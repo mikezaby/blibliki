@@ -19,6 +19,7 @@ import MidiEvent, { MidiEventType } from "../midi/MidiEvent";
 export interface IModule<T extends ModuleType> {
   id: string;
   name: string;
+  voiceNo: number;
   moduleType: T;
   props: ModuleTypeToPropsMapping[T];
 }
@@ -28,8 +29,8 @@ export interface IModuleSerialize<T extends ModuleType> extends IModule<T> {
   outputs: IIOSerialize[];
 }
 
-interface IModuleConstructor<T extends ModuleType>
-  extends Optional<IModule<T>, "id"> {
+export interface IModuleConstructor<T extends ModuleType>
+  extends Optional<IModule<T>, "id" | "voiceNo"> {
   audioNodeConstructor?: (context: IAnyAudioContext) => AudioNode;
 }
 
@@ -38,6 +39,7 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   engineId: string;
   name: string;
   moduleType: T;
+  voiceNo: number;
   audioNode: AudioNode | undefined;
   inputs: InputCollection;
   outputs: OutputCollection;
@@ -45,12 +47,14 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   protected superInitialized: boolean = false;
 
   constructor(engineId: string, params: IModuleConstructor<T>) {
-    const { id, name, moduleType, audioNodeConstructor, props } = params;
+    const { id, name, moduleType, voiceNo, audioNodeConstructor, props } =
+      params;
 
     this.id = id || uuidv4();
     this.engineId = engineId;
     this.name = name;
     this.moduleType = moduleType;
+    this.voiceNo = voiceNo ?? 0;
     this.audioNode = audioNodeConstructor?.(this.context);
     this._props = {} as ModuleTypeToPropsMapping[T];
     this.props = props;
@@ -90,6 +94,7 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
       id: this.id,
       name: this.name,
       moduleType: this.moduleType,
+      voiceNo: this.voiceNo,
       props: this.props,
       inputs: this.inputs.serialize(),
       outputs: this.outputs.serialize(),
@@ -157,6 +162,7 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
     this.engine._triggerPropsUpdate({
       id: this.id,
       moduleType: this.moduleType,
+      voiceNo: this.voiceNo,
       name: this.name,
       props: this.props,
     });

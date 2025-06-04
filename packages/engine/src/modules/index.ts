@@ -103,55 +103,38 @@ export interface ICreateModule<T extends ModuleType> {
   props: Partial<ModuleTypeToPropsMapping[T]>;
 }
 
-export function createModule<T extends ModuleType>(
+export type ModuleParams = {
+  [K in ModuleType]: ICreateModule<K>;
+}[ModuleType];
+
+export function createModule(
   engineId: string,
-  params: ICreateModule<T>,
+  params: ModuleParams,
 ): ModuleTypeToModuleMapping[keyof ModuleTypeToModuleMapping] {
   switch (params.moduleType) {
     case ModuleType.Oscillator:
-      return new Oscillator(
-        engineId,
-        params as ICreateModule<ModuleType.Oscillator>,
-      );
+      return new Oscillator(engineId, params);
     case ModuleType.Gain:
-      return new Gain(engineId, params as ICreateModule<ModuleType.Gain>);
+      return new Gain(engineId, params);
     case ModuleType.Master:
-      return new Master(engineId, params as ICreateModule<ModuleType.Master>);
+      return new Master(engineId, params);
     case ModuleType.MidiSelector:
-      return new MidiSelector(
-        engineId,
-        params as ICreateModule<ModuleType.MidiSelector>,
-      );
+      return new MidiSelector(engineId, params);
     case ModuleType.Envelope:
-      return new Envelope(
-        engineId,
-        params as ICreateModule<ModuleType.Envelope>,
-      );
+      return new Envelope(engineId, params);
     case ModuleType.Filter:
-      return new Filter(engineId, params as ICreateModule<ModuleType.Filter>);
+      return new Filter(engineId, params);
     case ModuleType.Scale:
-      return new Scale(engineId, params as ICreateModule<ModuleType.Scale>);
+      return new Scale(engineId, params);
     case ModuleType.Inspector:
-      return new Inspector(
-        engineId,
-        params as ICreateModule<ModuleType.Inspector>,
-      );
+      return new Inspector(engineId, params);
     case ModuleType.Constant:
-      return new Constant(
-        engineId,
-        params as ICreateModule<ModuleType.Constant>,
-      );
+      return new Constant(engineId, params);
     case ModuleType.VirtualMidi:
-      return new VirtualMidi(
-        engineId,
-        params as ICreateModule<ModuleType.VirtualMidi>,
-      );
+      return new VirtualMidi(engineId, params);
     case ModuleType.StepSequencer:
-      return new StepSequencer(
-        engineId,
-        params as ICreateModule<ModuleType.StepSequencer>,
-      );
+      return new StepSequencer(engineId, params);
     default:
-      assertNever(params.moduleType);
+      assertNever(params);
   }
 }

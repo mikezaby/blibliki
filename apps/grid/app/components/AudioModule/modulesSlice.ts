@@ -15,8 +15,8 @@ import { addNode } from "@/components/Grid/gridNodesSlice";
 import { AppDispatch, RootState } from "@/store";
 import { Optional } from "@/types";
 
-interface ModuleInterface extends Omit<IModule<ModuleType>, "id"> {
-  numberOfVoices?: number; // TODO: TO be re-implemented
+interface ModuleInterface extends Omit<IModule<ModuleType>, "id" | "voiceNo"> {
+  voices?: number;
 }
 
 export interface ModuleProps extends ModuleInterface {

@@ -12,6 +12,7 @@ import {
 } from "@/core";
 import {
   ICreateModule,
+  ModuleParams,
   ModuleType,
   ModuleTypeToModuleMapping,
   createModule,
@@ -21,7 +22,7 @@ import { loadProcessors } from "./processors";
 export interface IUpdateModule<T extends ModuleType> {
   id: string;
   moduleType: T;
-  changes: Partial<Omit<ICreateModule<T>, "id" | "moduleType">>;
+  changes: Partial<Omit<ICreateModule<T>, "id" | "moduleType" | "voice">>;
 }
 
 export type ICreateRoute = Optional<IRoute, "id">;
@@ -87,7 +88,7 @@ export class Engine {
   }
 
   addModule<T extends ModuleType>(params: ICreateModule<T>) {
-    const module = createModule<T>(this.id, params);
+    const module = createModule(this.id, params as ModuleParams);
     this.modules.set(module.id, module);
 
     return module.serialize() as IModuleSerialize<T>;
