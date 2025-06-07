@@ -4,7 +4,6 @@ import {
   IModuleSerialize,
   IRoute,
   Routes,
-  isStartable,
   MidiDeviceManager,
   IModule,
   TTime,
@@ -207,16 +206,12 @@ export class Engine {
 
   private onStart = (actionAt: TTime) => {
     this.modules.forEach((module) => {
-      if (!isStartable(module)) return;
-
       module.start(actionAt);
     });
   };
 
   private onStop = (actionAt: TTime) => {
     this.modules.forEach((module) => {
-      if (!isStartable(module)) return;
-
       module.stop(actionAt);
     });
   };

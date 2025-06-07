@@ -1,4 +1,4 @@
-import { IAnyAudioContext, IModule, Module, Startable } from "@/core";
+import { IAnyAudioContext, IModule, Module } from "@/core";
 import Note from "@/core/Note";
 import { nt, TTime } from "@/core/Timing/Time";
 import { PropSchema } from "@/core/schema";
@@ -21,10 +21,7 @@ export const constantPropSchema: PropSchema<IConstantProps> = {
 
 const DEFAULT_PROPS: IConstantProps = { value: 1 };
 
-export default class Constant
-  extends Module<ModuleType.Constant>
-  implements Startable
-{
+export default class Constant extends Module<ModuleType.Constant> {
   declare audioNode: ConstantSourceNode;
   isStated: boolean = false;
 

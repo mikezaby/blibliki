@@ -28,20 +28,6 @@ export interface IModuleSerialize<T extends ModuleType> extends IModule<T> {
   outputs: IIOSerialize[];
 }
 
-export interface Startable {
-  start(time: TTime): void;
-  stop(time: TTime): void;
-}
-
-export function isStartable<T>(value: T): value is T & Startable {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    typeof (value as unknown as Startable).start === "function" &&
-    typeof (value as unknown as Startable).stop === "function"
-  );
-}
-
 interface IModuleConstructor<T extends ModuleType>
   extends Optional<IModule<T>, "id"> {
   audioNodeConstructor?: (context: IAnyAudioContext) => AudioNode;
@@ -133,6 +119,14 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   protected unPlugAll() {
     this.inputs.unPlugAll();
     this.outputs.unPlugAll();
+  }
+
+  start(_time: TTime): void {
+    // Optional implementation in modules
+  }
+
+  stop(_time: TTime): void {
+    // Optional implementation in modules
   }
 
   triggerAttack = (_note: Note, _triggeredAt: TTime): void => {

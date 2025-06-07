@@ -1,4 +1,4 @@
-import { IAnyAudioContext, IModule, Module, Startable } from "@/core";
+import { IAnyAudioContext, IModule, Module } from "@/core";
 import Note from "@/core/Note";
 import { nt, TTime } from "@/core/Timing/Time";
 import { PropSchema } from "@/core/schema";
@@ -75,10 +75,7 @@ const DEFAULT_PROPS: IOscillatorProps = {
   octave: 0,
 };
 
-export default class Oscillator
-  extends Module<ModuleType.Oscillator>
-  implements Startable
-{
+export default class Oscillator extends Module<ModuleType.Oscillator> {
   declare audioNode: OscillatorNode;
   isStated: boolean = false;
   detuneGain!: GainNode;
