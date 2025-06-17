@@ -1,6 +1,10 @@
 import { assertNever } from "@blibliki/utils";
 import { IModule, Module, PropSchema } from "@/core";
 import { IPolyModuleConstructor } from "@/core/module/PolyModule";
+import VoiceScheduler, {
+  IVoiceSchedulerProps,
+  voiceSchedulerPropSchema,
+} from "@/core/module/VoiceScheduler";
 import Constant, { constantPropSchema, IConstantProps } from "./Constant";
 import Envelope, { envelopePropSchema, IEnvelopeProps } from "./Envelope";
 import Filter, { filterPropSchema, IFilterProps } from "./Filter";
@@ -37,6 +41,7 @@ export enum ModuleType {
   Constant = "Constant",
   VirtualMidi = "VirtualMidi",
   StepSequencer = "StepSequencer",
+  VoiceScheduler = "VoiceScheduler",
 }
 
 export interface ModuleTypeToPropsMapping {
@@ -51,6 +56,7 @@ export interface ModuleTypeToPropsMapping {
   [ModuleType.Constant]: IConstantProps;
   [ModuleType.VirtualMidi]: IVirtualMidiProps;
   [ModuleType.StepSequencer]: IStepSequencerProps;
+  [ModuleType.VoiceScheduler]: IVoiceSchedulerProps;
 }
 
 export interface ModuleTypeToModuleMapping {
@@ -65,6 +71,7 @@ export interface ModuleTypeToModuleMapping {
   [ModuleType.Constant]: Constant;
   [ModuleType.VirtualMidi]: VirtualMidi;
   [ModuleType.StepSequencer]: StepSequencer;
+  [ModuleType.VoiceScheduler]: VoiceScheduler;
 }
 
 export const moduleSchemas: {
@@ -81,6 +88,7 @@ export const moduleSchemas: {
   [ModuleType.Constant]: constantPropSchema,
   [ModuleType.VirtualMidi]: virtualMidiPropSchema,
   [ModuleType.StepSequencer]: stepSequencerPropSchema,
+  [ModuleType.VoiceScheduler]: voiceSchedulerPropSchema,
 };
 
 export type { IOscillator } from "./Oscillator";
@@ -110,6 +118,7 @@ export type ModuleParams = {
     | ModuleType.Gain
     | ModuleType.Envelope
     | ModuleType.Filter
+    | ModuleType.VoiceScheduler
     ? IPolyModuleConstructor<K>
     : ICreateModule<K>;
 }[ModuleType];
@@ -141,6 +150,8 @@ export function createModule(
       return new VirtualMidi(engineId, params);
     case ModuleType.StepSequencer:
       return new StepSequencer(engineId, params);
+    case ModuleType.VoiceScheduler:
+      return new VoiceScheduler(engineId, params);
     default:
       assertNever(params);
   }

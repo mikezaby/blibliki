@@ -55,6 +55,10 @@ export const AvailableModules: Record<
     name: "StepSequencer",
     moduleType: ModuleType.StepSequencer,
   },
+  [ModuleType.VoiceScheduler]: {
+    name: "VoiceScheduler",
+    moduleType: ModuleType.VoiceScheduler,
+  },
 };
 
 const modulesAdapter = createEntityAdapter<ModuleProps>({});

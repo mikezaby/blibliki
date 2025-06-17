@@ -11,6 +11,7 @@ import Master from "./Master";
 import MidiDeviceSelector from "./MidiDeviceSelector";
 import Oscillator from "./Oscillator";
 import Scale from "./Scale";
+import VoiceScheduler from "./VoiceScheduler";
 import { updateModule } from "./modulesSlice";
 
 export interface AudioModuleProps<T extends ModuleType> {
@@ -50,6 +51,7 @@ const COMPONENT_MAPPING: {
   [ModuleType.Scale]: Scale,
   [ModuleType.Inspector]: Inspector,
   [ModuleType.StepSequencer]: undefined,
+  [ModuleType.VoiceScheduler]: VoiceScheduler,
 };
 
 export default function AudioModule<T extends ModuleType>(audioModuleProps: {
