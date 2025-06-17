@@ -1,7 +1,6 @@
 import { assertDefined, Optional, pick, uuidv4 } from "@blibliki/utils";
 import {
   IAnyAudioContext,
-  IModuleSerialize,
   IRoute,
   Routes,
   MidiDeviceManager,
@@ -91,7 +90,7 @@ export class Engine {
     const module = createModule(this.id, params as ModuleParams);
     this.modules.set(module.id, module);
 
-    return module.serialize() as IModuleSerialize<T>;
+    return module.serialize();
   }
 
   updateModule<T extends ModuleType>(params: IUpdateModule<T>) {
@@ -105,7 +104,7 @@ export class Engine {
     const updates = pick(params.changes, ["name", "props"]);
     Object.assign(module, updates);
 
-    return module.serialize() as IModuleSerialize<T>;
+    return module.serialize();
   }
 
   removeModule(id: string) {

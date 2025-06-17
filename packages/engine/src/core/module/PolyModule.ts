@@ -2,6 +2,7 @@ import { deterministicId, Optional, uuidv4 } from "@blibliki/utils";
 import { Engine } from "@/Engine";
 import { ModuleType, ModuleTypeToPropsMapping } from "@/modules";
 import {
+  IIOSerialize,
   InputCollection,
   IOType,
   MidiInputProps,
@@ -18,7 +19,13 @@ export interface IPolyModule<T extends ModuleType>
   voices: number;
 }
 
-type IPolyModuleConstructor<T extends ModuleType> = Optional<
+export interface IPolyModuleSerialize<T extends ModuleType>
+  extends IPolyModule<T> {
+  inputs: IIOSerialize[];
+  outputs: IIOSerialize[];
+}
+
+export type IPolyModuleConstructor<T extends ModuleType> = Optional<
   IPolyModule<T>,
   "id"
 > & {
@@ -105,6 +112,18 @@ export abstract class PolyModule<T extends ModuleType>
     this.audioModules.forEach((m) => {
       m.stop(time);
     });
+  }
+
+  serialize(): IPolyModuleSerialize<T> {
+    return {
+      id: this.id,
+      name: this.name,
+      moduleType: this.moduleType,
+      voices: this.voices,
+      props: this.props,
+      inputs: this.inputs.serialize(),
+      outputs: this.outputs.serialize(),
+    };
   }
 
   plug({

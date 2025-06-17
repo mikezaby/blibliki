@@ -1,5 +1,6 @@
 import { assertNever } from "@blibliki/utils";
 import { IModule, Module, PropSchema } from "@/core";
+import { IPolyModuleConstructor } from "@/core/module/PolyModule";
 import Constant, { constantPropSchema, IConstantProps } from "./Constant";
 import Envelope, { envelopePropSchema, IEnvelopeProps } from "./Envelope";
 import Filter, { filterPropSchema, IFilterProps } from "./Filter";
@@ -104,7 +105,13 @@ export interface ICreateModule<T extends ModuleType> {
 }
 
 export type ModuleParams = {
-  [K in ModuleType]: ICreateModule<K>;
+  [K in ModuleType]: K extends
+    | ModuleType.Oscillator
+    | ModuleType.Gain
+    | ModuleType.Envelope
+    | ModuleType.Filter
+    ? IPolyModuleConstructor<K>
+    : ICreateModule<K>;
 }[ModuleType];
 
 export function createModule(

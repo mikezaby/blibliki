@@ -1,4 +1,6 @@
 import { IAnyAudioContext, IModule, Module } from "@/core";
+import { IModuleConstructor } from "@/core/module/Module";
+import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { PropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
 
@@ -19,7 +21,7 @@ export const gainPropSchema: PropSchema<IGainProps> = {
 
 const DEFAULT_PROPS: IGainProps = { gain: 1 };
 
-export default class Gain extends Module<ModuleType.Gain> {
+export class MonoGain extends Module<ModuleType.Gain> {
   declare audioNode: GainNode;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Gain>) {
@@ -46,5 +48,31 @@ export default class Gain extends Module<ModuleType.Gain> {
       name: "gain",
       getAudioNode: () => this.audioNode.gain,
     });
+  }
+}
+
+export default class Gain extends PolyModule<ModuleType.Gain> {
+  constructor(
+    engineId: string,
+    params: IPolyModuleConstructor<ModuleType.Gain>,
+  ) {
+    const props = { ...DEFAULT_PROPS, ...params.props };
+    const monoModuleConstructor = (
+      engineId: string,
+      params: IModuleConstructor<ModuleType.Gain>,
+    ) => new MonoGain(engineId, params);
+
+    super(engineId, {
+      ...params,
+      props,
+      monoModuleConstructor,
+    });
+
+    this.registerAdditionalInputs();
+    this.registerDefaultIOs();
+  }
+
+  private registerAdditionalInputs() {
+    this.registerAudioInput({ name: "gain" });
   }
 }
