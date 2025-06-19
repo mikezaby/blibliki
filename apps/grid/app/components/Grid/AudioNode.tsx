@@ -4,6 +4,7 @@ import { ReactNode, useMemo } from "react";
 import AudioModule from "@/components/AudioModule";
 import { useAudioModule } from "@/hooks";
 import Name from "../AudioModule/attributes/Name";
+import Voices from "../AudioModule/attributes/Voices";
 import {
   Card,
   CardContent,
@@ -51,6 +52,13 @@ export default function AudioNode(props: NodeProps) {
               moduleType={audioModule.moduleType}
               value={audioModule.name}
             />
+            {audioModule.voices && (
+              <Voices
+                id={audioModule.id}
+                moduleType={audioModule.moduleType}
+                value={audioModule.voices}
+              />
+            )}
           </CardContent>
         </Card>
       </ContextMenuContent>

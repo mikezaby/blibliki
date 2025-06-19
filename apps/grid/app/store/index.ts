@@ -17,6 +17,7 @@ export const store = configureStore({
     gridNodes: gridNodesReducer,
     patch: patchReducer,
   },
+  devTools: true,
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

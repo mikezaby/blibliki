@@ -1,7 +1,9 @@
 import { IAnyAudioContext, Module } from "@/core";
+import { IModuleConstructor } from "@/core/module/Module";
+import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { PropSchema } from "@/core/schema";
 import { createModule, ICreateModule, ModuleType } from ".";
-import Gain from "./Gain";
+import { MonoGain } from "./Gain";
 import Scale from "./Scale";
 
 export type IFilterProps = {
@@ -50,10 +52,10 @@ export const filterPropSchema: PropSchema<IFilterProps> = {
   },
 };
 
-export default class Filter extends Module<ModuleType.Filter> {
+class MonoFilter extends Module<ModuleType.Filter> {
   declare audioNode: BiquadFilterNode;
   private scale: Scale;
-  private amount: Gain;
+  private amount: MonoGain;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Filter>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
@@ -71,11 +73,11 @@ export default class Filter extends Module<ModuleType.Filter> {
       audioNodeConstructor,
     });
 
-    this.amount = createModule(engineId, {
+    this.amount = new MonoGain(engineId, {
       name: "amount",
       moduleType: ModuleType.Gain,
       props: { gain: props.envelopeAmount },
-    }) as Gain;
+    });
 
     this.scale = createModule(engineId, {
       name: "scale",
@@ -125,5 +127,33 @@ export default class Filter extends Module<ModuleType.Filter> {
       name: "Q",
       getAudioNode: () => this.audioNode.Q,
     });
+  }
+}
+
+export default class Filter extends PolyModule<ModuleType.Filter> {
+  constructor(
+    engineId: string,
+    params: IPolyModuleConstructor<ModuleType.Filter>,
+  ) {
+    const props = { ...DEFAULT_PROPS, ...params.props };
+    const monoModuleConstructor = (
+      engineId: string,
+      params: IModuleConstructor<ModuleType.Filter>,
+    ) => new MonoFilter(engineId, params);
+
+    super(engineId, {
+      ...params,
+      props,
+      monoModuleConstructor,
+    });
+
+    this.registerInputs();
+    this.registerDefaultIOs();
+  }
+
+  private registerInputs() {
+    this.registerAudioInput({ name: "cutoff" });
+    this.registerAudioInput({ name: "cutoffMod" });
+    this.registerAudioInput({ name: "Q" });
   }
 }

@@ -1,5 +1,7 @@
-import { AnyModule } from "@/modules";
+import { ModuleType } from "@/modules";
+import { Module } from "../module";
 import IO, { IOProps, IOType } from "./Base";
+import { PolyAudioInput, PolyAudioOutput } from "./PolyAudioIO";
 
 export type AudioIO = AudioInput | AudioOutput;
 
@@ -13,27 +15,35 @@ export interface AudioOutputProps extends IOProps {
   getAudioNode: () => AudioNode;
 }
 
-export class AudioInput extends IO<AudioOutput> implements AudioInputProps {
+export class AudioInput
+  extends IO<AudioOutput | PolyAudioOutput>
+  implements AudioInputProps
+{
   declare ioType: IOType.AudioInput;
   getAudioNode: AudioInputProps["getAudioNode"];
 
-  constructor(module: AnyModule, props: AudioInputProps) {
+  constructor(module: Module<ModuleType>, props: AudioInputProps) {
     super(module, props);
     this.getAudioNode = props.getAudioNode;
   }
 }
 
-export class AudioOutput extends IO<AudioInput> implements AudioOutputProps {
+export class AudioOutput
+  extends IO<AudioInput | PolyAudioInput>
+  implements AudioOutputProps
+{
   declare ioType: IOType.AudioOutput;
   getAudioNode!: AudioOutputProps["getAudioNode"];
 
-  constructor(module: AnyModule, props: AudioOutputProps) {
+  constructor(module: Module<ModuleType>, props: AudioOutputProps) {
     super(module, props);
     this.getAudioNode = props.getAudioNode;
   }
 
-  plug(io: AudioInput, plugOther: boolean = true) {
+  plug(io: AudioInput | PolyAudioInput, plugOther: boolean = true) {
     super.plug(io, plugOther);
+    if (io instanceof PolyAudioInput) return;
+
     const input = io.getAudioNode();
 
     if (input instanceof AudioParam) {
@@ -43,8 +53,10 @@ export class AudioOutput extends IO<AudioInput> implements AudioOutputProps {
     }
   }
 
-  unPlug(io: AudioInput, plugOther: boolean = true) {
+  unPlug(io: AudioInput | PolyAudioInput, plugOther: boolean = true) {
     super.unPlug(io, plugOther);
+    if (io instanceof PolyAudioInput) return;
+
     const input = io.getAudioNode();
 
     try {

@@ -63,18 +63,12 @@ export const SelectField = <T extends string | number>({
 }: SelectProps<T>) => {
   const label = schema.label ?? name;
 
-  const internalOnChange = (newValue: string) => {
-    const finalValue = typeof value === "number" ? Number(newValue) : newValue;
-
-    onChange(finalValue as T);
-  };
-
   return (
     <Select
       label={label}
-      value={value}
+      value={value as T}
       options={schema.options}
-      onChange={internalOnChange}
+      onChange={onChange}
       className={className}
     />
   );

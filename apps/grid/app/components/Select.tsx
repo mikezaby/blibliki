@@ -14,15 +14,17 @@ type TOption = string[] | number[] | TDefOption[] | TIDOption[];
 type TDefOption = { name: string; value: string | number };
 type TIDOption = { id: string; name: string };
 
-interface SelectProps {
-  value: string | number | undefined;
+interface SelectProps<T extends string | number | undefined> {
+  value: T;
   options: TOption;
   label?: string;
   className?: string;
-  onChange: (value: string) => void;
+  onChange: (value: T) => void;
 }
 
-export default function Select(props: SelectProps) {
+export default function Select<T extends string | number | undefined>(
+  props: SelectProps<T>,
+) {
   const { value, options, label, onChange, className = "" } = props;
 
   const opts: TDefOption[] = useMemo(() => {
@@ -43,8 +45,16 @@ export default function Select(props: SelectProps) {
     }
   }, [options]);
 
+  const onValueChange = (newValue: string | undefined) => {
+    if (typeof value === "number") {
+      onChange(Number(newValue) as T);
+    } else {
+      onChange(newValue as T);
+    }
+  };
+
   return (
-    <SelectUI value={value?.toString()} onValueChange={onChange}>
+    <SelectUI value={value?.toString()} onValueChange={onValueChange}>
       <SelectTrigger className="w-[180px]">
         <SelectValue placeholder={label} />
       </SelectTrigger>

@@ -1,6 +1,8 @@
-import { IAnyAudioContext, IModule, Module, Startable } from "@/core";
+import { IAnyAudioContext, IModule, Module } from "@/core";
 import Note from "@/core/Note";
 import { nt, TTime } from "@/core/Timing/Time";
+import { IModuleConstructor } from "@/core/module/Module";
+import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { PropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
 
@@ -75,10 +77,7 @@ const DEFAULT_PROPS: IOscillatorProps = {
   octave: 0,
 };
 
-export default class Oscillator
-  extends Module<ModuleType.Oscillator>
-  implements Startable
-{
+export class MonoOscillator extends Module<ModuleType.Oscillator> {
   declare audioNode: OscillatorNode;
   isStated: boolean = false;
   detuneGain!: GainNode;
@@ -180,5 +179,43 @@ export default class Oscillator
       name: "detune",
       getAudioNode: () => this.detuneGain,
     });
+  }
+}
+
+export default class Oscillator extends PolyModule<ModuleType.Oscillator> {
+  constructor(
+    engineId: string,
+    params: IPolyModuleConstructor<ModuleType.Oscillator>,
+  ) {
+    const props = { ...DEFAULT_PROPS, ...params.props };
+    const monoModuleConstructor = (
+      engineId: string,
+      params: IModuleConstructor<ModuleType.Oscillator>,
+    ) => new MonoOscillator(engineId, params);
+
+    super(engineId, {
+      ...params,
+      props,
+      monoModuleConstructor,
+    });
+
+    this.registerInputs();
+    this.registerDefaultIOs("out");
+  }
+
+  start(time: TTime) {
+    this.audioModules.forEach((audioModule) => {
+      audioModule.start(time);
+    });
+  }
+
+  stop(time: TTime) {
+    this.audioModules.forEach((audioModule) => {
+      audioModule.stop(time);
+    });
+  }
+
+  private registerInputs() {
+    this.registerAudioInput({ name: "detune" });
   }
 }

@@ -1,5 +1,5 @@
-export { Module, isStartable } from "./module";
-export type { IModule, IModuleSerialize, Startable } from "./module";
+export { Module } from "./module";
+export type { IModule, IModuleSerialize } from "./module";
 
 export type IAnyAudioContext = AudioContext | OfflineAudioContext;
 

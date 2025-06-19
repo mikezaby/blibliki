@@ -1,10 +1,8 @@
 import { assertDefined, Optional, pick, uuidv4 } from "@blibliki/utils";
 import {
   IAnyAudioContext,
-  IModuleSerialize,
   IRoute,
   Routes,
-  isStartable,
   MidiDeviceManager,
   IModule,
   TTime,
@@ -13,16 +11,20 @@ import {
 } from "@/core";
 import {
   ICreateModule,
+  ModuleParams,
   ModuleType,
   ModuleTypeToModuleMapping,
   createModule,
 } from "@/modules";
+import { PolyModule } from "./core/module/PolyModule";
 import { loadProcessors } from "./processors";
 
 export interface IUpdateModule<T extends ModuleType> {
   id: string;
   moduleType: T;
-  changes: Partial<Omit<ICreateModule<T>, "id" | "moduleType">>;
+  changes: Partial<Omit<ICreateModule<T>, "id" | "moduleType" | "voice">> & {
+    voices?: number;
+  };
 }
 
 export type ICreateRoute = Optional<IRoute, "id">;
@@ -88,10 +90,10 @@ export class Engine {
   }
 
   addModule<T extends ModuleType>(params: ICreateModule<T>) {
-    const module = createModule<T>(this.id, params);
+    const module = createModule(this.id, params as ModuleParams);
     this.modules.set(module.id, module);
 
-    return module.serialize() as IModuleSerialize<T>;
+    return module.serialize();
   }
 
   updateModule<T extends ModuleType>(params: IUpdateModule<T>) {
@@ -105,7 +107,11 @@ export class Engine {
     const updates = pick(params.changes, ["name", "props"]);
     Object.assign(module, updates);
 
-    return module.serialize() as IModuleSerialize<T>;
+    if (module instanceof PolyModule && params.changes.voices !== undefined) {
+      module.voices = params.changes.voices;
+    }
+
+    return module.serialize();
   }
 
   removeModule(id: string) {
@@ -207,16 +213,12 @@ export class Engine {
 
   private onStart = (actionAt: TTime) => {
     this.modules.forEach((module) => {
-      if (!isStartable(module)) return;
-
       module.start(actionAt);
     });
   };
 
   private onStop = (actionAt: TTime) => {
     this.modules.forEach((module) => {
-      if (!isStartable(module)) return;
-
       module.stop(actionAt);
     });
   };

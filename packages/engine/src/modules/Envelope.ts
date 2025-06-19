@@ -2,6 +2,8 @@ import { createScaleNormalized } from "@blibliki/utils";
 import { IAnyAudioContext, Module } from "@/core";
 import Note from "@/core/Note";
 import { nt, TTime } from "@/core/Timing/Time";
+import { IModuleConstructor } from "@/core/module/Module";
+import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { PropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
 
@@ -60,7 +62,7 @@ const scaleToFive = createScaleNormalized({
   max: 5,
 });
 
-export default class Envelope extends Module<ModuleType.Envelope> {
+class MonoEnvelope extends Module<ModuleType.Envelope> {
   declare audioNode: GainNode;
   currentNote?: Note;
 
@@ -137,5 +139,26 @@ export default class Envelope extends Module<ModuleType.Envelope> {
 
   private scaledRelease() {
     return scaleToTen(this.props.release);
+  }
+}
+
+export default class Envelope extends PolyModule<ModuleType.Envelope> {
+  constructor(
+    engineId: string,
+    params: IPolyModuleConstructor<ModuleType.Envelope>,
+  ) {
+    const props = { ...DEFAULT_PROPS, ...params.props };
+    const monoModuleConstructor = (
+      engineId: string,
+      params: IModuleConstructor<ModuleType.Envelope>,
+    ) => new MonoEnvelope(engineId, params);
+
+    super(engineId, {
+      ...params,
+      props,
+      monoModuleConstructor,
+    });
+
+    this.registerDefaultIOs();
   }
 }

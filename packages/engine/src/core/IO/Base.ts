@@ -1,7 +1,10 @@
 import { deterministicId } from "@blibliki/utils";
-import { AnyModule } from "@/modules";
+import { ModuleType } from "@/modules";
+import { Module } from "../module";
+import { PolyModule } from "../module/PolyModule";
 import { AudioInput, AudioOutput } from "./AudioIO";
 import { MidiInput, MidiOutput } from "./MidiIO";
+import { PolyAudioInput, PolyAudioOutput } from "./PolyAudioIO";
 
 export interface IOProps {
   name: string;
@@ -16,23 +19,28 @@ export interface IIOSerialize extends IOProps {
 export enum IOType {
   AudioInput = "audioInput",
   AudioOutput = "audioOutput",
+  PolyAudioInput = "polyAudioInput",
+  PolyAudioOutput = "polyAudioOutput",
   MidiOutput = "midiOutput",
   MidiInput = "midiInput",
 }
 
 export interface IIO extends IOProps {
   id: string;
-  module: AnyModule;
+  module: Module<ModuleType> | PolyModule<ModuleType>;
 }
 
 export abstract class Base implements IIO {
   id: string;
   ioType: IOType;
   name: string;
-  module: AnyModule;
+  module: Module<ModuleType> | PolyModule<ModuleType>;
   connections: Base[];
 
-  constructor(module: AnyModule, props: IOProps) {
+  constructor(
+    module: Module<ModuleType> | PolyModule<ModuleType>,
+    props: IOProps,
+  ) {
     this.module = module;
     this.name = props.name;
     this.ioType = props.ioType;
@@ -68,9 +76,16 @@ export abstract class Base implements IIO {
     });
   }
 
-  isAudio(): this is AudioInput | AudioOutput {
+  isAudio(): this is
+    | AudioInput
+    | AudioOutput
+    | PolyAudioInput
+    | PolyAudioOutput {
     return (
-      this.ioType === IOType.AudioInput || this.ioType === IOType.AudioOutput
+      this.ioType === IOType.AudioInput ||
+      this.ioType === IOType.AudioOutput ||
+      this.ioType === IOType.PolyAudioInput ||
+      this.ioType === IOType.PolyAudioOutput
     );
   }
 

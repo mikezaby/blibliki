@@ -1,5 +1,7 @@
-import { AnyModule } from "@/modules";
+import { ModuleType } from "@/modules";
 import MidiEvent from "../midi/MidiEvent";
+import { Module } from "../module";
+import { PolyModule } from "../module/PolyModule";
 import IO, { IOProps, IOType } from "./Base";
 
 export type MidiIO = MidiInput | MidiOutput;
@@ -17,7 +19,10 @@ export class MidiInput extends IO<MidiOutput> implements MidiInputProps {
   declare ioType: IOType.MidiInput;
   onMidiEvent: MidiInputProps["onMidiEvent"];
 
-  constructor(module: AnyModule, props: MidiInputProps) {
+  constructor(
+    module: Module<ModuleType> | PolyModule<ModuleType>,
+    props: MidiInputProps,
+  ) {
     super(module, props);
     this.onMidiEvent = props.onMidiEvent;
   }

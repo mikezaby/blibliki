@@ -1,5 +1,10 @@
 import { assertNever } from "@blibliki/utils";
 import { IModule, Module, PropSchema } from "@/core";
+import { IPolyModuleConstructor } from "@/core/module/PolyModule";
+import VoiceScheduler, {
+  IVoiceSchedulerProps,
+  voiceSchedulerPropSchema,
+} from "@/core/module/VoiceScheduler";
 import Constant, { constantPropSchema, IConstantProps } from "./Constant";
 import Envelope, { envelopePropSchema, IEnvelopeProps } from "./Envelope";
 import Filter, { filterPropSchema, IFilterProps } from "./Filter";
@@ -36,6 +41,7 @@ export enum ModuleType {
   Constant = "Constant",
   VirtualMidi = "VirtualMidi",
   StepSequencer = "StepSequencer",
+  VoiceScheduler = "VoiceScheduler",
 }
 
 export interface ModuleTypeToPropsMapping {
@@ -50,6 +56,7 @@ export interface ModuleTypeToPropsMapping {
   [ModuleType.Constant]: IConstantProps;
   [ModuleType.VirtualMidi]: IVirtualMidiProps;
   [ModuleType.StepSequencer]: IStepSequencerProps;
+  [ModuleType.VoiceScheduler]: IVoiceSchedulerProps;
 }
 
 export interface ModuleTypeToModuleMapping {
@@ -64,6 +71,7 @@ export interface ModuleTypeToModuleMapping {
   [ModuleType.Constant]: Constant;
   [ModuleType.VirtualMidi]: VirtualMidi;
   [ModuleType.StepSequencer]: StepSequencer;
+  [ModuleType.VoiceScheduler]: VoiceScheduler;
 }
 
 export const moduleSchemas: {
@@ -80,6 +88,7 @@ export const moduleSchemas: {
   [ModuleType.Constant]: constantPropSchema,
   [ModuleType.VirtualMidi]: virtualMidiPropSchema,
   [ModuleType.StepSequencer]: stepSequencerPropSchema,
+  [ModuleType.VoiceScheduler]: voiceSchedulerPropSchema,
 };
 
 export type { IOscillator } from "./Oscillator";
@@ -103,55 +112,47 @@ export interface ICreateModule<T extends ModuleType> {
   props: Partial<ModuleTypeToPropsMapping[T]>;
 }
 
-export function createModule<T extends ModuleType>(
+export type ModuleParams = {
+  [K in ModuleType]: K extends
+    | ModuleType.Oscillator
+    | ModuleType.Gain
+    | ModuleType.Envelope
+    | ModuleType.Filter
+    | ModuleType.VoiceScheduler
+    ? IPolyModuleConstructor<K>
+    : ICreateModule<K>;
+}[ModuleType];
+
+export function createModule(
   engineId: string,
-  params: ICreateModule<T>,
+  params: ModuleParams,
 ): ModuleTypeToModuleMapping[keyof ModuleTypeToModuleMapping] {
   switch (params.moduleType) {
     case ModuleType.Oscillator:
-      return new Oscillator(
-        engineId,
-        params as ICreateModule<ModuleType.Oscillator>,
-      );
+      return new Oscillator(engineId, params);
     case ModuleType.Gain:
-      return new Gain(engineId, params as ICreateModule<ModuleType.Gain>);
+      return new Gain(engineId, params);
     case ModuleType.Master:
-      return new Master(engineId, params as ICreateModule<ModuleType.Master>);
+      return new Master(engineId, params);
     case ModuleType.MidiSelector:
-      return new MidiSelector(
-        engineId,
-        params as ICreateModule<ModuleType.MidiSelector>,
-      );
+      return new MidiSelector(engineId, params);
     case ModuleType.Envelope:
-      return new Envelope(
-        engineId,
-        params as ICreateModule<ModuleType.Envelope>,
-      );
+      return new Envelope(engineId, params);
     case ModuleType.Filter:
-      return new Filter(engineId, params as ICreateModule<ModuleType.Filter>);
+      return new Filter(engineId, params);
     case ModuleType.Scale:
-      return new Scale(engineId, params as ICreateModule<ModuleType.Scale>);
+      return new Scale(engineId, params);
     case ModuleType.Inspector:
-      return new Inspector(
-        engineId,
-        params as ICreateModule<ModuleType.Inspector>,
-      );
+      return new Inspector(engineId, params);
     case ModuleType.Constant:
-      return new Constant(
-        engineId,
-        params as ICreateModule<ModuleType.Constant>,
-      );
+      return new Constant(engineId, params);
     case ModuleType.VirtualMidi:
-      return new VirtualMidi(
-        engineId,
-        params as ICreateModule<ModuleType.VirtualMidi>,
-      );
+      return new VirtualMidi(engineId, params);
     case ModuleType.StepSequencer:
-      return new StepSequencer(
-        engineId,
-        params as ICreateModule<ModuleType.StepSequencer>,
-      );
+      return new StepSequencer(engineId, params);
+    case ModuleType.VoiceScheduler:
+      return new VoiceScheduler(engineId, params);
     default:
-      assertNever(params.moduleType);
+      assertNever(params);
   }
 }

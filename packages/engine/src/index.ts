@@ -28,4 +28,5 @@ export type {
   IStepSequencer,
   ModuleTypeToPropsMapping,
   ICreateModule,
+  ModuleParams,
 } from "./modules";

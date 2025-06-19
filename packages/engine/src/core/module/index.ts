@@ -1,2 +1,2 @@
-export { Module, isStartable } from "./Module";
-export type { IModule, IModuleSerialize, Startable } from "./Module";
+export { Module } from "./Module";
+export type { IModule, IModuleSerialize } from "./Module";

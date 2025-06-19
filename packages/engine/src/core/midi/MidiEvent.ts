@@ -10,6 +10,7 @@ export enum MidiEventType {
 
 export default class MidiEvent {
   note?: Note;
+  voiceNo?: number;
   readonly triggeredAt: TTime;
   private message: Message;
 
@@ -51,5 +52,12 @@ export default class MidiEvent {
     if (this.note) return;
 
     this.note = Note.fromEvent(this.message);
+  }
+
+  clone(voiceNo?: number) {
+    const newEvent = new MidiEvent(this.message, this.triggeredAt);
+    newEvent.voiceNo = voiceNo;
+
+    return newEvent;
   }
 }
