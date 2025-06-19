@@ -56,12 +56,12 @@ export abstract class PolyModule<T extends ModuleType>
 
     this.audioModules = [];
 
+    this.monoModuleConstructor = monoModuleConstructor;
     this.id = id || uuidv4();
     this.engineId = engineId;
     this.name = name;
     this.moduleType = moduleType;
-    this.voices = voices;
-    this.monoModuleConstructor = monoModuleConstructor;
+    this.voices = voices || 1;
     this._props = {} as ModuleTypeToPropsMapping[T];
     this.props = props;
 
@@ -100,6 +100,7 @@ export abstract class PolyModule<T extends ModuleType>
   set voices(value: number) {
     this._voices = value;
     this.adjustNumberOfModules();
+    this.rePlugAll();
   }
 
   start(time: TTime): void {
@@ -139,6 +140,13 @@ export abstract class PolyModule<T extends ModuleType>
     const input = audioModule.inputs.findByName(to);
 
     output.plug(input);
+  }
+
+  rePlugAll(callback?: () => void) {
+    if (!this.superInitialized) return;
+
+    this.inputs.rePlugAll(callback);
+    this.outputs.rePlugAll(callback);
   }
 
   protected unPlugAll() {

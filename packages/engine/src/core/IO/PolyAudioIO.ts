@@ -37,7 +37,7 @@ export class PolyAudioInput
   findIOByVoice(voice: number): AudioInput {
     return this.module
       .findVoice(voice)
-      .outputs.findByName(this.name) as AudioInput;
+      .inputs.findByName(this.name) as AudioInput;
   }
 }
 
@@ -88,8 +88,8 @@ function plugOrUnplug(
     const maxVoices = Math.max(thisIO.module.voices, otherIO.module.voices);
 
     for (let voice = 0; voice < maxVoices; voice++) {
-      const thisMonoIO = thisIO.findIOByVoice(voice);
-      const otherMonoIO = otherIO.findIOByVoice(voice);
+      const thisMonoIO = thisIO.findIOByVoice(voice % thisIO.module.voices);
+      const otherMonoIO = otherIO.findIOByVoice(voice % otherIO.module.voices);
 
       if (isPlug) {
         // @ts-expect-error: temp solution until guard this input plug to output

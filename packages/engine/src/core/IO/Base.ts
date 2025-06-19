@@ -4,6 +4,7 @@ import { Module } from "../module";
 import { PolyModule } from "../module/PolyModule";
 import { AudioInput, AudioOutput } from "./AudioIO";
 import { MidiInput, MidiOutput } from "./MidiIO";
+import { PolyAudioInput, PolyAudioOutput } from "./PolyAudioIO";
 
 export interface IOProps {
   name: string;
@@ -75,9 +76,16 @@ export abstract class Base implements IIO {
     });
   }
 
-  isAudio(): this is AudioInput | AudioOutput {
+  isAudio(): this is
+    | AudioInput
+    | AudioOutput
+    | PolyAudioInput
+    | PolyAudioOutput {
     return (
-      this.ioType === IOType.AudioInput || this.ioType === IOType.AudioOutput
+      this.ioType === IOType.AudioInput ||
+      this.ioType === IOType.AudioOutput ||
+      this.ioType === IOType.PolyAudioInput ||
+      this.ioType === IOType.PolyAudioOutput
     );
   }
 

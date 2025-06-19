@@ -1,3 +1,4 @@
+import { EmptyObject } from "@blibliki/utils";
 import { ICreateModule, ModuleType } from "@/modules";
 import { MidiOutput } from "../IO";
 import { nt, t, TTime } from "../Timing/Time";
@@ -6,23 +7,9 @@ import { PropSchema } from "../schema";
 import { IModuleConstructor, Module } from "./Module";
 import { IPolyModuleConstructor, PolyModule } from "./PolyModule";
 
-export interface IVoiceSchedulerProps {
-  polyNumber: number;
-}
-
-export const voiceSchedulerPropSchema: PropSchema<IVoiceSchedulerProps> = {
-  polyNumber: {
-    kind: "number",
-    min: 0,
-    max: 1000,
-    step: 1,
-    label: "Polyphony",
-  },
-};
-
-const DEFAULT_PROPS = {
-  polyNumber: 1,
-};
+export type IVoiceSchedulerProps = EmptyObject;
+export const voiceSchedulerPropSchema: PropSchema<IVoiceSchedulerProps> = {};
+const DEFAULT_PROPS = {};
 
 class Voice extends Module<ModuleType.VoiceScheduler> {
   declare audioNode: undefined;

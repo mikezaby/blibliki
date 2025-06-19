@@ -16,12 +16,15 @@ import {
   ModuleTypeToModuleMapping,
   createModule,
 } from "@/modules";
+import { PolyModule } from "./core/module/PolyModule";
 import { loadProcessors } from "./processors";
 
 export interface IUpdateModule<T extends ModuleType> {
   id: string;
   moduleType: T;
-  changes: Partial<Omit<ICreateModule<T>, "id" | "moduleType" | "voice">>;
+  changes: Partial<Omit<ICreateModule<T>, "id" | "moduleType" | "voice">> & {
+    voices?: number;
+  };
 }
 
 export type ICreateRoute = Optional<IRoute, "id">;
@@ -103,6 +106,10 @@ export class Engine {
 
     const updates = pick(params.changes, ["name", "props"]);
     Object.assign(module, updates);
+
+    if (module instanceof PolyModule && params.changes.voices !== undefined) {
+      module.voices = params.changes.voices;
+    }
 
     return module.serialize();
   }
