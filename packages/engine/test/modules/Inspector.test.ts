@@ -19,11 +19,11 @@ describe("Inspector", () => {
     });
 
     it("has default props", () => {
-      expect(currentModule.props.fftSize).toBe(256);
+      expect(currentModule.props.fftSize).toBe(512);
     });
 
     it("has buffer", () => {
-      const array = new Float32Array(256);
+      const array = new Float32Array(512);
 
       expect(currentModule.buffer).to.be.eql(array);
     });
