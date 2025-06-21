@@ -53,15 +53,27 @@ export default class Scale extends Module<ModuleType.Scale> {
     this.registerDefaultIOs();
   }
 
+  get current() {
+    return this.audioNode.parameters.get("current")!;
+  }
+
+  get min() {
+    return this.audioNode.parameters.get("min")!;
+  }
+
+  get max() {
+    return this.audioNode.parameters.get("max")!;
+  }
+
   protected onSetMin(value: number) {
-    this.audioNode.parameters.get("min")!.value = value;
+    this.min.value = value;
   }
 
   protected onSetMax(value: number) {
-    this.audioNode.parameters.get("max")!.value = value;
+    this.max.value = value;
   }
 
   protected onSetCurrent(value: number) {
-    this.audioNode.parameters.get("current")!.value = value;
+    this.current.value = value;
   }
 }
