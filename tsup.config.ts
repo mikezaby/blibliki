@@ -6,7 +6,7 @@ export default defineConfig({
   clean: true,
   dts: true,
   format: ["cjs", "esm"],
-  target: "es2020",
+  target: "es2022",
   minify: true,
   platform: "neutral", // Ensure compatibility for both Node.js and browser
 });
