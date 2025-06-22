@@ -31,7 +31,7 @@ export function load() {
   const filter = addModule({
     name: "Filter",
     moduleType: ModuleType.Filter,
-    props: { cutoff: 200, envelopeAmount: 1 },
+    props: { cutoff: 22050, envelopeAmount: 1 },
   });
 
   const constant = addModule({

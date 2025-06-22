@@ -3,7 +3,6 @@ import Fader, { MarkProps } from "@/components/Fader";
 import { ModuleComponent } from "..";
 import Container from "../Container";
 import Cutoff from "./Cutoff";
-import FilterType from "./FilterType";
 import Resonance from "./Resonance";
 
 const AmountCenter: MarkProps[] = [{ value: 0, label: "-" }];
@@ -11,13 +10,13 @@ const AmountCenter: MarkProps[] = [{ value: 0, label: "-" }];
 const Filter: ModuleComponent<ModuleType.Filter> = (props) => {
   const {
     updateProp,
-    props: { cutoff, Q, type, envelopeAmount },
+    props: { cutoff, resonance, envelopeAmount },
   } = props;
 
   return (
     <Container>
       <Cutoff value={cutoff} updateProp={updateProp("cutoff")} />
-      <Resonance value={Q} updateProp={updateProp("Q")} />
+      <Resonance value={resonance} updateProp={updateProp("resonance")} />
       <Fader
         name="Amount"
         marks={AmountCenter}
@@ -27,7 +26,6 @@ const Filter: ModuleComponent<ModuleType.Filter> = (props) => {
         onChange={updateProp("envelopeAmount")}
         value={envelopeAmount}
       />
-      <FilterType value={type} updateProp={updateProp("type")} />
     </Container>
   );
 };
