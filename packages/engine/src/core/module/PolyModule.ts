@@ -170,7 +170,8 @@ export abstract class PolyModule<T extends ModuleType>
 
   findVoice(voiceNo: number) {
     const moduleByVoice = this.audioModules.find((m) => m.voiceNo === voiceNo);
-    if (!moduleByVoice) throw Error(`Voice ${voiceNo} not found`);
+    if (!moduleByVoice)
+      throw Error(`Voice ${voiceNo} on module ${this.name} not found`);
 
     return moduleByVoice;
   }
