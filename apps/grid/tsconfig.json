@@ -6,8 +6,8 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./app/*"]
+      "@/*": ["./src/*"]
     }
   },
-  "include": ["app", "vite-env.d.ts"]
+  "include": ["src", "vite-env.d.ts"]
 }

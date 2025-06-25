@@ -1,15 +1,16 @@
 packages:
   - packages/*
   - apps/*
-catalog:
-  vite-tsconfig-paths: 5.1.4
 catalogs:
+  vite:
+    vite: ^6.3.5
+    "vite-tsconfig-paths": ^5.1.4
   react-19:
     react: ^19.1.0
     react-dom: ^19.1.0
-    '@types/react': ^19.1.0
-    '@types/react-dom': ^19.1.0
-    '@vitejs/plugin-react': ^4.4.1
+    "@types/react": ^19.1.0
+    "@types/react-dom": ^19.1.0
+    "@vitejs/plugin-react": ^4.4.1
     babel-plugin-react-compiler: 19.1.0-rc.2
 ignoredBuiltDependencies:
-  - '@firebase/util'
+  - "@firebase/util"

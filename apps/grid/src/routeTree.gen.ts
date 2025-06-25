@@ -8,65 +8,34 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as PatchPatchIdRouteImport } from './routes/patch.$patchId'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as IndexImport } from './routes/index'
-import { Route as PatchPatchIdImport } from './routes/patch.$patchId'
-
-// Create/Update Routes
-
-const IndexRoute = IndexImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const PatchPatchIdRoute = PatchPatchIdImport.update({
+const PatchPatchIdRoute = PatchPatchIdRouteImport.update({
   id: '/patch/$patchId',
   path: '/patch/$patchId',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-// Populate the FileRoutesByPath interface
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/patch/$patchId': {
-      id: '/patch/$patchId'
-      path: '/patch/$patchId'
-      fullPath: '/patch/$patchId'
-      preLoaderRoute: typeof PatchPatchIdImport
-      parentRoute: typeof rootRoute
-    }
-  }
-}
-
-// Create and export the route tree
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/patch/$patchId': typeof PatchPatchIdRoute
 }
-
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/patch/$patchId': typeof PatchPatchIdRoute
 }
-
 export interface FileRoutesById {
-  __root__: typeof rootRoute
+  __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/patch/$patchId': typeof PatchPatchIdRoute
 }
-
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths: '/' | '/patch/$patchId'
@@ -75,37 +44,34 @@ export interface FileRouteTypes {
   id: '__root__' | '/' | '/patch/$patchId'
   fileRoutesById: FileRoutesById
 }
-
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PatchPatchIdRoute: typeof PatchPatchIdRoute
+}
+
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/patch/$patchId': {
+      id: '/patch/$patchId'
+      path: '/patch/$patchId'
+      fullPath: '/patch/$patchId'
+      preLoaderRoute: typeof PatchPatchIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+  }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PatchPatchIdRoute: PatchPatchIdRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/patch/$patchId"
-      ]
-    },
-    "/": {
-      "filePath": "index.tsx"
-    },
-    "/patch/$patchId": {
-      "filePath": "patch.$patchId.tsx"
-    }
-  }
-}
-ROUTE_MANIFEST_END */
