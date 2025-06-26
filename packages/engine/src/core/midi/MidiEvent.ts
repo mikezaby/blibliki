@@ -54,6 +54,10 @@ export default class MidiEvent {
     this.note = Note.fromEvent(this.message);
   }
 
+  get rawMessage() {
+    return this.message;
+  }
+
   clone(voiceNo?: number) {
     const newEvent = new MidiEvent(this.message, this.triggeredAt);
     newEvent.voiceNo = voiceNo;

@@ -1,12 +1,18 @@
 import { Input, Output, WebMidi } from "webmidi";
+import ComputerKeyboardDevice from "./ComputerKeyboardDevice";
 import MidiDevice from "./MidiDevice";
 
 type ListenerCallback = (device: MidiDevice) => void;
 
 export default class MidiDeviceManager {
-  devices: Map<string, MidiDevice> = new Map();
+  devices: Map<string, MidiDevice | ComputerKeyboardDevice> = new Map();
   private initialized = false;
   private listeners: ListenerCallback[] = [];
+
+  constructor() {
+    const computerKeyboardDevice = new ComputerKeyboardDevice();
+    this.devices.set(computerKeyboardDevice.id, computerKeyboardDevice);
+  }
 
   async initialize() {
     await this.initializeDevices();
@@ -15,7 +21,7 @@ export default class MidiDeviceManager {
     this.initialized = true;
   }
 
-  find(id: string): MidiDevice | undefined {
+  find(id: string): MidiDevice | ComputerKeyboardDevice | undefined {
     return this.devices.get(id);
   }
 
@@ -60,6 +66,7 @@ export default class MidiDeviceManager {
 
       const device = this.devices.get(port.id);
       if (!device) return;
+      if (device instanceof ComputerKeyboardDevice) return;
 
       device.disconnect();
       this.devices.delete(device.id);

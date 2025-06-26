@@ -1,4 +1,4 @@
-import { Input, MessageEvent } from "webmidi";
+import { MessageEvent, Input } from "webmidi";
 import { browserToContextTime } from "../Timing";
 import MidiEvent, { MidiEventType } from "./MidiEvent";
 
@@ -11,6 +11,10 @@ export interface IMidiDevice {
   id: string;
   name: string;
   state: MidiPortState;
+}
+
+export interface IMidiInput extends IMidiDevice {
+  eventListerCallbacks: EventListerCallback[];
 }
 
 export type EventListerCallback = (event: MidiEvent) => void;

@@ -5,7 +5,7 @@ import { ICreateModule, ModuleType } from ".";
 
 export type IMidiSelector = IModule<ModuleType.MidiSelector>;
 export type IMidiSelectorProps = {
-  selectedId?: string;
+  selectedId: string | undefined | null;
 };
 
 export const midiSelectorPropSchema: PropSchema<IMidiSelectorProps> = {
@@ -33,10 +33,14 @@ export default class MidiSelector extends Module<ModuleType.MidiSelector> {
       props,
     });
 
+    this.addEventListener(this.props.selectedId);
+
     this.registerOutputs();
   }
 
   protected onSetSelectedId(value: string | null) {
+    if (!this.superInitialized) return;
+
     this.removeEventListener();
     this.addEventListener(value);
   }
@@ -51,7 +55,7 @@ export default class MidiSelector extends Module<ModuleType.MidiSelector> {
     return this._forwardMidiEvent;
   }
 
-  private addEventListener(midiId: string | null) {
+  private addEventListener(midiId: string | undefined | null) {
     if (!midiId) return;
 
     const midiDevice = this.engine.findMidiDevice(midiId);
