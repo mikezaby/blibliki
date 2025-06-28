@@ -6,6 +6,7 @@ export type {
   IIOSerialize,
   IModule,
   IModuleSerialize,
+  IPolyModuleSerialize,
   IMidiDevice,
   PropDefinition,
   PropSchema,

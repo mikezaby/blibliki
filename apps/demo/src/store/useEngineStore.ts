@@ -5,16 +5,21 @@ import {
   ICreateRoute,
   IUpdateModule,
   IModuleSerialize,
+  IPolyModuleSerialize,
   IRoute,
 } from "@blibliki/engine";
 import { assertDefined } from "@blibliki/utils";
 import { create } from "zustand";
 
+export type AnyModuleSerialize =
+  | IModuleSerialize<ModuleType>
+  | IPolyModuleSerialize<ModuleType>;
+
 type EngineStore = {
   id?: string;
   isInitialized: boolean;
   isStarted: boolean;
-  modules: IModuleSerialize<ModuleType>[];
+  modules: AnyModuleSerialize[];
 
   init: () => Promise<void>;
   getEngine: () => Engine;
@@ -22,10 +27,10 @@ type EngineStore = {
   stop: () => void;
   addModule: <T extends ModuleType>(
     params: ICreateModule<T>,
-  ) => IModuleSerialize<T>;
+  ) => AnyModuleSerialize;
   updateModule: <T extends ModuleType>(
     params: IUpdateModule<T>,
-  ) => IModuleSerialize<T>;
+  ) => AnyModuleSerialize;
   removeModule: (id: string) => void;
   addRoute: (params: ICreateRoute) => IRoute;
   removeRoute: (id: string) => void;
@@ -115,7 +120,9 @@ export const useEngineStore = create<EngineStore>((set, get) => ({
     engine.dispose();
     set({
       isStarted: false,
-      modules: Object.values(engine.modules.values()),
+      modules: Array.from(engine.modules.values()).map((module) =>
+        module.serialize(),
+      ),
     });
   },
 }));

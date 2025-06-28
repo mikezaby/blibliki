@@ -1,17 +1,18 @@
 import {
-  IModuleSerialize,
   moduleSchemas as originalModuleSchemas,
   ModuleType,
   ModuleTypeToPropsMapping,
   PropSchema,
   PropDefinition,
+  IModuleSerialize,
+  IPolyModuleSerialize,
 } from "@blibliki/engine";
 import { deepmerge, toPrimitive } from "@blibliki/utils";
 import { useEngineStore } from "../store/useEngineStore";
 import Field from "./Field";
 
 type ModuleCardProps<T extends ModuleType> = {
-  module: IModuleSerialize<T>;
+  module: IModuleSerialize<T> | IPolyModuleSerialize<T>;
 };
 
 const overrides: {
