@@ -64,7 +64,6 @@ const scaleToFive = createScaleNormalized({
 
 class MonoEnvelope extends Module<ModuleType.Envelope> {
   declare audioNode: GainNode;
-  currentNote?: Note;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Envelope>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
@@ -83,8 +82,8 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
     this.registerDefaultIOs();
   }
 
-  triggerAttack = (note: Note, triggeredAt: TTime) => {
-    this.currentNote = note;
+  triggerAttack(note: Note, triggeredAt: TTime) {
+    super.triggerAttack(note, triggeredAt);
 
     const attack = this.scaledAttack();
     const decay = this.scaledDecay();
@@ -93,6 +92,7 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
 
     this.audioNode.gain.cancelAndHoldAtTime(triggeredAtNum);
 
+    // Always start from a tiny value, can't ramp from 0
     if (this.audioNode.gain.value === 0) {
       this.audioNode.gain.setValueAtTime(0.001, triggeredAtNum);
     }
@@ -102,32 +102,46 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
       1.0,
       triggeredAtNum + attack,
     );
+
     // Decay
-    this.audioNode.gain.exponentialRampToValueAtTime(
-      sustain || 0.001,
-      triggeredAtNum + (attack + decay),
-    );
+    if (sustain > 0) {
+      this.audioNode.gain.exponentialRampToValueAtTime(
+        sustain,
+        triggeredAtNum + attack + decay,
+      );
+      // Do not set to zero or anything else!
+    } else {
+      this.audioNode.gain.exponentialRampToValueAtTime(
+        0.001,
+        triggeredAtNum + attack + decay,
+      );
+    }
+  }
 
-    this.audioNode.gain.setValueAtTime(
-      sustain,
-      triggeredAtNum + (attack + decay),
-    );
-  };
-
-  triggerRelease = (note: Note, triggeredAt: TTime) => {
-    if (note.fullName !== this.currentNote?.fullName) return;
+  triggerRelease(note: Note, triggeredAt: TTime) {
+    super.triggerRelease(note, triggeredAt);
+    if (this.activeNotes.length > 0) return;
 
     const release = this.scaledRelease();
     const triggeredAtNum = nt(triggeredAt);
 
+    // Cancel scheduled automations and set gain to the ACTUAL value at this moment
     this.audioNode.gain.cancelAndHoldAtTime(triggeredAtNum);
-    this.audioNode.gain.exponentialRampToValueAtTime(
-      0.001,
-      triggeredAtNum + release - 0.01,
-    );
+    const currentGainValue = this.audioNode.gain.value;
+
+    if (currentGainValue >= 0.0001) {
+      // Always set the value at the release time to ensure a smooth ramp from here
+      this.audioNode.gain.setValueAtTime(currentGainValue, triggeredAtNum);
+      // Exponential ramp to a tiny value
+      this.audioNode.gain.exponentialRampToValueAtTime(
+        0.0001,
+        triggeredAtNum + release - 0.0001,
+      );
+    }
+
+    // Set to zero at the very end
     this.audioNode.gain.setValueAtTime(0, triggeredAtNum + release);
-    this.currentNote = undefined;
-  };
+  }
 
   private scaledAttack() {
     return scaleToTen(this.props.attack);

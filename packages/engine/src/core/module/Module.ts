@@ -13,7 +13,7 @@ import {
   MidiOutputProps,
 } from "../IO";
 import Note from "../Note";
-import { t, TTime } from "../Timing/Time";
+import { TTime } from "../Timing/Time";
 import MidiEvent, { MidiEventType } from "../midi/MidiEvent";
 
 export interface IModule<T extends ModuleType> {
@@ -45,6 +45,7 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   outputs: OutputCollection;
   protected _props!: ModuleTypeToPropsMapping[T];
   protected superInitialized: boolean = false;
+  protected activeNotes: Note[];
 
   constructor(engineId: string, params: IModuleConstructor<T>) {
     const { id, name, moduleType, voiceNo, audioNodeConstructor, props } =
@@ -55,6 +56,7 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
     this.name = name;
     this.moduleType = moduleType;
     this.voiceNo = voiceNo ?? 0;
+    this.activeNotes = [];
     this.audioNode = audioNodeConstructor?.(this.context);
     this._props = {} as ModuleTypeToPropsMapping[T];
     this.props = props;
@@ -134,24 +136,28 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
     // Optional implementation in modules
   }
 
-  triggerAttack = (_note: Note, _triggeredAt: TTime): void => {
-    throw Error("triggerAttack not implemented");
-  };
+  triggerAttack(note: Note, _triggeredAt: TTime): void {
+    if (this.activeNotes.some((n) => n.fullName === note.fullName)) return;
 
-  triggerRelease = (_note: Note, _triggeredAt: TTime): void => {
-    throw Error("triggerRelease not implemented");
-  };
+    this.activeNotes.push(note);
+  }
+
+  triggerRelease(note: Note, _triggeredAt: TTime): void {
+    this.activeNotes = this.activeNotes.filter(
+      (n) => n.fullName !== note.fullName,
+    );
+  }
 
   onMidiEvent = (midiEvent: MidiEvent) => {
     const { note, triggeredAt } = midiEvent;
 
     switch (midiEvent.type) {
       case MidiEventType.noteOn: {
-        this.triggerer(this.triggerAttack, note, triggeredAt);
+        this.triggerAttack(note!, triggeredAt);
         break;
       }
       case MidiEventType.noteOff:
-        this.triggerer(this.triggerRelease, note, triggeredAt);
+        this.triggerRelease(note!, triggeredAt);
         break;
       default:
         throw Error("This type is not a note");
@@ -171,16 +177,6 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   dispose() {
     this.inputs.unPlugAll();
     this.outputs.unPlugAll();
-  }
-
-  private triggerer(
-    trigger: (note: Note, triggeredAt: TTime) => void,
-    note: Note | undefined,
-    triggeredAt: TTime,
-  ) {
-    if (!note) return;
-
-    trigger(note, t(triggeredAt));
   }
 
   protected registerDefaultIOs(value: "both" | "in" | "out" = "both") {

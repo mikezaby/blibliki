@@ -138,14 +138,24 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
   }
 
   triggerAttack = (note: Note, triggeredAt: TTime) => {
+    super.triggerAttack(note, triggeredAt);
+
     this.props = { frequency: note.frequency };
     this.updateFrequency(triggeredAt);
     this.start(triggeredAt);
   };
 
-  triggerRelease = () => {
-    // Do nothing
-  };
+  triggerRelease(note: Note, triggeredAt: TTime) {
+    super.triggerRelease(note, triggeredAt);
+
+    const lastNote = this.activeNotes.length
+      ? this.activeNotes[this.activeNotes.length - 1]
+      : null;
+    if (!lastNote) return;
+
+    this.props = { frequency: lastNote.frequency };
+    this.updateFrequency(triggeredAt);
+  }
 
   private get finalFrequency(): number | undefined {
     const { frequency, coarse, octave, fine } = this.props;
