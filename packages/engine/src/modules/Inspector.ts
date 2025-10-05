@@ -19,7 +19,7 @@ const DEFAULT_PROPS: IInspectorProps = { fftSize: 512 };
 
 export default class Inspector extends Module<ModuleType.Inspector> {
   declare audioNode: AnalyserNode;
-  private _buffer?: Float32Array;
+  private _buffer?: Float32Array<ArrayBuffer>;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Inspector>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
