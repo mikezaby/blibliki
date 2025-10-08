@@ -13,19 +13,19 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.5",
+    "@tailwindcss/vite": "catalog:tailwindcss",
     "@types/react": "catalog:react-19",
     "@types/react-dom": "catalog:react-19",
     "@vitejs/plugin-react": "catalog:react-19",
     "babel-plugin-react-compiler": "catalog:react-19",
-    "tailwindcss": "^4.1.5",
-    "vite": "^6.3.5"
+    "tailwindcss": "catalog:tailwindcss",
+    "vite": "catalog:vite"
   },
   "dependencies": {
     "@blibliki/engine": "workspace:^",
     "@blibliki/utils": "workspace:^",
     "react": "catalog:react-19",
     "react-dom": "catalog:react-19",
-    "zustand": "^5.0.4"
+    "zustand": "^5.0.8"
   }
 }
