@@ -172,6 +172,7 @@ export class Engine {
     this.modules.forEach((module) => {
       module.dispose();
     });
+    this.modules.clear();
   }
 
   findModule(
