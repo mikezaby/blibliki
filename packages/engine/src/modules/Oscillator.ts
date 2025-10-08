@@ -1,3 +1,4 @@
+import { dbToGain } from "@blibliki/utils";
 import { IAnyAudioContext, IModule, Module } from "@/core";
 import Note from "@/core/Note";
 import { nt, TTime } from "@/core/Timing/Time";
@@ -5,6 +6,8 @@ import { IModuleConstructor } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { PropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
+
+const LOW_GAIN = -18;
 
 export type IOscillator = IModule<ModuleType.Oscillator>;
 
@@ -24,6 +27,7 @@ export enum OscillatorWave {
  * @property fine - Fine tuning factor in the range [-1, 1], where ±1 represents ±1 semitone.
  * @property coarse - Coarse tuning factor in the range [-1, 1], scaled to ±12 semitones.
  * @property octave - Octave transposition value (e.g. +1 for one octave up, -2 for two octaves down).
+ * @property lowGain - Whether to gain reduction (-18dB). When false, oscillator runs at full gain.
  */
 export type IOscillatorProps = {
   wave: OscillatorWave;
@@ -31,6 +35,7 @@ export type IOscillatorProps = {
   fine: number;
   coarse: number;
   octave: number;
+  lowGain: boolean;
 };
 
 export const oscillatorPropSchema: PropSchema<IOscillatorProps> = {
@@ -67,6 +72,10 @@ export const oscillatorPropSchema: PropSchema<IOscillatorProps> = {
     step: 1,
     label: "Octave",
   },
+  lowGain: {
+    kind: "boolean",
+    label: `Use ${LOW_GAIN}db Gain`,
+  },
 };
 
 const DEFAULT_PROPS: IOscillatorProps = {
@@ -75,11 +84,13 @@ const DEFAULT_PROPS: IOscillatorProps = {
   fine: 0,
   coarse: 0,
   octave: 0,
+  lowGain: false,
 };
 
 export class MonoOscillator extends Module<ModuleType.Oscillator> {
   declare audioNode: OscillatorNode;
   isStated: boolean = false;
+  lowOutputGain: GainNode;
   detuneGain!: GainNode;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Oscillator>) {
@@ -93,9 +104,14 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
       audioNodeConstructor,
     });
 
+    this.lowOutputGain = new GainNode(this.context, {
+      gain: dbToGain(LOW_GAIN),
+    });
+
+    this.applyOutputGain();
     this.initializeGainDetune();
     this.registerInputs();
-    this.registerDefaultIOs("out");
+    this.registerOutputs();
   }
 
   protected onAfterSetWave(value: OscillatorWave) {
@@ -113,8 +129,15 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
   protected onAfterSetCoarse() {
     this.updateFrequency();
   }
+
   protected onAfterSetOctave() {
     this.updateFrequency();
+  }
+
+  protected onAfterSetLowGain() {
+    if (!this.superInitialized) return;
+
+    this.rePlugAll();
   }
 
   start(time: TTime) {
@@ -131,6 +154,7 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
         type: this.props["wave"],
         frequency: this.finalFrequency,
       });
+      this.applyOutputGain();
       this.detuneGain.connect(this.audioNode.detune);
     });
 
@@ -179,6 +203,10 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
     }
   }
 
+  private applyOutputGain() {
+    this.audioNode.connect(this.lowOutputGain);
+  }
+
   private initializeGainDetune() {
     this.detuneGain = new GainNode(this.context, { gain: 100 });
     this.detuneGain.connect(this.audioNode.detune);
@@ -188,6 +216,14 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
     this.registerAudioInput({
       name: "detune",
       getAudioNode: () => this.detuneGain,
+    });
+  }
+
+  private registerOutputs() {
+    this.registerAudioOutput({
+      name: "out",
+      getAudioNode: () =>
+        this.props.lowGain ? this.lowOutputGain : this.audioNode,
     });
   }
 }

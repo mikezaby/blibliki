@@ -28,6 +28,8 @@ enum ScaleType {
   exponential = "EXPONENTIAL",
 }
 
+export const dbToGain = (db: number): number => Math.pow(10, db / 20);
+
 export function scaleNormalized({
   value,
   min,

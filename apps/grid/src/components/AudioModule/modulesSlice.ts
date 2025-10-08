@@ -33,6 +33,7 @@ export const AvailableModules: Record<
   [ModuleType.Oscillator]: {
     name: "Oscillator",
     moduleType: ModuleType.Oscillator,
+    props: { lowGain: true },
   },
   [ModuleType.Envelope]: { name: "Envelope", moduleType: ModuleType.Envelope },
   [ModuleType.Filter]: { name: "Filter", moduleType: ModuleType.Filter },
@@ -95,7 +96,13 @@ export const addModule =
   (params: { audioModule: ModuleInterface; position?: XYPosition }) =>
   (dispatch: AppDispatch) => {
     const { audioModule, position = { x: 0, y: 0 } } = params;
-    const serializedModule = Engine.current.addModule(audioModule);
+    const { props: defaultProps = {} } =
+      AvailableModules[audioModule.moduleType];
+    const serializedModule = Engine.current.addModule({
+      ...audioModule,
+      props: { ...defaultProps, ...audioModule.props },
+    });
+
     dispatch(_addModule(serializedModule));
 
     dispatch(
@@ -112,9 +119,12 @@ export const addNewModule =
   (params: { type: ModuleType; position?: XYPosition }) =>
   (dispatch: AppDispatch) => {
     const { type, position } = params;
-    const modulePayload = AvailableModules[type];
+    const { props = {}, ...moduleAttrs } = AvailableModules[type];
     dispatch(
-      addModule({ audioModule: { props: {}, ...modulePayload }, position }),
+      addModule({
+        audioModule: { ...moduleAttrs, props },
+        position,
+      }),
     );
   };
 
