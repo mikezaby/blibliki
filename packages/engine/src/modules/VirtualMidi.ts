@@ -4,9 +4,9 @@ import MidiEvent from "@/core/midi/MidiEvent";
 import { ICreateModule, ModuleType } from ".";
 
 export type IVirtualMidi = IModule<ModuleType.VirtualMidi>;
-export type IVirtualMidiProps = {
+export interface IVirtualMidiProps {
   activeNotes: string[];
-};
+}
 
 export const virtualMidiPropSchema: PropSchema<IVirtualMidiProps> = {
   activeNotes: {

@@ -4,9 +4,9 @@ import { PropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
 
 export type IMidiSelector = IModule<ModuleType.MidiSelector>;
-export type IMidiSelectorProps = {
+export interface IMidiSelectorProps {
   selectedId: string | undefined | null;
-};
+}
 
 export const midiSelectorPropSchema: PropSchema<IMidiSelectorProps> = {
   selectedId: {
@@ -63,9 +63,9 @@ export default class MidiSelector extends Module<ModuleType.MidiSelector> {
   }
 
   private removeEventListener() {
-    if (!this.props["selectedId"]) return;
+    if (!this.props.selectedId) return;
 
-    const midiDevice = this.engine.findMidiDevice(this.props["selectedId"]);
+    const midiDevice = this.engine.findMidiDevice(this.props.selectedId);
     midiDevice?.removeEventListener(this.forwardMidiEvent);
   }
 

@@ -40,7 +40,7 @@ export class AudioOutput
     this.getAudioNode = props.getAudioNode;
   }
 
-  plug(io: AudioInput | PolyAudioInput, plugOther: boolean = true) {
+  plug(io: AudioInput | PolyAudioInput, plugOther = true) {
     super.plug(io, plugOther);
     if (io instanceof PolyAudioInput) return;
 
@@ -53,7 +53,7 @@ export class AudioOutput
     }
   }
 
-  unPlug(io: AudioInput | PolyAudioInput, plugOther: boolean = true) {
+  unPlug(io: AudioInput | PolyAudioInput, plugOther = true) {
     super.unPlug(io, plugOther);
     if (io instanceof PolyAudioInput) return;
 

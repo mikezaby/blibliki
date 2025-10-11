@@ -2,11 +2,11 @@ import { create } from "zustand";
 
 export type ExampleKey = "example1" | "filter";
 
-export type ExampleMeta = {
+export interface ExampleMeta {
   key: ExampleKey;
   label: string;
   description?: string;
-};
+}
 
 const exampleRegistry: Record<ExampleKey, () => Promise<() => void>> = {
   example1: () => import("./example1").then((m) => m.load),
@@ -18,10 +18,10 @@ export const exampleList: ExampleMeta[] = [
   { key: "filter", label: "Filter" },
 ];
 
-type ExampleState = {
+interface ExampleState {
   currentExample: ExampleKey | null;
   setExample: (key: ExampleKey) => Promise<void>;
-};
+}
 
 export const useExample = create<ExampleState>((set, get) => ({
   currentExample: null,

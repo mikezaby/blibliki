@@ -6,12 +6,12 @@ import { createModule, ICreateModule, ModuleType } from ".";
 import { MonoGain } from "./Gain";
 import Scale from "./Scale";
 
-export type IBiquadFilterProps = {
+export interface IBiquadFilterProps {
   cutoff: number;
   envelopeAmount: number;
   type: BiquadFilterType;
   Q: number;
-};
+}
 
 const MIN_FREQ = 20;
 const MAX_FREQ = 20000;

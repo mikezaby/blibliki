@@ -11,9 +11,9 @@ import { deepmerge, toPrimitive } from "@blibliki/utils";
 import { useEngineStore } from "../store/useEngineStore";
 import Field from "./Field";
 
-type ModuleCardProps<T extends ModuleType> = {
+interface ModuleCardProps<T extends ModuleType> {
   module: IModuleSerialize<T> | IPolyModuleSerialize<T>;
-};
+}
 
 const overrides: {
   [K in ModuleType]?: {
@@ -45,7 +45,7 @@ const ModuleCard = <T extends ModuleType>({ module }: ModuleCardProps<T>) => {
 
   const onChange =
     (key: keyof ModuleTypeToPropsMapping[T]) =>
-    (value: string | number | boolean | Array<string | number>) => {
+    (value: string | number | boolean | (string | number)[]) => {
       const { id, moduleType } = module;
       const props = { [key]: value } as ModuleTypeToPropsMapping[T];
 

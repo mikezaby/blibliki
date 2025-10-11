@@ -16,7 +16,7 @@ export default class MidiEvent {
 
   static fromNote(
     noteName: string | Note | Omit<INote, "frequency">,
-    noteOn: boolean = true,
+    noteOn = true,
     triggeredAt?: TTime,
   ): MidiEvent {
     const note = noteName instanceof Note ? noteName : new Note(noteName);

@@ -11,8 +11,8 @@ import {
 
 type TOption = string[] | number[] | TDefOption[] | TIDOption[];
 
-type TDefOption = { name: string; value: string | number };
-type TIDOption = { id: string; name: string };
+interface TDefOption { name: string; value: string | number }
+interface TIDOption { id: string; name: string }
 
 interface SelectProps<T extends string | number | undefined> {
   value: T;

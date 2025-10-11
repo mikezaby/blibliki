@@ -11,11 +11,11 @@ export interface ISequence {
   notes: INote[];
 }
 
-export type IStepSequencerProps = {
+export interface IStepSequencerProps {
   bars: number;
   steps: number;
   sequences: ISequence[][];
-};
+}
 
 export const stepSequencerPropSchema: PropSchema<
   Omit<IStepSequencerProps, "sequences">

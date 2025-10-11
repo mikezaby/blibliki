@@ -44,7 +44,7 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   inputs: InputCollection;
   outputs: OutputCollection;
   protected _props!: ModuleTypeToPropsMapping[T];
-  protected superInitialized: boolean = false;
+  protected superInitialized = false;
   protected activeNotes: Note[];
 
   constructor(engineId: string, params: IModuleConstructor<T>) {

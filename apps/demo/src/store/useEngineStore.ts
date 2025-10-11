@@ -15,7 +15,7 @@ export type AnyModuleSerialize =
   | IModuleSerialize<ModuleType>
   | IPolyModuleSerialize<ModuleType>;
 
-type EngineStore = {
+interface EngineStore {
   id?: string;
   isInitialized: boolean;
   isStarted: boolean;
@@ -35,7 +35,7 @@ type EngineStore = {
   addRoute: (params: ICreateRoute) => IRoute;
   removeRoute: (id: string) => void;
   dispose: () => void;
-};
+}
 
 export const useEngineStore = create<EngineStore>((set, get) => ({
   id: undefined,

@@ -2,7 +2,7 @@ import Note from "../Note";
 import { EventListerCallback, IMidiInput, MidiPortState } from "./MidiDevice";
 import MidiEvent from "./MidiEvent";
 
-const MAP_KEYS: { [key: string]: Note } = {
+const MAP_KEYS: Record<string, Note> = {
   a: new Note("C3"),
   s: new Note("D3"),
   d: new Note("E3"),

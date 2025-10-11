@@ -62,7 +62,7 @@ export default function AudioModule<T extends ModuleType>(audioModuleProps: {
 
   const { id, name, moduleType, props } = audioModuleProps.audioModule;
 
-  const Component = COMPONENT_MAPPING[moduleType] as ModuleComponent<T>;
+  const Component = COMPONENT_MAPPING[moduleType]!;
 
   const updateProps: TUpdateProps<T> = (props) => {
     dispatch(updateModule({ id, moduleType, changes: { props } }));

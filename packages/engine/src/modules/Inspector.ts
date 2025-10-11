@@ -3,9 +3,9 @@ import { PropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
 
 export type IInspector = IModule<ModuleType.Inspector>;
-export type IInspectorProps = {
+export interface IInspectorProps {
   fftSize: number;
-};
+}
 
 export const inspectorPropSchema: PropSchema<IInspectorProps> = {
   fftSize: {

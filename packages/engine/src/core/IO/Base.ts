@@ -48,12 +48,12 @@ export abstract class Base implements IIO {
     this.connections = [];
   }
 
-  plug(io: Base, plugOther: boolean = true) {
+  plug(io: Base, plugOther = true) {
     this.connections.push(io);
     if (plugOther) io.plug(this, false);
   }
 
-  unPlug(io: Base, plugOther: boolean = true) {
+  unPlug(io: Base, plugOther = true) {
     this.connections = this.connections.filter(
       (currentIO) => currentIO.id !== io.id,
     );

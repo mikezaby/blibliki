@@ -8,21 +8,21 @@ export enum TransportState {
   paused = "paused",
 }
 
-export type TransportEvents = {
+export interface TransportEvents {
   start: { actionAt: TTime; offset: TTime };
   stop: { actionAt: TTime };
   pause: { actionAt: TTime };
-};
+}
 
 type TPlaybackCallback = (actionAt: TTime) => void;
 
-type TransportProps = {
+interface TransportProps {
   onStart?: TPlaybackCallback;
   onStop?: TPlaybackCallback;
-};
+}
 
 export default class Transport {
-  bpm: number = 120;
+  bpm = 120;
   timeSignature: [number, number] = [4, 4];
   loopStart: TTime;
   loopEnd?: TTime;

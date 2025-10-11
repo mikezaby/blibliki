@@ -1,9 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-type ModalProps = {
+interface ModalProps {
   modalName: string | null;
   isOpen: boolean;
-};
+}
 
 export const modalSlice = createSlice({
   name: "modal",

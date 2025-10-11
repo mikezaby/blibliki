@@ -5,9 +5,9 @@ import { PropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
 
 export type IGain = IModule<ModuleType.Gain>;
-export type IGainProps = {
+export interface IGainProps {
   gain: number;
-};
+}
 
 export const gainPropSchema: PropSchema<IGainProps> = {
   gain: {

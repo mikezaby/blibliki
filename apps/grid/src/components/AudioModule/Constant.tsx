@@ -14,7 +14,7 @@ const Constant: ModuleComponent<ModuleType.Constant> = (props) => {
       <InputField
         name="value"
         value={value}
-        schema={moduleSchemas[ModuleType.Constant]["value"] as NumberProp}
+        schema={moduleSchemas[ModuleType.Constant].value as NumberProp}
         onChange={updateProp("value")}
         className="w-20"
       />

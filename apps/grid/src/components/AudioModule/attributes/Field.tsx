@@ -10,14 +10,13 @@ import Select from "@/components/Select";
 import { Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
-type FieldProps<T extends string | number | boolean | Array<string | number>> =
-  {
+interface FieldProps<T extends string | number | boolean | (string | number)[]> {
     name: string;
     value?: T;
     schema: PropDefinition<T>;
     onChange: (value: T) => void;
     className?: string;
-  };
+  }
 
 type InputProps<T extends string | number> = FieldProps<T> & {
   schema: NumberProp | StringProp;
@@ -66,7 +65,7 @@ export const SelectField = <T extends string | number>({
   return (
     <Select
       label={label}
-      value={value as T}
+      value={value!}
       options={schema.options}
       onChange={onChange}
       className={className}

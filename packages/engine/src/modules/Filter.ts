@@ -7,11 +7,11 @@ import { createModule, ICreateModule, ModuleType } from ".";
 import { MonoGain } from "./Gain";
 import Scale from "./Scale";
 
-export type IFilterProps = {
+export interface IFilterProps {
   cutoff: number;
   envelopeAmount: number;
   resonance: number;
-};
+}
 
 const MIN_FREQ = 20;
 const MAX_FREQ = 22050;

@@ -30,15 +30,13 @@ export interface IUpdateModule<T extends ModuleType> {
 export type ICreateRoute = Optional<IRoute, "id">;
 
 export class Engine {
-  private static _engines: Map<string, Engine> = new Map();
+  private static _engines = new Map<string, Engine>();
   private static _currentId: string;
-  private propsUpdateCallbacks: {
-    <T extends ModuleType>(params: IModule<T>): void;
-  }[] = [];
+  private propsUpdateCallbacks: (<T extends ModuleType>(params: IModule<T>) => void)[] = [];
 
   readonly id: string;
   context: IAnyAudioContext;
-  isInitialized: boolean = false;
+  isInitialized = false;
   routes: Routes;
   transport: Transport;
   modules: Map<

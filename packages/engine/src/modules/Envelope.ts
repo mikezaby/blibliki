@@ -7,12 +7,12 @@ import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { PropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
 
-export type IEnvelopeProps = {
+export interface IEnvelopeProps {
   attack: number;
   decay: number;
   sustain: number;
   release: number;
-};
+}
 
 const DEFAULT_PROPS: IEnvelopeProps = {
   attack: 0.1,

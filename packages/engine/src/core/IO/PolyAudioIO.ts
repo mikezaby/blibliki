@@ -20,14 +20,14 @@ export class PolyAudioInput
   declare ioType: IOType.PolyAudioInput;
   declare module: PolyModule<ModuleType>;
 
-  plug(io: PolyAudioOutput | AudioOutput, plugOther: boolean = true) {
+  plug(io: PolyAudioOutput | AudioOutput, plugOther = true) {
     super.plug(io, plugOther);
     if (!plugOther && io instanceof PolyAudioOutput) return;
 
     plugOrUnplug(this, io, true);
   }
 
-  unPlug(io: PolyAudioOutput | AudioOutput, plugOther: boolean = true) {
+  unPlug(io: PolyAudioOutput | AudioOutput, plugOther = true) {
     super.unPlug(io, plugOther);
     if (!plugOther && io instanceof PolyAudioOutput) return;
 
@@ -48,14 +48,14 @@ export class PolyAudioOutput
   declare ioType: IOType.PolyAudioOutput;
   declare module: PolyModule<ModuleType>;
 
-  plug(io: PolyAudioInput | AudioInput, plugOther: boolean = true) {
+  plug(io: PolyAudioInput | AudioInput, plugOther = true) {
     super.plug(io, plugOther);
     if (!plugOther && io instanceof PolyAudioInput) return;
 
     plugOrUnplug(this, io, true);
   }
 
-  unPlug(io: PolyAudioInput | AudioInput, plugOther: boolean = true) {
+  unPlug(io: PolyAudioInput | AudioInput, plugOther = true) {
     super.unPlug(io, plugOther);
     if (!plugOther && io instanceof PolyAudioInput) return;
 

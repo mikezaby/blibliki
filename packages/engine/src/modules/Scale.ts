@@ -4,11 +4,11 @@ import { CustomWorklet, newAudioWorklet } from "@/processors";
 import { ICreateModule, ModuleType } from ".";
 
 export type IScale = IModule<ModuleType.Scale>;
-export type IScaleProps = {
+export interface IScaleProps {
   min: number;
   max: number;
   current: number;
-};
+}
 
 export const scalePropSchema: PropSchema<IScaleProps> = {
   min: {

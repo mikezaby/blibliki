@@ -29,14 +29,14 @@ export enum OscillatorWave {
  * @property octave - Octave transposition value (e.g. +1 for one octave up, -2 for two octaves down).
  * @property lowGain - Whether to gain reduction (-18dB). When false, oscillator runs at full gain.
  */
-export type IOscillatorProps = {
+export interface IOscillatorProps {
   wave: OscillatorWave;
   frequency: number;
   fine: number;
   coarse: number;
   octave: number;
   lowGain: boolean;
-};
+}
 
 export const oscillatorPropSchema: PropSchema<IOscillatorProps> = {
   wave: {
@@ -89,7 +89,7 @@ const DEFAULT_PROPS: IOscillatorProps = {
 
 export class MonoOscillator extends Module<ModuleType.Oscillator> {
   declare audioNode: OscillatorNode;
-  isStated: boolean = false;
+  isStated = false;
   lowOutputGain: GainNode;
   detuneGain!: GainNode;
 
@@ -151,7 +151,7 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
     this.audioNode.stop(nt(time));
     this.rePlugAll(() => {
       this.audioNode = new OscillatorNode(this.context, {
-        type: this.props["wave"],
+        type: this.props.wave,
         frequency: this.finalFrequency,
       });
       this.applyOutputGain();

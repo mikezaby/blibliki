@@ -46,7 +46,7 @@ export abstract class PolyModule<T extends ModuleType>
   outputs: OutputCollection;
   protected monoModuleConstructor: IPolyModuleConstructor<T>["monoModuleConstructor"];
   protected _props!: ModuleTypeToPropsMapping[T];
-  protected superInitialized: boolean = false;
+  protected superInitialized = false;
   private _voices!: number;
   private _name!: string;
 
