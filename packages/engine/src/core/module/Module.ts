@@ -51,7 +51,7 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
     const { id, name, moduleType, voiceNo, audioNodeConstructor, props } =
       params;
 
-    this.id = id || uuidv4();
+    this.id = id ?? uuidv4();
     this.engineId = engineId;
     this.name = name;
     this.moduleType = moduleType;

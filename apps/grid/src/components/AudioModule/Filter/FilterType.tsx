@@ -18,7 +18,7 @@ export default function FilterType(props: FilterTypeProps) {
 
   const onChange = (value: number) => {
     const val =
-      FILTER_TYPES.find((t) => t.value === value)?.label ||
+      FILTER_TYPES.find((t) => t.value === value)?.label ??
       FILTER_TYPES[0].label;
     updateProp(val as BiquadFilterType);
   };

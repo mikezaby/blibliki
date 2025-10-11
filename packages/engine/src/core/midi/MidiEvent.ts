@@ -33,7 +33,7 @@ export default class MidiEvent {
 
   constructor(message: Message, triggeredAt?: TTime) {
     this.message = message;
-    this.triggeredAt = triggeredAt || t();
+    this.triggeredAt = triggeredAt ?? t();
     this.defineNotes();
   }
 

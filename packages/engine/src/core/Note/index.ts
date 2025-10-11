@@ -95,7 +95,7 @@ export default class Note implements INote {
   }
 
   private fromString(string: string) {
-    const matches = string.match(/(\w#?)(\d)?/) || [];
+    const matches = string.match(/(\w#?)(\d)?/) ?? [];
 
     this.name = matches[1];
     this.octave = matches[2] ? parseInt(matches[2]) : 1;

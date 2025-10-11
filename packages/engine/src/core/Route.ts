@@ -22,7 +22,7 @@ export class Routes {
   }
 
   addRoute(props: Optional<IRoute, "id">): IRoute {
-    const id = props.id || uuidv4();
+    const id = props.id ?? uuidv4();
     const route = { ...props, id };
     this.routes.set(id, route);
 

@@ -53,9 +53,7 @@ export default function Fader(props: FaderProps) {
     step ??= 1;
   }
 
-  if (max === undefined) {
-    max = marks ? marks.length - 1 : 1;
-  }
+  max ??= marks ? marks.length - 1 : 1;
 
   const revValue = value && revCalcValue(value, min, max, exp);
 
@@ -73,7 +71,7 @@ export default function Fader(props: FaderProps) {
         defaultValue={defaultValue}
         min={min}
         max={max}
-        step={step || 0.01}
+        step={step ?? 0.01}
         marks={marks}
       />
       <div className="text-gray-900 dark:text-white">{name}</div>

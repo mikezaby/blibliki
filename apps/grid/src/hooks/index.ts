@@ -57,8 +57,8 @@ export function usePatch() {
   const { patch } = useAppSelector((state) => state.patch);
   const { isSignedIn, user } = useUser();
 
-  const canCreate = isSignedIn && !patch.id;
-  const canUpdate = user && patch.userId === user.id;
+  const canCreate = !!(isSignedIn && !patch.id);
+  const canUpdate = !!(user && patch.userId === user.id);
   const canDelete = canUpdate;
 
   return { patch, canCreate, canUpdate, canDelete };

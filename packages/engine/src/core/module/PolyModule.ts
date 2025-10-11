@@ -57,7 +57,7 @@ export abstract class PolyModule<T extends ModuleType>
     this.audioModules = [];
 
     this.monoModuleConstructor = monoModuleConstructor;
-    this.id = id || uuidv4();
+    this.id = id ?? uuidv4();
     this.engineId = engineId;
     this.name = name;
     this.moduleType = moduleType;

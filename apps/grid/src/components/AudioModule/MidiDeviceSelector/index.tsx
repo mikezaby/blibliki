@@ -23,7 +23,7 @@ const MidiSelector: ModuleComponent<ModuleType.MidiSelector> = (props) => {
     <Container>
       <Select
         label="Select MIDI device"
-        value={selectedId || ""}
+        value={selectedId ?? ""}
         options={devices}
         onChange={updateProp("selectedId")}
       />
