@@ -4,12 +4,12 @@ import { initialize as patchInitialize, loadById } from "@/patchSlice";
 import { AppDispatch, RootState } from "@/store";
 import { updatePlainModule } from "./components/AudioModule/modulesSlice";
 
-interface IContext {
+type IContext = {
   latencyHint: "interactive" | "playback";
   lookAhead?: number;
 }
 
-interface GlobalProps {
+type GlobalProps = {
   engineId: string;
   isInitialized: boolean;
   isStarted: boolean;

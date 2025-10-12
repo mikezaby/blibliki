@@ -1,12 +1,12 @@
 import { Optional, uuidv4 } from "@blibliki/utils";
 import { Engine } from "@/Engine";
 
-interface IPlug {
+type IPlug = {
   moduleId: string;
   ioName: string;
 }
 
-export interface IRoute {
+export type IRoute = {
   id: string;
   source: IPlug;
   destination: IPlug;

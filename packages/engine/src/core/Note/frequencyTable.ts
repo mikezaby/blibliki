@@ -1,4 +1,4 @@
-const frequencyTable: Map<string, number> = new Map([
+const frequencyTable = new Map<string, number>([
   ["C0", 16.35],
   ["C#0", 17.32],
   ["Db0", 17.32],

@@ -13,7 +13,7 @@ import {
 import Patch, { IPatch } from "@/models/Patch";
 import { AppDispatch, RootState } from "@/store";
 
-interface PatchProps {
+type PatchProps = {
   patch: Omit<IPatch, "config">;
   status: "idle" | "loading" | "succeeded" | "failed";
   error?: string;

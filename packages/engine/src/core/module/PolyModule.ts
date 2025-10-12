@@ -14,16 +14,14 @@ import { TTime } from "../Timing";
 import MidiEvent from "../midi/MidiEvent";
 import { IModule, IModuleConstructor, Module } from "./Module";
 
-export interface IPolyModule<T extends ModuleType>
-  extends Omit<IModule<T>, "voiceNo"> {
+export type IPolyModule<T extends ModuleType> = Omit<IModule<T>, "voiceNo"> & {
   voices: number;
-}
+};
 
-export interface IPolyModuleSerialize<T extends ModuleType>
-  extends IPolyModule<T> {
+export type IPolyModuleSerialize<T extends ModuleType> = IPolyModule<T> & {
   inputs: IIOSerialize[];
   outputs: IIOSerialize[];
-}
+};
 
 export type IPolyModuleConstructor<T extends ModuleType> = Optional<
   IPolyModule<T>,
@@ -46,7 +44,7 @@ export abstract class PolyModule<T extends ModuleType>
   outputs: OutputCollection;
   protected monoModuleConstructor: IPolyModuleConstructor<T>["monoModuleConstructor"];
   protected _props!: ModuleTypeToPropsMapping[T];
-  protected superInitialized: boolean = false;
+  protected superInitialized = false;
   private _voices!: number;
   private _name!: string;
 

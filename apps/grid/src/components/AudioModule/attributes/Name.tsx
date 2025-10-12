@@ -4,7 +4,7 @@ import { Input, Label } from "@/components/ui";
 import { useAppDispatch } from "@/hooks";
 import { updateModule } from "../modulesSlice";
 
-interface NameInterface {
+type NameInterface = {
   id: string;
   moduleType: ModuleType;
   value: string;

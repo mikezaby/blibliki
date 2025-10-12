@@ -22,7 +22,7 @@ type TransportProps = {
 };
 
 export default class Transport {
-  bpm: number = 120;
+  bpm = 120;
   timeSignature: [number, number] = [4, 4];
   loopStart: TTime;
   loopEnd?: TTime;

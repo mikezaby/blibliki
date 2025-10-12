@@ -6,15 +6,15 @@ import { AudioInput, AudioOutput } from "./AudioIO";
 import { MidiInput, MidiOutput } from "./MidiIO";
 import { PolyAudioInput, PolyAudioOutput } from "./PolyAudioIO";
 
-export interface IOProps {
+export type IOProps = {
   name: string;
   ioType: IOType;
-}
+};
 
-export interface IIOSerialize extends IOProps {
+export type IIOSerialize = IOProps & {
   id: string;
   moduleId: string;
-}
+};
 
 export enum IOType {
   AudioInput = "audioInput",
@@ -25,10 +25,10 @@ export enum IOType {
   MidiInput = "midiInput",
 }
 
-export interface IIO extends IOProps {
+export type IIO = {
   id: string;
   module: Module<ModuleType> | PolyModule<ModuleType>;
-}
+} & IOProps;
 
 export abstract class Base implements IIO {
   id: string;
@@ -48,12 +48,12 @@ export abstract class Base implements IIO {
     this.connections = [];
   }
 
-  plug(io: Base, plugOther: boolean = true) {
+  plug(io: Base, plugOther = true) {
     this.connections.push(io);
     if (plugOther) io.plug(this, false);
   }
 
-  unPlug(io: Base, plugOther: boolean = true) {
+  unPlug(io: Base, plugOther = true) {
     this.connections = this.connections.filter(
       (currentIO) => currentIO.id !== io.id,
     );

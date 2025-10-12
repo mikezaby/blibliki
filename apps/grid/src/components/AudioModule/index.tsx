@@ -14,7 +14,7 @@ import Scale from "./Scale";
 import VoiceScheduler from "./VoiceScheduler";
 import { updateModule } from "./modulesSlice";
 
-export interface AudioModuleProps<T extends ModuleType> {
+export type AudioModuleProps<T extends ModuleType> = {
   id: string;
   name: string;
   moduleType: T;
@@ -62,7 +62,7 @@ export default function AudioModule<T extends ModuleType>(audioModuleProps: {
 
   const { id, name, moduleType, props } = audioModuleProps.audioModule;
 
-  const Component = COMPONENT_MAPPING[moduleType] as ModuleComponent<T>;
+  const Component = COMPONENT_MAPPING[moduleType]!;
 
   const updateProps: TUpdateProps<T> = (props) => {
     dispatch(updateModule({ id, moduleType, changes: { props } }));

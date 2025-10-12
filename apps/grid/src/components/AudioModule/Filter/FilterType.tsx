@@ -1,6 +1,6 @@
 import Fader from "@/components/Fader";
 
-interface FilterTypeProps {
+type FilterTypeProps = {
   value: BiquadFilterType;
   updateProp: (value: BiquadFilterType) => void;
 }

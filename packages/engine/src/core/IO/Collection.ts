@@ -27,7 +27,7 @@ export enum CollectionType {
   Output = "Output",
 }
 
-interface IMappedIOProps {
+type IMappedIOProps = {
   [CollectionType.Input]:
     | AudioInputProps
     | PolyAudioInputProps
@@ -38,7 +38,7 @@ interface IMappedIOProps {
     | MidiOutputProps;
 }
 
-interface IIOTypeTOClass {
+type IIOTypeTOClass = {
   [IOType.AudioInput]: AudioInput;
   [IOType.AudioOutput]: AudioOutput;
   [IOType.PolyAudioInput]: PolyAudioInput;

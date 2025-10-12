@@ -1,12 +1,12 @@
 import { throttle } from "@blibliki/utils";
 import { Slider } from "./ui";
 
-export interface MarkProps {
+export type MarkProps = {
   value: number;
   label: string;
 }
 
-interface FaderProps {
+type FaderProps = {
   name: string;
   onChange: (value: number, calculatedValue: number) => void;
   defaultValue?: number;

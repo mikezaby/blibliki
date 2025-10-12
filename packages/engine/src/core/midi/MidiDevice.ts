@@ -7,15 +7,15 @@ export enum MidiPortState {
   disconnected = "disconnected",
 }
 
-export interface IMidiDevice {
+export type IMidiDevice = {
   id: string;
   name: string;
   state: MidiPortState;
-}
+};
 
-export interface IMidiInput extends IMidiDevice {
+export type IMidiInput = IMidiDevice & {
   eventListerCallbacks: EventListerCallback[];
-}
+};
 
 export type EventListerCallback = (event: MidiEvent) => void;
 

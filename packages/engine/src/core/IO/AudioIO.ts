@@ -5,15 +5,15 @@ import { PolyAudioInput, PolyAudioOutput } from "./PolyAudioIO";
 
 export type AudioIO = AudioInput | AudioOutput;
 
-export interface AudioInputProps extends IOProps {
+export type AudioInputProps = IOProps & {
   ioType: IOType.AudioInput;
   getAudioNode: () => AudioNode | AudioParam | AudioDestinationNode;
-}
+};
 
-export interface AudioOutputProps extends IOProps {
+export type AudioOutputProps = IOProps & {
   ioType: IOType.AudioOutput;
   getAudioNode: () => AudioNode;
-}
+};
 
 export class AudioInput
   extends IO<AudioOutput | PolyAudioOutput>
@@ -40,7 +40,7 @@ export class AudioOutput
     this.getAudioNode = props.getAudioNode;
   }
 
-  plug(io: AudioInput | PolyAudioInput, plugOther: boolean = true) {
+  plug(io: AudioInput | PolyAudioInput, plugOther = true) {
     super.plug(io, plugOther);
     if (io instanceof PolyAudioInput) return;
 
@@ -53,7 +53,7 @@ export class AudioOutput
     }
   }
 
-  unPlug(io: AudioInput | PolyAudioInput, plugOther: boolean = true) {
+  unPlug(io: AudioInput | PolyAudioInput, plugOther = true) {
     super.unPlug(io, plugOther);
     if (io instanceof PolyAudioInput) return;
 

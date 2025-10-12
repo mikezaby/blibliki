@@ -15,15 +15,15 @@ import { addNode } from "@/components/Grid/gridNodesSlice";
 import { AppDispatch, RootState } from "@/store";
 import { Optional } from "@/types";
 
-interface ModuleInterface extends Omit<IModule<ModuleType>, "id" | "voiceNo"> {
+type ModuleInterface = {
   voices?: number;
-}
+} & Omit<IModule<ModuleType>, "id" | "voiceNo">
 
-export interface ModuleProps extends ModuleInterface {
+export type ModuleProps = {
   id: string;
   inputs: IIOSerialize[];
   outputs: IIOSerialize[];
-}
+} & ModuleInterface
 
 export const AvailableModules: Record<
   ModuleType,

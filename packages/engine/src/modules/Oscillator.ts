@@ -89,7 +89,7 @@ const DEFAULT_PROPS: IOscillatorProps = {
 
 export class MonoOscillator extends Module<ModuleType.Oscillator> {
   declare audioNode: OscillatorNode;
-  isStated: boolean = false;
+  isStated = false;
   lowOutputGain: GainNode;
   detuneGain!: GainNode;
 
@@ -151,7 +151,7 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
     this.audioNode.stop(nt(time));
     this.rePlugAll(() => {
       this.audioNode = new OscillatorNode(this.context, {
-        type: this.props["wave"],
+        type: this.props.wave,
         frequency: this.finalFrequency,
       });
       this.applyOutputGain();

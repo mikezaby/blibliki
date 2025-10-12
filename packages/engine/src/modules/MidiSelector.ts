@@ -63,9 +63,9 @@ export default class MidiSelector extends Module<ModuleType.MidiSelector> {
   }
 
   private removeEventListener() {
-    if (!this.props["selectedId"]) return;
+    if (!this.props.selectedId) return;
 
-    const midiDevice = this.engine.findMidiDevice(this.props["selectedId"]);
+    const midiDevice = this.engine.findMidiDevice(this.props.selectedId);
     midiDevice?.removeEventListener(this.forwardMidiEvent);
   }
 

@@ -1,6 +1,6 @@
 import Fader from "@/components/Fader";
 
-interface ResonanceProps {
+type ResonanceProps = {
   value: number;
   updateProp: (value: number) => void;
 }

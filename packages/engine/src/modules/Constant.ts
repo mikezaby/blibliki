@@ -23,7 +23,7 @@ const DEFAULT_PROPS: IConstantProps = { value: 1 };
 
 export default class Constant extends Module<ModuleType.Constant> {
   declare audioNode: ConstantSourceNode;
-  isStated: boolean = false;
+  isStated = false;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Constant>) {
     const props = { ...DEFAULT_PROPS, ...params.props };

@@ -16,23 +16,25 @@ import Note from "../Note";
 import { TTime } from "../Timing/Time";
 import MidiEvent, { MidiEventType } from "../midi/MidiEvent";
 
-export interface IModule<T extends ModuleType> {
+export type IModule<T extends ModuleType> = {
   id: string;
   name: string;
   voiceNo: number;
   moduleType: T;
   props: ModuleTypeToPropsMapping[T];
-}
+};
 
-export interface IModuleSerialize<T extends ModuleType> extends IModule<T> {
+export type IModuleSerialize<T extends ModuleType> = IModule<T> & {
   inputs: IIOSerialize[];
   outputs: IIOSerialize[];
-}
+};
 
-export interface IModuleConstructor<T extends ModuleType>
-  extends Optional<IModule<T>, "id" | "voiceNo"> {
+export type IModuleConstructor<T extends ModuleType> = Optional<
+  IModule<T>,
+  "id" | "voiceNo"
+> & {
   audioNodeConstructor?: (context: IAnyAudioContext) => AudioNode;
-}
+};
 
 export abstract class Module<T extends ModuleType> implements IModule<T> {
   id: string;
@@ -44,7 +46,7 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   inputs: InputCollection;
   outputs: OutputCollection;
   protected _props!: ModuleTypeToPropsMapping[T];
-  protected superInitialized: boolean = false;
+  protected superInitialized = false;
   protected activeNotes: Note[];
 
   constructor(engineId: string, params: IModuleConstructor<T>) {

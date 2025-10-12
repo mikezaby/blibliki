@@ -1,6 +1,6 @@
 import { ChangeEvent, useMemo } from "react";
 
-interface SliderProps {
+type SliderProps = {
   min: number;
   max: number;
   value?: number;
@@ -16,7 +16,7 @@ type TOrientation = "vertical" | "horizontal";
 const InputClassName =
   "bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700";
 
-interface MarkProps {
+type MarkProps = {
   value: number;
   label: string;
 }

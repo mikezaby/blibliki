@@ -1,7 +1,7 @@
 import { PropDefinition } from "@blibliki/engine";
 import { assertNever, notImplemented } from "@blibliki/utils";
 
-type FieldProps<T extends string | number | boolean | Array<string | number>> =
+type FieldProps<T extends string | number | boolean | (string | number)[]> =
   {
     name: string;
     value?: T;
@@ -9,7 +9,7 @@ type FieldProps<T extends string | number | boolean | Array<string | number>> =
     onChange: (value: T) => void;
   };
 
-const Field = <T extends string | number | boolean | Array<string | number>>({
+const Field = <T extends string | number | boolean | (string | number)[]>({
   name,
   value,
   schema,

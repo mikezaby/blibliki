@@ -15,9 +15,7 @@ const Inspector: ModuleComponent<ModuleType.Inspector> = (props) => {
     props: { fftSize },
   } = props;
 
-  const fftSchema = moduleSchemas[ModuleType.Inspector][
-    "fftSize"
-  ] as EnumProp<number>;
+  const fftSchema = moduleSchemas[ModuleType.Inspector].fftSize as EnumProp<number>;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
