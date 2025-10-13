@@ -19,7 +19,7 @@ export type AudioModuleProps<T extends ModuleType> = {
   name: string;
   moduleType: T;
   props: ModuleTypeToPropsMapping[T];
-}
+};
 
 export type ModuleComponent<T extends ModuleType> = (
   props: AudioModuleProps<T> & {
@@ -55,6 +55,18 @@ const COMPONENT_MAPPING: {
   [ModuleType.VoiceScheduler]: VoiceScheduler,
 };
 
+function getModuleComponent<T extends ModuleType>(
+  moduleType: T,
+): ModuleComponent<T> {
+  const component = COMPONENT_MAPPING[moduleType];
+
+  if (!component) {
+    throw new Error(`No component found for module type: ${moduleType}`);
+  }
+
+  return component;
+}
+
 export default function AudioModule<T extends ModuleType>(audioModuleProps: {
   audioModule: AudioModuleProps<T>;
 }) {
@@ -62,7 +74,7 @@ export default function AudioModule<T extends ModuleType>(audioModuleProps: {
 
   const { id, name, moduleType, props } = audioModuleProps.audioModule;
 
-  const Component = COMPONENT_MAPPING[moduleType]!;
+  const Component = getModuleComponent(moduleType);
 
   const updateProps: TUpdateProps<T> = (props) => {
     dispatch(updateModule({ id, moduleType, changes: { props } }));

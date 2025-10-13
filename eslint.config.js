@@ -35,7 +35,7 @@ export default defineConfig([
         },
       ],
       "@typescript-eslint/prefer-interface": "off",
-      "@typescript-eslint/consistent-type-definitions": ["error", "type"],
+      "@typescript-eslint/consistent-type-definitions": "off",
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/restrict-template-expressions": [
         "error",
