@@ -6,7 +6,7 @@ import { close as _close } from "./modalSlice";
 export { open, close } from "./modalSlice";
 export { default as TriggerModal } from "./TriggerModal";
 
-interface ModalProps {
+type ModalProps = {
   children: ReactNode;
   modalName: string;
   className?: string;

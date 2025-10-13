@@ -6,7 +6,7 @@ const Notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
 const MIDI_OCTAVE_SYTSTEM = 2;
 
-export interface INote {
+export type INote = {
   name: string;
   octave: number;
   frequency: number;
@@ -18,7 +18,7 @@ export default class Note implements INote {
   static _notes: Note[];
   name!: string;
   octave!: number;
-  velocity: number = 1;
+  velocity = 1;
   duration?: TTime;
 
   static fromFrequency(frequency: number) {
@@ -56,7 +56,7 @@ export default class Note implements INote {
   }
 
   get isSemi() {
-    return this.name.slice(-1) === "#";
+    return this.name.endsWith("#");
   }
 
   get fullName() {
@@ -67,7 +67,7 @@ export default class Note implements INote {
     return frequencyTable.get(`${this.name}${this.octave}`)!;
   }
 
-  midiData(noteOn: boolean = true): Uint8Array {
+  midiData(noteOn = true): Uint8Array {
     const statusByte = noteOn ? 0x90 : 0x80;
     return new Uint8Array([statusByte, this.midiNumber, this.velocity * 100]);
   }
@@ -95,7 +95,7 @@ export default class Note implements INote {
   }
 
   private fromString(string: string) {
-    const matches = string.match(/(\w#?)(\d)?/) || [];
+    const matches = (/(\w#?)(\d)?/.exec(string)) ?? [];
 
     this.name = matches[1];
     this.octave = matches[2] ? parseInt(matches[2]) : 1;

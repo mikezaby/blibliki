@@ -4,9 +4,7 @@ import { ExampleKey, exampleList, useExample } from "./examples";
 import { useEngineStore } from "./store/useEngineStore";
 
 function getExampleFromPath(): ExampleKey | undefined {
-  const match = window.location.pathname.match(
-    /^\/examples\/([a-zA-Z0-9_-]+)$/,
-  );
+  const match = /^\/examples\/([a-zA-Z0-9_-]+)$/.exec(window.location.pathname);
   const key = match?.[1];
 
   if (key && exampleList.some((e) => e.key === key)) {

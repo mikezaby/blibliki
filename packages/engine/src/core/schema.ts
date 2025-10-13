@@ -34,7 +34,7 @@ export type PropDefinition<T> = T extends number
     ? BooleanProp
     : T extends string
       ? StringProp | EnumProp<string>
-      : T extends Array<string | number>
+      : T extends (string | number)[]
         ? ArrayProp
         : never;
 

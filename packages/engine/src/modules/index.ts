@@ -49,7 +49,7 @@ export enum ModuleType {
   VoiceScheduler = "VoiceScheduler",
 }
 
-export interface ModuleTypeToPropsMapping {
+export type ModuleTypeToPropsMapping = {
   [ModuleType.Oscillator]: IOscillatorProps;
   [ModuleType.Gain]: IGainProps;
   [ModuleType.Master]: IMasterProps;
@@ -65,7 +65,7 @@ export interface ModuleTypeToPropsMapping {
   [ModuleType.VoiceScheduler]: IVoiceSchedulerProps;
 }
 
-export interface ModuleTypeToModuleMapping {
+export type ModuleTypeToModuleMapping = {
   [ModuleType.Oscillator]: Oscillator;
   [ModuleType.Gain]: Gain;
   [ModuleType.Master]: Master;
@@ -113,7 +113,7 @@ export type {
 export type AnyModule = Module<ModuleType>;
 export type IAnyModule = IModule<ModuleType>;
 
-export interface ICreateModule<T extends ModuleType> {
+export type ICreateModule<T extends ModuleType> = {
   id?: string;
   name: string;
   moduleType: T;

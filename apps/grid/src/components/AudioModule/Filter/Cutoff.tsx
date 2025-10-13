@@ -1,6 +1,6 @@
 import Fader from "@/components/Fader";
 
-interface CutoffProps {
+type CutoffProps = {
   value: number;
   updateProp: (value: number) => void;
 }

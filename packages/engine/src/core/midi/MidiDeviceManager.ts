@@ -5,7 +5,7 @@ import MidiDevice from "./MidiDevice";
 type ListenerCallback = (device: MidiDevice) => void;
 
 export default class MidiDeviceManager {
-  devices: Map<string, MidiDevice | ComputerKeyboardDevice> = new Map();
+  devices = new Map<string, MidiDevice | ComputerKeyboardDevice>();
   private initialized = false;
   private listeners: ListenerCallback[] = [];
 

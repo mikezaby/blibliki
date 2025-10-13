@@ -34,8 +34,7 @@ export const scaleProcessorURL = URL.createObjectURL(
             const currentValues = parameters.current;
 
             if (!input.length || input[0].length === 0) {
-              for (let channel = 0; channel < output.length; channel++) {
-                const outputChannel = output[channel];
+              for (const outputChannel of output) {
                 const current =
                   parameters.current.length > 1
                     ? parameters.current[0]

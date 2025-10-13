@@ -1,12 +1,12 @@
 import { Optional, uuidv4 } from "@blibliki/utils";
 import { Engine } from "@/Engine";
 
-interface IPlug {
+type IPlug = {
   moduleId: string;
   ioName: string;
 }
 
-export interface IRoute {
+export type IRoute = {
   id: string;
   source: IPlug;
   destination: IPlug;
@@ -22,7 +22,7 @@ export class Routes {
   }
 
   addRoute(props: Optional<IRoute, "id">): IRoute {
-    const id = props.id || uuidv4();
+    const id = props.id ?? uuidv4();
     const route = { ...props, id };
     this.routes.set(id, route);
 

@@ -1,4 +1,4 @@
-export interface OscilloscopeOptions {
+export type OscilloscopeOptions = {
   canvas: HTMLCanvasElement;
   buffer: Float32Array;
   width: number;

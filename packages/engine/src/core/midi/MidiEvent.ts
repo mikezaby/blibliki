@@ -16,7 +16,7 @@ export default class MidiEvent {
 
   static fromNote(
     noteName: string | Note | Omit<INote, "frequency">,
-    noteOn: boolean = true,
+    noteOn = true,
     triggeredAt?: TTime,
   ): MidiEvent {
     const note = noteName instanceof Note ? noteName : new Note(noteName);
@@ -33,7 +33,7 @@ export default class MidiEvent {
 
   constructor(message: Message, triggeredAt?: TTime) {
     this.message = message;
-    this.triggeredAt = triggeredAt || t();
+    this.triggeredAt = triggeredAt ?? t();
     this.defineNotes();
   }
 

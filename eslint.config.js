@@ -1,21 +1,24 @@
 import eslint from "@eslint/js";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
+import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
-export default tseslint.config(
+export default defineConfig([
   eslint.configs.recommended,
-  ...tseslint.configs.strictTypeChecked,
+  tseslint.configs.strictTypeChecked,
+  tseslint.configs.stylisticTypeChecked,
+  reactRefresh.configs.recommended,
   {
+    plugins: {
+      // TODO: migrate to flat when upgrade to version 8
+      "react-hooks": reactHooks,
+    },
     languageOptions: {
       parserOptions: {
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
-    },
-    plugins: {
-      "react-hooks": reactHooks,
-      "react-refresh": reactRefresh,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
@@ -31,6 +34,8 @@ export default tseslint.config(
           caughtErrorsIgnorePattern: "^_",
         },
       ],
+      "@typescript-eslint/prefer-interface": "off",
+      "@typescript-eslint/consistent-type-definitions": "off",
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/restrict-template-expressions": [
         "error",
@@ -43,4 +48,4 @@ export default tseslint.config(
       ],
     },
   },
-);
+]);

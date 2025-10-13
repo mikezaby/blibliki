@@ -19,7 +19,7 @@ const style = {
   gridTemplateRows: `${semiToneHeight}px`,
 };
 
-interface OctaveProps {
+type OctaveProps = {
   id: string;
   octave: number;
   props: { activeNotes: string[] };

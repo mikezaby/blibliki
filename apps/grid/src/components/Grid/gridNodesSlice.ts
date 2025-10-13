@@ -14,7 +14,7 @@ import {
 import { removeModule } from "@/components/AudioModule/modulesSlice";
 import { AppDispatch, RootState } from "@/store";
 
-export interface IGridNodes {
+export type IGridNodes = {
   nodes: Node[];
   edges: Edge[];
   viewport: Viewport;

@@ -14,7 +14,7 @@ type TOption = string[] | number[] | TDefOption[] | TIDOption[];
 type TDefOption = { name: string; value: string | number };
 type TIDOption = { id: string; name: string };
 
-interface SelectProps<T extends string | number | undefined> {
+type SelectProps<T extends string | number | undefined> = {
   value: T;
   options: TOption;
   label?: string;

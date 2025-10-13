@@ -1,7 +1,7 @@
 import { Engine, Note } from "@blibliki/engine";
 import { useCallback, useMemo, useState } from "react";
 
-const Keys: { [key: string]: string } = {
+const Keys: Record<string, string> = {
   C: "white-key c-key",
   "C#": "black-key c-sharp-key",
   D: "white-key d-key",
@@ -16,7 +16,7 @@ const Keys: { [key: string]: string } = {
   B: "white-key b-key",
 };
 
-interface KeyProps {
+type KeyProps = {
   id: string;
   note: Note;
   active: boolean;
@@ -37,7 +37,7 @@ export default function Key(props: KeyProps) {
   }, [active, mouseDown, note.name]);
 
   const trigger = useCallback(
-    (type: "noteOn" | "noteOff", force: boolean = false) =>
+    (type: "noteOn" | "noteOff", force = false) =>
       () => {
         if (!triggerable && !force) return;
 

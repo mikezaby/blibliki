@@ -6,14 +6,14 @@ import IO, { IOProps, IOType } from "./Base";
 
 export type MidiIO = MidiInput | MidiOutput;
 
-export interface MidiInputProps extends IOProps {
+export type MidiInputProps = IOProps & {
   ioType: IOType.MidiInput;
   onMidiEvent: (event: MidiEvent) => void;
-}
+};
 
-export interface MidiOutputProps extends IOProps {
+export type MidiOutputProps = IOProps & {
   ioType: IOType.MidiOutput;
-}
+};
 
 export class MidiInput extends IO<MidiOutput> implements MidiInputProps {
   declare ioType: IOType.MidiInput;

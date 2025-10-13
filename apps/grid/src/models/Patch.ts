@@ -13,14 +13,14 @@ import { IGridNodes } from "@/components/Grid/gridNodesSlice";
 import { Optional } from "@/types";
 import { db, getDb } from "./db";
 
-export interface IPatch {
+export type IPatch = {
   id: string;
   name: string;
   userId: string;
   config: IConfig;
 }
 
-export interface IConfig {
+export type IConfig = {
   modules: ModuleProps[];
   gridNodes: IGridNodes;
 }

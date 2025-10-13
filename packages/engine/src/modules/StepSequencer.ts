@@ -4,7 +4,7 @@ import { ICreateModule, ModuleType } from ".";
 
 export type IStepSequencer = IModule<ModuleType.StepSequencer>;
 
-export interface ISequence {
+export type ISequence = {
   active: boolean;
   time: BarsBeatsSixteenths;
   duration: string;
