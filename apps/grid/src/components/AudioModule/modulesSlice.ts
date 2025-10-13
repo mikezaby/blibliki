@@ -17,13 +17,13 @@ import { Optional } from "@/types";
 
 type ModuleInterface = {
   voices?: number;
-} & Omit<IModule<ModuleType>, "id" | "voiceNo">
+} & Omit<IModule<ModuleType>, "id" | "voiceNo">;
 
 export type ModuleProps = {
   id: string;
   inputs: IIOSerialize[];
   outputs: IIOSerialize[];
-} & ModuleInterface
+} & ModuleInterface;
 
 export const AvailableModules: Record<
   ModuleType,

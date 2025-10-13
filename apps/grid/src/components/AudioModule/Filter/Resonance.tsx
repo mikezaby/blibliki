@@ -3,7 +3,7 @@ import Fader from "@/components/Fader";
 type ResonanceProps = {
   value: number;
   updateProp: (value: number) => void;
-}
+};
 
 export default function Resonance(props: ResonanceProps) {
   const { value, updateProp } = props;

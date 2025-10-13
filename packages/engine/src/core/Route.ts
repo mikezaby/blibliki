@@ -4,13 +4,13 @@ import { Engine } from "@/Engine";
 type IPlug = {
   moduleId: string;
   ioName: string;
-}
+};
 
 export type IRoute = {
   id: string;
   source: IPlug;
   destination: IPlug;
-}
+};
 
 export class Routes {
   engine: Engine;

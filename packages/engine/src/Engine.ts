@@ -25,14 +25,16 @@ export type IUpdateModule<T extends ModuleType> = {
   changes: Partial<Omit<ICreateModule<T>, "id" | "moduleType" | "voice">> & {
     voices?: number;
   };
-}
+};
 
 export type ICreateRoute = Optional<IRoute, "id">;
 
 export class Engine {
   private static _engines = new Map<string, Engine>();
   private static _currentId: string;
-  private propsUpdateCallbacks: (<T extends ModuleType>(params: IModule<T>) => void)[] = [];
+  private propsUpdateCallbacks: (<T extends ModuleType>(
+    params: IModule<T>,
+  ) => void)[] = [];
 
   readonly id: string;
   context: IAnyAudioContext;

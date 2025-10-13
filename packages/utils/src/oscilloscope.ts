@@ -7,7 +7,7 @@ export type OscilloscopeOptions = {
   rising?: boolean; // Default: true (rising zero-crossing)
   color?: string; // Waveform color
   cyclesToShow?: number; // How many cycles to display (default: 2)
-}
+};
 
 export function oscilloscope({
   canvas,

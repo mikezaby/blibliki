@@ -21,7 +21,7 @@ type KeyProps = {
   note: Note;
   active: boolean;
   triggerable: boolean;
-}
+};
 
 export default function Key(props: KeyProps) {
   const [mouseDown, setMouseDown] = useState<boolean>();

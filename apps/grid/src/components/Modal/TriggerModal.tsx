@@ -7,7 +7,7 @@ type Props = {
   children: ReactNode;
   modalName: string;
   type: "open" | "close";
-}
+};
 
 export default function TriggerModal(props: Props) {
   const dispatch = useAppDispatch();

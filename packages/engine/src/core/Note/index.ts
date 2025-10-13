@@ -12,7 +12,7 @@ export type INote = {
   frequency: number;
   duration?: TTime;
   velocity?: number;
-}
+};
 
 export default class Note implements INote {
   static _notes: Note[];
@@ -95,7 +95,7 @@ export default class Note implements INote {
   }
 
   private fromString(string: string) {
-    const matches = (/(\w#?)(\d)?/.exec(string)) ?? [];
+    const matches = /(\w#?)(\d)?/.exec(string) ?? [];
 
     this.name = matches[1];
     this.octave = matches[2] ? parseInt(matches[2]) : 1;

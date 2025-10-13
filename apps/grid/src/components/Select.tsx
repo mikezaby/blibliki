@@ -20,7 +20,7 @@ type SelectProps<T extends string | number | undefined> = {
   label?: string;
   className?: string;
   onChange: (value: T) => void;
-}
+};
 
 export default function Select<T extends string | number | undefined>(
   props: SelectProps<T>,

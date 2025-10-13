@@ -8,7 +8,7 @@ type NameInterface = {
   id: string;
   moduleType: ModuleType;
   value: string;
-}
+};
 
 export default function Name(props: NameInterface) {
   const dispatch = useAppDispatch();

@@ -24,7 +24,7 @@ type OctaveProps = {
   octave: number;
   props: { activeNotes: string[] };
   triggerable: boolean;
-}
+};
 
 export default function Octave(params: OctaveProps) {
   const {

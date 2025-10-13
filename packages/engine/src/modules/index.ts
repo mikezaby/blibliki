@@ -63,7 +63,7 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.VirtualMidi]: IVirtualMidiProps;
   [ModuleType.StepSequencer]: IStepSequencerProps;
   [ModuleType.VoiceScheduler]: IVoiceSchedulerProps;
-}
+};
 
 export type ModuleTypeToModuleMapping = {
   [ModuleType.Oscillator]: Oscillator;
@@ -79,7 +79,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.VirtualMidi]: VirtualMidi;
   [ModuleType.StepSequencer]: StepSequencer;
   [ModuleType.VoiceScheduler]: VoiceScheduler;
-}
+};
 
 export const moduleSchemas: {
   [K in ModuleType]: PropSchema<Partial<ModuleTypeToPropsMapping[K]>>;
@@ -118,7 +118,7 @@ export type ICreateModule<T extends ModuleType> = {
   name: string;
   moduleType: T;
   props: Partial<ModuleTypeToPropsMapping[T]>;
-}
+};
 
 export type ModuleParams = {
   [K in ModuleType]: K extends

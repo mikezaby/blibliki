@@ -4,7 +4,7 @@ import { Slider } from "./ui";
 export type MarkProps = {
   value: number;
   label: string;
-}
+};
 
 type FaderProps = {
   name: string;
@@ -16,7 +16,7 @@ type FaderProps = {
   min?: number;
   step?: number;
   exp?: number;
-}
+};
 
 const calcValue = function (
   value: number,

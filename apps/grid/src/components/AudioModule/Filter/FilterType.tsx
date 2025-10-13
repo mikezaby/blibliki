@@ -3,7 +3,7 @@ import Fader from "@/components/Fader";
 type FilterTypeProps = {
   value: BiquadFilterType;
   updateProp: (value: BiquadFilterType) => void;
-}
+};
 
 const FILTER_TYPES = [
   { value: 0, label: "lowpass" },

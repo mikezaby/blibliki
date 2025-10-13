@@ -9,7 +9,7 @@ export type ISequence = {
   time: BarsBeatsSixteenths;
   duration: string;
   notes: INote[];
-}
+};
 
 export type IStepSequencerProps = {
   bars: number;

@@ -11,7 +11,7 @@ type ModalProps = {
   modalName: string;
   className?: string;
   onClose?: () => void;
-}
+};
 
 export default function Modal(props: ModalProps) {
   const { children, modalName, onClose } = props;

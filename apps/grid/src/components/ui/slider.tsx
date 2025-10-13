@@ -9,7 +9,7 @@ type SliderProps = {
   marks?: readonly MarkProps[];
   orientation?: TOrientation;
   onChange: (newValue: number) => void;
-}
+};
 
 type TOrientation = "vertical" | "horizontal";
 
@@ -19,7 +19,7 @@ const InputClassName =
 type MarkProps = {
   value: number;
   label: string;
-}
+};
 
 export default function Slider(props: SliderProps) {
   const {

@@ -18,12 +18,12 @@ export type IPatch = {
   name: string;
   userId: string;
   config: IConfig;
-}
+};
 
 export type IConfig = {
   modules: ModuleProps[];
   gridNodes: IGridNodes;
-}
+};
 
 export default class Patch implements IPatch {
   id!: string;

@@ -10,14 +10,13 @@ import Select from "@/components/Select";
 import { Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
-type FieldProps<T extends string | number | boolean | (string | number)[]> =
-  {
-    name: string;
-    value?: T;
-    schema: PropDefinition<T>;
-    onChange: (value: T) => void;
-    className?: string;
-  };
+type FieldProps<T extends string | number | boolean | (string | number)[]> = {
+  name: string;
+  value?: T;
+  schema: PropDefinition<T>;
+  onChange: (value: T) => void;
+  className?: string;
+};
 
 type InputProps<T extends string | number> = FieldProps<T> & {
   schema: NumberProp | StringProp;

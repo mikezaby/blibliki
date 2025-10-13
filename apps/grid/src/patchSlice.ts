@@ -17,7 +17,7 @@ type PatchProps = {
   patch: Omit<IPatch, "config">;
   status: "idle" | "loading" | "succeeded" | "failed";
   error?: string;
-}
+};
 
 const initialState: PatchProps = {
   patch: { id: "", userId: "", name: "Init patch" },

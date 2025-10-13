@@ -36,7 +36,7 @@ type IMappedIOProps = {
     | AudioOutputProps
     | PolyAudioOutputProps
     | MidiOutputProps;
-}
+};
 
 type IIOTypeTOClass = {
   [IOType.AudioInput]: AudioInput;
@@ -45,7 +45,7 @@ type IIOTypeTOClass = {
   [IOType.PolyAudioOutput]: PolyAudioOutput;
   [IOType.MidiInput]: MidiInput;
   [IOType.MidiOutput]: MidiOutput;
-}
+};
 
 export default abstract class IOCollection<T extends CollectionType> {
   module: Module<ModuleType> | PolyModule<ModuleType>;

@@ -9,7 +9,7 @@ type NameInterface = {
   id: string;
   moduleType: ModuleType;
   value: number;
-}
+};
 
 export default function Voices(props: NameInterface) {
   const dispatch = useAppDispatch();

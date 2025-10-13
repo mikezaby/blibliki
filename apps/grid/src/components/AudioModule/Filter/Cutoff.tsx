@@ -3,7 +3,7 @@ import Fader from "@/components/Fader";
 type CutoffProps = {
   value: number;
   updateProp: (value: number) => void;
-}
+};
 
 export default function Cutoff(props: CutoffProps) {
   const { value, updateProp } = props;

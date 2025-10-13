@@ -7,7 +7,7 @@ import { updatePlainModule } from "./components/AudioModule/modulesSlice";
 type IContext = {
   latencyHint: "interactive" | "playback";
   lookAhead?: number;
-}
+};
 
 type GlobalProps = {
   engineId: string;
@@ -15,7 +15,7 @@ type GlobalProps = {
   isStarted: boolean;
   context: IContext;
   bpm: number;
-}
+};
 
 const initialState: GlobalProps = {
   engineId: "",

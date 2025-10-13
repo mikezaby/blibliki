@@ -18,7 +18,7 @@ export type IGridNodes = {
   nodes: Node[];
   edges: Edge[];
   viewport: Viewport;
-}
+};
 
 const initialState: IGridNodes = {
   nodes: [],
