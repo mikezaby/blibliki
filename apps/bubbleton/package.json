@@ -1,0 +1,31 @@
+{
+  "name": "@blibliki/bubbleton",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "tsc": "tsc --noEmit",
+    "lint": "eslint src",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "catalog:tailwindcss",
+    "@types/react": "catalog:react-19",
+    "@types/react-dom": "catalog:react-19",
+    "@vitejs/plugin-react": "catalog:react-19",
+    "babel-plugin-react-compiler": "catalog:react-19",
+    "tailwindcss": "catalog:tailwindcss",
+    "vite": "catalog:vite"
+  },
+  "dependencies": {
+    "@blibliki/engine": "workspace:^",
+    "@blibliki/utils": "workspace:^",
+    "react": "catalog:react-19",
+    "react-dom": "catalog:react-19",
+    "zustand": "^5.0.8"
+  }
+}
