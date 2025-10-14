@@ -18,7 +18,9 @@
     "tsc": "tsc --noEmit",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "test": "vitest"
+    "test": "vitest",
+    "bump": "npm version patch",
+    "release": "pnpm run build && pnpm publish"
   },
   "devDependencies": {
     "@types/audioworklet": "^0.0.87",
