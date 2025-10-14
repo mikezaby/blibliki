@@ -18,8 +18,7 @@
     "tsc": "tsc --noEmit",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "bump": "npm version patch",
-    "release": "pnpm run build && pnpm publish"
+    "bump": "npm version patch"
   },
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
