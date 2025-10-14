@@ -223,12 +223,12 @@ importers:
         specifier: ^1.0.3
         version: 1.0.4
       webmidi:
-        specifier: ^3.1.12
-        version: 3.1.12
+        specifier: ^3.1.14
+        version: 3.1.14
     devDependencies:
       '@types/audioworklet':
-        specifier: ^0.0.71
-        version: 0.0.71
+        specifier: ^0.0.87
+        version: 0.0.87
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.9.3)(vite@6.3.5(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.39.2)(tsx@4.19.4)(yaml@2.7.1))
@@ -2466,8 +2466,8 @@ packages:
       svelte:
         optional: true
 
-  '@types/audioworklet@0.0.71':
-    resolution: {integrity: sha512-bi5UKn9UXQaDPN9C3gVIT7D1CbPRlJyUPqfTqpLOUVh2cRoPdCscrVPuBkXiJV2JvHH/4bXvmYDSg7SmC7wuXA==}
+  '@types/audioworklet@0.0.87':
+    resolution: {integrity: sha512-BqsYNAbUykyG7CjedwLi0uq30plzGmuBisIW0pIcz/l0xepViHm5i69C/ucSGpzkCbeHOJqOrx0DKVWi/ATmVw==}
 
   '@types/babel__code-frame@7.0.6':
     resolution: {integrity: sha512-Anitqkl3+KrzcW2k77lRlg/GfLZLWXBuNgbEcIOU6M92yw42vsd3xV/Z/yAHEj8m+KUjL6bWOVOFqX8PFPJ4LA==}
@@ -5669,8 +5669,8 @@ packages:
     resolution: {integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==}
     engines: {node: '>=12'}
 
-  webmidi@3.1.12:
-    resolution: {integrity: sha512-X1lACggXm2BxuAPdx5wleh8S2kygduHbtR2ti5sGhivLkX6Muv/sLAYmPuIaNLOUddyxr71+3tsq8m5dKXoT4A==}
+  webmidi@3.1.14:
+    resolution: {integrity: sha512-K9GzNm0J3R/61NJWAW7ipAJGWU5D/8bEjOir3PymFjLDpbQJ+ygjvm5jx/WQ8atQ1hu23St3lvnc5g1NKbOsrw==}
     engines: {node: '>=8.5'}
 
   webpack-virtual-modules@0.6.2:
@@ -8214,7 +8214,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@types/audioworklet@0.0.71': {}
+  '@types/audioworklet@0.0.87': {}
 
   '@types/babel__code-frame@7.0.6': {}
 
@@ -11680,7 +11680,7 @@ snapshots:
 
   webidl-conversions@7.0.0: {}
 
-  webmidi@3.1.12:
+  webmidi@3.1.14:
     dependencies:
       djipevents: 2.0.7
     optionalDependencies:
