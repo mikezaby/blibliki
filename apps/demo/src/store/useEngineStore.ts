@@ -23,7 +23,7 @@ type EngineStore = {
 
   init: () => Promise<void>;
   getEngine: () => Engine;
-  start: () => void;
+  start: () => Promise<void>;
   stop: () => void;
   addModule: <T extends ModuleType>(
     params: ICreateModule<T>,
@@ -60,8 +60,8 @@ export const useEngineStore = create<EngineStore>((set, get) => ({
     set({ id: newEngine.id, isInitialized: true });
   },
 
-  start: () => {
-    get().getEngine().start();
+  start: async () => {
+    await get().getEngine().start();
     set({ isStarted: true });
   },
 

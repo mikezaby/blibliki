@@ -65,8 +65,8 @@ export const initialize =
     );
   };
 
-export const start = () => (dispatch: AppDispatch) => {
-  Engine.current.start();
+export const start = () => async (dispatch: AppDispatch) => {
+  await Engine.current.start();
   dispatch(setAttributes({ isStarted: true }));
 };
 

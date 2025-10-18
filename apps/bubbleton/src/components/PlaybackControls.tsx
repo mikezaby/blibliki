@@ -7,7 +7,7 @@ export default function PlaybackControls() {
     if (isPlaying) {
       pause();
     } else {
-      start();
+      void start();
     }
   };
 
@@ -35,4 +35,3 @@ export default function PlaybackControls() {
     </div>
   );
 }
-

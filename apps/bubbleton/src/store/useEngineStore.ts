@@ -26,7 +26,7 @@ type EngineStore = {
   init: () => void;
   dispose: () => void;
   getEngine: () => Engine;
-  start: () => void;
+  start: () => Promise<void>;
   pause: () => void;
   stop: () => void;
   setBpm: (value: number) => void;
@@ -81,8 +81,8 @@ export const useEngineStore = create<EngineStore>((set, get) => ({
     });
   },
 
-  start: () => {
-    get().getEngine().start();
+  start: async () => {
+    await get().getEngine().start();
     set({ isPlaying: true });
   },
 
