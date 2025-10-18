@@ -16,6 +16,8 @@ export type {
   BooleanProp,
   ArrayProp,
   INote,
+  t,
+  nt,
 } from "./core";
 export { TransportState, MidiDevice, MidiPortState, Note } from "./core";
 

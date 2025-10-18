@@ -18,13 +18,19 @@ export type AnyModuleSerialize =
 type EngineStore = {
   id?: string;
   isInitialized: boolean;
-  isStarted: boolean;
+  isPlaying: boolean;
+  bpm: number;
+  timeSignature: [number, number];
   modules: AnyModuleSerialize[];
 
-  init: () => Promise<void>;
+  init: () => void;
+  dispose: () => void;
   getEngine: () => Engine;
   start: () => void;
+  pause: () => void;
   stop: () => void;
+  setBpm: (value: number) => void;
+  setTimeSignature: (value: [number, number]) => void;
   addModule: <T extends ModuleType>(
     params: ICreateModule<T>,
   ) => AnyModuleSerialize;
@@ -34,13 +40,14 @@ type EngineStore = {
   removeModule: (id: string) => void;
   addRoute: (params: ICreateRoute) => IRoute;
   removeRoute: (id: string) => void;
-  dispose: () => void;
 };
 
 export const useEngineStore = create<EngineStore>((set, get) => ({
   id: undefined,
   isInitialized: false,
-  isStarted: false,
+  isPlaying: false,
+  bpm: 120,
+  timeSignature: [4, 4] as const,
   modules: [],
 
   getEngine: () => {
@@ -50,24 +57,53 @@ export const useEngineStore = create<EngineStore>((set, get) => ({
     return Engine.getById(id);
   },
 
-  init: async () => {
+  init: () => {
     const { id } = get();
     if (id) return;
 
     const context = new AudioContext();
     const newEngine = new Engine(context);
-    await newEngine.initialize();
     set({ id: newEngine.id, isInitialized: true });
+    void newEngine.initialize();
+  },
+
+  dispose: () => {
+    const { getEngine } = get();
+    const engine = getEngine();
+
+    engine.dispose();
+    set({
+      id: undefined,
+      isPlaying: false,
+      modules: Array.from(engine.modules.values()).map((module) =>
+        module.serialize(),
+      ),
+    });
   },
 
   start: () => {
     get().getEngine().start();
-    set({ isStarted: true });
+    set({ isPlaying: true });
+  },
+
+  pause: () => {
+    get().getEngine().pause();
+    set({ isPlaying: false });
   },
 
   stop: () => {
     get().getEngine().stop();
-    set({ isStarted: false });
+    set({ isPlaying: false });
+  },
+
+  setBpm: (value: number) => {
+    get().getEngine().bpm = value;
+    set({ bpm: value });
+  },
+
+  setTimeSignature: (value: [number, number]) => {
+    get().getEngine().timeSignature = value;
+    set({ timeSignature: value });
   },
 
   addModule: (params) => {
@@ -111,18 +147,5 @@ export const useEngineStore = create<EngineStore>((set, get) => ({
     const engine = getEngine();
 
     engine.removeRoute(id);
-  },
-
-  dispose: () => {
-    const { getEngine } = get();
-    const engine = getEngine();
-
-    engine.dispose();
-    set({
-      isStarted: false,
-      modules: Array.from(engine.modules.values()).map((module) =>
-        module.serialize(),
-      ),
-    });
   },
 }));

@@ -31,7 +31,7 @@ export type ICreateRoute = Optional<IRoute, "id">;
 
 export class Engine {
   private static _engines = new Map<string, Engine>();
-  private static _currentId: string;
+  private static _currentId: string | undefined;
   private propsUpdateCallbacks: (<T extends ModuleType>(
     params: IModule<T>,
   ) => void)[] = [];
@@ -142,7 +142,8 @@ export class Engine {
     );
   }
 
-  start(props: { offset?: TTime; actionAt?: TTime } = {}) {
+  async start(props: { offset?: TTime; actionAt?: TTime } = {}) {
+    await this.resume();
     this.transport.start(props);
   }
 
@@ -162,6 +163,18 @@ export class Engine {
     this.transport.bpm = value;
   }
 
+  get timeSignature() {
+    return this.transport.timeSignature;
+  }
+
+  set timeSignature(value: [number, number]) {
+    this.transport.timeSignature = value;
+  }
+
+  get playhead() {
+    return this.transport.playhead;
+  }
+
   async resume() {
     await this.context.resume();
   }
@@ -173,6 +186,8 @@ export class Engine {
       module.dispose();
     });
     this.modules.clear();
+    Engine._engines.delete(this.id);
+    Engine._currentId = Engine._engines.keys().next().value;
   }
 
   findModule(

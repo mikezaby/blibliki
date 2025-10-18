@@ -1,7 +1,7 @@
 import { Engine } from "@/Engine";
 
 export { default as Transport, TransportState } from "./Transport";
-export { default as Time } from "./Time";
+export { default as Time, t, nt } from "./Time";
 
 export type { TransportEvents } from "./Transport";
 export type { TTime } from "./Time";

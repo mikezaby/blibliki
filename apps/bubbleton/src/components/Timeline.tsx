@@ -1,121 +1,145 @@
-import { useRef, useEffect } from 'react';
+import { TransportState } from "@blibliki/engine";
+import { useEffect, useRef, useCallback } from "react";
+import { useEngineStore } from "../store/useEngineStore";
 
-interface TimeSignature {
-  numerator: number;
-  denominator: number;
-}
-
-interface TimelineProps {
-  playheadPosition: number;
-  scrollOffset: number;
-  timeSignature: TimeSignature;
-  isPlaying: boolean;
-  onScrollOffsetChange: (offset: number) => void;
-}
-
-export default function Timeline({ 
-  playheadPosition, 
-  scrollOffset, 
-  timeSignature, 
-  isPlaying,
-  onScrollOffsetChange
-}: TimelineProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+export default function Timeline() {
   const timelineRef = useRef<HTMLDivElement>(null);
-  
-  // Visual constants
-  const barWidth = 200; // pixels per bar
-  const totalBars = 100; // Show 100 bars initially
-  const timelineWidth = totalBars * barWidth;
+  const playheadRef = useRef<HTMLDivElement>(null);
+  const animationFrameRef = useRef<number>(0);
+  const lastPlayheadRef = useRef<number>(0);
+  const wasPlayingRef = useRef<boolean>(false);
 
-  // Auto-scroll logic
-  useEffect(() => {
-    if (containerRef.current && isPlaying) {
-      const containerWidth = containerRef.current.clientWidth;
-      const scrollThreshold = containerWidth * 0.8; // Start scrolling when playhead is 80% across screen
-      
-      if (playheadPosition - scrollOffset > scrollThreshold) {
-        const newScrollOffset = playheadPosition - containerWidth * 0.2; // Keep playhead at 20% from left
-        onScrollOffsetChange(Math.max(0, newScrollOffset));
+  const { getEngine } = useEngineStore();
+
+  const updatePlayhead = useCallback(() => {
+    if (!playheadRef.current || !timelineRef.current) return;
+
+    const engine = getEngine();
+    const playhead = engine.transport.playhead.toNumber();
+    const isPlaying = engine.state === TransportState.playing;
+
+    // Calculate position based on timeline scale (50px per beat, 200px per bar)
+    // Assuming 120 BPM: 1 beat = 0.5 seconds, so 50px per 0.5s = 100px per second
+    const beatsPerSecond = 2; // Adjust based on your BPM (120 BPM = 2 beats per second)
+    const pixelsPerBeat = 50;
+    const position = playhead * beatsPerSecond * pixelsPerBeat;
+
+    // Directly update DOM element position
+    playheadRef.current.style.transform = `translateX(${position}px)`;
+
+    const timelineContainer = timelineRef.current;
+    const containerWidth = timelineContainer.offsetWidth;
+
+    // Detect play start - focus on playhead immediately
+    if (isPlaying && !wasPlayingRef.current) {
+      // Playback just started - jump to center playhead
+      timelineContainer.scrollLeft = position - containerWidth / 2;
+    }
+    // During playback, keep playhead locked in center (smooth scrolling)
+    else if (isPlaying) {
+      const targetScroll = position - containerWidth / 2;
+      const currentScroll = timelineContainer.scrollLeft;
+      const scrollDiff = targetScroll - currentScroll;
+
+      // Smooth scroll interpolation (adjust 0.1 for smoothness vs responsiveness)
+      if (Math.abs(scrollDiff) > 1) {
+        timelineContainer.scrollLeft = currentScroll + scrollDiff * 0.3;
       }
     }
-  }, [playheadPosition, scrollOffset, isPlaying, onScrollOffsetChange]);
+
+    // Store current state for next frame (always run this)
+    lastPlayheadRef.current = playhead;
+    wasPlayingRef.current = isPlaying;
+
+    // Continue the animation loop
+    animationFrameRef.current = requestAnimationFrame(updatePlayhead);
+  }, [getEngine]);
+
+  useEffect(() => {
+    // Start the animation loop
+    animationFrameRef.current = requestAnimationFrame(updatePlayhead);
+
+    // Cleanup function
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [updatePlayhead]);
 
   return (
-    <div className="w-full">
-      {/* Timeline Container */}
-      <div 
-        ref={containerRef}
-        className="relative w-full h-24 bg-gray-800 border border-gray-700 overflow-hidden"
+    <div className="timeline-container">
+      {/* Timeline content */}
+      <div
+        className="timeline-scroll relative overflow-x-auto bg-gray-900"
+        ref={timelineRef}
       >
-        {/* Timeline */}
+        {/* Timeline Ruler */}
         <div
-          ref={timelineRef}
-          className="relative h-full transition-transform duration-75 ease-linear"
-          style={{ 
-            width: `${timelineWidth}px`,
-            transform: `translateX(-${scrollOffset}px)`
-          }}
+          className="timeline-ruler bg-gray-800 border-b border-gray-600 h-8 relative"
+          style={{ minWidth: "40000px" }}
         >
-          {/* Bars */}
-          {Array.from({ length: totalBars }, (_, barIndex) => (
-            <div
-              key={barIndex}
-              className="absolute top-0 h-full border-r border-gray-600"
-              style={{
-                left: `${barIndex * barWidth}px`,
-                width: `${barWidth}px`
-              }}
-            >
-              {/* Bar number */}
-              <div className="absolute top-1 left-2 text-xs font-bold text-gray-300">
-                {barIndex + 1}
-              </div>
-              
-              {/* Beat markers */}
-              <div className="absolute top-6 left-0 right-0 bottom-0 flex">
-                {Array.from({ length: timeSignature.numerator }, (_, beatIndex) => (
-                  <div
-                    key={beatIndex}
-                    className="flex-1 border-r border-gray-700 last:border-r-0 relative"
-                  >
-                    {/* Beat number */}
-                    <div className="absolute top-1 left-1 text-xs text-gray-500">
-                      {beatIndex + 1}
+          {/* Bar and Beat markers */}
+          {Array.from({ length: 200 }, (_, barIndex) => {
+            const barPixelPos = barIndex * 200; // 200px per bar (50px per beat * 4 beats)
+            return (
+              <div key={`bar-${barIndex}`} className="absolute top-0 h-full">
+                {/* Bar marker */}
+                <div
+                  className="absolute top-0 w-px bg-gray-300 h-full z-10"
+                  style={{ left: `${barPixelPos}px` }}
+                />
+                {/* Bar number */}
+                <div
+                  className="absolute top-1 text-xs text-gray-200 font-mono"
+                  style={{ left: `${barPixelPos + 2}px` }}
+                >
+                  {barIndex + 1}
+                </div>
+
+                {/* Beat markers within each bar */}
+                {Array.from({ length: 3 }, (_, beatIndex) => {
+                  const beatPixelPos = barPixelPos + (beatIndex + 1) * 50; // 50px per beat
+                  return (
+                    <div key={`beat-${barIndex}-${beatIndex}`}>
+                      <div
+                        className="absolute top-0 w-px bg-gray-500 h-4"
+                        style={{ left: `${beatPixelPos}px` }}
+                      />
+                      {/* Beat numbers */}
+                      <div
+                        className="absolute top-4 text-xs text-gray-400 font-mono"
+                        style={{
+                          left: `${beatPixelPos + 1}px`,
+                          fontSize: "10px",
+                        }}
+                      >
+                        {beatIndex + 2}
+                      </div>
                     </div>
-                    
-                    {/* Subdivision markers */}
-                    <div className="absolute top-6 left-0 right-0 bottom-0 flex">
-                      {Array.from({ length: 4 }, (_, subIndex) => (
-                        <div
-                          key={subIndex}
-                          className="flex-1 border-r border-gray-800 last:border-r-0 bg-gray-750"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-            </div>
-          ))}
-          
-          {/* Playhead */}
+            );
+          })}
+        </div>
+
+        {/* Main timeline track */}
+        <div
+          className="timeline-track bg-gray-700 h-20 relative"
+          style={{ minWidth: "40000px" }}
+        >
+          {/* Playhead indicator */}
           <div
-            className="absolute top-0 w-0.5 h-full bg-blue-500 z-10 transition-all duration-75 ease-linear"
-            style={{ left: `${playheadPosition}px` }}
-          >
-            <div className="w-3 h-3 bg-blue-500 rounded-full -ml-1.5 -mt-1 border-2 border-white"></div>
+            ref={playheadRef}
+            className="absolute top-0 w-1 h-full bg-red-500 pointer-events-none z-10"
+            style={{ transform: "translateX(0px)" }}
+          />
+
+          {/* Timeline content/tracks */}
+          <div className="timeline-content absolute inset-0">
+            {/* Add your timeline tracks, clips, etc. here */}
           </div>
-        </div>
-      </div>
-      
-      {/* Status */}
-      <div className="mt-4 flex justify-between items-center text-gray-400">
-        <div>
-          {isPlaying ? '🎵 Playing...' : '⏸️ Paused'}
-        </div>
-        <div className="text-sm">
-          Scroll Offset: {Math.round(scrollOffset)}px | Playhead: {Math.round(playheadPosition)}px
         </div>
       </div>
     </div>

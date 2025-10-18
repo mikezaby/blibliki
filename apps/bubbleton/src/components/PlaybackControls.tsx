@@ -1,14 +1,20 @@
-interface PlaybackControlsProps {
-  isPlaying: boolean;
-  onPlayPause: () => void;
-  onStop: () => void;
-}
+import { useEngineStore } from "../store/useEngineStore";
 
-export default function PlaybackControls({ 
-  isPlaying, 
-  onPlayPause, 
-  onStop 
-}: PlaybackControlsProps) {
+export default function PlaybackControls() {
+  const { start, stop, pause, isPlaying } = useEngineStore();
+
+  const onPlayPause = () => {
+    if (isPlaying) {
+      pause();
+    } else {
+      start();
+    }
+  };
+
+  const onStop = () => {
+    stop();
+  };
+
   return (
     <div className="flex items-center space-x-4">
       {/* Play/Pause Button */}
@@ -16,13 +22,9 @@ export default function PlaybackControls({
         onClick={onPlayPause}
         className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md flex items-center space-x-2 transition-colors"
       >
-        {isPlaying ? (
-          <span>⏸️ Pause</span>
-        ) : (
-          <span>▶️ Start</span>
-        )}
+        {isPlaying ? <span>⏸️ Pause</span> : <span>▶️ Start</span>}
       </button>
-      
+
       {/* Stop Button */}
       <button
         onClick={onStop}
@@ -33,3 +35,4 @@ export default function PlaybackControls({
     </div>
   );
 }
+
