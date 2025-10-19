@@ -1,6 +1,6 @@
 {
   "name": "@blibliki/engine",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "type": "module",
   "source": "src/index.ts",
   "main": "dist/index.cjs",
