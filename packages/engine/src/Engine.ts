@@ -186,8 +186,6 @@ export class Engine {
       module.dispose();
     });
     this.modules.clear();
-    Engine._engines.delete(this.id);
-    Engine._currentId = Engine._engines.keys().next().value;
   }
 
   findModule(
