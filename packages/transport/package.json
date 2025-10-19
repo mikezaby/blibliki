@@ -1,0 +1,28 @@
+{
+  "name": "@blibliki/transport",
+  "version": "0.3.3",
+  "type": "module",
+  "source": "src/index.ts",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "README.md",
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src",
+    "tsc": "tsc --noEmit",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "bump": "npm version patch",
+    "release": "pnpm run build && pnpm publish --access public"
+  },
+  "devDependencies": {
+    "@types/audioworklet": "^0.0.87"
+  },
+  "dependencies": {}
+}
