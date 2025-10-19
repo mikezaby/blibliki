@@ -10,8 +10,7 @@ export default class MidiDeviceManager {
   private listeners: ListenerCallback[] = [];
 
   constructor() {
-    const computerKeyboardDevice = new ComputerKeyboardDevice();
-    this.devices.set(computerKeyboardDevice.id, computerKeyboardDevice);
+    this.addComputerKeyboard();
   }
 
   async initialize() {
@@ -43,6 +42,13 @@ export default class MidiDeviceManager {
     } catch (err) {
       console.error("Error enabling WebMidi:", err);
     }
+  }
+
+  private addComputerKeyboard() {
+    if (typeof document === "undefined") return;
+
+    const computerKeyboardDevice = new ComputerKeyboardDevice();
+    this.devices.set(computerKeyboardDevice.id, computerKeyboardDevice);
   }
 
   private listenChanges() {
