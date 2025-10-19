@@ -20,7 +20,7 @@
     "format:check": "prettier . --check",
     "test": "vitest",
     "bump": "npm version patch",
-    "release": "pnpm run build && pnpm publish"
+    "release": "pnpm run build && pnpm publish --access public"
   },
   "devDependencies": {
     "@types/audioworklet": "^0.0.87",
