@@ -24,5 +24,7 @@
   "devDependencies": {
     "@types/audioworklet": "^0.0.87"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@blibliki/utils": "workspace:^"
+  }
 }
