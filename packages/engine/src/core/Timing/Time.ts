@@ -40,7 +40,7 @@ export default class Time {
     return t(this.toNumber() + t(value).toNumber());
   }
 
-  subtrack(value: TTime): Time {
+  subtract(value: TTime): Time {
     return t(this.toNumber() - nt(value));
   }
 

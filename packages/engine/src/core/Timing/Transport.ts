@@ -56,7 +56,7 @@ export default class Transport {
     this.scheduler.start(actionAt, () => {
       this.state = TransportState.playing;
       this.offset = offset;
-      this.startTime = t(actionAt).subtrack(this.offset);
+      this.startTime = t(actionAt).subtract(this.offset);
     });
     this.onStart?.(actionAt);
 
@@ -84,7 +84,7 @@ export default class Transport {
 
     this.scheduler.stop(actionAt, () => {
       this.state = TransportState.paused;
-      this.offset = t(actionAt).subtrack(this.startTime);
+      this.offset = t(actionAt).subtract(this.startTime);
     });
     this.onStop?.(actionAt);
 
@@ -95,7 +95,7 @@ export default class Transport {
     if (this.state === TransportState.stopped) return t(0);
     if (this.state === TransportState.paused) return t(this.offset);
 
-    return t(now()).subtrack(this.startTime);
+    return t(now()).subtract(this.startTime);
   }
 
   private validateFutureTime(time: TTime) {
