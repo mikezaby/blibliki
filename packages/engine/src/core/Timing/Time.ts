@@ -68,11 +68,10 @@ export default class Time {
       ((this.value as number) / secondsPerBeat) * divisionsPerBeat,
     );
 
-    const bars = Math.floor(totalDivisions / divisionsPerBar);
-    const beats = Math.floor(
-      (totalDivisions % divisionsPerBar) / divisionsPerBeat,
-    );
-    const divisions = totalDivisions % divisionsPerBeat;
+    const bars = Math.floor(totalDivisions / divisionsPerBar) + 1;
+    const beats =
+      Math.floor((totalDivisions % divisionsPerBar) / divisionsPerBeat) + 1;
+    const divisions = (totalDivisions % divisionsPerBeat) + 1;
 
     this._notation = `${bars}:${beats}:${divisions}`;
 
