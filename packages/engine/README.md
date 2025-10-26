@@ -33,10 +33,10 @@ By representing the synthesizer configuration as data, you can easily store and 
 
 I've written some blog posts about the engine's development:
 
-- [Part 1: Introduction to Web Audio and Engine Design](https://mikezaby.com/posts/web-audio-engine-part1)
-- [Part 2: Building a Modular Architecture](https://mikezaby.com/posts/web-audio-engine-part2)
-- [Part 3: Implementing the Transport System](https://mikezaby.com/posts/web-audio-engine-part3)
-- [Part 4: Creating a Step Sequencer](https://mikezaby.com/posts/web-audio-engine-part4)
+- [Part 1: Story & Engine Explanation](https://mikezaby.com/posts/web-audio-engine-part1)
+- [Part 2: Shaping the Core of Our Modular Audio Engine](https://mikezaby.com/posts/web-audio-engine-part2)
+- [Part 3: Integrating WebAudio API](https://mikezaby.com/posts/web-audio-engine-part3)
+- [Part 4: Implementing Advanced I/O](https://mikezaby.com/posts/web-audio-engine-part4)
 
 ## Installation
 
