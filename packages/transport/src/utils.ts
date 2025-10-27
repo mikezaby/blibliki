@@ -10,3 +10,12 @@ export const secondsPerTick = (tempo: BPM) => {
 export const ticksPerSecond = (tempo: BPM) => {
   return (tempo / 60) * TPB;
 };
+
+export const insertionIndexBy = <T>(
+  arr: T[],
+  n: T,
+  comparatorFn: (a: T, b: T) => number,
+) => {
+  const index = arr.findIndex((el) => comparatorFn(n, el) < 0);
+  return index === -1 ? arr.length : index;
+};
