@@ -253,6 +253,9 @@ importers:
 
   packages/engine:
     dependencies:
+      '@blibliki/transport':
+        specifier: workspace:^
+        version: link:../transport
       '@blibliki/utils':
         specifier: workspace:^
         version: link:../utils

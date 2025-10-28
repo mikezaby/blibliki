@@ -28,6 +28,7 @@
     "vitest": "^3.0.7"
   },
   "dependencies": {
+    "@blibliki/transport": "workspace:^",
     "@blibliki/utils": "workspace:^",
     "@ircam/sc-scheduling": "^1.0.0",
     "node-web-audio-api": "^1.0.3",
