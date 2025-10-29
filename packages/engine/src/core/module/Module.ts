@@ -1,7 +1,6 @@
-import { Optional, upperFirst, uuidv4 } from "@blibliki/utils";
+import { Context, Optional, upperFirst, uuidv4 } from "@blibliki/utils";
 import { Engine } from "@/Engine";
 import { AnyModule, ModuleType, ModuleTypeToPropsMapping } from "@/modules";
-import { IAnyAudioContext } from "../";
 import {
   AudioInputProps,
   AudioOutputProps,
@@ -33,7 +32,7 @@ export type IModuleConstructor<T extends ModuleType> = Optional<
   IModule<T>,
   "id" | "voiceNo"
 > & {
-  audioNodeConstructor?: (context: IAnyAudioContext) => AudioNode;
+  audioNodeConstructor?: (context: Context) => AudioNode;
 };
 
 export abstract class Module<T extends ModuleType> implements IModule<T> {

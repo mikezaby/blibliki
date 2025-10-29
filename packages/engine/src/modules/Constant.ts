@@ -1,4 +1,5 @@
-import { IAnyAudioContext, IModule, Module } from "@/core";
+import { Context } from "@blibliki/utils";
+import { IModule, Module } from "@/core";
 import Note from "@/core/Note";
 import { nt, TTime } from "@/core/Timing/Time";
 import { PropSchema } from "@/core/schema";
@@ -27,8 +28,8 @@ export default class Constant extends Module<ModuleType.Constant> {
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Constant>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
-    const audioNodeConstructor = (context: IAnyAudioContext) =>
-      new ConstantSourceNode(context);
+    const audioNodeConstructor = (context: Context) =>
+      new ConstantSourceNode(context.audioContext);
 
     super(engineId, {
       ...params,
@@ -53,7 +54,7 @@ export default class Constant extends Module<ModuleType.Constant> {
   stop(time: TTime) {
     this.audioNode.stop(nt(time));
     this.rePlugAll(() => {
-      this.audioNode = new ConstantSourceNode(this.context, {
+      this.audioNode = new ConstantSourceNode(this.context.audioContext, {
         offset: this.props.value,
       });
     });

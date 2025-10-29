@@ -1,5 +1,5 @@
-import { createScaleNormalized } from "@blibliki/utils";
-import { IAnyAudioContext, Module } from "@/core";
+import { Context, createScaleNormalized } from "@blibliki/utils";
+import { Module } from "@/core";
 import Note from "@/core/Note";
 import { nt, TTime } from "@/core/Timing/Time";
 import { IModuleConstructor } from "@/core/module/Module";
@@ -67,8 +67,8 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Envelope>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
-    const audioNodeConstructor = (context: IAnyAudioContext) => {
-      const audioNode = new GainNode(context);
+    const audioNodeConstructor = (context: Context) => {
+      const audioNode = new GainNode(context.audioContext);
       audioNode.gain.value = 0;
       return audioNode;
     };

@@ -1,5 +1,5 @@
-import { IAnyAudioContext, Module } from "@/core";
-import { IModuleConstructor } from "@/core/module/Module";
+import { Context } from "@blibliki/utils";
+import { IModuleConstructor, Module } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { PropSchema } from "@/core/schema";
 import { createModule, ICreateModule, ModuleType } from ".";
@@ -63,8 +63,8 @@ class MonoBiquadFilter extends Module<ModuleType.BiquadFilter> {
   ) {
     const props = { ...DEFAULT_PROPS, ...params.props };
 
-    const audioNodeConstructor = (context: IAnyAudioContext) =>
-      new BiquadFilterNode(context, {
+    const audioNodeConstructor = (context: Context) =>
+      new BiquadFilterNode(context.audioContext, {
         type: props.type,
         frequency: props.cutoff,
         Q: props.Q,

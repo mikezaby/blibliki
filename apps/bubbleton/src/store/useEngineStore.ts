@@ -8,7 +8,7 @@ import {
   IPolyModuleSerialize,
   IRoute,
 } from "@blibliki/engine";
-import { assertDefined } from "@blibliki/utils";
+import { assertDefined, Context } from "@blibliki/utils";
 import { create } from "zustand";
 
 export type AnyModuleSerialize =
@@ -61,7 +61,7 @@ export const useEngineStore = create<EngineStore>((set, get) => ({
     const { id } = get();
     if (id) return;
 
-    const context = new AudioContext();
+    const context = new Context();
     const newEngine = new Engine(context);
     set({ id: newEngine.id, isInitialized: true });
     void newEngine.initialize();

@@ -1,4 +1,5 @@
-import { IAnyAudioContext, Module } from "@/core";
+import { Context } from "@blibliki/utils";
+import { Module } from "@/core";
 import { IModuleConstructor } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { PropSchema } from "@/core/schema";
@@ -54,7 +55,7 @@ class MonoFilter extends Module<ModuleType.Filter> {
   constructor(engineId: string, params: ICreateModule<ModuleType.Filter>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
 
-    const audioNodeConstructor = (context: IAnyAudioContext) =>
+    const audioNodeConstructor = (context: Context) =>
       newAudioWorklet(context, CustomWorklet.FilterProcessor);
 
     super(engineId, {

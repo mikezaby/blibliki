@@ -1,6 +1,11 @@
-import { assertDefined, Optional, pick, uuidv4 } from "@blibliki/utils";
 import {
-  IAnyAudioContext,
+  assertDefined,
+  Context,
+  Optional,
+  pick,
+  uuidv4,
+} from "@blibliki/utils";
+import {
   IRoute,
   Routes,
   MidiDeviceManager,
@@ -37,7 +42,7 @@ export class Engine {
   ) => void)[] = [];
 
   readonly id: string;
-  context: IAnyAudioContext;
+  context: Context;
   isInitialized = false;
   routes: Routes;
   transport: Transport;
@@ -61,7 +66,7 @@ export class Engine {
     return this.getById(this._currentId);
   }
 
-  constructor(context: IAnyAudioContext) {
+  constructor(context: Context) {
     this.id = uuidv4();
 
     this.context = context;

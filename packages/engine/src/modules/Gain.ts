@@ -1,4 +1,5 @@
-import { IAnyAudioContext, IModule, Module } from "@/core";
+import { Context } from "@blibliki/utils";
+import { IModule, Module } from "@/core";
 import { IModuleConstructor } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { PropSchema } from "@/core/schema";
@@ -26,8 +27,8 @@ export class MonoGain extends Module<ModuleType.Gain> {
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Gain>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
-    const audioNodeConstructor = (context: IAnyAudioContext) =>
-      new GainNode(context);
+    const audioNodeConstructor = (context: Context) =>
+      new GainNode(context.audioContext);
 
     super(engineId, {
       ...params,

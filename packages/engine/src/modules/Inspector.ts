@@ -1,4 +1,5 @@
-import { IAnyAudioContext, IModule, Module } from "@/core";
+import { Context } from "@blibliki/utils";
+import { IModule, Module } from "@/core";
 import { PropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
 
@@ -23,8 +24,8 @@ export default class Inspector extends Module<ModuleType.Inspector> {
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Inspector>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
-    const audioNodeConstructor = (context: IAnyAudioContext) =>
-      new AnalyserNode(context);
+    const audioNodeConstructor = (context: Context) =>
+      new AnalyserNode(context.audioContext);
 
     super(engineId, {
       ...params,

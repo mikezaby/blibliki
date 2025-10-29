@@ -1,4 +1,5 @@
-import { IAnyAudioContext, IModule, Module } from "@/core";
+import { Context } from "@blibliki/utils";
+import { IModule, Module } from "@/core";
 import { PropSchema } from "@/core/schema";
 import { CustomWorklet, newAudioWorklet } from "@/processors";
 import { ICreateModule, ModuleType } from ".";
@@ -41,7 +42,7 @@ export default class Scale extends Module<ModuleType.Scale> {
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Scale>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
-    const audioNodeConstructor = (context: IAnyAudioContext) =>
+    const audioNodeConstructor = (context: Context) =>
       newAudioWorklet(context, CustomWorklet.ScaleProcessor);
 
     super(engineId, {

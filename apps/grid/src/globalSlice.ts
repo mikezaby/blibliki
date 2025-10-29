@@ -1,4 +1,5 @@
 import { Engine, TransportState } from "@blibliki/engine";
+import { Context } from "@blibliki/utils";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { initialize as patchInitialize, loadById } from "@/patchSlice";
 import { AppDispatch, RootState } from "@/store";
@@ -40,7 +41,8 @@ export const initialize =
   async (dispatch: AppDispatch, getState: () => RootState) => {
     const { context: contextConf, bpm } = getState().global;
 
-    const context = new AudioContext(contextConf);
+    const audioContext = new AudioContext(contextConf);
+    const context = new Context(audioContext);
     const engine = new Engine(context);
     await engine.initialize();
     engine.bpm = bpm;

@@ -1,5 +1,5 @@
-import { dbToGain } from "@blibliki/utils";
-import { IAnyAudioContext, IModule, Module } from "@/core";
+import { Context, dbToGain } from "@blibliki/utils";
+import { IModule, Module } from "@/core";
 import Note from "@/core/Note";
 import { nt, TTime } from "@/core/Timing/Time";
 import { IModuleConstructor } from "@/core/module/Module";
@@ -95,8 +95,8 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Oscillator>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
-    const audioNodeConstructor = (context: IAnyAudioContext) =>
-      new OscillatorNode(context);
+    const audioNodeConstructor = (context: Context) =>
+      new OscillatorNode(context.audioContext);
 
     super(engineId, {
       ...params,
@@ -104,7 +104,7 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
       audioNodeConstructor,
     });
 
-    this.lowOutputGain = new GainNode(this.context, {
+    this.lowOutputGain = new GainNode(this.context.audioContext, {
       gain: dbToGain(LOW_GAIN),
     });
 
@@ -150,7 +150,7 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
   stop(time: TTime) {
     this.audioNode.stop(nt(time));
     this.rePlugAll(() => {
-      this.audioNode = new OscillatorNode(this.context, {
+      this.audioNode = new OscillatorNode(this.context.audioContext, {
         type: this.props.wave,
         frequency: this.finalFrequency,
       });
@@ -208,7 +208,7 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
   }
 
   private initializeGainDetune() {
-    this.detuneGain = new GainNode(this.context, { gain: 100 });
+    this.detuneGain = new GainNode(this.context.audioContext, { gain: 100 });
     this.detuneGain.connect(this.audioNode.detune);
   }
 

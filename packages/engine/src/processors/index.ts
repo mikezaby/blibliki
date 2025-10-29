@@ -1,5 +1,4 @@
-import { assertNever } from "@blibliki/utils";
-import { IAnyAudioContext } from "@/core";
+import { assertNever, Context } from "@blibliki/utils";
 import { filterProcessorURL } from "./filter-processor";
 import { scaleProcessorURL } from "./scale-processor";
 
@@ -8,20 +7,17 @@ export enum CustomWorklet {
   FilterProcessor = "FilterProcessor",
 }
 
-export async function loadProcessors(context: IAnyAudioContext) {
-  await context.audioWorklet.addModule(scaleProcessorURL);
-  await context.audioWorklet.addModule(filterProcessorURL);
+export async function loadProcessors(context: Context) {
+  await context.addModule(scaleProcessorURL);
+  await context.addModule(filterProcessorURL);
 }
 
-export function newAudioWorklet(
-  context: IAnyAudioContext,
-  worklet: CustomWorklet,
-) {
+export function newAudioWorklet(context: Context, worklet: CustomWorklet) {
   switch (worklet) {
     case CustomWorklet.ScaleProcessor:
-      return new AudioWorkletNode(context, "scale-processor");
+      return context.newAudioWorklet("scale-processor");
     case CustomWorklet.FilterProcessor:
-      return new AudioWorkletNode(context, "filter-processor");
+      return context.newAudioWorklet("filter-processor");
     default:
       assertNever(worklet);
   }
