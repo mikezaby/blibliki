@@ -1,5 +1,5 @@
 import { Context } from "@blibliki/utils";
-// import { clearInterval, setInterval } from "audio-context-timers";
+import { clearInterval, setInterval } from "./audio-context-timers";
 import { ContextTime } from "./types";
 
 export const scheduleAtContextTime = ({
