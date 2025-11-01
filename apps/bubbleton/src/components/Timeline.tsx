@@ -2,6 +2,8 @@ import { TransportState } from "@blibliki/engine";
 import { useEffect, useRef, useCallback } from "react";
 import { useEngineStore } from "../store/useEngineStore";
 
+const pixelsPerBeat = 50;
+
 export default function Timeline() {
   const timelineRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
@@ -9,20 +11,19 @@ export default function Timeline() {
   const lastPlayheadRef = useRef<number>(0);
   const wasPlayingRef = useRef<boolean>(false);
 
-  const { getEngine } = useEngineStore();
+  const { getEngine, timeSignature } = useEngineStore();
 
   const updatePlayhead = useCallback(() => {
     if (!playheadRef.current || !timelineRef.current) return;
 
     const engine = getEngine();
-    const playhead = engine.transport.playhead.toNumber();
+    const transportPosition = engine.transport.position;
     const isPlaying = engine.state === TransportState.playing;
 
-    // Calculate position based on timeline scale (50px per beat, 200px per bar)
-    // Assuming 120 BPM: 1 beat = 0.5 seconds, so 50px per 0.5s = 100px per second
-    const beatsPerSecond = 2; // Adjust based on your BPM (120 BPM = 2 beats per second)
-    const pixelsPerBeat = 50;
-    const position = playhead * beatsPerSecond * pixelsPerBeat;
+    // Calculate total position in pixels
+    const totalBeats =
+      transportPosition.totalBeats + transportPosition.beatFraction;
+    const position = totalBeats * pixelsPerBeat;
 
     // Directly update DOM element position
     playheadRef.current.style.transform = `translateX(${position}px)`;
@@ -48,7 +49,7 @@ export default function Timeline() {
     }
 
     // Store current state for next frame (always run this)
-    lastPlayheadRef.current = playhead;
+    lastPlayheadRef.current = totalBeats;
     wasPlayingRef.current = isPlaying;
 
     // Continue the animation loop
@@ -81,7 +82,7 @@ export default function Timeline() {
         >
           {/* Bar and Beat markers */}
           {Array.from({ length: 200 }, (_, barIndex) => {
-            const barPixelPos = barIndex * 200; // 200px per bar (50px per beat * 4 beats)
+            const barPixelPos = barIndex * timeSignature[0] * pixelsPerBeat;
             return (
               <div key={`bar-${barIndex}`} className="absolute top-0 h-full">
                 {/* Bar marker */}
@@ -98,27 +99,31 @@ export default function Timeline() {
                 </div>
 
                 {/* Beat markers within each bar */}
-                {Array.from({ length: 3 }, (_, beatIndex) => {
-                  const beatPixelPos = barPixelPos + (beatIndex + 1) * 50; // 50px per beat
-                  return (
-                    <div key={`beat-${barIndex}-${beatIndex}`}>
-                      <div
-                        className="absolute top-0 w-px bg-gray-500 h-4"
-                        style={{ left: `${beatPixelPos}px` }}
-                      />
-                      {/* Beat numbers */}
-                      <div
-                        className="absolute top-4 text-xs text-gray-400 font-mono"
-                        style={{
-                          left: `${beatPixelPos + 1}px`,
-                          fontSize: "10px",
-                        }}
-                      >
-                        {beatIndex + 2}
+                {Array.from(
+                  { length: timeSignature[0] - 1 },
+                  (_, beatIndex) => {
+                    const beatPixelPos =
+                      barPixelPos + (beatIndex + 1) * pixelsPerBeat;
+                    return (
+                      <div key={`beat-${barIndex}-${beatIndex}`}>
+                        <div
+                          className="absolute top-0 w-px bg-gray-500 h-4"
+                          style={{ left: `${beatPixelPos}px` }}
+                        />
+                        {/* Beat numbers */}
+                        <div
+                          className="absolute top-4 text-xs text-gray-400 font-mono"
+                          style={{
+                            left: `${beatPixelPos + 1}px`,
+                            fontSize: "10px",
+                          }}
+                        >
+                          {beatIndex + 2}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  },
+                )}
               </div>
             );
           })}

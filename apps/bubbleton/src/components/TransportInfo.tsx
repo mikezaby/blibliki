@@ -1,12 +1,35 @@
 import { ChangeEvent, useEffect } from "react";
 import { useEngineStore } from "../store/useEngineStore";
 
+const validDenominator = [2, 4, 8, 16];
+
+const isValidDenominator = (value: number): value is 2 | 4 | 8 | 16 => {
+  return validDenominator.includes(value);
+};
+
 export default function TransportInfo() {
-  const { bpm, setBpm, timeSignature, getEngine } = useEngineStore();
+  const { bpm, setBpm, timeSignature, setTimeSignature, getEngine } =
+    useEngineStore();
 
   const onBpmChange = (event: ChangeEvent<HTMLInputElement>) => {
     const newBpm = parseInt(event.target.value);
     setBpm(newBpm);
+  };
+
+  const onTimeSignatureNumeratorChange = (
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const newNumerator = parseInt(event.target.value);
+    setTimeSignature([newNumerator, timeSignature[1]]);
+  };
+
+  const onTimeSignatureDenominatorChange = (
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const newDenominator = parseInt(event.target.value);
+    if (!isValidDenominator(newDenominator)) return;
+
+    setTimeSignature([timeSignature[0], newDenominator]);
   };
 
   useEffect(() => {
@@ -16,7 +39,8 @@ export default function TransportInfo() {
 
     const updatePosition = () => {
       const engine = getEngine();
-      const position = engine.transport.playhead.toNotation();
+      const transportPosition = engine.transport.position;
+      const position = transportPosition.toString();
 
       if (prevPosition !== position) {
         prevPosition = position;
@@ -58,10 +82,24 @@ export default function TransportInfo() {
       {/* Time Signature */}
       <div className="flex items-center space-x-2">
         <span className="text-sm font-medium">Time:</span>
-        <div className="bg-gray-700 border border-gray-600 rounded px-3 py-1">
-          <span className="font-mono">
-            {timeSignature[0]}/{timeSignature[1]}
-          </span>
+        <div className="flex items-center space-x-1">
+          <input
+            type="number"
+            value={timeSignature[0]}
+            onChange={onTimeSignatureNumeratorChange}
+            min="1"
+            max="16"
+            className="bg-gray-700 border border-gray-600 rounded px-2 py-1 w-12 text-center focus:outline-none focus:border-blue-500"
+          />
+          <span className="font-mono">/</span>
+          <input
+            type="number"
+            value={timeSignature[1]}
+            onChange={onTimeSignatureDenominatorChange}
+            min="2"
+            max="16"
+            className="bg-gray-700 border border-gray-600 rounded px-2 py-1 w-12 text-center focus:outline-none focus:border-blue-500"
+          />
         </div>
       </div>
 

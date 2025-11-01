@@ -1,7 +1,7 @@
+import { ContextTime } from "@blibliki/transport";
 import { Context } from "@blibliki/utils";
 import { IModule, Module } from "@/core";
 import Note from "@/core/Note";
-import { nt, TTime } from "@/core/Timing/Time";
 import { PropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
 
@@ -44,15 +44,15 @@ export default class Constant extends Module<ModuleType.Constant> {
     this.audioNode.offset.value = value;
   }
 
-  start(time: TTime) {
+  start(time: ContextTime) {
     if (this.isStated) return;
 
     this.isStated = true;
-    this.audioNode.start(nt(time));
+    this.audioNode.start(time);
   }
 
-  stop(time: TTime) {
-    this.audioNode.stop(nt(time));
+  stop(time: ContextTime) {
+    this.audioNode.stop(time);
     this.rePlugAll(() => {
       this.audioNode = new ConstantSourceNode(this.context.audioContext, {
         offset: this.props.value,
@@ -62,8 +62,8 @@ export default class Constant extends Module<ModuleType.Constant> {
     this.isStated = false;
   }
 
-  triggerAttack = (note: Note, triggeredAt: TTime) => {
-    this.audioNode.offset.setValueAtTime(note.frequency, nt(triggeredAt));
+  triggerAttack = (note: Note, triggeredAt: ContextTime) => {
+    this.audioNode.offset.setValueAtTime(note.frequency, triggeredAt);
     this.start(triggeredAt);
   };
 

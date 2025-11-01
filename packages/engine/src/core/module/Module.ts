@@ -1,3 +1,4 @@
+import { ContextTime } from "@blibliki/transport";
 import { Context, Optional, upperFirst, uuidv4 } from "@blibliki/utils";
 import { Engine } from "@/Engine";
 import { AnyModule, ModuleType, ModuleTypeToPropsMapping } from "@/modules";
@@ -12,7 +13,6 @@ import {
   MidiOutputProps,
 } from "../IO";
 import Note from "../Note";
-import { TTime } from "../Timing/Time";
 import MidiEvent, { MidiEventType } from "../midi/MidiEvent";
 
 export type IModule<T extends ModuleType> = {
@@ -129,21 +129,21 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
     this.outputs.unPlugAll();
   }
 
-  start(_time: TTime): void {
+  start(_time: ContextTime): void {
     // Optional implementation in modules
   }
 
-  stop(_time: TTime): void {
+  stop(_time: ContextTime): void {
     // Optional implementation in modules
   }
 
-  triggerAttack(note: Note, _triggeredAt: TTime): void {
+  triggerAttack(note: Note, _triggeredAt: ContextTime): void {
     if (this.activeNotes.some((n) => n.fullName === note.fullName)) return;
 
     this.activeNotes.push(note);
   }
 
-  triggerRelease(note: Note, _triggeredAt: TTime): void {
+  triggerRelease(note: Note, _triggeredAt: ContextTime): void {
     this.activeNotes = this.activeNotes.filter(
       (n) => n.fullName !== note.fullName,
     );

@@ -1,6 +1,6 @@
+import { ContextTime } from "@blibliki/transport";
 import { Message } from "webmidi";
 import Note, { INote } from "../Note";
-import { t, TTime } from "../Timing/Time";
 
 export enum MidiEventType {
   noteOn = "noteon",
@@ -11,29 +11,33 @@ export enum MidiEventType {
 export default class MidiEvent {
   note?: Note;
   voiceNo?: number;
-  readonly triggeredAt: TTime;
+  readonly triggeredAt: ContextTime;
   private message: Message;
 
   static fromNote(
     noteName: string | Note | Omit<INote, "frequency">,
     noteOn = true,
-    triggeredAt?: TTime,
+    triggeredAt: ContextTime,
   ): MidiEvent {
     const note = noteName instanceof Note ? noteName : new Note(noteName);
 
     return new MidiEvent(new Message(note.midiData(noteOn)), triggeredAt);
   }
 
-  static fromCC(cc: number, value: number, triggeredAt?: TTime): MidiEvent {
+  static fromCC(
+    cc: number,
+    value: number,
+    triggeredAt: ContextTime,
+  ): MidiEvent {
     return new MidiEvent(
       new Message(new Uint8Array([0xb0, cc, value])),
       triggeredAt,
     );
   }
 
-  constructor(message: Message, triggeredAt?: TTime) {
+  constructor(message: Message, triggeredAt: ContextTime) {
     this.message = message;
-    this.triggeredAt = triggeredAt ?? t();
+    this.triggeredAt = triggeredAt;
     this.defineNotes();
   }
 

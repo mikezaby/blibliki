@@ -40,4 +40,9 @@ export class Context {
   newAudioWorklet(name: string) {
     return new AudioWorkletNode(this.audioContext, name);
   }
+
+  browserToContextTime(browserTime: number): number {
+    const differenceBetweenClocks = performance.now() / 1000 - this.currentTime;
+    return browserTime / 1000 - differenceBetweenClocks;
+  }
 }

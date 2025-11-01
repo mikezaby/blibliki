@@ -7,6 +7,7 @@ import {
   IModuleSerialize,
   IPolyModuleSerialize,
   IRoute,
+  TimeSignature,
 } from "@blibliki/engine";
 import { assertDefined, Context } from "@blibliki/utils";
 import { create } from "zustand";
@@ -20,7 +21,7 @@ type EngineStore = {
   isInitialized: boolean;
   isPlaying: boolean;
   bpm: number;
-  timeSignature: [number, number];
+  timeSignature: TimeSignature;
   modules: AnyModuleSerialize[];
 
   init: () => void;
@@ -30,7 +31,7 @@ type EngineStore = {
   pause: () => void;
   stop: () => void;
   setBpm: (value: number) => void;
-  setTimeSignature: (value: [number, number]) => void;
+  setTimeSignature: (value: TimeSignature) => void;
   addModule: <T extends ModuleType>(
     params: ICreateModule<T>,
   ) => AnyModuleSerialize;
@@ -101,7 +102,7 @@ export const useEngineStore = create<EngineStore>((set, get) => ({
     set({ bpm: value });
   },
 
-  setTimeSignature: (value: [number, number]) => {
+  setTimeSignature: (value: TimeSignature) => {
     get().getEngine().timeSignature = value;
     set({ timeSignature: value });
   },

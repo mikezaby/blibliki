@@ -16,10 +16,11 @@ export type {
   BooleanProp,
   ArrayProp,
   INote,
-  t,
-  nt,
 } from "./core";
-export { TransportState, MidiDevice, MidiPortState, Note } from "./core";
+export { MidiDevice, MidiPortState, Note } from "./core";
+
+export { TransportState } from "@blibliki/transport";
+export type { TimeSignature, Position } from "@blibliki/transport";
 
 export { ModuleType, moduleSchemas, OscillatorWave } from "./modules";
 export type {

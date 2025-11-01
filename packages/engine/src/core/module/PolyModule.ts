@@ -1,3 +1,4 @@
+import { ContextTime } from "@blibliki/transport";
 import { deterministicId, Optional, uuidv4 } from "@blibliki/utils";
 import { Engine } from "@/Engine";
 import { ModuleType, ModuleTypeToPropsMapping } from "@/modules";
@@ -10,7 +11,6 @@ import {
   OutputCollection,
 } from "../IO";
 import { PolyAudioInputProps, PolyAudioOutputProps } from "../IO/PolyAudioIO";
-import { TTime } from "../Timing";
 import MidiEvent from "../midi/MidiEvent";
 import { IModule, IModuleConstructor, Module } from "./Module";
 
@@ -101,13 +101,13 @@ export abstract class PolyModule<T extends ModuleType>
     this.rePlugAll();
   }
 
-  start(time: TTime): void {
+  start(time: ContextTime): void {
     this.audioModules.forEach((m) => {
       m.start(time);
     });
   }
 
-  stop(time: TTime): void {
+  stop(time: ContextTime): void {
     this.audioModules.forEach((m) => {
       m.stop(time);
     });

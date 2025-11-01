@@ -1,3 +1,4 @@
+import { Context } from "@blibliki/utils";
 import { Input, Output, WebMidi } from "webmidi";
 import ComputerKeyboardDevice from "./ComputerKeyboardDevice";
 import MidiDevice from "./MidiDevice";
@@ -8,8 +9,10 @@ export default class MidiDeviceManager {
   devices = new Map<string, MidiDevice | ComputerKeyboardDevice>();
   private initialized = false;
   private listeners: ListenerCallback[] = [];
+  private context: Readonly<Context>;
 
-  constructor() {
+  constructor(context: Context) {
+    this.context = context;
     this.addComputerKeyboard();
   }
 
@@ -36,7 +39,7 @@ export default class MidiDeviceManager {
 
       WebMidi.inputs.forEach((input) => {
         if (!this.devices.has(input.id)) {
-          this.devices.set(input.id, new MidiDevice(input));
+          this.devices.set(input.id, new MidiDevice(input, this.context));
         }
       });
     } catch (err) {
@@ -47,7 +50,7 @@ export default class MidiDeviceManager {
   private addComputerKeyboard() {
     if (typeof document === "undefined") return;
 
-    const computerKeyboardDevice = new ComputerKeyboardDevice();
+    const computerKeyboardDevice = new ComputerKeyboardDevice(this.context);
     this.devices.set(computerKeyboardDevice.id, computerKeyboardDevice);
   }
 
@@ -58,7 +61,7 @@ export default class MidiDeviceManager {
 
       if (this.devices.has(port.id)) return;
 
-      const device = new MidiDevice(port);
+      const device = new MidiDevice(port, this.context);
       this.devices.set(device.id, device);
 
       this.listeners.forEach((listener) => {

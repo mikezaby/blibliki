@@ -1,5 +1,5 @@
+import { Context } from "@blibliki/utils";
 import { MessageEvent, Input } from "webmidi";
-import { browserToContextTime } from "../Timing";
 import MidiEvent, { MidiEventType } from "./MidiEvent";
 
 export enum MidiPortState {
@@ -24,12 +24,14 @@ export default class MidiDevice implements IMidiDevice {
   name: string;
   eventListerCallbacks: EventListerCallback[] = [];
 
+  private context: Readonly<Context>;
   private input: Input;
 
-  constructor(input: Input) {
+  constructor(input: Input, context: Context) {
     this.id = input.id;
     this.name = input.name || `Device ${input.id}`;
     this.input = input;
+    this.context = context;
 
     this.connect();
   }
@@ -67,7 +69,7 @@ export default class MidiDevice implements IMidiDevice {
   private processEvent(event: MessageEvent) {
     const midiEvent = new MidiEvent(
       event.message,
-      browserToContextTime(event.timestamp),
+      this.context.browserToContextTime(event.timestamp),
     );
 
     switch (midiEvent.type) {

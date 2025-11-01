@@ -1,5 +1,5 @@
 {
-  "name": "@blibliki/engine",
+  "name": "@blibliki/transport",
   "version": "0.3.3",
   "type": "module",
   "source": "src/index.ts",
@@ -18,20 +18,14 @@
     "tsc": "tsc --noEmit",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "test": "vitest",
     "bump": "npm version patch",
     "release": "pnpm run build && pnpm publish --access public"
   },
   "devDependencies": {
-    "@types/audioworklet": "^0.0.87",
-    "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.0.7"
+    "@types/audioworklet": "^0.0.87"
   },
   "dependencies": {
-    "@blibliki/transport": "workspace:^",
     "@blibliki/utils": "workspace:^",
-    "@ircam/sc-scheduling": "^1.0.0",
-    "node-web-audio-api": "^1.0.3",
-    "webmidi": "^3.1.14"
+    "audio-context-timers": "^5.0.132"
   }
 }

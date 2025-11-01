@@ -1,5 +1,5 @@
+import { ContextTime } from "@blibliki/transport";
 import { PropSchema, Module, IModule, MidiOutput, Note } from "@/core";
-import { TTime } from "@/core/Timing/Time";
 import MidiEvent from "@/core/midi/MidiEvent";
 import { ICreateModule, ModuleType } from ".";
 
@@ -37,13 +37,13 @@ export default class VirtualMidi extends Module<ModuleType.VirtualMidi> {
     this.midiOutput.onMidiEvent(midiEvent);
   }
 
-  triggerAttack = (note: Note, triggerAttack: TTime) => {
+  triggerAttack = (note: Note, triggerAttack: ContextTime) => {
     this.props = { activeNotes: [...this.props.activeNotes, note.fullName] };
     this.triggerPropsUpdate();
     this.sendMidi(MidiEvent.fromNote(note, true, triggerAttack));
   };
 
-  triggerRelease = (note: Note, triggerAttack: TTime) => {
+  triggerRelease = (note: Note, triggerAttack: ContextTime) => {
     this.props = {
       activeNotes: this.props.activeNotes.filter(
         (name) => name !== note.fullName,
