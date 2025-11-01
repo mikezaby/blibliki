@@ -1,7 +1,7 @@
+import { ContextTime } from "@blibliki/transport";
 import { EmptyObject } from "@blibliki/utils";
 import { ICreateModule, ModuleType } from "@/modules";
 import { MidiOutput } from "../IO";
-import { nt, t, TTime } from "../Timing/Time";
 import MidiEvent, { MidiEventType } from "../midi/MidiEvent";
 import { PropSchema } from "../schema";
 import { IModuleConstructor, Module } from "./Module";
@@ -14,7 +14,7 @@ const DEFAULT_PROPS = {};
 class Voice extends Module<ModuleType.VoiceScheduler> {
   declare audioNode: undefined;
   activeNote: string | null = null;
-  triggeredAt: TTime = t(0);
+  triggeredAt: ContextTime = 0;
 
   constructor(
     engineId: string,
@@ -102,7 +102,7 @@ export default class VoiceScheduler extends PolyModule<ModuleType.VoiceScheduler
 
     // If no available voice, get the one with the lowest triggeredAt
     voice ??= this.audioModules.sort((a, b) => {
-      return nt(a.triggeredAt) - nt(b.triggeredAt);
+      return a.triggeredAt - b.triggeredAt;
     })[0];
 
     return voice;

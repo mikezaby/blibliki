@@ -1,12 +1,11 @@
 import { INote, PropSchema, Module, IModule, MidiOutput } from "@/core";
-import { BarsBeatsSixteenths } from "@/core/Timing/Time";
 import { ICreateModule, ModuleType } from ".";
 
 export type IStepSequencer = IModule<ModuleType.StepSequencer>;
 
 export type ISequence = {
   active: boolean;
-  time: BarsBeatsSixteenths;
+  // time: BarsBeatsSixteenths;
   duration: string;
   notes: INote[];
 };

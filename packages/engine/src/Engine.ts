@@ -1,19 +1,18 @@
 import {
+  ContextTime,
+  Ticks,
+  TimeSignature,
+  Transport,
+  TransportEvent,
+} from "@blibliki/transport";
+import {
   assertDefined,
   Context,
   Optional,
   pick,
   uuidv4,
 } from "@blibliki/utils";
-import {
-  IRoute,
-  Routes,
-  MidiDeviceManager,
-  IModule,
-  TTime,
-  Transport,
-  MidiEvent,
-} from "@/core";
+import { IRoute, Routes, MidiDeviceManager, IModule, MidiEvent } from "@/core";
 import {
   ICreateModule,
   ModuleParams,
@@ -45,7 +44,7 @@ export class Engine {
   context: Context;
   isInitialized = false;
   routes: Routes;
-  transport: Transport;
+  transport: Transport<TransportEvent>;
   modules: Map<
     string,
     ModuleTypeToModuleMapping[keyof ModuleTypeToModuleMapping]
@@ -70,13 +69,25 @@ export class Engine {
     this.id = uuidv4();
 
     this.context = context;
-    this.transport = new Transport({
+    this.transport = new Transport(this.context, {
+      generator: (_start: Ticks, _end: Ticks) => {
+        return [] as TransportEvent[];
+      },
+      consumer: (_event: TransportEvent) => {
+        return;
+      },
+      onJump: (_ticks: Ticks) => {
+        return;
+      },
       onStart: this.onStart,
       onStop: this.onStop,
+      silence: (_actionAt: ContextTime) => {
+        return;
+      },
     });
     this.routes = new Routes(this);
     this.modules = new Map();
-    this.midiDeviceManager = new MidiDeviceManager();
+    this.midiDeviceManager = new MidiDeviceManager(this.context);
 
     Engine._engines.set(this.id, this);
     Engine._currentId = this.id;
@@ -147,17 +158,18 @@ export class Engine {
     );
   }
 
-  async start(props: { offset?: TTime; actionAt?: TTime } = {}) {
+  async start() {
     await this.resume();
-    this.transport.start(props);
+    this.transport.start();
   }
 
-  stop(props: { actionAt?: TTime } = {}) {
-    this.transport.stop(props);
+  stop() {
+    this.transport.stop();
+    this.transport.reset();
   }
 
-  pause(props: { actionAt?: TTime } = {}) {
-    this.transport.pause(props);
+  pause() {
+    this.transport.stop();
   }
 
   get bpm() {
@@ -172,12 +184,8 @@ export class Engine {
     return this.transport.timeSignature;
   }
 
-  set timeSignature(value: [number, number]) {
+  set timeSignature(value: TimeSignature) {
     this.transport.timeSignature = value;
-  }
-
-  get playhead() {
-    return this.transport.playhead;
   }
 
   async resume() {
@@ -227,16 +235,20 @@ export class Engine {
     if (virtualMidi.moduleType !== ModuleType.VirtualMidi)
       throw Error("This is not a virtual mid");
 
-    virtualMidi.sendMidi(MidiEvent.fromNote(noteName, type === "noteOn"));
+    virtualMidi.sendMidi(
+      MidiEvent.fromNote(noteName, type === "noteOn", this.context.currentTime),
+    );
   }
 
-  private onStart = (actionAt: TTime) => {
+  // actionAt is context time
+  private onStart = (actionAt: ContextTime) => {
     this.modules.forEach((module) => {
       module.start(actionAt);
     });
   };
 
-  private onStop = (actionAt: TTime) => {
+  // actionAt is context time
+  private onStop = (actionAt: ContextTime) => {
     this.modules.forEach((module) => {
       module.stop(actionAt);
     });

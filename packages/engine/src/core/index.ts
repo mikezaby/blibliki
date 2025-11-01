@@ -19,9 +19,6 @@ export type {
   IIOSerialize,
 } from "./IO";
 
-export { Time, TransportState, Transport, t, nt } from "./Timing";
-export type { TTime } from "./Timing";
-
 export type {
   PropDefinition,
   PropSchema,

@@ -1,6 +1,5 @@
 import { sleep } from "@blibliki/utils";
 import { describe, it, expect, beforeEach } from "vitest";
-import { now } from "@/core/Timing";
 import { createModule, ModuleType } from "@/modules";
 import Constant from "@/modules/Constant";
 import Inspector from "@/modules/Inspector";
@@ -23,7 +22,7 @@ describe("Scale", () => {
       moduleType: ModuleType.Constant,
       props: { value: 1 },
     }) as Constant;
-    amount.start(now());
+    amount.start(ctx.context.currentTime);
 
     inspector = createModule(ctx.engine.id, {
       name: "inspector",

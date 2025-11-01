@@ -1,7 +1,7 @@
+import { ContextTime } from "@blibliki/transport";
 import { Context, dbToGain } from "@blibliki/utils";
 import { IModule, Module } from "@/core";
 import Note from "@/core/Note";
-import { nt, TTime } from "@/core/Timing/Time";
 import { IModuleConstructor } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { PropSchema } from "@/core/schema";
@@ -140,15 +140,15 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
     this.rePlugAll();
   }
 
-  start(time: TTime) {
+  start(time: ContextTime) {
     if (this.isStated) return;
 
     this.isStated = true;
-    this.audioNode.start(nt(time));
+    this.audioNode.start(time);
   }
 
-  stop(time: TTime) {
-    this.audioNode.stop(nt(time));
+  stop(time: ContextTime) {
+    this.audioNode.stop(time);
     this.rePlugAll(() => {
       this.audioNode = new OscillatorNode(this.context.audioContext, {
         type: this.props.wave,
@@ -161,7 +161,7 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
     this.isStated = false;
   }
 
-  triggerAttack = (note: Note, triggeredAt: TTime) => {
+  triggerAttack = (note: Note, triggeredAt: ContextTime) => {
     super.triggerAttack(note, triggeredAt);
 
     this.props = { frequency: note.frequency };
@@ -169,7 +169,7 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
     this.start(triggeredAt);
   };
 
-  triggerRelease(note: Note, triggeredAt: TTime) {
+  triggerRelease(note: Note, triggeredAt: ContextTime) {
     super.triggerRelease(note, triggeredAt);
 
     const lastNote = this.activeNotes.length
@@ -190,14 +190,11 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
     return transposed;
   }
 
-  private updateFrequency(actionAt?: TTime) {
+  private updateFrequency(actionAt?: ContextTime) {
     if (this.finalFrequency === undefined) return;
 
     if (actionAt) {
-      this.audioNode.frequency.setValueAtTime(
-        this.finalFrequency,
-        nt(actionAt),
-      );
+      this.audioNode.frequency.setValueAtTime(this.finalFrequency, actionAt);
     } else {
       this.audioNode.frequency.value = this.finalFrequency;
     }
@@ -249,13 +246,13 @@ export default class Oscillator extends PolyModule<ModuleType.Oscillator> {
     this.registerDefaultIOs("out");
   }
 
-  start(time: TTime) {
+  start(time: ContextTime) {
     this.audioModules.forEach((audioModule) => {
       audioModule.start(time);
     });
   }
 
-  stop(time: TTime) {
+  stop(time: ContextTime) {
     this.audioModules.forEach((audioModule) => {
       audioModule.stop(time);
     });

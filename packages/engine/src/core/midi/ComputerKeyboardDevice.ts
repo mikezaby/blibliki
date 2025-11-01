@@ -1,3 +1,4 @@
+import { Context } from "@blibliki/utils";
 import Note from "../Note";
 import { EventListerCallback, IMidiInput, MidiPortState } from "./MidiDevice";
 import MidiEvent from "./MidiEvent";
@@ -32,12 +33,14 @@ export default class ComputerKeyboardInput implements IMidiInput {
   name: string;
   state: MidiPortState;
   eventListerCallbacks: EventListerCallback[] = [];
+  private context: Readonly<Context>;
 
-  constructor() {
+  constructor(context: Context) {
     const { id, name, state } = computerKeyboardData();
     this.id = id;
     this.name = name;
     this.state = state;
+    this.context = context;
 
     document.addEventListener("keydown", this.onKeyTrigger(true));
     document.addEventListener("keyup", this.onKeyTrigger(false));
@@ -63,7 +66,11 @@ export default class ComputerKeyboardInput implements IMidiInput {
     const note = this.extractNote(event);
     if (!note) return;
 
-    const midiEvent = MidiEvent.fromNote(note, noteOn);
+    const midiEvent = MidiEvent.fromNote(
+      note,
+      noteOn,
+      this.context.browserToContextTime(event.timeStamp),
+    );
     this.eventListerCallbacks.forEach((callback) => {
       callback(midiEvent);
     });
