@@ -1,4 +1,3 @@
-import { TransportPosition } from "./Transport";
 import { BPM, NormalRange, Ticks } from "./types";
 
 // Ticks per beat
@@ -11,34 +10,6 @@ export const secondsPerTick = (tempo: BPM) => {
 export const ticksPerSecond = (tempo: BPM) => {
   return (tempo / 60) * TPB;
 };
-
-export function ticksToPosition(
-  ticks: Ticks,
-  beatsPerBar: number,
-): Readonly<TransportPosition> {
-  const tb = ticks / 15360; // Time in beats, along timeline (a floating point number)
-  const tbi = Math.floor(tb); // Current beat as integer
-  const bf = tb - tbi; // Fraction between current beat and next
-
-  const beat = tbi % beatsPerBar;
-  const bar = Math.floor(tbi / beatsPerBar);
-  const sixteenth = Math.floor(bf * 4);
-
-  return {
-    bar,
-    beat,
-    sixteenth,
-  };
-}
-
-export function positionToTicks(
-  position: Readonly<TransportPosition>,
-  beatsPerBar: number,
-): Ticks {
-  const tb =
-    position.bar * beatsPerBar + position.beat + position.sixteenth / 4;
-  return tb * 15360;
-}
 
 export const insertionIndexBy = <T>(
   arr: T[],
