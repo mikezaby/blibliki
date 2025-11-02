@@ -2,10 +2,6 @@
 
 > Musical transport and scheduler on top of the WebAudio API.
 
-## Fork Notice
-
-This package is a maintained fork of [GustavTaxen/webaudio-transport](https://gitlab.com/GustavTaxen/webaudio-transport). The API stays close to the upstream project while integrating tightly with the rest of the Blibliki toolchain (for example, it consumes the shared `Context` wrapper from `@blibliki/utils` and exposes additional helpers around positions and swing).
-
 ## Installation
 
 ```sh
@@ -18,7 +14,7 @@ yarn add @blibliki/transport
 
 ## Quick Start
 
-Create a transport by supplying a Web Audio context (wrapped in the shared `Context` class) and a listener object that knows how to generate and consume scheduled events. The generator runs in transport ticks, the consumer receives the same events translated into AudioContext time.
+Create a transport by supplying a WebAudio context (wrapped in the shared `Context` class) and a listener object that knows how to generate and consume scheduled events. The generator runs in transport ticks, the consumer receives the same events translated into AudioContext time.
 
 ```ts
 import { Position, Transport, TransportEvent } from "@blibliki/transport";
@@ -134,3 +130,7 @@ pnpm run build    # bundle with tsup
 pnpm run lint     # check sources with eslint
 pnpm run tsc      # type-check
 ```
+
+## Fork Notice
+
+This package is forked and adjusted from [GustavTaxen/webaudio-transport](https://gitlab.com/GustavTaxen/webaudio-transport).
