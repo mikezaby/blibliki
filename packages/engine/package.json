@@ -23,9 +23,9 @@
     "release": "pnpm run build && pnpm publish --access public"
   },
   "devDependencies": {
-    "@types/audioworklet": "^0.0.87",
+    "@types/audioworklet": "^0.0.90",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.0.7"
+    "vitest": "^4.0.6"
   },
   "dependencies": {
     "@blibliki/transport": "workspace:^",
