@@ -22,8 +22,7 @@
     "release": "pnpm run build && pnpm publish --access public"
   },
   "devDependencies": {
-    "@types/crypto-js": "^4.2.2",
-    "tsup": "^8.4.0"
+    "@types/crypto-js": "^4.2.2"
   },
   "dependencies": {
     "crypto-js": "^4.2.0",
