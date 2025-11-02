@@ -48,7 +48,13 @@ export const loadById = (id: string) => async (dispatch: AppDispatch) => {
     return { ...initialState.patch };
   }
 
-  const { name, config, userId } = await Patch.find(id);
+  const patch = await Patch.find(id);
+  dispatch(load(patch));
+};
+
+export const load = (patch: Patch | IPatch) => (dispatch: AppDispatch) => {
+  console.log(patch);
+  const { id, name, config, userId } = patch;
   const { modules, gridNodes } = config;
 
   dispatch(clearEngine());

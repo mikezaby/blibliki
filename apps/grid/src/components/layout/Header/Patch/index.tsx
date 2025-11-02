@@ -12,11 +12,23 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui";
 import { useAppDispatch, usePatch } from "@/hooks";
-import { destroy, save } from "@/patchSlice";
+import useUpload from "@/hooks/useUpload";
+import { IPatch } from "@/models/Patch";
+import { destroy, load, save } from "@/patchSlice";
 import Export from "./Export";
 
 export default function Patch() {
+  const dispatch = useAppDispatch();
   const { patch, canCreate, canUpdate, canDelete } = usePatch();
+  const { open: openUpload } = useUpload({
+    accept: ".json",
+    onFilesSelected: async (value) => {
+      const file = value[0]!;
+      const text = await file.text();
+      const patch = JSON.parse(text) as IPatch;
+      dispatch(load(patch));
+    },
+  });
 
   return (
     <DropdownMenu>
@@ -57,6 +69,9 @@ export default function Patch() {
         <DropdownMenuSeparator />
 
         <DropdownMenuGroup>
+          <DropdownMenuItem>
+            <button onClick={openUpload}>Import</button>
+          </DropdownMenuItem>
           <DropdownMenuItem>
             <Export />
           </DropdownMenuItem>
