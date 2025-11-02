@@ -22,6 +22,8 @@ export { MidiDevice, MidiPortState, Note } from "./core";
 export { TransportState } from "@blibliki/transport";
 export type { TimeSignature, Position } from "@blibliki/transport";
 
+export { Context } from "@blibliki/utils";
+
 export { ModuleType, moduleSchemas, OscillatorWave } from "./modules";
 export type {
   IOscillator,
