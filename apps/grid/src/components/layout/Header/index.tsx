@@ -56,7 +56,7 @@ export default function Header() {
       <Group>
         <ColorSchemeToggle />
         <a
-          href="https://github.com/blibliki-js"
+          href="https://github.com/mikezaby/blibliki"
           target="_blank"
           rel="noreferrer"
           className={buttonVariants({ variant: "outline" })}
