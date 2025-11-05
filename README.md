@@ -24,6 +24,18 @@ The core audio engine built directly on the Web Audio API. It provides a modular
 
 [Learn more about the Engine](/packages/engine)
 
+### [Transport](/packages/transport)
+
+A musical transport and scheduler built on top of the Web Audio API. It provides precise timing and musical coordination for audio applications with support for:
+
+- Musical time signatures and BPM control
+- Event scheduling and generation
+- Swing and groove quantization
+- Transport controls (play/stop/reset)
+- Musical position tracking
+
+[Learn more about Transport](/packages/transport)
+
 ### [Grid](/apps/grid)
 
 A visual interface for the Blibliki Engine that allows users to create and connect audio modules through an intuitive drag-and-drop interface. Features include:
