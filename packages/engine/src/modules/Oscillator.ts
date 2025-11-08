@@ -148,6 +148,8 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
   }
 
   stop(time: ContextTime) {
+    if (!this.isStated) return;
+
     this.audioNode.stop(time);
     this.rePlugAll(() => {
       this.audioNode = new OscillatorNode(this.context.audioContext, {

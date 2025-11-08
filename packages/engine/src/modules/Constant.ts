@@ -52,6 +52,8 @@ export default class Constant extends Module<ModuleType.Constant> {
   }
 
   stop(time: ContextTime) {
+    if (!this.isStated) return;
+
     this.audioNode.stop(time);
     this.rePlugAll(() => {
       this.audioNode = new ConstantSourceNode(this.context.audioContext, {
