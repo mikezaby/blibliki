@@ -109,6 +109,10 @@ export const AvailableModules: Record<
   [ModuleType.LFO]: { name: "LFO", moduleType: ModuleType.LFO },
   [ModuleType.Noise]: { name: "Noise", moduleType: ModuleType.Noise },
   [ModuleType.Reverb]: { name: "Reverb", moduleType: ModuleType.Reverb },
+  [ModuleType.Stretch]: {
+    name: "Stretch",
+    moduleType: ModuleType.Stretch,
+  },
 };
 
 const modulesAdapter = createEntityAdapter<ModuleProps>({});

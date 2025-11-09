@@ -50,6 +50,7 @@ import StereoPanner, {
   IStereoPannerProps,
   stereoPannerPropSchema,
 } from "./StereoPanner";
+import Stretch, { IStretchProps, stretchPropSchema } from "./Stretch";
 import VirtualMidi, {
   IVirtualMidiProps,
   virtualMidiPropSchema,
@@ -80,6 +81,7 @@ export enum ModuleType {
   MidiMapper = "MidiMapper",
   VirtualMidi = "VirtualMidi",
   StepSequencer = "StepSequencer",
+  Stretch = "Stretch",
   VoiceScheduler = "VoiceScheduler",
   LFO = "LFO",
   Noise = "Noise",
@@ -106,6 +108,7 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.MidiMapper]: IMidiMapperProps;
   [ModuleType.VirtualMidi]: IVirtualMidiProps;
   [ModuleType.StepSequencer]: IStepSequencerProps;
+  [ModuleType.Stretch]: IStretchProps;
   [ModuleType.VoiceScheduler]: IVoiceSchedulerProps;
   [ModuleType.LFO]: ILFOProps;
   [ModuleType.Noise]: INoiseProps;
@@ -158,6 +161,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.MidiMapper]: MidiMapper;
   [ModuleType.VirtualMidi]: VirtualMidi;
   [ModuleType.StepSequencer]: StepSequencer;
+  [ModuleType.Stretch]: Stretch;
   [ModuleType.VoiceScheduler]: VoiceScheduler;
   [ModuleType.LFO]: LFO;
   [ModuleType.Noise]: Noise;
@@ -184,6 +188,7 @@ export const moduleSchemas = {
   [ModuleType.MidiMapper]: midiMapperPropSchema,
   [ModuleType.VirtualMidi]: virtualMidiPropSchema,
   [ModuleType.StepSequencer]: stepSequencerPropSchema,
+  [ModuleType.Stretch]: stretchPropSchema,
   [ModuleType.VoiceScheduler]: voiceSchedulerPropSchema,
   [ModuleType.LFO]: lfoPropSchema,
   [ModuleType.Noise]: noisePropSchema,
@@ -210,6 +215,7 @@ export type { IMaster } from "./Master";
 export type { IMidiInput, IMidiInputProps } from "./MidiInput";
 export type { IMidiOutput, IMidiOutputProps } from "./MidiOutput";
 export type { IStereoPanner } from "./StereoPanner";
+export type { IStretch } from "./Stretch";
 export type {
   IStepSequencer,
   IStepSequencerProps,
@@ -253,6 +259,7 @@ export type ModuleParams = {
     | ModuleType.Envelope
     | ModuleType.Filter
     | ModuleType.StereoPanner
+    | ModuleType.Stretch
     | ModuleType.VoiceScheduler
     | ModuleType.Scale
     | ModuleType.LFO
@@ -305,6 +312,8 @@ export function createModule(
       return VirtualMidi.create(VirtualMidi, engineId, params);
     case ModuleType.StepSequencer:
       return StepSequencer.create(StepSequencer, engineId, params);
+    case ModuleType.Stretch:
+      return Stretch.create(Stretch, engineId, params);
     case ModuleType.VoiceScheduler:
       return VoiceScheduler.create(VoiceScheduler, engineId, params);
     case ModuleType.LFO:
