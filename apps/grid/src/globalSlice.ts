@@ -82,8 +82,9 @@ export const setBpm = (bpm: number) => (dispatch: AppDispatch) => {
   dispatch(setAttributes({ bpm }));
 };
 
-export const dispose = () => () => {
-  Engine.current.stop();
+export const dispose = () => (dispatch: AppDispatch) => {
+  Engine.current.dispose();
+  dispatch(setAttributes({ isStarted: false }));
 };
 
 export const { setAttributes } = globalSlice.actions;

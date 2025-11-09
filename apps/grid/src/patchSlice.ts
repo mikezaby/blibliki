@@ -1,4 +1,3 @@
-import { Engine } from "@blibliki/engine";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
   addModule,
@@ -12,6 +11,7 @@ import {
 } from "@/components/Grid/gridNodesSlice";
 import Patch, { IPatch } from "@/models/Patch";
 import { AppDispatch, RootState } from "@/store";
+import { dispose } from "./globalSlice";
 
 type PatchProps = {
   patch: Omit<IPatch, "config">;
@@ -44,8 +44,8 @@ export const initialize = () => (dispatch: AppDispatch) => {
 export const loadById = (id: string) => async (dispatch: AppDispatch) => {
   if (id === "new") {
     dispatch(clearEngine());
-
-    return { ...initialState.patch };
+    dispatch(initialize());
+    return;
   }
 
   const patch = await Patch.find(id);
@@ -53,7 +53,6 @@ export const loadById = (id: string) => async (dispatch: AppDispatch) => {
 };
 
 export const load = (patch: Patch | IPatch) => (dispatch: AppDispatch) => {
-  console.log(patch);
   const { id, name, config, userId } = patch;
   const { modules, gridNodes } = config;
 
@@ -97,7 +96,7 @@ export const destroy =
 export const { setAttributes, setName } = patchSlice.actions;
 
 const clearEngine = () => (dispatch: AppDispatch) => {
-  Engine.current.dispose();
+  dispatch(dispose());
   dispatch(removeAllModules());
   dispatch(removeAllGridNodes());
 };
