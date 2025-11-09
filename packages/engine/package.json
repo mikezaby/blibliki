@@ -23,7 +23,7 @@
     "release": "pnpm run build && pnpm publish --access public"
   },
   "devDependencies": {
-    "@types/audioworklet": "^0.0.90",
+    "@types/audioworklet": "^0.0.91",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^4.0.6"
   },

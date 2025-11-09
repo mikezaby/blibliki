@@ -270,8 +270,8 @@ importers:
         version: 3.1.14
     devDependencies:
       '@types/audioworklet':
-        specifier: ^0.0.90
-        version: 0.0.90
+        specifier: ^0.0.91
+        version: 0.0.91
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.9.3)(vite@7.1.9(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.39.2)(tsx@4.19.4)(yaml@2.7.1))
@@ -285,12 +285,12 @@ importers:
         specifier: workspace:^
         version: link:../utils
       audio-context-timers:
-        specifier: ^5.0.132
-        version: 5.0.132
+        specifier: ^5.0.133
+        version: 5.0.133
     devDependencies:
       '@types/audioworklet':
-        specifier: ^0.0.90
-        version: 0.0.90
+        specifier: ^0.0.91
+        version: 0.0.91
 
   packages/utils:
     dependencies:
@@ -2273,8 +2273,8 @@ packages:
       svelte:
         optional: true
 
-  '@types/audioworklet@0.0.90':
-    resolution: {integrity: sha512-fG1NU0kxzr/vha7zavWL/qR/kzUTtvmOqQ6vGo0/iKf0ZvezDLPgT+bP6x6VwDqeDeBc8HQpzkKDyFGAc8EJeg==}
+  '@types/audioworklet@0.0.91':
+    resolution: {integrity: sha512-EGJdIY4HIb18SYFZysNRgfubbyJavQj8eCsq2c72ZUEjeR39I8lu0nHH/rM1N7v6kZkfaKJm9b8JVScIxbD8cw==}
 
   '@types/babel__code-frame@7.0.6':
     resolution: {integrity: sha512-Anitqkl3+KrzcW2k77lRlg/GfLZLWXBuNgbEcIOU6M92yw42vsd3xV/Z/yAHEj8m+KUjL6bWOVOFqX8PFPJ4LA==}
@@ -2635,8 +2635,8 @@ packages:
   async@3.2.6:
     resolution: {integrity: sha512-htCUDlxyyCLMgaM3xXg0C0LW2xqfuQ6p05pCEIsXuyQ+a1koYKTuBMzRNwmybfLgvJDMd0r1LTn4+E0Ti6C2AA==}
 
-  audio-context-timers@5.0.132:
-    resolution: {integrity: sha512-qEgFXr5yyOdtxigI7c4noWBZmQVq9QNRx6RLjyg/uVmQtrw1gCDgjXTGljaLyOLf7alZzQMz4LYqtqou1DSDwA==}
+  audio-context-timers@5.0.133:
+    resolution: {integrity: sha512-IViUs9bZpaqdaGM8o2Kv2vepFMQWjnPSK9kT5e3LKy+kQ+c1cCTF69s19V1lJ7wROsWR8Xd46LQAE8behgeI4w==}
 
   automation-events@7.1.13:
     resolution: {integrity: sha512-1Hay5TQPzxsskSqPTH3YXyzE9Iirz82zZDse2vr3+kOR7Sc7om17qIEPsESchlNX0EgKxANwR40i2g/O3GM1Tw==}
@@ -7812,7 +7812,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@types/audioworklet@0.0.90': {}
+  '@types/audioworklet@0.0.91': {}
 
   '@types/babel__code-frame@7.0.6': {}
 
@@ -8294,7 +8294,7 @@ snapshots:
 
   async@3.2.6: {}
 
-  audio-context-timers@5.0.132:
+  audio-context-timers@5.0.133:
     dependencies:
       '@babel/runtime': 7.28.4
       fast-unique-numbers: 9.0.24

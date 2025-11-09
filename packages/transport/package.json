@@ -22,10 +22,10 @@
     "release": "pnpm run build && pnpm publish --access public"
   },
   "devDependencies": {
-    "@types/audioworklet": "^0.0.90"
+    "@types/audioworklet": "^0.0.91"
   },
   "dependencies": {
     "@blibliki/utils": "workspace:^",
-    "audio-context-timers": "^5.0.132"
+    "audio-context-timers": "^5.0.133"
   }
 }
