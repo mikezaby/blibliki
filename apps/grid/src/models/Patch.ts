@@ -70,7 +70,7 @@ export default class Patch implements IPatch {
   }
 
   async delete(): Promise<void> {
-    if (this.id) throw Error("Cannot delete a patch without id");
+    if (!this.id) throw Error("Cannot delete a patch without id");
 
     await deleteDoc(this.docRef);
   }

@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/tanstack-react-start";
 import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ReactNode } from "react";
 import { TriggerModal } from "@/components/Modal";
 import {
@@ -98,14 +98,21 @@ function Save(props: { asNew: boolean; children: ReactNode }) {
 
 function Destroy(props: { disabled: boolean; children: ReactNode }) {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { disabled, children } = props;
 
-  const onDestroy = () => {
-    void dispatch(destroy());
+  const onDestroy = async () => {
+    await dispatch(destroy());
+    await navigate({ to: "/patch/$patchId", params: { patchId: "new" } });
   };
 
   return (
-    <button onClick={onDestroy} disabled={disabled}>
+    <button
+      onClick={() => {
+        void onDestroy();
+      }}
+      disabled={disabled}
+    >
       {children}
     </button>
   );
