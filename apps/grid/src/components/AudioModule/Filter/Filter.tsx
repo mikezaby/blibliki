@@ -3,20 +3,21 @@ import Fader, { MarkProps } from "@/components/Fader";
 import { ModuleComponent } from "..";
 import Container from "../Container";
 import Cutoff from "./Cutoff";
+import FilterType from "./FilterType";
 import Resonance from "./Resonance";
 
 const AmountCenter: MarkProps[] = [{ value: 0, label: "-" }];
 
-const Filter: ModuleComponent<ModuleType.Filter> = (props) => {
+const BiquadFilter: ModuleComponent<ModuleType.Filter> = (props) => {
   const {
     updateProp,
-    props: { cutoff, resonance, envelopeAmount },
+    props: { cutoff, Q, type, envelopeAmount },
   } = props;
 
   return (
     <Container>
       <Cutoff value={cutoff} updateProp={updateProp("cutoff")} />
-      <Resonance value={resonance} updateProp={updateProp("resonance")} />
+      <Resonance value={Q} updateProp={updateProp("Q")} />
       <Fader
         name="Amount"
         marks={AmountCenter}
@@ -26,8 +27,9 @@ const Filter: ModuleComponent<ModuleType.Filter> = (props) => {
         onChange={updateProp("envelopeAmount")}
         value={envelopeAmount}
       />
+      <FilterType value={type} updateProp={updateProp("type")} />
     </Container>
   );
 };
 
-export default Filter;
+export default BiquadFilter;

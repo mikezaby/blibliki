@@ -15,8 +15,8 @@ export default function Cutoff(props: CutoffProps) {
   return (
     <Fader
       name="Hz"
-      min={20}
-      max={20000}
+      min={0}
+      max={22050}
       onChange={onChange}
       value={value}
       exp={4}

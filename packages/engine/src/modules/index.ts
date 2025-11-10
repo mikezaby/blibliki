@@ -5,10 +5,6 @@ import VoiceScheduler, {
   IVoiceSchedulerProps,
   voiceSchedulerPropSchema,
 } from "@/core/module/VoiceScheduler";
-import BiquadFilter, {
-  biquadFilterPropSchema,
-  IBiquadFilterProps,
-} from "./BiquadFilter";
 import Constant, { constantPropSchema, IConstantProps } from "./Constant";
 import Envelope, { envelopePropSchema, IEnvelopeProps } from "./Envelope";
 import Filter, { filterPropSchema, IFilterProps } from "./Filter";
@@ -40,7 +36,6 @@ export enum ModuleType {
   MidiSelector = "MidiSelector",
   Envelope = "Envelope",
   Filter = "Filter",
-  BiquadFilter = "BiquadFilter",
   Scale = "Scale",
   Inspector = "Inspector",
   Constant = "Constant",
@@ -56,7 +51,6 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.MidiSelector]: IMidiSelectorProps;
   [ModuleType.Envelope]: IEnvelopeProps;
   [ModuleType.Filter]: IFilterProps;
-  [ModuleType.BiquadFilter]: IBiquadFilterProps;
   [ModuleType.Scale]: IScaleProps;
   [ModuleType.Inspector]: IInspectorProps;
   [ModuleType.Constant]: IConstantProps;
@@ -72,7 +66,6 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.MidiSelector]: MidiSelector;
   [ModuleType.Envelope]: Envelope;
   [ModuleType.Filter]: Filter;
-  [ModuleType.BiquadFilter]: BiquadFilter;
   [ModuleType.Scale]: Scale;
   [ModuleType.Inspector]: Inspector;
   [ModuleType.Constant]: Constant;
@@ -90,7 +83,6 @@ export const moduleSchemas: {
   [ModuleType.MidiSelector]: midiSelectorPropSchema,
   [ModuleType.Envelope]: envelopePropSchema,
   [ModuleType.Filter]: filterPropSchema,
-  [ModuleType.BiquadFilter]: biquadFilterPropSchema,
   [ModuleType.Scale]: scalePropSchema,
   [ModuleType.Inspector]: inspectorPropSchema,
   [ModuleType.Constant]: constantPropSchema,
@@ -126,7 +118,6 @@ export type ModuleParams = {
     | ModuleType.Gain
     | ModuleType.Envelope
     | ModuleType.Filter
-    | ModuleType.BiquadFilter
     | ModuleType.VoiceScheduler
     ? IPolyModuleConstructor<K>
     : ICreateModule<K>;
@@ -149,8 +140,6 @@ export function createModule(
       return new Envelope(engineId, params);
     case ModuleType.Filter:
       return new Filter(engineId, params);
-    case ModuleType.BiquadFilter:
-      return new BiquadFilter(engineId, params);
     case ModuleType.Scale:
       return new Scale(engineId, params);
     case ModuleType.Inspector:

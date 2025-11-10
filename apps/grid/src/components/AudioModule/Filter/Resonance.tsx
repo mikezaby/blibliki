@@ -16,7 +16,7 @@ export default function Resonance(props: ResonanceProps) {
     <Fader
       name="Q"
       min={0}
-      max={100}
+      max={1000}
       onChange={onChange}
       value={value}
       exp={5}

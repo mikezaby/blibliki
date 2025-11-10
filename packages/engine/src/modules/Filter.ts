@@ -1,9 +1,7 @@
 import { Context } from "@blibliki/utils";
-import { Module } from "@/core";
-import { IModuleConstructor } from "@/core/module/Module";
+import { IModuleConstructor, Module } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { PropSchema } from "@/core/schema";
-import { CustomWorklet, newAudioWorklet } from "@/processors";
 import { createModule, ICreateModule, ModuleType } from ".";
 import { MonoGain } from "./Gain";
 import Scale from "./Scale";
@@ -11,16 +9,18 @@ import Scale from "./Scale";
 export type IFilterProps = {
   cutoff: number;
   envelopeAmount: number;
-  resonance: number;
+  type: BiquadFilterType;
+  Q: number;
 };
 
-const MIN_FREQ = 20;
+const MIN_FREQ = 0;
 const MAX_FREQ = 22050;
 
 const DEFAULT_PROPS: IFilterProps = {
   cutoff: MAX_FREQ,
   envelopeAmount: 0,
-  resonance: 0,
+  type: "lowpass",
+  Q: 1,
 };
 
 export const filterPropSchema: PropSchema<IFilterProps> = {
@@ -28,7 +28,7 @@ export const filterPropSchema: PropSchema<IFilterProps> = {
     kind: "number",
     min: MIN_FREQ,
     max: MAX_FREQ,
-    step: 0.0001,
+    step: 1,
     label: "Cutoff",
   },
   envelopeAmount: {
@@ -38,17 +38,22 @@ export const filterPropSchema: PropSchema<IFilterProps> = {
     step: 0.01,
     label: "Envelope Amount",
   },
-  resonance: {
+  type: {
+    kind: "enum",
+    options: ["lowpass", "highpass", "bandpass"] satisfies BiquadFilterType[],
+    label: "Type",
+  },
+  Q: {
     kind: "number",
-    min: 0,
-    max: 4,
-    step: 0.01,
-    label: "resonance",
+    min: 0.0001,
+    max: 1000,
+    step: 0.1,
+    label: "Q",
   },
 };
 
 class MonoFilter extends Module<ModuleType.Filter> {
-  declare audioNode: AudioWorkletNode;
+  declare audioNode: BiquadFilterNode;
   private scale: Scale;
   private amount: MonoGain;
 
@@ -56,7 +61,11 @@ class MonoFilter extends Module<ModuleType.Filter> {
     const props = { ...DEFAULT_PROPS, ...params.props };
 
     const audioNodeConstructor = (context: Context) =>
-      newAudioWorklet(context, CustomWorklet.FilterProcessor);
+      new BiquadFilterNode(context.audioContext, {
+        type: props.type,
+        frequency: 0,
+        Q: props.Q,
+      });
 
     super(engineId, {
       ...params,
@@ -77,18 +86,14 @@ class MonoFilter extends Module<ModuleType.Filter> {
     }) as Scale;
 
     this.amount.plug({ audioModule: this.scale, from: "out", to: "in" });
-    this.scale.audioNode.connect(this.cutoff);
+    this.scale.audioNode.connect(this.audioNode.frequency);
 
     this.registerDefaultIOs();
     this.registerInputs();
   }
 
-  get cutoff() {
-    return this.audioNode.parameters.get("cutoff")!;
-  }
-
-  get resonance() {
-    return this.audioNode.parameters.get("resonance")!;
+  protected onSetType(value: IFilterProps["type"]) {
+    this.audioNode.type = value;
   }
 
   protected onSetCutoff(value: IFilterProps["cutoff"]) {
@@ -97,8 +102,8 @@ class MonoFilter extends Module<ModuleType.Filter> {
     this.scale.props = { current: value };
   }
 
-  protected onSetResonance(value: IFilterProps["resonance"]) {
-    this.resonance.value = value;
+  protected onSetQ(value: IFilterProps["Q"]) {
+    this.audioNode.Q.value = value;
   }
 
   protected onSetEnvelopeAmount(value: IFilterProps["envelopeAmount"]) {
@@ -110,7 +115,7 @@ class MonoFilter extends Module<ModuleType.Filter> {
   private registerInputs() {
     this.registerAudioInput({
       name: "cutoff",
-      getAudioNode: () => this.scale.audioNode,
+      getAudioNode: () => this.audioNode.frequency,
     });
 
     this.registerAudioInput({
@@ -120,7 +125,7 @@ class MonoFilter extends Module<ModuleType.Filter> {
 
     this.registerAudioInput({
       name: "Q",
-      getAudioNode: () => this.resonance,
+      getAudioNode: () => this.audioNode.Q,
     });
   }
 }

@@ -3,7 +3,7 @@ import { JSX } from "react";
 import { useAppDispatch } from "@/hooks";
 import Constant from "./Constant";
 import Envelope from "./Envelope";
-import { Filter, BiquadFilter } from "./Filter";
+import { Filter } from "./Filter";
 import Gain from "./Gain";
 import Inspector from "./Inspector";
 import Keyboard from "./Keyboard";
@@ -43,7 +43,6 @@ const COMPONENT_MAPPING: {
   [ModuleType.Oscillator]: Oscillator,
   [ModuleType.Master]: Master,
   [ModuleType.Filter]: Filter,
-  [ModuleType.BiquadFilter]: BiquadFilter,
   [ModuleType.Gain]: Gain,
   [ModuleType.Envelope]: Envelope,
   [ModuleType.MidiSelector]: MidiDeviceSelector,
