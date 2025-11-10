@@ -26,7 +26,7 @@ export default function Patch() {
       const file = value[0]!;
       const text = await file.text();
       const patch = JSON.parse(text) as IPatch;
-      dispatch(load(patch));
+      dispatch(load({ ...patch, id: "", userId: "" }));
     },
   });
 
