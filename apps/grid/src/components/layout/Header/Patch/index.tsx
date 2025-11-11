@@ -46,7 +46,7 @@ export default function FileMenu() {
         <Button
           variant="ghost"
           size="sm"
-          className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 h-10 px-3 gap-1.5 font-medium"
+          className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 h-10 px-3 gap-1.5 font-medium cursor-pointer"
         >
           <TableOfContents className="w-4 h-4" />
           File
@@ -98,7 +98,10 @@ export default function FileMenu() {
         <DropdownMenuGroup>
           <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm cursor-pointer transition-colors">
             <Upload className="w-4 h-4" />
-            <button onClick={openUpload} className="w-full text-left">
+            <button
+              onClick={openUpload}
+              className="w-full text-left cursor-pointer"
+            >
               Import
             </button>
           </DropdownMenuItem>
@@ -124,7 +127,7 @@ function SaveButton(props: { asNew: boolean; children: ReactNode }) {
   };
 
   return (
-    <button onClick={onSave} className="w-full text-left">
+    <button onClick={onSave} className="w-full text-left cursor-pointer">
       {children}
     </button>
   );
@@ -142,7 +145,7 @@ function Destroy(props: { disabled: boolean; children: ReactNode }) {
 
   return (
     <button
-      className="w-full text-left disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full text-left disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       onClick={() => {
         void onDestroy();
       }}

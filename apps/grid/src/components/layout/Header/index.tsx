@@ -86,7 +86,7 @@ export default function Header() {
 
           <Button
             onClick={togglePlay}
-            className="h-8 w-8 rounded-full shadow-lg transition-all duration-200 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 shadow-slate-400/25 dark:shadow-slate-800/50"
+            className="h-8 w-8 rounded-full shadow-lg transition-all duration-200 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 shadow-slate-400/25 dark:shadow-slate-800/50 cursor-pointer"
           >
             {isStarted ? (
               <Square className="w-4 h-4" />
@@ -102,7 +102,7 @@ export default function Header() {
         <Button
           variant="ghost"
           size="sm"
-          className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50"
+          className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 cursor-pointer"
         >
           <Settings className="w-4 h-4" />
         </Button>
@@ -119,7 +119,7 @@ export default function Header() {
               variant: "ghost",
               size: "sm",
             }) +
-            " text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50"
+            " text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 cursor-pointer"
           }
         >
           <Github />
@@ -137,7 +137,7 @@ export default function Header() {
             onClick={() => {
               openSignIn();
             }}
-            className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50"
+            className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 cursor-pointer"
           >
             <LogIn className="w-4 h-4" />
             <span className="ml-2 text-sm">Sign In</span>
