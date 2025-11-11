@@ -31,9 +31,7 @@ export default function Modal(props: ModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={close}>
-      <DialogContent className={className}>
-        {children}
-      </DialogContent>
+      <DialogContent className={className}>{children}</DialogContent>
     </Dialog>
   );
 }
