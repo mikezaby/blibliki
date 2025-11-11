@@ -17,11 +17,11 @@ export default function AudioModules() {
 
   return (
     <div
-      className="absolute z-10 top-12 w-[189px] bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 border-r border-b border-slate-200 dark:border-slate-700 shadow-xl transition-all duration-300 ease-in-out"
+      className="absolute z-10 top-12 w-[189px] bg-slate-50 dark:bg-slate-900 border-r border-b border-slate-200 dark:border-slate-700 shadow-xl transition-all duration-300 ease-in-out"
       style={{ left }}
     >
       {/* Header Section */}
-      <div className="flex items-center gap-2 p-4 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900">
+      <div className="flex items-center gap-2 p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
         <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-purple-600 rounded flex items-center justify-center shadow-sm">
           <Blocks className="w-3 h-3 text-white" />
         </div>
@@ -32,7 +32,7 @@ export default function AudioModules() {
 
       <Button
         variant="ghost"
-        className="absolute left-[189px] top-0 h-13 rounded-none rounded-r-md border-r border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-lg hover:from-slate-200 hover:to-slate-100 dark:hover:from-slate-700 dark:hover:to-slate-800 transition-all duration-200"
+        className="absolute left-[189px] top-0 h-13 rounded-none rounded-r-md border-r border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 shadow-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
         onClick={onClick}
       >
         {visible ? (
@@ -53,7 +53,7 @@ export default function AudioModules() {
             <li key={moduleName}>
               <Button
                 variant="ghost"
-                className="w-full justify-start cursor-move h-9 px-3 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/30 shadow-sm hover:shadow-md transition-all duration-200 group"
+                className="w-full justify-start cursor-move h-9 px-3 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/30 transition-colors group"
                 onDragStart={(event: DragEvent) => {
                   onDragStart(event, moduleName);
                 }}
