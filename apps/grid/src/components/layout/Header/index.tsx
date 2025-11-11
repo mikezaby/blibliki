@@ -4,14 +4,14 @@ import {
   UserButton,
   useClerk,
 } from "@clerk/tanstack-react-start";
-import { LogIn, Octagon, Play } from "lucide-react";
-import { ChangeEvent, ReactNode } from "react";
+import { LogIn, Play, Settings, Square, SplinePointer } from "lucide-react";
+import { ChangeEvent } from "react";
 import { Button, Input, buttonVariants } from "@/components/ui";
 import { start, stop, setBpm } from "@/globalSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { setName as setPatchName } from "@/patchSlice";
 import ColorSchemeToggle from "./ColorSchemeToggle";
-import Patch from "./Patch";
+import FileMenu from "./Patch";
 import LoadModal from "./Patch/LoadModal";
 
 export default function Header() {
@@ -29,63 +29,125 @@ export default function Header() {
   };
 
   return (
-    <div className="flex items-center justify-between p-2 border-b-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-900">
-      <Group>
-        <Patch />
-        <Input
-          className="w-40"
-          onChange={(event: ChangeEvent<HTMLInputElement>) =>
-            dispatch(setPatchName(event.target.value))
-          }
-          value={patchName}
-        />
-        <Input
-          className="w-20"
-          type="number"
-          onChange={(event: ChangeEvent<HTMLInputElement>) => {
-            dispatch(setBpm(+event.target.value));
-          }}
-          value={bpm}
-        />
-      </Group>
-      <Group>
-        <Button variant="outline" onClick={togglePlay}>
-          {isStarted ? <Octagon /> : <Play />}
+    <header className="flex items-center h-12 px-4 bg-gradient-to-r from-slate-100 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-lg">
+      {/* Logo in Transport Area */}
+      <div className="flex items-center gap-2 mr-4">
+        <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-md flex items-center justify-center shadow-sm">
+          <SplinePointer className="w-3 h-3 text-white" />
+        </div>
+        <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+          Grid
+        </h1>
+      </div>
+
+      {/* File Menu - Leftmost */}
+      <div className="flex items-center">
+        <FileMenu />
+      </div>
+
+      {/* Project Controls Section */}
+      <div className="flex items-center gap-3 min-w-[280px] ml-6">
+        <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
+
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-slate-600 dark:text-slate-400 font-medium uppercase tracking-wide">
+            Project
+          </label>
+          <Input
+            className="h-7 w-40 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+              dispatch(setPatchName(event.target.value))
+            }
+            value={patchName}
+            placeholder="Untitled Patch"
+          />
+        </div>
+      </div>
+
+      {/* Transport Controls Section with Logo */}
+      <div className="flex items-center justify-center flex-1 gap-4">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-slate-600 dark:text-slate-400 font-medium uppercase tracking-wide">
+              BPM
+            </label>
+            <Input
+              className="h-7 w-16 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm font-mono text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+              type="number"
+              min="60"
+              max="200"
+              onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                dispatch(setBpm(+event.target.value));
+              }}
+              value={bpm}
+            />
+          </div>
+
+          <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
+
+          <Button
+            onClick={togglePlay}
+            className="h-8 w-8 rounded-full shadow-lg transition-all duration-200 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 shadow-slate-400/25 dark:shadow-slate-800/50"
+          >
+            {isStarted ? (
+              <Square className="w-4 h-4" />
+            ) : (
+              <Play className="w-4 h-4 ml-0.5" />
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* User & Settings Section */}
+      <div className="flex items-center gap-3 min-w-[200px] justify-end">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50"
+        >
+          <Settings className="w-4 h-4" />
         </Button>
-      </Group>
-      <Group>
+
+        <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
+
         <ColorSchemeToggle />
         <a
           href="https://github.com/mikezaby/blibliki"
           target="_blank"
           rel="noreferrer"
-          className={buttonVariants({ variant: "outline" })}
+          className={
+            buttonVariants({
+              variant: "ghost",
+              size: "sm",
+            }) +
+            " text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50"
+          }
         >
           <Github />
         </a>
+
+        <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
 
         <SignedIn>
           <UserButton userProfileUrl="/user" />
         </SignedIn>
         <SignedOut>
           <Button
-            variant="outline"
+            variant="ghost"
+            size="sm"
             onClick={() => {
               openSignIn();
             }}
+            className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50"
           >
-            <LogIn />
+            <LogIn className="w-4 h-4" />
+            <span className="ml-2 text-sm">Sign In</span>
           </Button>
         </SignedOut>
-      </Group>
-
+      </div>
       <LoadModal />
-    </div>
+    </header>
   );
-}
-
-function Group({ children }: { children: ReactNode }) {
-  return <div className="flex items-center gap-2">{children}</div>;
 }
 
 function Github() {
