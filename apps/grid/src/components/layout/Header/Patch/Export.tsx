@@ -9,7 +9,7 @@ export default function Export() {
 
   const exportJSON = () => {
     const data: IPatch = {
-      id: patch.id,
+      id: "",
       userId: "",
       name: patch.name,
       config: { modules, gridNodes },
