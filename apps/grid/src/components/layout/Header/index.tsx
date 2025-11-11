@@ -11,8 +11,8 @@ import { start, stop, setBpm } from "@/globalSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { setName as setPatchName } from "@/patchSlice";
 import ColorSchemeToggle from "./ColorSchemeToggle";
-import FileMenu from "./Patch";
-import LoadModal from "./Patch/LoadModal";
+import FileMenu from "./FileMenu";
+import LoadModal from "./FileMenu/LoadModal";
 
 export default function Header() {
   const dispatch = useAppDispatch();

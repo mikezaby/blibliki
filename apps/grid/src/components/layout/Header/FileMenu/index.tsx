@@ -60,54 +60,79 @@ export default function FileMenu() {
         alignOffset={-4}
       >
         <DropdownMenuGroup>
-          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm cursor-pointer transition-colors">
-            <Plus className="w-4 h-4" />
-            <Link to="/patch/$patchId" params={{ patchId: "new" }}>
+          <DropdownMenuItem asChild>
+            <Link
+              to="/patch/$patchId"
+              params={{ patchId: "new" }}
+              className="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm cursor-pointer transition-colors w-full"
+            >
+              <Plus className="w-4 h-4" />
               New
             </Link>
           </DropdownMenuItem>
 
           {(canCreate || canUpdate) && (
-            <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm cursor-pointer transition-colors">
-              <Save className="w-4 h-4" />
-              <SaveButton asNew={false}>Save</SaveButton>
+            <DropdownMenuItem asChild>
+              <SaveButton
+                asNew={false}
+                className="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm cursor-pointer transition-colors w-full text-left"
+              >
+                <Save className="w-4 h-4" />
+                Save
+              </SaveButton>
             </DropdownMenuItem>
           )}
           {patch.id && canCreate && (
-            <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm cursor-pointer transition-colors">
-              <Copy className="w-4 h-4" />
-              <SaveButton asNew={true}>Save As Copy</SaveButton>
+            <DropdownMenuItem asChild>
+              <SaveButton
+                asNew={true}
+                className="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm cursor-pointer transition-colors w-full text-left"
+              >
+                <Copy className="w-4 h-4" />
+                Save As Copy
+              </SaveButton>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm cursor-pointer transition-colors">
-            <FolderOpen className="w-4 h-4" />
-            <TriggerModal modalName="patch" type="open">
+          <DropdownMenuItem asChild>
+            <TriggerModal
+              modalName="patch"
+              type="open"
+              className="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm cursor-pointer transition-colors w-full"
+            >
+              <FolderOpen className="w-4 h-4" />
               <span>Load</span>
             </TriggerModal>
           </DropdownMenuItem>
 
           {canDelete && (
-            <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-sm cursor-pointer transition-colors">
-              <Trash2 className="w-4 h-4" />
-              <Destroy disabled={!patch.id}>Delete</Destroy>
+            <DropdownMenuItem asChild>
+              <Destroy
+                disabled={!patch.id}
+                className="flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-sm cursor-pointer transition-colors w-full text-left disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </Destroy>
             </DropdownMenuItem>
           )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator className="my-1 bg-slate-200 dark:bg-slate-700" />
 
         <DropdownMenuGroup>
-          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm cursor-pointer transition-colors">
-            <Upload className="w-4 h-4" />
+          <DropdownMenuItem asChild>
             <button
               onClick={openUpload}
-              className="w-full text-left cursor-pointer"
+              className="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm cursor-pointer transition-colors w-full text-left"
             >
+              <Upload className="w-4 h-4" />
               Import
             </button>
           </DropdownMenuItem>
-          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm cursor-pointer transition-colors">
-            <Download className="w-4 h-4" />
-            <Export />
+          <DropdownMenuItem asChild>
+            <div className="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm cursor-pointer transition-colors w-full">
+              <Download className="w-4 h-4" />
+              <Export />
+            </div>
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
@@ -115,10 +140,14 @@ export default function FileMenu() {
   );
 }
 
-function SaveButton(props: { asNew: boolean; children: ReactNode }) {
+function SaveButton(props: {
+  asNew: boolean;
+  children: ReactNode;
+  className?: string;
+}) {
   const dispatch = useAppDispatch();
   const { user } = useUser();
-  const { asNew, children } = props;
+  const { asNew, children, className = "" } = props;
 
   const onSave = () => {
     if (!user) throw Error("You can't save without login");
@@ -127,16 +156,20 @@ function SaveButton(props: { asNew: boolean; children: ReactNode }) {
   };
 
   return (
-    <button onClick={onSave} className="w-full text-left cursor-pointer">
+    <button onClick={onSave} className={className}>
       {children}
     </button>
   );
 }
 
-function Destroy(props: { disabled: boolean; children: ReactNode }) {
+function Destroy(props: {
+  disabled: boolean;
+  children: ReactNode;
+  className?: string;
+}) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { disabled, children } = props;
+  const { disabled, children, className = "" } = props;
 
   const onDestroy = async () => {
     await dispatch(destroy());
@@ -145,7 +178,7 @@ function Destroy(props: { disabled: boolean; children: ReactNode }) {
 
   return (
     <button
-      className="w-full text-left disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+      className={className}
       onClick={() => {
         void onDestroy();
       }}
