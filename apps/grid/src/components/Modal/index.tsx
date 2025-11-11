@@ -14,7 +14,7 @@ type ModalProps = {
 };
 
 export default function Modal(props: ModalProps) {
-  const { children, modalName, onClose } = props;
+  const { children, modalName, className, onClose } = props;
 
   const dispatch = useAppDispatch();
   const { isOpen, modalName: currentModalName } = useAppSelector(
@@ -31,10 +31,8 @@ export default function Modal(props: ModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={close}>
-      <DialogContent className="sm:max-w-md">
-        <div className="flex flex-col justify-cent items-center space-x-2">
-          {children}
-        </div>
+      <DialogContent className={className}>
+        {children}
       </DialogContent>
     </Dialog>
   );
