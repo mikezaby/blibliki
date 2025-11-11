@@ -3,7 +3,7 @@ import Fader, { MarkProps } from "@/components/Fader";
 import { ModuleComponent } from "..";
 import Container from "../Container";
 
-const Center: MarkProps[] = [{ value: 0, label: "-" }];
+const Center: MarkProps[] = [{ value: 0, label: "" }];
 
 const WAVES: OscillatorWave[] = Object.values(OscillatorWave);
 

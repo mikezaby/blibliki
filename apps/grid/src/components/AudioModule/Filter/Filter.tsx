@@ -6,7 +6,7 @@ import Cutoff from "./Cutoff";
 import FilterType from "./FilterType";
 import Resonance from "./Resonance";
 
-const AmountCenter: MarkProps[] = [{ value: 0, label: "-" }];
+const AmountCenter: MarkProps[] = [{ value: 0, label: "" }];
 
 const BiquadFilter: ModuleComponent<ModuleType.Filter> = (props) => {
   const {

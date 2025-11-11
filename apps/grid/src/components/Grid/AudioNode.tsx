@@ -26,27 +26,39 @@ export default function AudioNode(props: NodeProps) {
 
   return (
     <ContextMenu>
-      <ContextMenuTrigger className="flex cursor-grab gap-3 items-stretch shadow-md rounded-md bg-white dark:bg-gray-800 border-2 border-stone-400">
-        <IOContainer>
-          {inputs.map((io) => (
-            <IO key={io.id} io={io} />
-          ))}
-        </IOContainer>
+      <ContextMenuTrigger className="flex cursor-grab items-stretch shadow-lg hover:shadow-xl transition-shadow duration-200 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 min-w-[200px]">
+        {inputs.length > 0 && (
+          <IOContainer type="input">
+            {inputs.map((io) => (
+              <IO key={io.id} io={io} />
+            ))}
+          </IOContainer>
+        )}
 
-        <div className="py-2">
+        <div
+          className={`flex-1 p-3 ${inputs.length > 0 || outputs.length > 0 ? "border-x border-slate-200 dark:border-slate-700" : ""}`}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
+            <span className="text-sm font-medium text-slate-900 dark:text-white truncate">
+              {audioModule.name || audioModule.moduleType}
+            </span>
+          </div>
           <AudioModule audioModule={audioModuleProps} />
         </div>
 
-        <IOContainer>
-          {outputs.map((io) => (
-            <IO key={io.id} io={io} />
-          ))}
-        </IOContainer>
+        {outputs.length > 0 && (
+          <IOContainer type="output">
+            {outputs.map((io) => (
+              <IO key={io.id} io={io} />
+            ))}
+          </IOContainer>
+        )}
       </ContextMenuTrigger>
 
       <ContextMenuContent className="p-0 border-0">
-        <Card>
-          <CardContent>
+        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+          <CardContent className="p-4 space-y-3">
             <Name
               id={audioModule.id}
               moduleType={audioModule.moduleType}
@@ -68,34 +80,58 @@ export default function AudioNode(props: NodeProps) {
 
 function IO({ io }: { io: IIOSerialize }) {
   const handleProps = useMemo(() => {
-    const position = io.ioType.includes("Input")
-      ? Position.Left
-      : Position.Right;
-    const type: HandleType = io.ioType.includes("Input") ? "target" : "source";
-    const className = io.ioType.includes("Input")
-      ? "-left-[6px]"
-      : "-right-[6px]";
+    const isInput = io.ioType.includes("Input");
+    const position = isInput ? Position.Left : Position.Right;
+    const type: HandleType = isInput ? "target" : "source";
+    const className = isInput ? "-left-[8px]" : "-right-[8px]";
+    const gradientClass = isInput
+      ? "bg-gradient-to-r from-emerald-500 to-teal-600"
+      : "bg-gradient-to-r from-orange-500 to-red-600";
 
-    return { type, position, className };
+    return { type, position, className, gradientClass, isInput };
   }, [io.ioType]);
 
   return (
-    <div className="relative">
-      <div className="px-2">{io.name}</div>
+    <div className="group/io relative flex items-center">
+      <div
+        className={`px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 truncate min-w-0 ${
+          handleProps.isInput ? "text-left" : "text-right"
+        }`}
+      >
+        {io.name}
+      </div>
       <Handle
         id={io.name}
         type={handleProps.type}
         position={handleProps.position}
-        className={`${handleProps.className} block rounded w-auto h-6 text-white text-xs -bottom-5 p-1`}
+        className={`${handleProps.className} ${handleProps.gradientClass} w-4 h-4 rounded-full border-2 border-white dark:border-slate-700 shadow-lg hover:scale-110 transition-all duration-200 cursor-pointer`}
+      />
+
+      {/* Connection indicator dot */}
+      <div
+        className={`absolute ${handleProps.isInput ? "-left-1" : "-right-1"} top-1/2 transform -translate-y-1/2 w-1 h-1 ${handleProps.gradientClass} rounded-full opacity-60 group-hover/io:opacity-100 transition-opacity duration-200`}
       />
     </div>
   );
 }
 
-function IOContainer({ children }: { children: ReactNode }) {
+function IOContainer({
+  children,
+  type,
+}: {
+  children: ReactNode;
+  type: "input" | "output";
+}) {
+  const isInput = type === "input";
+  const bgGradient = isInput
+    ? "bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30"
+    : "bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950/30 dark:to-red-950/30";
+
   return (
-    <div className="flex flex-col gap-3 justify-center bg-gray-100 dark:bg-gray-700">
-      {children}
+    <div
+      className={`flex flex-col justify-center min-w-[80px] ${bgGradient} ${isInput ? "rounded-l-lg" : "rounded-r-lg"}`}
+    >
+      <div className="flex flex-col py-2">{children}</div>
     </div>
   );
 }

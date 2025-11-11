@@ -42,9 +42,19 @@ export const InputField = <T extends string | number>({
   };
 
   return (
-    <div className={cn("flex flex-col justify-center items-center", className)}>
-      <Label>{label}</Label>
-      <Input type={inputType} value={value} onChange={internalOnChange} />
+    <div className={cn("space-y-3 p-3 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700", className)}>
+      <div className="flex items-center gap-2">
+        <div className="w-2 h-2 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full" />
+        <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-tight">{label}</Label>
+      </div>
+      <Input 
+        type={inputType} 
+        value={value} 
+        onChange={internalOnChange} 
+        className={`text-sm bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors ${
+          inputType === 'number' ? 'w-20 text-center font-mono' : ''
+        }`}
+      />
     </div>
   );
 };
@@ -63,12 +73,18 @@ export const SelectField = <T extends string | number>({
   const label = schema.label ?? name;
 
   return (
-    <Select
-      label={label}
-      value={value!}
-      options={schema.options}
-      onChange={onChange}
-      className={className}
-    />
+    <div className={cn("space-y-3 p-3 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700", className)}>
+      <div className="flex items-center gap-2">
+        <div className="w-2 h-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full" />
+        <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-tight">{label}</Label>
+      </div>
+      <Select
+        label={""}
+        value={value!}
+        options={schema.options}
+        onChange={onChange}
+        className="text-sm"
+      />
+    </div>
   );
 };

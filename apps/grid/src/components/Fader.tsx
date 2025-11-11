@@ -63,7 +63,7 @@ export default function Fader(props: FaderProps) {
   const debouncedOnChange = throttle(internalOnChange, 500);
 
   return (
-    <div className="flex flex-col justify-center items-center">
+    <div className="flex flex-col items-center gap-2 p-2">
       <Slider
         orientation="vertical"
         onChange={debouncedOnChange}
@@ -74,7 +74,13 @@ export default function Fader(props: FaderProps) {
         step={step ?? 0.01}
         marks={marks}
       />
-      <div className="text-gray-900 dark:text-white">{name}</div>
+
+      <div className="flex items-center gap-1.5 mt-1">
+        <div className="w-1.5 h-1.5 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
+        <label className="text-xs font-medium text-slate-700 dark:text-slate-300 tracking-tight text-center">
+          {name}
+        </label>
+      </div>
     </div>
   );
 }
