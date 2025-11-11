@@ -54,7 +54,7 @@ export default function FileMenu() {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        className="w-64 p-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg"
+        className="w-64 p-1 m-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg"
         align="start"
         sideOffset={0}
         alignOffset={-4}

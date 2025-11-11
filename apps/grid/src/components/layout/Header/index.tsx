@@ -40,7 +40,6 @@ export default function Header() {
         </h1>
       </div>
 
-      {/* File Menu - Leftmost */}
       <div className="flex items-center">
         <FileMenu />
       </div>
@@ -72,10 +71,10 @@ export default function Header() {
               BPM
             </label>
             <Input
-              className="h-7 w-16 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm font-mono text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+              className="h-7 w-18 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm font-mono text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
               type="number"
-              min="60"
-              max="200"
+              min="10"
+              max="999"
               onChange={(event: ChangeEvent<HTMLInputElement>) => {
                 dispatch(setBpm(+event.target.value));
               }}
