@@ -16,7 +16,6 @@ const Constant: ModuleComponent<ModuleType.Constant> = (props) => {
         value={value}
         schema={moduleSchemas[ModuleType.Constant].value as NumberProp}
         onChange={updateProp("value")}
-        className="w-20"
       />
     </Container>
   );
