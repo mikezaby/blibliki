@@ -8,13 +8,7 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import { useEffect } from "react";
-import {
-  ColorScheme,
-  useAppDispatch,
-  useColorScheme,
-  useGridNodes,
-  usePatch,
-} from "@/hooks";
+import { useAppDispatch, useGridNodes, usePatch } from "@/hooks";
 import { NodeTypes } from "./AudioNode";
 import { setViewport } from "./gridNodesSlice";
 import useDrag from "./useDrag";
@@ -34,11 +28,6 @@ export default function Grid() {
     isValidConnection,
   } = useGridNodes();
   const { onDrop, onDragOver } = useDrag();
-
-  const { colorScheme } = useColorScheme();
-  const isDarkMode = colorScheme === ColorScheme.Dark;
-
-  console.log(isDarkMode);
 
   return (
     <div className="grid-container h-full bg-slate-200 dark:bg-slate-600">
