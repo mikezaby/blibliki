@@ -38,7 +38,7 @@ export default function Grid() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={NodeTypes}
-        minZoom={0.3}
+        minZoom={0.1}
         onDrop={onDrop}
         onDragOver={onDragOver}
         isValidConnection={isValidConnection}
