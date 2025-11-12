@@ -124,7 +124,7 @@ function IOContainer({
   type: "input" | "output";
 }) {
   const isInput = type === "input";
-  const bgColor = "bg-slate-50 dark:bg-slate-800/50";
+  const bgColor = "bg-slate-50 dark:bg-slate-900/50";
 
   return (
     <div
