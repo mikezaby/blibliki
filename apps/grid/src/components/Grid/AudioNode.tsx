@@ -35,10 +35,8 @@ export default function AudioNode(props: NodeProps) {
           </IOContainer>
         )}
 
-        <div
-          className={`flex-1 p-3 ${inputs.length > 0 || outputs.length > 0 ? "border-x border-slate-200 dark:border-slate-700" : ""}`}
-        >
-          <div className="flex items-center gap-2 mb-2">
+        <div className={"flex flex-col justify-center p-3 gap-2"}>
+          <div className="flex items-center gap-2 ">
             <div className="w-2 h-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
             <span className="text-sm font-medium text-slate-900 dark:text-white truncate">
               {audioModule.name || audioModule.moduleType}

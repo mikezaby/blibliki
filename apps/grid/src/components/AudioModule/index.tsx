@@ -1,5 +1,5 @@
 import { ModuleType, ModuleTypeToPropsMapping } from "@blibliki/engine";
-import { JSX } from "react";
+import { ReactNode } from "react";
 import { useAppDispatch } from "@/hooks";
 import Constant from "./Constant";
 import Envelope from "./Envelope";
@@ -25,7 +25,7 @@ export type ModuleComponent<T extends ModuleType> = (
   props: AudioModuleProps<T> & {
     updateProp: TUpdateProp<T>;
   },
-) => JSX.Element;
+) => ReactNode;
 
 export type TUpdateProp<T extends ModuleType> = <
   K extends keyof ModuleTypeToPropsMapping[T],

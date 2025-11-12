@@ -1,3 +1,3 @@
 export default function Master() {
-  return <div />;
+  return null;
 }
