@@ -94,9 +94,7 @@ function IO({ io }: { io: IIOSerialize }) {
   return (
     <div className="group/io relative flex items-center">
       <div
-        className={`px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 truncate min-w-0 ${
-          handleProps.isInput ? "text-left" : "text-right"
-        }`}
+        className={`px-3 py-2 w-full text-xs font-medium text-slate-700 dark:text-slate-200 truncate ${handleProps.isInput ? "text-left" : "text-right"}`}
       >
         {io.name}
       </div>
@@ -123,13 +121,11 @@ function IOContainer({
   type: "input" | "output";
 }) {
   const isInput = type === "input";
-  const bgGradient = isInput
-    ? "bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30"
-    : "bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950/30 dark:to-red-950/30";
+  const bgColor = "bg-slate-50 dark:bg-slate-800/50";
 
   return (
     <div
-      className={`flex flex-col justify-center min-w-[80px] ${bgGradient} ${isInput ? "rounded-l-lg" : "rounded-r-lg"}`}
+      className={`flex flex-col justify-center min-w-[80px] ${bgColor} ${isInput ? "rounded-l-lg" : "rounded-r-lg"}`}
     >
       <div className="flex flex-col py-2">{children}</div>
     </div>
