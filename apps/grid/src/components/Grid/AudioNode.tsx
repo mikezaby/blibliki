@@ -82,9 +82,14 @@ function IO({ io }: { io: IIOSerialize }) {
     const position = isInput ? Position.Left : Position.Right;
     const type: HandleType = isInput ? "target" : "source";
     const className = isInput ? "-left-[8px]" : "-right-[8px]";
-    const gradientClass = isInput
-      ? "bg-gradient-to-r from-emerald-500 to-teal-600"
-      : "bg-gradient-to-r from-orange-500 to-red-600";
+
+    // Determine gradient class based on IOType
+    const getGradientClass = (ioType: string) =>
+      ioType.toLowerCase().includes("audio")
+        ? "bg-gradient-to-r from-blue-500 to-cyan-600"
+        : "bg-gradient-to-r from-purple-500 to-pink-600";
+
+    const gradientClass = getGradientClass(io.ioType);
 
     return { type, position, className, gradientClass, isInput };
   }, [io.ioType]);
