@@ -8,8 +8,14 @@ import {
   Viewport,
   useReactFlow,
 } from "@xyflow/react";
-import { useEffect } from "react";
-import { useAppDispatch, useGridNodes, usePatch } from "@/hooks";
+import { useEffect, useMemo } from "react";
+import {
+  ColorScheme,
+  useAppDispatch,
+  useColorScheme,
+  useGridNodes,
+  usePatch,
+} from "@/hooks";
 import { NodeTypes } from "./AudioNode";
 import { setViewport } from "./gridNodesSlice";
 import useDrag from "./useDrag";
@@ -30,8 +36,13 @@ export default function Grid() {
   } = useGridNodes();
   const { onDrop, onDragOver } = useDrag();
 
+  const { colorScheme } = useColorScheme();
+  const isDarkMode = colorScheme === ColorScheme.Dark;
+
+  console.log(isDarkMode);
+
   return (
-    <div className="grid-container">
+    <div className="grid-container h-full bg-slate-200 dark:bg-slate-600">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -45,14 +56,27 @@ export default function Grid() {
         isValidConnection={isValidConnection}
         proOptions={DEFAULT_REACT_FLOW_PROPS}
       >
-        <Controls className="dark:bg-gray-500" />
-        <MiniMap className="dark:bg-gray-700" />
-        <Background
-          className="dark:bg-gray-700"
-          variant={BackgroundVariant.Dots}
-          gap={12}
-          size={1}
+        <Controls className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg" />
+        <MiniMap
+          style={{
+            backgroundColor: isDarkMode ? "#1e293b" : "#ffffff",
+            border: `1px solid ${isDarkMode ? "#334155" : "#e2e8f0"}`,
+            borderRadius: "0.5rem",
+            overflow: "hidden",
+            boxShadow:
+              "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+          }}
+          nodeColor={(node) => {
+            return node.selected ? "#3b82f6" : "#64748b";
+          }}
+          nodeStrokeColor={(node) => {
+            return node.selected ? "#1e40af" : "#475569";
+          }}
+          maskColor={
+            isDarkMode ? "rgb(241 245 249 / 0.1)" : "rgb(148 163 184 / 0.1)"
+          }
         />
+        <Background variant={BackgroundVariant.Dots} gap={16} size={1.2} />
         <OnViewportChange viewport={viewport} />
       </ReactFlow>
     </div>
