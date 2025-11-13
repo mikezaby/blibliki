@@ -1,5 +1,9 @@
 import { ContextTime } from "@blibliki/transport";
-import { Context, createScaleNormalized } from "@blibliki/utils";
+import {
+  Context,
+  createScaleNormalized,
+  cancelAndHoldAtTime,
+} from "@blibliki/utils";
 import { Module } from "@/core";
 import Note from "@/core/Note";
 import { IModuleConstructor } from "@/core/module/Module";
@@ -89,7 +93,7 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
     const decay = this.scaledDecay();
     const sustain = this.props.sustain;
 
-    this.audioNode.gain.cancelAndHoldAtTime(triggeredAt);
+    cancelAndHoldAtTime(this.audioNode.gain, triggeredAt);
 
     // Always start from a tiny value, can't ramp from 0
     if (this.audioNode.gain.value === 0) {
@@ -121,8 +125,10 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
     const release = this.scaledRelease();
 
     // Cancel scheduled automations and set gain to the ACTUAL value at this moment
-    this.audioNode.gain.cancelAndHoldAtTime(triggeredAt);
-    const currentGainValue = this.audioNode.gain.value;
+    const currentGainValue = cancelAndHoldAtTime(
+      this.audioNode.gain,
+      triggeredAt,
+    );
 
     if (currentGainValue >= 0.0001) {
       // Always set the value at the release time to ensure a smooth ramp from here

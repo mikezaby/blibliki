@@ -123,3 +123,29 @@ export function toPrimitive(
     `Unsupported value for toPrimitive: ${JSON.stringify(value)}`,
   );
 }
+
+/**
+ * Firefox-compatible alternative to AudioParam.cancelAndHoldAtTime()
+ *
+ * The cancelAndHoldAtTime method is not supported in Firefox versions prior to 72.
+ * This utility provides cross-browser compatibility by falling back to
+ * cancelScheduledValues + setValueAtTime when the native method is unavailable.
+ *
+ * @param param - The AudioParam to modify
+ * @param time - The time at which to cancel and hold
+ * @returns The current parameter value
+ */
+export function cancelAndHoldAtTime(param: AudioParam, time: number): number {
+  // Try to use native cancelAndHoldAtTime if available (Chrome, Firefox 72+)
+  if (typeof param.cancelAndHoldAtTime === "function") {
+    param.cancelAndHoldAtTime(time);
+    return param.value;
+  }
+
+  // Fallback for older Firefox and other browsers
+  const currentValue = param.value;
+  param.cancelScheduledValues(time);
+  param.setValueAtTime(currentValue, time);
+
+  return currentValue;
+}
