@@ -1,3 +1,4 @@
+import { DialogTitle } from "@radix-ui/react-dialog";
 import { ReactNode } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAppDispatch, useAppSelector } from "@/hooks";
@@ -31,6 +32,7 @@ export default function Modal(props: ModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={close}>
+      <DialogTitle>{modalName}</DialogTitle>
       <DialogContent className={className}>{children}</DialogContent>
     </Dialog>
   );

@@ -17,7 +17,9 @@ export const modalSlice = createSlice({
       state.isOpen = true;
     },
     close: (state, action: PayloadAction<string>) => {
-      state.modalName = action.payload;
+      if (state.modalName !== action.payload) return;
+
+      state.modalName = "";
       state.isOpen = false;
     },
   },

@@ -19,6 +19,7 @@ export default function Header() {
   const { openSignIn } = useClerk();
 
   const { isStarted, bpm } = useAppSelector((state) => state.global);
+  const { modalName } = useAppSelector((state) => state.modal);
   const {
     patch: { name: patchName },
   } = useAppSelector((state) => state.patch);
@@ -144,7 +145,7 @@ export default function Header() {
           </Button>
         </SignedOut>
       </div>
-      <LoadModal />
+      {modalName === "patch" && <LoadModal />}
     </header>
   );
 }
