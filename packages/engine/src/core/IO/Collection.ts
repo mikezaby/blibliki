@@ -1,4 +1,5 @@
 import { assertNever } from "@blibliki/utils";
+import { sortBy } from "es-toolkit";
 import { ModuleType } from "@/modules";
 import { Module } from "../module";
 import { PolyModule } from "../module/PolyModule";
@@ -129,7 +130,9 @@ export default abstract class IOCollection<T extends CollectionType> {
   }
 
   serialize() {
-    return this.collection.map((io) => io.serialize());
+    return sortBy(this.collection, [(io) => (io.isMidi() ? -1 : 1)]).map((io) =>
+      io.serialize(),
+    );
   }
 
   private validateUniqName(name: string) {
