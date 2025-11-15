@@ -259,9 +259,6 @@ importers:
       '@blibliki/utils':
         specifier: workspace:^
         version: link:../utils
-      '@ircam/sc-scheduling':
-        specifier: ^1.0.0
-        version: 1.0.0
       node-web-audio-api:
         specifier: ^1.0.3
         version: 1.0.4
@@ -1034,15 +1031,6 @@ packages:
 
   '@ioredis/commands@1.2.0':
     resolution: {integrity: sha512-Sx1pU8EM64o2BrqNpEO1CNLtKQwyhuXuqyfH7oGKCk+1a33d2r5saW8zNwm3j6BTExtjrv2BxTgzzkMwts6vGg==}
-
-  '@ircam/sc-gettime@1.0.1':
-    resolution: {integrity: sha512-wCW5OVWjtoezKRu3FSl/97LA6VYdatjZfO3azITNYOKIRwDwRtBtZP6PbNNdOY9Qe0/N+tOYxTvmXmRePPjMUw==}
-
-  '@ircam/sc-scheduling@1.0.0':
-    resolution: {integrity: sha512-ehaCWG++/n69d4QPp+8RLGGXHcTi/qeeK/HmDoQxXDdPHIs7rry47dbXuw3ZBBUjpxWVoqeUBbM7pp/qsiHzgA==}
-
-  '@ircam/sc-utils@1.10.1':
-    resolution: {integrity: sha512-w9WxGe6aXT+mUGRreidKSr+U1RW0uFC3zNd75vWV/NSUpfxxVsrQtxzuJlEAJIxA+IK7ddILPPixenKXK7xYzg==}
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -3742,10 +3730,6 @@ packages:
     resolution: {integrity: sha512-YWnfyRwxL/+SsrWYfOpUtz5b3YD+nyfkHvjbcanzk8zgyO4ASD67uVMRt8k5bM4lLMDnXfriRhOpemw+NfT1eA==}
     engines: {node: '>=8'}
 
-  is-plain-obj@4.1.0:
-    resolution: {integrity: sha512-+Pgi+vMuUNkJyExiMBt5IlFoMyKnr5zhJ4Uspz58WOhBF5QoIZkFyNHIbBAtHwzVAgk5RtndVNsDRN61/mmDqg==}
-    engines: {node: '>=12'}
-
   is-reference@1.2.1:
     resolution: {integrity: sha512-U82MsXXiFIrjCK4otLT+o2NA2Cd2g5MLoOVXUZjIOhLurrRxpEXzI8O0KZHr3IjLvlAH1kTPYSuqer5T9ZVBKQ==}
 
@@ -4271,9 +4255,6 @@ packages:
 
   nth-check@2.1.1:
     resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
-
-  number-precision@1.6.0:
-    resolution: {integrity: sha512-05OLPgbgmnixJw+VvEh18yNPUo3iyp4BEWJcrLu4X9W05KmMifN7Mu5exYvQXqxxeNWhvIF+j3Rij+HmddM/hQ==}
 
   nypm@0.6.0:
     resolution: {integrity: sha512-mn8wBFV9G9+UFHIrq+pZ2r2zL4aPau/by3kJb3cM7+5tQHMt6HGQB8FDIeKFYp8o0D2pnH6nVsO88N4AmUxIWg==}
@@ -6478,18 +6459,6 @@ snapshots:
   '@humanwhocodes/retry@0.4.2': {}
 
   '@ioredis/commands@1.2.0': {}
-
-  '@ircam/sc-gettime@1.0.1': {}
-
-  '@ircam/sc-scheduling@1.0.0':
-    dependencies:
-      '@ircam/sc-utils': 1.10.1
-
-  '@ircam/sc-utils@1.10.1':
-    dependencies:
-      '@ircam/sc-gettime': 1.0.1
-      is-plain-obj: 4.1.0
-      number-precision: 1.6.0
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -9478,8 +9447,6 @@ snapshots:
 
   is-plain-obj@2.1.0: {}
 
-  is-plain-obj@4.1.0: {}
-
   is-reference@1.2.1:
     dependencies:
       '@types/estree': 1.0.7
@@ -10024,8 +9991,6 @@ snapshots:
   nth-check@2.1.1:
     dependencies:
       boolbase: 1.0.0
-
-  number-precision@1.6.0: {}
 
   nypm@0.6.0:
     dependencies:

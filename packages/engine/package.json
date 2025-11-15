@@ -30,7 +30,6 @@
   "dependencies": {
     "@blibliki/transport": "workspace:^",
     "@blibliki/utils": "workspace:^",
-    "@ircam/sc-scheduling": "^1.0.0",
     "node-web-audio-api": "^1.0.3",
     "webmidi": "^3.1.14"
   }
