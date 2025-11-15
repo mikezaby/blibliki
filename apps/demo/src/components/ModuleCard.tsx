@@ -2,8 +2,8 @@ import {
   moduleSchemas as originalModuleSchemas,
   ModuleType,
   ModuleTypeToPropsMapping,
+  ModulePropSchema,
   PropSchema,
-  PropDefinition,
   IModuleSerialize,
   IPolyModuleSerialize,
 } from "@blibliki/engine";
@@ -18,7 +18,7 @@ type ModuleCardProps<T extends ModuleType> = {
 const overrides: {
   [K in ModuleType]?: {
     [P in keyof ModuleTypeToPropsMapping[K]]?: Partial<
-      PropSchema<ModuleTypeToPropsMapping[K]>[P]
+      ModulePropSchema<ModuleTypeToPropsMapping[K]>[P]
     >;
   };
 } = {
@@ -45,7 +45,7 @@ const ModuleCard = <T extends ModuleType>({ module }: ModuleCardProps<T>) => {
 
   const onChange =
     (key: keyof ModuleTypeToPropsMapping[T]) =>
-    (value: string | number | boolean | (string | number)[]) => {
+    (value: string | number | boolean | string[] | number[]) => {
       const { id, moduleType } = module;
       const props = { [key]: value } as ModuleTypeToPropsMapping[T];
 
@@ -65,9 +65,8 @@ const ModuleCard = <T extends ModuleType>({ module }: ModuleCardProps<T>) => {
       <div className="mb-2">
         <h3 className="text-sm font-semibold text-gray-700">Props</h3>
         {typedEntries(module.props).map(([key, value]) => {
-          const fieldSchema = schema[key] as
-            | PropDefinition<typeof value>
-            | undefined;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+          const fieldSchema = (schema as any)[key] as PropSchema | undefined;
 
           return (
             <Field

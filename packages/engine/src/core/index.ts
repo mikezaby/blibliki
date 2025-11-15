@@ -20,7 +20,7 @@ export type {
 } from "./IO";
 
 export type {
-  PropDefinition,
+  ModulePropSchema,
   PropSchema,
   NumberProp,
   StringProp,

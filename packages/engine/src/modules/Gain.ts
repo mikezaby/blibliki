@@ -1,8 +1,7 @@
 import { Context } from "@blibliki/utils";
-import { IModule, Module } from "@/core";
+import { IModule, Module, ModulePropSchema } from "@/core";
 import { IModuleConstructor } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
-import { PropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
 
 export type IGain = IModule<ModuleType.Gain>;
@@ -10,7 +9,7 @@ export type IGainProps = {
   gain: number;
 };
 
-export const gainPropSchema: PropSchema<IGainProps> = {
+export const gainPropSchema: ModulePropSchema<IGainProps> = {
   gain: {
     kind: "number",
     min: 0,

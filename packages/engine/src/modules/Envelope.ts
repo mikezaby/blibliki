@@ -4,7 +4,7 @@ import { Module } from "@/core";
 import Note from "@/core/Note";
 import { IModuleConstructor } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
-import { PropSchema } from "@/core/schema";
+import { ModulePropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
 
 export type IEnvelopeProps = {
@@ -21,7 +21,7 @@ const DEFAULT_PROPS: IEnvelopeProps = {
   release: 0,
 };
 
-export const envelopePropSchema: PropSchema<IEnvelopeProps> = {
+export const envelopePropSchema: ModulePropSchema<IEnvelopeProps> = {
   attack: {
     kind: "number",
     min: 0.0001,

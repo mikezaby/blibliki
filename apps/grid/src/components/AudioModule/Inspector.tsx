@@ -1,4 +1,4 @@
-import { Engine, EnumProp, moduleSchemas, ModuleType } from "@blibliki/engine";
+import { Engine, moduleSchemas, ModuleType } from "@blibliki/engine";
 import { oscilloscope } from "@blibliki/utils";
 import { useEffect, useRef } from "react";
 import { ModuleComponent } from ".";
@@ -15,8 +15,7 @@ const Inspector: ModuleComponent<ModuleType.Inspector> = (props) => {
     props: { fftSize },
   } = props;
 
-  const fftSchema = moduleSchemas[ModuleType.Inspector]
-    .fftSize as EnumProp<number>;
+  const fftSchema = moduleSchemas[ModuleType.Inspector].fftSize;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 

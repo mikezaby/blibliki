@@ -1,6 +1,6 @@
 import { IModule, Module, MidiOutput } from "@/core";
 import MidiEvent from "@/core/midi/MidiEvent";
-import { PropSchema } from "@/core/schema";
+import { ModulePropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
 
 export type IMidiSelector = IModule<ModuleType.MidiSelector>;
@@ -8,7 +8,7 @@ export type IMidiSelectorProps = {
   selectedId: string | undefined | null;
 };
 
-export const midiSelectorPropSchema: PropSchema<IMidiSelectorProps> = {
+export const midiSelectorPropSchema: ModulePropSchema<IMidiSelectorProps> = {
   selectedId: {
     kind: "string",
     label: "Midi device ID",

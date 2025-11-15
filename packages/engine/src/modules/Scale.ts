@@ -1,6 +1,6 @@
 import { Context } from "@blibliki/utils";
 import { IModule, Module } from "@/core";
-import { PropSchema } from "@/core/schema";
+import { ModulePropSchema } from "@/core/schema";
 import { CustomWorklet, newAudioWorklet } from "@/processors";
 import { ICreateModule, ModuleType } from ".";
 
@@ -11,7 +11,7 @@ export type IScaleProps = {
   current: number;
 };
 
-export const scalePropSchema: PropSchema<IScaleProps> = {
+export const scalePropSchema: ModulePropSchema<IScaleProps> = {
   min: {
     kind: "number",
     min: -Infinity,

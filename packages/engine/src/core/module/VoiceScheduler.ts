@@ -3,12 +3,13 @@ import { EmptyObject } from "@blibliki/utils";
 import { ICreateModule, ModuleType } from "@/modules";
 import { MidiOutput } from "../IO";
 import MidiEvent, { MidiEventType } from "../midi/MidiEvent";
-import { PropSchema } from "../schema";
+import { ModulePropSchema } from "../schema";
 import { IModuleConstructor, Module } from "./Module";
 import { IPolyModuleConstructor, PolyModule } from "./PolyModule";
 
 export type IVoiceSchedulerProps = EmptyObject;
-export const voiceSchedulerPropSchema: PropSchema<IVoiceSchedulerProps> = {};
+export const voiceSchedulerPropSchema: ModulePropSchema<IVoiceSchedulerProps> =
+  {};
 const DEFAULT_PROPS = {};
 
 class Voice extends Module<ModuleType.VoiceScheduler> {

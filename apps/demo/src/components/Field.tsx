@@ -1,14 +1,14 @@
-import { PropDefinition } from "@blibliki/engine";
+import { PropSchema } from "@blibliki/engine";
 import { assertNever, notImplemented } from "@blibliki/utils";
 
-type FieldProps<T extends string | number | boolean | (string | number)[]> = {
+type FieldProps<T extends string | number | boolean | string[] | number[]> = {
   name: string;
   value?: T;
-  schema: PropDefinition<T> | undefined;
+  schema: PropSchema | undefined;
   onChange: (value: T) => void;
 };
 
-const Field = <T extends string | number | boolean | (string | number)[]>({
+const Field = <T extends string | number | boolean | string[] | number[]>({
   name,
   value,
   schema,

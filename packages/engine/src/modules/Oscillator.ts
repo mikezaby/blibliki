@@ -4,7 +4,7 @@ import { IModule, Module } from "@/core";
 import Note from "@/core/Note";
 import { IModuleConstructor } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
-import { PropSchema } from "@/core/schema";
+import { EnumProp, ModulePropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
 
 const LOW_GAIN = -18;
@@ -38,7 +38,12 @@ export type IOscillatorProps = {
   lowGain: boolean;
 };
 
-export const oscillatorPropSchema: PropSchema<IOscillatorProps> = {
+export const oscillatorPropSchema: ModulePropSchema<
+  IOscillatorProps,
+  {
+    wave: EnumProp<OscillatorWave>;
+  }
+> = {
   wave: {
     kind: "enum",
     options: Object.values(OscillatorWave),

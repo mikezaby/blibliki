@@ -1,4 +1,4 @@
-import { INote, PropSchema, Module, IModule, MidiOutput } from "@/core";
+import { INote, Module, IModule, MidiOutput, ModulePropSchema } from "@/core";
 import { ICreateModule, ModuleType } from ".";
 
 export type IStepSequencer = IModule<ModuleType.StepSequencer>;
@@ -16,7 +16,7 @@ export type IStepSequencerProps = {
   sequences: ISequence[][];
 };
 
-export const stepSequencerPropSchema: PropSchema<
+export const stepSequencerPropSchema: ModulePropSchema<
   Omit<IStepSequencerProps, "sequences">
 > = {
   steps: {

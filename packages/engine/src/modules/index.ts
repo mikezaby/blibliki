@@ -1,5 +1,5 @@
 import { assertNever } from "@blibliki/utils";
-import { IModule, Module, PropSchema } from "@/core";
+import { IModule, Module } from "@/core";
 import { IPolyModuleConstructor } from "@/core/module/PolyModule";
 import VoiceScheduler, {
   IVoiceSchedulerProps,
@@ -74,9 +74,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.VoiceScheduler]: VoiceScheduler;
 };
 
-export const moduleSchemas: {
-  [K in ModuleType]: PropSchema<Partial<ModuleTypeToPropsMapping[K]>>;
-} = {
+export const moduleSchemas = {
   [ModuleType.Oscillator]: oscillatorPropSchema,
   [ModuleType.Gain]: gainPropSchema,
   [ModuleType.Master]: masterPropSchema,

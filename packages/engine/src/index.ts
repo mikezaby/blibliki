@@ -8,7 +8,7 @@ export type {
   IModuleSerialize,
   IPolyModuleSerialize,
   IMidiDevice,
-  PropDefinition,
+  ModulePropSchema,
   PropSchema,
   StringProp,
   NumberProp,

@@ -1,5 +1,5 @@
 import { ContextTime } from "@blibliki/transport";
-import { PropSchema, Module, IModule, MidiOutput, Note } from "@/core";
+import { Module, IModule, MidiOutput, Note, ModulePropSchema } from "@/core";
 import MidiEvent from "@/core/midi/MidiEvent";
 import { ICreateModule, ModuleType } from ".";
 
@@ -8,7 +8,7 @@ export type IVirtualMidiProps = {
   activeNotes: string[];
 };
 
-export const virtualMidiPropSchema: PropSchema<IVirtualMidiProps> = {
+export const virtualMidiPropSchema: ModulePropSchema<IVirtualMidiProps> = {
   activeNotes: {
     kind: "array",
     label: "Active notes",

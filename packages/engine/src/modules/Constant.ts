@@ -1,8 +1,7 @@
 import { ContextTime } from "@blibliki/transport";
 import { Context } from "@blibliki/utils";
-import { IModule, Module } from "@/core";
+import { IModule, Module, ModulePropSchema } from "@/core";
 import Note from "@/core/Note";
-import { PropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
 
 export type IConstant = IModule<ModuleType.Constant>;
@@ -10,7 +9,7 @@ export type IConstantProps = {
   value: number;
 };
 
-export const constantPropSchema: PropSchema<IConstantProps> = {
+export const constantPropSchema: ModulePropSchema<IConstantProps> = {
   value: {
     kind: "number",
     min: -Infinity,

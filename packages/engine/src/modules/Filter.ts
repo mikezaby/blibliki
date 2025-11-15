@@ -1,7 +1,7 @@
 import { Context } from "@blibliki/utils";
+import { EnumProp, ModulePropSchema } from "@/core";
 import { IModuleConstructor, Module } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
-import { PropSchema } from "@/core/schema";
 import { createModule, ICreateModule, ModuleType } from ".";
 import { MonoGain } from "./Gain";
 import Scale from "./Scale";
@@ -23,7 +23,12 @@ const DEFAULT_PROPS: IFilterProps = {
   Q: 1,
 };
 
-export const filterPropSchema: PropSchema<IFilterProps> = {
+export const filterPropSchema: ModulePropSchema<
+  IFilterProps,
+  {
+    type: EnumProp<BiquadFilterType>;
+  }
+> = {
   cutoff: {
     kind: "number",
     min: MIN_FREQ,
