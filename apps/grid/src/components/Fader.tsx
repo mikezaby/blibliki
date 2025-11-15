@@ -80,7 +80,7 @@ export default function Fader(props: FaderProps) {
         marks={marks}
       />
 
-      <div className="flex items-center gap-1.5 mt-1">
+      <div className="flex items-center w-full gap-1.5 mt-1">
         <div className="w-1.5 h-1.5 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
         <label className="text-xs font-medium text-slate-700 dark:text-slate-300 tracking-tight text-center">
           {name}
