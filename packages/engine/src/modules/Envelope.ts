@@ -1,9 +1,5 @@
 import { ContextTime } from "@blibliki/transport";
-import {
-  Context,
-  createScaleNormalized,
-  cancelAndHoldAtTime,
-} from "@blibliki/utils";
+import { Context, cancelAndHoldAtTime } from "@blibliki/utils";
 import { Module } from "@/core";
 import Note from "@/core/Note";
 import { IModuleConstructor } from "@/core/module/Module";
@@ -19,24 +15,24 @@ export type IEnvelopeProps = {
 };
 
 const DEFAULT_PROPS: IEnvelopeProps = {
-  attack: 0.1,
-  decay: 0.2,
-  sustain: 0,
-  release: 0.3,
+  attack: 0.01,
+  decay: 0,
+  sustain: 1,
+  release: 0,
 };
 
 export const envelopePropSchema: PropSchema<IEnvelopeProps> = {
   attack: {
     kind: "number",
     min: 0.0001,
-    max: 1,
+    max: 20,
     step: 0.01,
     label: "Attack",
   },
   decay: {
     kind: "number",
     min: 0,
-    max: 1,
+    max: 20,
     step: 0.01,
     label: "Decay",
   },
@@ -50,21 +46,11 @@ export const envelopePropSchema: PropSchema<IEnvelopeProps> = {
   release: {
     kind: "number",
     min: 0,
-    max: 1,
+    max: 20,
     step: 0.01,
     label: "Release",
   },
 };
-
-const scaleToTen = createScaleNormalized({
-  min: 0.001,
-  max: 10,
-});
-
-const scaleToFive = createScaleNormalized({
-  min: 0.001,
-  max: 5,
-});
 
 class MonoEnvelope extends Module<ModuleType.Envelope> {
   declare audioNode: GainNode;
@@ -89,8 +75,8 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
   triggerAttack(note: Note, triggeredAt: ContextTime) {
     super.triggerAttack(note, triggeredAt);
 
-    const attack = this.scaledAttack();
-    const decay = this.scaledDecay();
+    const attack = this.props.attack;
+    const decay = this.props.decay;
     const sustain = this.props.sustain;
 
     cancelAndHoldAtTime(this.audioNode.gain, triggeredAt);
@@ -122,7 +108,7 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
     super.triggerRelease(note, triggeredAt);
     if (this.activeNotes.length > 0) return;
 
-    const release = this.scaledRelease();
+    const release = this.props.release;
 
     // Cancel scheduled automations and set gain to the ACTUAL value at this moment
     const currentGainValue = cancelAndHoldAtTime(
@@ -142,18 +128,6 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
 
     // Set to zero at the very end
     this.audioNode.gain.setValueAtTime(0, triggeredAt + release);
-  }
-
-  private scaledAttack() {
-    return scaleToTen(this.props.attack);
-  }
-
-  private scaledDecay() {
-    return scaleToFive(this.props.decay);
-  }
-
-  private scaledRelease() {
-    return scaleToTen(this.props.release);
   }
 }
 

@@ -19,29 +19,34 @@ type FaderProps = {
 };
 
 const calcValue = function (
-  value: number,
+  sliderValue: number,
   min: number,
   max: number,
   exp?: number,
 ) {
-  if (!value || !exp) return value;
+  if (exp === undefined || exp === 1) return sliderValue;
 
   const range = max - min;
-  const coeff = Math.pow((value - min) / range, exp);
+  const normalizedSlider = (sliderValue - min) / range; // 0 to 1
+  const curved = Math.pow(normalizedSlider, exp);
 
-  return min + coeff * range;
+  return min + curved * range;
 };
 
 const revCalcValue = function (
-  value: number,
+  actualValue: number,
   min: number,
   max: number,
   exp?: number,
 ) {
-  if (!value || !exp) return value;
+  if (exp === undefined || exp === 1) return actualValue;
 
   const range = max - min;
-  return Math.round(Math.pow((value - min) / range, 1 / exp) * range + min);
+  const normalizedValue = (actualValue - min) / range; // 0 to 1
+  const inverseExp = 1 / exp;
+  const sliderPosition = Math.pow(normalizedValue, inverseExp);
+
+  return min + sliderPosition * range;
 };
 
 export default function Fader(props: FaderProps) {
@@ -58,7 +63,7 @@ export default function Fader(props: FaderProps) {
   const revValue = value && revCalcValue(value, min, max, exp);
 
   const internalOnChange = (newValue: number) => {
-    onChange(newValue, calcValue(newValue, min, max || 1, exp));
+    onChange(newValue, calcValue(newValue, min, max, exp));
   };
   const debouncedOnChange = throttle(internalOnChange, 500);
 
