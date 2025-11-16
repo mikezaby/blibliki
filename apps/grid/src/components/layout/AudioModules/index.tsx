@@ -1,10 +1,15 @@
 "use client";
 
+import { ModuleType } from "@blibliki/engine";
 import { PanelLeftClose, PanelLeftOpen, Blocks } from "lucide-react";
 import { useState, DragEvent } from "react";
 import { AvailableModules } from "@/components/AudioModule/modulesSlice";
 import useDrag from "@/components/Grid/useDrag";
 import { Button } from "@/components/ui";
+
+const SupportedModules = Object.values(AvailableModules)
+  .filter(({ moduleType }) => moduleType !== ModuleType.StepSequencer)
+  .map(({ moduleType }) => moduleType);
 
 export default function AudioModules() {
   const [visible, setVisible] = useState<boolean>(true);
@@ -49,7 +54,7 @@ export default function AudioModules() {
           </p>
         </div>
         <ul className="px-3 space-y-1">
-          {Object.keys(AvailableModules).map((moduleName) => (
+          {SupportedModules.map((moduleName) => (
             <li key={moduleName}>
               <Button
                 variant="ghost"
