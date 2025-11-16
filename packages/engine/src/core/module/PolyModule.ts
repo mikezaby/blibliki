@@ -47,6 +47,7 @@ export abstract class PolyModule<T extends ModuleType>
   protected superInitialized = false;
   private _voices!: number;
   private _name!: string;
+  private pendingUIUpdates = false;
 
   constructor(engineId: string, params: IPolyModuleConstructor<T>) {
     const { id, name, moduleType, voices, monoModuleConstructor, props } =
@@ -165,6 +166,26 @@ export abstract class PolyModule<T extends ModuleType>
     const audioModule = this.findVoice(voiceNo);
     audioModule.onMidiEvent(midiEvent);
   };
+
+  triggerPropsUpdate = () => {
+    if (this.pendingUIUpdates) return;
+
+    this.pendingUIUpdates = true;
+    this.sheduleTriggerUpdate();
+  };
+
+  private sheduleTriggerUpdate() {
+    requestAnimationFrame(() => {
+      this.engine._triggerPropsUpdate({
+        id: this.id,
+        moduleType: this.moduleType,
+        voices: this.voices,
+        name: this.name,
+        props: this.props,
+      });
+      this.pendingUIUpdates = false;
+    });
+  }
 
   findVoice(voiceNo: number) {
     const moduleByVoice = this.audioModules.find((m) => m.voiceNo === voiceNo);

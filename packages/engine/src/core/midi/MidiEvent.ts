@@ -5,7 +5,7 @@ import Note, { INote } from "../Note";
 export enum MidiEventType {
   noteOn = "noteon",
   noteOff = "noteoff",
-  cc = "cc",
+  cc = "controlchange",
 }
 
 export default class MidiEvent {
@@ -49,6 +49,22 @@ export default class MidiEvent {
     return (
       this.type === MidiEventType.noteOn || this.type === MidiEventType.noteOff
     );
+  }
+
+  get isCC() {
+    return this.type === MidiEventType.cc;
+  }
+
+  get cc(): number | undefined {
+    if (!this.isCC) return;
+
+    return this.message.dataBytes[0];
+  }
+
+  get ccValue(): number | undefined {
+    if (!this.isCC) return;
+
+    return this.message.dataBytes[1];
   }
 
   defineNotes() {

@@ -35,4 +35,7 @@ export type {
   ModuleTypeToPropsMapping,
   ICreateModule,
   ModuleParams,
+  IMidiMapper,
+  IMidiMapperProps,
+  MidiMapping,
 } from "./modules";

@@ -47,6 +47,7 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   protected _props!: ModuleTypeToPropsMapping[T];
   protected superInitialized = false;
   protected activeNotes: Note[];
+  private pendingUIUpdates = false;
 
   constructor(engineId: string, params: IModuleConstructor<T>) {
     const { id, name, moduleType, voiceNo, audioNodeConstructor, props } =
@@ -149,6 +150,10 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
     );
   }
 
+  handleCC(_event: MidiEvent, _triggeredAt: ContextTime): void {
+    // Optional implementation in modules
+  }
+
   onMidiEvent = (midiEvent: MidiEvent) => {
     const { note, triggeredAt } = midiEvent;
 
@@ -160,18 +165,31 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
       case MidiEventType.noteOff:
         this.triggerRelease(note!, triggeredAt);
         break;
+      case MidiEventType.cc:
+        this.handleCC(midiEvent, triggeredAt);
+        break;
       default:
         throw Error("This type is not a note");
     }
   };
 
-  protected triggerPropsUpdate() {
-    this.engine._triggerPropsUpdate({
-      id: this.id,
-      moduleType: this.moduleType,
-      voiceNo: this.voiceNo,
-      name: this.name,
-      props: this.props,
+  triggerPropsUpdate = () => {
+    if (this.pendingUIUpdates) return;
+
+    this.pendingUIUpdates = true;
+    this.sheduleTriggerUpdate();
+  };
+
+  private sheduleTriggerUpdate() {
+    requestAnimationFrame(() => {
+      this.engine._triggerPropsUpdate({
+        id: this.id,
+        moduleType: this.moduleType,
+        voiceNo: this.voiceNo,
+        name: this.name,
+        props: this.props,
+      });
+      this.pendingUIUpdates = false;
     });
   }
 

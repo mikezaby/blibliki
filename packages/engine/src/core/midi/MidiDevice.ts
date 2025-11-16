@@ -75,6 +75,7 @@ export default class MidiDevice implements IMidiDevice {
     switch (midiEvent.type) {
       case MidiEventType.noteOn:
       case MidiEventType.noteOff:
+      case MidiEventType.cc:
         this.eventListerCallbacks.forEach((callback) => {
           callback(midiEvent);
         });

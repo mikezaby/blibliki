@@ -20,7 +20,7 @@ import {
   ModuleTypeToModuleMapping,
   createModule,
 } from "@/modules";
-import { PolyModule } from "./core/module/PolyModule";
+import { IPolyModule, PolyModule } from "./core/module/PolyModule";
 import { loadProcessors } from "./processors";
 
 export type IUpdateModule<T extends ModuleType> = {
@@ -37,7 +37,7 @@ export class Engine {
   private static _engines = new Map<string, Engine>();
   private static _currentId: string | undefined;
   private propsUpdateCallbacks: (<T extends ModuleType>(
-    params: IModule<T>,
+    params: IModule<T> | IPolyModule<T>,
   ) => void)[] = [];
 
   readonly id: string;
@@ -219,11 +219,17 @@ export class Engine {
     return this.midiDeviceManager.find(id);
   }
 
-  onPropsUpdate(callback: <T extends ModuleType>(params: IModule<T>) => void) {
+  onPropsUpdate(
+    callback: <T extends ModuleType>(
+      params: IModule<T> | IPolyModule<T>,
+    ) => void,
+  ) {
     this.propsUpdateCallbacks.push(callback);
   }
 
-  _triggerPropsUpdate<T extends ModuleType>(params: IModule<T>) {
+  _triggerPropsUpdate<T extends ModuleType>(
+    params: IModule<T> | IPolyModule<T>,
+  ) {
     this.propsUpdateCallbacks.forEach((callback) => {
       callback(params);
     });

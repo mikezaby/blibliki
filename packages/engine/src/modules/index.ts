@@ -11,6 +11,10 @@ import Filter, { filterPropSchema, IFilterProps } from "./Filter";
 import Gain, { gainPropSchema, IGainProps } from "./Gain";
 import Inspector, { IInspectorProps, inspectorPropSchema } from "./Inspector";
 import Master, { IMasterProps, masterPropSchema } from "./Master";
+import MidiMapper, {
+  IMidiMapperProps,
+  midiMapperPropSchema,
+} from "./MidiMapper";
 import MidiSelector, {
   IMidiSelectorProps,
   midiSelectorPropSchema,
@@ -39,6 +43,7 @@ export enum ModuleType {
   Scale = "Scale",
   Inspector = "Inspector",
   Constant = "Constant",
+  MidiMapper = "MidiMapper",
   VirtualMidi = "VirtualMidi",
   StepSequencer = "StepSequencer",
   VoiceScheduler = "VoiceScheduler",
@@ -54,6 +59,7 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.Scale]: IScaleProps;
   [ModuleType.Inspector]: IInspectorProps;
   [ModuleType.Constant]: IConstantProps;
+  [ModuleType.MidiMapper]: IMidiMapperProps;
   [ModuleType.VirtualMidi]: IVirtualMidiProps;
   [ModuleType.StepSequencer]: IStepSequencerProps;
   [ModuleType.VoiceScheduler]: IVoiceSchedulerProps;
@@ -69,6 +75,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.Scale]: Scale;
   [ModuleType.Inspector]: Inspector;
   [ModuleType.Constant]: Constant;
+  [ModuleType.MidiMapper]: MidiMapper;
   [ModuleType.VirtualMidi]: VirtualMidi;
   [ModuleType.StepSequencer]: StepSequencer;
   [ModuleType.VoiceScheduler]: VoiceScheduler;
@@ -84,6 +91,7 @@ export const moduleSchemas = {
   [ModuleType.Scale]: scalePropSchema,
   [ModuleType.Inspector]: inspectorPropSchema,
   [ModuleType.Constant]: constantPropSchema,
+  [ModuleType.MidiMapper]: midiMapperPropSchema,
   [ModuleType.VirtualMidi]: virtualMidiPropSchema,
   [ModuleType.StepSequencer]: stepSequencerPropSchema,
   [ModuleType.VoiceScheduler]: voiceSchedulerPropSchema,
@@ -99,6 +107,7 @@ export type {
   IStepSequencerProps,
   ISequence,
 } from "./StepSequencer";
+export type { IMidiMapper, IMidiMapperProps, MidiMapping } from "./MidiMapper";
 
 export type AnyModule = Module<ModuleType>;
 export type IAnyModule = IModule<ModuleType>;
@@ -144,6 +153,8 @@ export function createModule(
       return new Inspector(engineId, params);
     case ModuleType.Constant:
       return new Constant(engineId, params);
+    case ModuleType.MidiMapper:
+      return new MidiMapper(engineId, params);
     case ModuleType.VirtualMidi:
       return new VirtualMidi(engineId, params);
     case ModuleType.StepSequencer:

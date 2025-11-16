@@ -19,13 +19,21 @@ type SelectProps<T extends string | number | undefined> = {
   options: TOption;
   label?: string;
   className?: string;
+  disabled?: boolean;
   onChange: (value: T) => void;
 };
 
 export default function Select<T extends string | number | undefined>(
   props: SelectProps<T>,
 ) {
-  const { value, options, label, onChange, className = "" } = props;
+  const {
+    value,
+    options,
+    label,
+    onChange,
+    className = "",
+    disabled = false,
+  } = props;
 
   const opts: TDefOption[] = useMemo(() => {
     if (!options.length) return options as TDefOption[];
@@ -54,7 +62,11 @@ export default function Select<T extends string | number | undefined>(
   };
 
   return (
-    <SelectUI value={value?.toString()} onValueChange={onValueChange}>
+    <SelectUI
+      value={value?.toString()}
+      onValueChange={onValueChange}
+      disabled={disabled}
+    >
       <SelectTrigger className="w-[180px]">
         <SelectValue placeholder={label} />
       </SelectTrigger>
@@ -64,7 +76,7 @@ export default function Select<T extends string | number | undefined>(
           <SelectLabel>Select...</SelectLabel>
           {opts.map(({ name, value: v }) => (
             <SelectItem key={v} value={v.toString()}>
-              {name}
+              {name} ({v})
             </SelectItem>
           ))}
         </SelectGroup>

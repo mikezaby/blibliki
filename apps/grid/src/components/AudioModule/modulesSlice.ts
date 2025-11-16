@@ -9,6 +9,7 @@ import {
   createSlice,
   createEntityAdapter,
   PayloadAction,
+  createSelector,
 } from "@reduxjs/toolkit";
 import { XYPosition } from "@xyflow/react";
 import { addNode } from "@/components/Grid/gridNodesSlice";
@@ -48,6 +49,10 @@ export const AvailableModules: Record<
     moduleType: ModuleType.Inspector,
   },
   [ModuleType.Constant]: { name: "Constant", moduleType: ModuleType.Constant },
+  [ModuleType.MidiMapper]: {
+    name: "Midi Mapper",
+    moduleType: ModuleType.MidiMapper,
+  },
   [ModuleType.VirtualMidi]: {
     name: "Keyboard",
     moduleType: ModuleType.VirtualMidi,
@@ -139,6 +144,12 @@ export const removeModule =
 
 export const modulesSelector = modulesAdapter.getSelectors(
   (state: RootState) => state.modules,
+);
+
+export const selectAllExceptSelf = createSelector(
+  (state: RootState) => modulesSelector.selectAll(state),
+  (_: RootState, id: string) => id,
+  (modules: ModuleProps[], id: string) => modules.filter((m) => m.id !== id),
 );
 
 export default modulesSlice.reducer;

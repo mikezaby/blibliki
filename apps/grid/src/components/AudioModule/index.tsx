@@ -9,6 +9,7 @@ import Inspector from "./Inspector";
 import Keyboard from "./Keyboard";
 import Master from "./Master";
 import MidiDeviceSelector from "./MidiDeviceSelector";
+import MidiMapper from "./MidiMapper";
 import Oscillator from "./Oscillator";
 import Scale from "./Scale";
 import VoiceScheduler from "./VoiceScheduler";
@@ -46,6 +47,7 @@ const COMPONENT_MAPPING: {
   [ModuleType.Gain]: Gain,
   [ModuleType.Envelope]: Envelope,
   [ModuleType.MidiSelector]: MidiDeviceSelector,
+  [ModuleType.MidiMapper]: MidiMapper,
   [ModuleType.VirtualMidi]: Keyboard,
   [ModuleType.Constant]: Constant,
   [ModuleType.Scale]: Scale,
