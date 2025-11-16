@@ -44,7 +44,7 @@ export const InputField = <T extends string | number>({
       )}
     >
       <div className="flex items-center gap-2">
-        <div className="w-2 h-2 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full" />
+        <div className="w-2 h-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
         <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-tight">
           {label}
         </Label>
@@ -82,7 +82,7 @@ export const SelectField = <T extends string | number>({
       )}
     >
       <div className="flex items-center gap-2">
-        <div className="w-2 h-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full" />
+        <div className="w-2 h-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
         <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-tight">
           {label}
         </Label>

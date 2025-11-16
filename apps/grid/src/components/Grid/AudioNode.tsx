@@ -86,8 +86,8 @@ function IO({ io }: { io: IIOSerialize }) {
     // Determine gradient class based on IOType
     const getGradientClass = (ioType: string) =>
       ioType.toLowerCase().includes("audio")
-        ? "bg-gradient-to-r from-blue-500 to-cyan-600"
-        : "bg-gradient-to-r from-purple-500 to-pink-600";
+        ? "bg-gradient-to-r from-blue-500 to-purple-500"
+        : "bg-gradient-to-r from-purple-500 to-pink-500";
 
     const gradientClass = getGradientClass(io.ioType);
 
