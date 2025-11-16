@@ -4,7 +4,7 @@ import {
   UserButton,
   useClerk,
 } from "@clerk/tanstack-react-start";
-import { LogIn, Play, Settings, Square, SplinePointer } from "lucide-react";
+import { LogIn, Play, Square, SplinePointer } from "lucide-react";
 import { ChangeEvent } from "react";
 import { Button, Input, buttonVariants } from "@/components/ui";
 import { start, stop, setBpm } from "@/globalSlice";
@@ -100,14 +100,6 @@ export default function Header() {
 
       {/* User & Settings Section */}
       <div className="flex items-center gap-3 min-w-[200px] justify-end">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 cursor-pointer"
-        >
-          <Settings className="w-4 h-4" />
-        </Button>
-
         <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
 
         <ColorSchemeToggle />
