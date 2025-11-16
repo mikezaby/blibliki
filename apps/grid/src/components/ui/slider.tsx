@@ -14,7 +14,92 @@ type SliderProps = {
 type TOrientation = "vertical" | "horizontal";
 
 const InputClassName =
-  "bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg appearance-none cursor-pointer transition-colors border border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 focus:outline-none";
+"bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg appearance-none cursor-pointer transition-all duration-200 border border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 focus:outline-none slider-custom";
+
+// Custom slider styles for cross-browser consistency
+const sliderStyles = `
+  /* WebKit browsers (Chrome, Safari, Edge) */
+  .slider-custom::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .slider-custom::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4), 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
+  
+  .slider-custom::-webkit-slider-thumb:active {
+    transform: scale(0.95);
+  }
+  
+  /* Dark mode for WebKit */
+  .dark .slider-custom::-webkit-slider-thumb {
+    border-color: #1e293b;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+  
+  .dark .slider-custom::-webkit-slider-thumb:hover {
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+  
+  /* Firefox */
+  .slider-custom::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .slider-custom::-moz-range-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4), 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
+  
+  .slider-custom::-moz-range-thumb:active {
+    transform: scale(0.95);
+  }
+  
+  /* Dark mode for Firefox */
+  .dark .slider-custom::-moz-range-thumb {
+    border-color: #1e293b;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+  
+  .dark .slider-custom::-moz-range-thumb:hover {
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+  
+  /* Vertical slider specific styles */
+  .slider-vertical::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .slider-vertical::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+  }
+`;
+
+// Inject styles into the document head
+if (typeof document !== 'undefined' && !document.getElementById('slider-custom-styles')) {
+  const styleElement = document.createElement('style');
+  styleElement.id = 'slider-custom-styles';
+  styleElement.textContent = sliderStyles;
+  document.head.appendChild(styleElement);
+}
 
 type MarkProps = {
   value: number;
