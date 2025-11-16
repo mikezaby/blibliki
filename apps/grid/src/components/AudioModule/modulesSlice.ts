@@ -52,10 +52,6 @@ export const AvailableModules: Record<
     name: "Keyboard",
     moduleType: ModuleType.VirtualMidi,
   },
-  [ModuleType.StepSequencer]: {
-    name: "StepSequencer",
-    moduleType: ModuleType.StepSequencer,
-  },
   [ModuleType.VoiceScheduler]: {
     name: "VoiceScheduler",
     moduleType: ModuleType.VoiceScheduler,

@@ -50,7 +50,6 @@ const COMPONENT_MAPPING: {
   [ModuleType.Constant]: Constant,
   [ModuleType.Scale]: Scale,
   [ModuleType.Inspector]: Inspector,
-  [ModuleType.StepSequencer]: undefined,
   [ModuleType.VoiceScheduler]: VoiceScheduler,
 };
 
