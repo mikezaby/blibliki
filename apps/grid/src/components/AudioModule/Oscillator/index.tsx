@@ -15,10 +15,10 @@ const WAVE_MARKS: MarkProps[] = [
 ];
 
 const RANGES: MarkProps[] = [
-  { value: -1, label: "" },
-  { value: 0, label: "" },
-  { value: 1, label: "" },
-  { value: 2, label: "" },
+  { value: -1, label: "-1" },
+  { value: 0, label: "0" },
+  { value: 1, label: "1" },
+  { value: 2, label: "2" },
 ];
 
 const Oscillator: ModuleComponent<ModuleType.Oscillator> = (props) => {
