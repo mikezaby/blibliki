@@ -16,129 +16,16 @@ type TOrientation = "vertical" | "horizontal";
 const InputClassName =
   "bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg appearance-none cursor-pointer transition-all duration-200 border border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 focus:outline-none slider-custom";
 
-// Custom slider styles for cross-browser consistency
-const sliderStyles = `
-  /* WebKit browsers (Chrome, Safari, Edge) */
-  .slider-custom::-webkit-slider-thumb {
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-    border: 2px solid white;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  
-  .slider-custom::-webkit-slider-thumb:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4), 0 2px 6px rgba(0, 0, 0, 0.15);
-  }
-  
-  .slider-custom::-webkit-slider-thumb:active {
-    transform: scale(0.95);
-  }
-  
-  /* Dark mode for WebKit */
-  .dark .slider-custom::-webkit-slider-thumb {
-    border-color: #1e293b;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
-  }
-  
-  .dark .slider-custom::-webkit-slider-thumb:hover {
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
-  }
-  
-  /* Firefox */
-  .slider-custom::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-    border: 2px solid white;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  
-  .slider-custom::-moz-range-thumb:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4), 0 2px 6px rgba(0, 0, 0, 0.15);
-  }
-  
-  .slider-custom::-moz-range-thumb:active {
-    transform: scale(0.95);
-  }
-  
-  /* Dark mode for Firefox */
-  .dark .slider-custom::-moz-range-thumb {
-    border-color: #1e293b;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
-  }
-  
-  .dark .slider-custom::-moz-range-thumb:hover {
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
-  }
-  
-  /* Vertical slider specific styles */
-  .slider-vertical::-webkit-slider-thumb {
-    width: 20px;
-    height: 20px;
-  }
-  
-  .slider-vertical::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-  }
-  
-  /* Tooltip arrow styles */
-  .tooltip-with-arrow::before {
-    content: '';
-    position: absolute;
-    right: -6px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 0;
-    height: 0;
-    border-left: 6px solid hsl(var(--primary));
-    border-top: 6px solid transparent;
-    border-bottom: 6px solid transparent;
-    z-index: 1;
-  }
-`;
-
-// Inject styles into the document head
-if (
-  typeof document !== "undefined" &&
-  !document.getElementById("slider-custom-styles")
-) {
-  const styleElement = document.createElement("style");
-  styleElement.id = "slider-custom-styles";
-  styleElement.textContent = sliderStyles;
-  document.head.appendChild(styleElement);
-}
-
 type MarkProps = {
   value: number;
   label: string;
 };
 
-const Tooltip = ({
-  value,
-  marks,
-}: {
-  value: number | undefined;
-  marks: readonly MarkProps[] | undefined;
-}) => {
-  const markValue = marks?.find((m) => m.value === value);
-  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-  const finalValue = markValue?.label || value?.toFixed(2);
-
+const Tooltip = ({ value }: { value: number | undefined }) => {
   return (
     <div className="absolute right-full hidden group-hover:block rounded bg-primary px-2 py-1 mx-2 text-primary-foreground text-xs ">
       <div className="rounded bg-primary px-2 py-1 text-primary-foreground text-xs">
-        {finalValue}
+        {value?.toFixed(2)}
       </div>
     </div>
   );
@@ -164,6 +51,8 @@ export default function Slider(props: SliderProps) {
     return rules.join(" ");
   }, [orientation]);
 
+  const hasMarks = marks?.some((m) => m.value);
+
   const inputClassName = useMemo(() => {
     return orientation === "horizontal"
       ? InputClassName
@@ -186,7 +75,7 @@ export default function Slider(props: SliderProps) {
         className={inputClassName}
         onChange={_onChange}
       />
-      <Tooltip marks={marks} value={value} />
+      {!hasMarks && <Tooltip value={value} />}
 
       <Labels marks={marks} orientation={orientation} onClick={onChange} />
     </div>
