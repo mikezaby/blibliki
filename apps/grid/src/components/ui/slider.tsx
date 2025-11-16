@@ -91,6 +91,21 @@ const sliderStyles = `
     width: 20px;
     height: 20px;
   }
+  
+  /* Tooltip arrow styles */
+  .tooltip-with-arrow::before {
+    content: '';
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid hsl(var(--primary));
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    z-index: 1;
+  }
 `;
 
 // Inject styles into the document head
@@ -109,6 +124,26 @@ type MarkProps = {
   label: string;
 };
 
+const Tooltip = ({
+  value,
+  marks,
+}: {
+  value: number | undefined;
+  marks: readonly MarkProps[] | undefined;
+}) => {
+  const markValue = marks?.find((m) => m.value === value);
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+  const finalValue = markValue?.label || value?.toFixed(2);
+
+  return (
+    <div className="absolute right-full hidden group-hover:block rounded bg-primary px-2 py-1 mx-2 text-primary-foreground text-xs ">
+      <div className="rounded bg-primary px-2 py-1 text-primary-foreground text-xs">
+        {finalValue}
+      </div>
+    </div>
+  );
+};
+
 export default function Slider(props: SliderProps) {
   const {
     min,
@@ -122,7 +157,7 @@ export default function Slider(props: SliderProps) {
   } = props;
 
   const wrapperClassName = useMemo(() => {
-    const rules = ["flex", "gap-x-2", "nodrag"];
+    const rules = ["flex", "gap-x-2", "nodrag", "relative", "group"];
 
     if (orientation === "horizontal") rules.push("flex-col");
 
@@ -151,6 +186,7 @@ export default function Slider(props: SliderProps) {
         className={inputClassName}
         onChange={_onChange}
       />
+      <Tooltip marks={marks} value={value} />
 
       <Labels marks={marks} orientation={orientation} onClick={onChange} />
     </div>
