@@ -11,10 +11,11 @@ export type IMidiMapperProps = {
 };
 
 export type MidiMapping<T extends ModuleType> = {
-  cc: number;
-  moduleId: string;
-  moduleType: T;
-  propName: string;
+  cc?: number;
+  moduleId?: string;
+  moduleType?: T;
+  propName?: string;
+  autoAssign?: boolean;
 };
 
 export const midiMapperPropSchema: ModulePropSchema<IMidiMapperProps> = {
@@ -52,9 +53,16 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
   }
 
   handleCC = (event: MidiEvent, _triggeredAt: ContextTime) => {
-    console.log(event);
-    const mapping = this.props.mappings.find(({ cc }) => cc === event.cc);
+    this.checkAutoAssign(event);
+
+    const mapping = this.props.mappings.find((m) => m.cc === event.cc);
     if (!mapping) return;
+    if (
+      mapping.moduleId === undefined ||
+      mapping.moduleType === undefined ||
+      mapping.propName === undefined
+    )
+      return;
 
     const propName = mapping.propName;
 
@@ -118,5 +126,24 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
 
     const midiDevice = this.engine.findMidiDevice(this.props.selectedId);
     midiDevice?.removeEventListener(this.onMidiEvent);
+  }
+
+  private checkAutoAssign(event: MidiEvent) {
+    if (event.cc === undefined) return;
+
+    if (!this.props.mappings.some(({ autoAssign }) => autoAssign)) return;
+
+    const mappings = this.props.mappings.map((mapping) => {
+      if (!mapping.autoAssign) return mapping;
+
+      return {
+        ...mapping,
+        cc: event.cc,
+        autoAssign: false,
+      };
+    });
+
+    this.props = { mappings };
+    this.triggerPropsUpdate();
   }
 }

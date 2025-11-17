@@ -1,5 +1,5 @@
 import { type MidiMapping, ModuleType, moduleSchemas } from "@blibliki/engine";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Select from "@/components/Select";
 import { useAppSelector, useAppDispatch } from "@/hooks";
 import { ModuleComponent } from ".";
@@ -22,34 +22,35 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
   const devices = useAppSelector((state) => devicesSelector.selectAll(state));
   const modules = useAppSelector((state) => selectAllExceptSelf(state, id));
 
-  const [localMappings, setLocalMappings] = useState<
-    Partial<MidiMapping<ModuleType>>[]
-  >([...mappings]);
-
   useEffect(() => {
     dispatch(initialize());
   }, [dispatch]);
 
   const onAdd = () => {
-    setLocalMappings([...localMappings, {}]);
+    updateModule([...mappings, {}]);
   };
 
   const updateModule = (
     updatedMappings: Partial<MidiMapping<ModuleType>>[],
   ) => {
-    const newMappings = updatedMappings.filter(
-      (m) => m.cc && m.moduleId && m.propName && m.moduleType,
-    ) as MidiMapping<ModuleType>[];
-    updateProp("mappings")(newMappings);
+    updateProp("mappings")(updatedMappings);
   };
 
   const updateMappedCC = ({ cc, index }: { cc: number; index: number }) => {
-    const updatedMappings = [...localMappings];
+    const updatedMappings = [...mappings];
     updatedMappings[index] = {
       ...updatedMappings[index],
       cc,
     };
-    setLocalMappings(updatedMappings);
+    updateModule(updatedMappings);
+  };
+
+  const updateMappedAutoAssign = ({ index }: { index: number }) => {
+    const updatedMappings = [...mappings];
+    updatedMappings[index] = {
+      ...updatedMappings[index],
+      autoAssign: true,
+    };
     updateModule(updatedMappings);
   };
 
@@ -60,7 +61,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
     id: string;
     index: number;
   }) => {
-    const updatedMappings = [...localMappings];
+    const updatedMappings = [...mappings];
     const module = modules.find(({ id: mId }) => mId === id);
     if (!module) throw Error(`Module with id ${id} not exists`);
 
@@ -69,7 +70,6 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
       moduleId: module.id,
       moduleType: module.moduleType,
     };
-    setLocalMappings(updatedMappings);
     updateModule(updatedMappings);
   };
 
@@ -80,12 +80,11 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
     propName: string;
     index: number;
   }) => {
-    const updatedMappings = [...localMappings];
+    const updatedMappings = [...mappings];
     updatedMappings[index] = {
       ...updatedMappings[index],
       propName,
     };
-    setLocalMappings(updatedMappings);
     updateModule(updatedMappings);
   };
 
@@ -99,13 +98,17 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
       />
 
       <div className="flex flex-col gap-4">
-        {localMappings.map((mapping, i) => (
+        {mappings.map((mapping, i) => (
           <div key={i} className="flex gap-4">
             <Input
               className="w-20"
               type="string"
-              value={mapping.cc}
+              value={mapping.autoAssign ? "Mapping..." : mapping.cc}
               placeholder="cc"
+              readOnly
+              onClick={() => {
+                updateMappedAutoAssign({ index: i });
+              }}
               onChange={(e) => {
                 updateMappedCC({
                   cc: Number(e.currentTarget.value),
