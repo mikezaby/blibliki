@@ -5,21 +5,17 @@ import { useAppSelector, useAppDispatch } from "@/hooks";
 import { ModuleComponent } from ".";
 import { Button, Input } from "../ui";
 import Container from "./Container";
-import {
-  devicesSelector,
-  initialize,
-} from "./MidiDeviceSelector/midiDevicesSlice";
+import { initialize } from "./MidiDeviceSelector/midiDevicesSlice";
 import { selectAllExceptSelf } from "./modulesSlice";
 
 const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
   const {
     id,
     updateProp,
-    props: { selectedId, mappings },
+    props: { mappings },
   } = props;
 
   const dispatch = useAppDispatch();
-  const devices = useAppSelector((state) => devicesSelector.selectAll(state));
   const modules = useAppSelector((state) => selectAllExceptSelf(state, id));
 
   useEffect(() => {
@@ -90,13 +86,6 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
 
   return (
     <Container className="flex flex-col gap-4">
-      <Select
-        label="Select MIDI device"
-        value={selectedId ?? ""}
-        options={devices}
-        onChange={updateProp("selectedId")}
-      />
-
       <div className="flex flex-col gap-4">
         {mappings.map((mapping, i) => (
           <div key={i} className="flex gap-4">

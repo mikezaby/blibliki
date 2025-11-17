@@ -1,12 +1,10 @@
 import { ContextTime } from "@blibliki/transport";
-import { throttle } from "es-toolkit";
 import { IModule, MidiEvent, Module } from "@/core";
 import { ModulePropSchema, PropSchema } from "@/core/schema";
 import { ICreateModule, moduleSchemas, ModuleType } from ".";
 
 export type IMidiMapper = IModule<ModuleType.MidiMapper>;
 export type IMidiMapperProps = {
-  selectedId: string | undefined | null;
   mappings: MidiMapping<ModuleType>[];
 };
 
@@ -19,17 +17,13 @@ export type MidiMapping<T extends ModuleType> = {
 };
 
 export const midiMapperPropSchema: ModulePropSchema<IMidiMapperProps> = {
-  selectedId: {
-    kind: "string",
-    label: "Midi device ID",
-  },
   mappings: {
     kind: "array",
     label: "Midi mapping",
   },
 };
 
-const DEFAULT_PROPS: IMidiMapperProps = { selectedId: undefined, mappings: [] };
+const DEFAULT_PROPS: IMidiMapperProps = { mappings: [] };
 
 export default class MidiMapper extends Module<ModuleType.MidiMapper> {
   declare audioNode: undefined;
@@ -42,14 +36,10 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
       props,
     });
 
-    this.addEventListener(this.props.selectedId);
-  }
-
-  protected onSetSelectedId(value: string | null) {
-    if (!this.superInitialized) return;
-
-    this.removeEventListener();
-    this.addEventListener(value);
+    this.registerMidiInput({
+      name: "midi in",
+      onMidiEvent: this.onMidiEvent,
+    });
   }
 
   handleCC = (event: MidiEvent, _triggeredAt: ContextTime) => {
@@ -111,22 +101,6 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
     mappedModule.props = { [propName]: mappedValue };
     mappedModule.triggerPropsUpdate();
   };
-
-  private addEventListener(midiId: string | undefined | null) {
-    if (!midiId) return;
-
-    const midiDevice = this.engine.findMidiDevice(midiId);
-    midiDevice?.addEventListener(
-      throttle(this.onMidiEvent, 5, { edges: ["leading", "trailing"] }),
-    );
-  }
-
-  private removeEventListener() {
-    if (!this.props.selectedId) return;
-
-    const midiDevice = this.engine.findMidiDevice(this.props.selectedId);
-    midiDevice?.removeEventListener(this.onMidiEvent);
-  }
 
   private checkAutoAssign(event: MidiEvent) {
     if (event.cc === undefined) return;
