@@ -71,7 +71,9 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
       case "number": {
         const min = propSchema.min ?? 0;
         const max = propSchema.max ?? 1;
-        mappedValue = min + (midiValue / 127) * (max - min);
+        const normalizedMidi = midiValue / 127;
+        const curvedValue = Math.pow(normalizedMidi, propSchema.exp ?? 1);
+        mappedValue = min + curvedValue * (max - min);
         break;
       }
       case "enum": {

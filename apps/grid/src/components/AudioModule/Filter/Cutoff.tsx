@@ -1,3 +1,4 @@
+import { moduleSchemas, ModuleType } from "@blibliki/engine";
 import Fader from "@/components/Fader";
 
 type CutoffProps = {
@@ -15,11 +16,11 @@ export default function Cutoff(props: CutoffProps) {
   return (
     <Fader
       name="Hz"
-      min={20}
-      max={20000}
+      min={moduleSchemas[ModuleType.Filter].cutoff.min}
+      max={moduleSchemas[ModuleType.Filter].cutoff.max}
       onChange={onChange}
       value={value}
-      exp={5}
+      exp={moduleSchemas[ModuleType.Filter].cutoff.exp}
     />
   );
 }

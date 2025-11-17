@@ -10,6 +10,7 @@ export type NumberProp = BasePropType & {
   min?: number;
   max?: number;
   step?: number;
+  exp?: number;
 };
 
 export type EnumProp<T extends string | number> = BasePropType & {

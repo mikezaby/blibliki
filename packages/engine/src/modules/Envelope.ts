@@ -27,6 +27,7 @@ export const envelopePropSchema: ModulePropSchema<IEnvelopeProps> = {
     min: 0.0001,
     max: 20,
     step: 0.01,
+    exp: 3,
     label: "Attack",
   },
   decay: {
@@ -34,6 +35,7 @@ export const envelopePropSchema: ModulePropSchema<IEnvelopeProps> = {
     min: 0,
     max: 20,
     step: 0.01,
+    exp: 3,
     label: "Decay",
   },
   sustain: {
@@ -48,6 +50,7 @@ export const envelopePropSchema: ModulePropSchema<IEnvelopeProps> = {
     min: 0,
     max: 20,
     step: 0.01,
+    exp: 3,
     label: "Release",
   },
 };

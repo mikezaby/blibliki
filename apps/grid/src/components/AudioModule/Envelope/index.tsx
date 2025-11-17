@@ -1,4 +1,8 @@
-import { ModuleType, ModuleTypeToPropsMapping } from "@blibliki/engine";
+import {
+  moduleSchemas,
+  ModuleType,
+  ModuleTypeToPropsMapping,
+} from "@blibliki/engine";
 import Fader from "@/components/Fader";
 import { ModuleComponent } from "..";
 import Container from "../Container";
@@ -24,26 +28,26 @@ const Envelope: ModuleComponent<ModuleType.Envelope> = (props) => {
       <Fader
         name="A"
         onChange={onChange("attack")}
-        min={0.001}
-        max={10}
-        exp={3}
+        min={moduleSchemas[ModuleType.Envelope].attack.min}
+        max={moduleSchemas[ModuleType.Envelope].attack.max}
+        exp={moduleSchemas[ModuleType.Envelope].attack.exp}
         value={attack}
       />
       <Fader
         name="D"
         onChange={onChange("decay")}
-        min={0.001}
-        max={10}
-        exp={3}
+        min={moduleSchemas[ModuleType.Envelope].decay.min}
+        max={moduleSchemas[ModuleType.Envelope].decay.max}
+        exp={moduleSchemas[ModuleType.Envelope].decay.exp}
         value={decay}
       />
       <Fader name="S" onChange={updateProp("sustain")} value={sustain} />
       <Fader
         name="R"
         onChange={onChange("release")}
-        min={0.001}
-        max={10}
-        exp={3}
+        min={moduleSchemas[ModuleType.Envelope].release.min}
+        max={moduleSchemas[ModuleType.Envelope].release.max}
+        exp={moduleSchemas[ModuleType.Envelope].release.exp}
         value={release}
       />
     </Container>

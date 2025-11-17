@@ -13,8 +13,8 @@ export type IFilterProps = {
   Q: number;
 };
 
-const MIN_FREQ = 0;
-const MAX_FREQ = 22050;
+const MIN_FREQ = 20;
+const MAX_FREQ = 20000;
 
 const DEFAULT_PROPS: IFilterProps = {
   cutoff: MAX_FREQ,
@@ -34,6 +34,7 @@ export const filterPropSchema: ModulePropSchema<
     min: MIN_FREQ,
     max: MAX_FREQ,
     step: 1,
+    exp: 5,
     label: "Cutoff",
   },
   envelopeAmount: {
@@ -53,6 +54,7 @@ export const filterPropSchema: ModulePropSchema<
     min: 0.0001,
     max: 1000,
     step: 0.1,
+    exp: 5,
     label: "Q",
   },
 };
