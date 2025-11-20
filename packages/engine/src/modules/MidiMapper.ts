@@ -5,6 +5,12 @@ import { ICreateModule, moduleSchemas, ModuleType } from ".";
 
 export type IMidiMapper = IModule<ModuleType.MidiMapper>;
 export type IMidiMapperProps = {
+  pages: MidiMappingPage[];
+  activePage: number;
+};
+
+export type MidiMappingPage = {
+  name?: string;
   mappings: MidiMapping<ModuleType>[];
 };
 
@@ -17,13 +23,23 @@ export type MidiMapping<T extends ModuleType> = {
 };
 
 export const midiMapperPropSchema: ModulePropSchema<IMidiMapperProps> = {
-  mappings: {
+  pages: {
     kind: "array",
-    label: "Midi mapping",
+    label: "Midi mapping pages",
+  },
+  activePage: {
+    kind: "number",
+    label: "Active page",
+    min: 0,
+    max: 100,
+    step: 1,
   },
 };
 
-const DEFAULT_PROPS: IMidiMapperProps = { mappings: [] };
+const DEFAULT_PROPS: IMidiMapperProps = {
+  pages: [{ name: "Page 1", mappings: [{}] }],
+  activePage: 0,
+};
 
 export default class MidiMapper extends Module<ModuleType.MidiMapper> {
   declare audioNode: undefined;
@@ -45,7 +61,9 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
   handleCC = (event: MidiEvent, _triggeredAt: ContextTime) => {
     this.checkAutoAssign(event);
 
-    const mapping = this.props.mappings.find((m) => m.cc === event.cc);
+    const activePage = this.props.pages[this.props.activePage];
+
+    const mapping = activePage.mappings.find((m) => m.cc === event.cc);
     if (!mapping) return;
     if (
       mapping.moduleId === undefined ||
@@ -87,13 +105,13 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
         mappedValue = propSchema.options[clampedIndex];
         break;
       }
-
       case "boolean":
         mappedValue = midiValue >= 64;
         break;
-
       case "string":
         throw Error("MidiMapper not support string type of values");
+      case "array":
+        throw Error("MidiMapper not support array type of values");
 
       default:
         throw Error("MidiMapper unknown type");
@@ -107,9 +125,10 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
   private checkAutoAssign(event: MidiEvent) {
     if (event.cc === undefined) return;
 
-    if (!this.props.mappings.some(({ autoAssign }) => autoAssign)) return;
+    const activePage = this.props.pages[this.props.activePage];
+    if (!activePage.mappings.some(({ autoAssign }) => autoAssign)) return;
 
-    const mappings = this.props.mappings.map((mapping) => {
+    const updatedMappings = activePage.mappings.map((mapping) => {
       if (!mapping.autoAssign) return mapping;
 
       return {
@@ -119,7 +138,13 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
       };
     });
 
-    this.props = { mappings };
+    const updatedPages = this.props.pages.map((page, index) =>
+      index === this.props.activePage
+        ? { ...page, mappings: updatedMappings }
+        : page,
+    );
+
+    this.props = { pages: updatedPages };
     this.triggerPropsUpdate();
   }
 }
