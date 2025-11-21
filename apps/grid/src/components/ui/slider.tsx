@@ -4,6 +4,7 @@ type SliderProps = {
   min: number;
   max: number;
   value?: number;
+  displayValue?: number;
   defaultValue?: number;
   step?: number;
   marks?: readonly MarkProps[];
@@ -36,6 +37,7 @@ export default function Slider(props: SliderProps) {
     min,
     max,
     value,
+    displayValue,
     defaultValue,
     marks,
     onChange,
@@ -75,7 +77,7 @@ export default function Slider(props: SliderProps) {
         className={inputClassName}
         onChange={_onChange}
       />
-      {!hasMarks && <Tooltip value={value} />}
+      {!hasMarks && <Tooltip value={displayValue ?? value} />}
 
       <Labels marks={marks} orientation={orientation} onClick={onChange} />
     </div>

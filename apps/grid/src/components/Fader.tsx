@@ -73,6 +73,7 @@ export default function Fader(props: FaderProps) {
         orientation="vertical"
         onChange={debouncedOnChange}
         value={revValue}
+        displayValue={value}
         defaultValue={defaultValue}
         min={min}
         max={max}
