@@ -83,7 +83,7 @@ export const {
 export const onNodesChange =
   (changes: NodeChange[]) =>
   (dispatch: AppDispatch, getState: () => RootState) => {
-    const nodes = getState().gridNodes.nodes;
+    const nodes = structuredClone(getState().gridNodes.nodes);
     dispatch(setNodes(applyNodeChanges(changes, nodes)));
 
     changes.forEach((change) => {
