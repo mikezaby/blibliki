@@ -231,7 +231,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                   className="w-24 text-center bg-slate-50 dark:bg-slate-950/50 font-mono"
                   type="string"
                   value={mapping.autoAssign ? "Mapping..." : mapping.cc}
-                  placeholder="Click to map"
+                  placeholder="Unmapped"
                   readOnly
                   onClick={() => {
                     updateMappedAutoAssign({ index: i });
