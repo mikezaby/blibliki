@@ -1,5 +1,6 @@
 import { throttle } from "@blibliki/utils";
 import { Slider } from "./ui";
+import { TOrientation } from "./ui/slider";
 
 export type MarkProps = {
   value: number;
@@ -11,6 +12,7 @@ type FaderProps = {
   onChange: (value: number, calculatedValue: number) => void;
   defaultValue?: number;
   value?: number;
+  orientation?: TOrientation;
   marks?: readonly MarkProps[];
   max?: number;
   min?: number;
@@ -50,7 +52,16 @@ const revCalcValue = function (
 };
 
 export default function Fader(props: FaderProps) {
-  const { name, onChange, value, defaultValue, marks, exp, min = 0 } = props;
+  const {
+    name,
+    onChange,
+    value,
+    defaultValue,
+    marks,
+    exp,
+    min = 0,
+    orientation = "vertical",
+  } = props;
 
   let { max, step } = props;
 
@@ -70,7 +81,7 @@ export default function Fader(props: FaderProps) {
   return (
     <div className="flex flex-col items-center gap-2 p-2">
       <Slider
-        orientation="vertical"
+        orientation={orientation}
         onChange={debouncedOnChange}
         value={revValue}
         displayValue={value}

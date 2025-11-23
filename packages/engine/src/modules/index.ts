@@ -28,6 +28,10 @@ import StepSequencer, {
   IStepSequencerProps,
   stepSequencerPropSchema,
 } from "./StepSequencer";
+import StereoPanner, {
+  IStereoPannerProps,
+  stereoPannerPropSchema,
+} from "./StereoPanner";
 import VirtualMidi, {
   IVirtualMidiProps,
   virtualMidiPropSchema,
@@ -41,6 +45,7 @@ export enum ModuleType {
   Envelope = "Envelope",
   Filter = "Filter",
   Scale = "Scale",
+  StereoPanner = "StereoPanner",
   Inspector = "Inspector",
   Constant = "Constant",
   MidiMapper = "MidiMapper",
@@ -57,6 +62,7 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.Envelope]: IEnvelopeProps;
   [ModuleType.Filter]: IFilterProps;
   [ModuleType.Scale]: IScaleProps;
+  [ModuleType.StereoPanner]: IStereoPannerProps;
   [ModuleType.Inspector]: IInspectorProps;
   [ModuleType.Constant]: IConstantProps;
   [ModuleType.MidiMapper]: IMidiMapperProps;
@@ -73,6 +79,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.Envelope]: Envelope;
   [ModuleType.Filter]: Filter;
   [ModuleType.Scale]: Scale;
+  [ModuleType.StereoPanner]: StereoPanner;
   [ModuleType.Inspector]: Inspector;
   [ModuleType.Constant]: Constant;
   [ModuleType.MidiMapper]: MidiMapper;
@@ -89,6 +96,7 @@ export const moduleSchemas = {
   [ModuleType.Envelope]: envelopePropSchema,
   [ModuleType.Filter]: filterPropSchema,
   [ModuleType.Scale]: scalePropSchema,
+  [ModuleType.StereoPanner]: stereoPannerPropSchema,
   [ModuleType.Inspector]: inspectorPropSchema,
   [ModuleType.Constant]: constantPropSchema,
   [ModuleType.MidiMapper]: midiMapperPropSchema,
@@ -102,6 +110,7 @@ export { OscillatorWave } from "./Oscillator";
 export type { IGain } from "./Gain";
 export type { IMaster } from "./Master";
 export type { IMidiSelector } from "./MidiSelector";
+export type { IStereoPanner } from "./StereoPanner";
 export type {
   IStepSequencer,
   IStepSequencerProps,
@@ -125,6 +134,7 @@ export type ModuleParams = {
     | ModuleType.Gain
     | ModuleType.Envelope
     | ModuleType.Filter
+    | ModuleType.StereoPanner
     | ModuleType.VoiceScheduler
     ? IPolyModuleConstructor<K>
     : ICreateModule<K>;
@@ -149,6 +159,8 @@ export function createModule(
       return new Filter(engineId, params);
     case ModuleType.Scale:
       return new Scale(engineId, params);
+    case ModuleType.StereoPanner:
+      return new StereoPanner(engineId, params);
     case ModuleType.Inspector:
       return new Inspector(engineId, params);
     case ModuleType.Constant:

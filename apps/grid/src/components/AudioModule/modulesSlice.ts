@@ -49,6 +49,10 @@ export const AvailableModules: Record<
     moduleType: ModuleType.Inspector,
   },
   [ModuleType.Constant]: { name: "Constant", moduleType: ModuleType.Constant },
+  [ModuleType.StereoPanner]: {
+    name: "Stereo Panner",
+    moduleType: ModuleType.StereoPanner,
+  },
   [ModuleType.MidiMapper]: {
     name: "Midi Mapper",
     moduleType: ModuleType.MidiMapper,

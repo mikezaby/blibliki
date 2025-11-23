@@ -12,7 +12,7 @@ type SliderProps = {
   onChange: (newValue: number) => void;
 };
 
-type TOrientation = "vertical" | "horizontal";
+export type TOrientation = "vertical" | "horizontal";
 
 const InputClassName =
   "bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg appearance-none cursor-pointer transition-all duration-200 border border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 focus:outline-none slider-custom";
