@@ -9,7 +9,8 @@ import { Button } from "@/components/ui";
 
 const SupportedModules = Object.values(AvailableModules)
   .filter(({ moduleType }) => moduleType !== ModuleType.StepSequencer)
-  .map(({ moduleType }) => moduleType);
+  .map(({ moduleType }) => moduleType)
+  .sort();
 
 export default function AudioModules() {
   const [visible, setVisible] = useState<boolean>(true);
