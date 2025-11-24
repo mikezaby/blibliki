@@ -44,7 +44,10 @@ export default function Grid() {
         isValidConnection={isValidConnection}
         proOptions={DEFAULT_REACT_FLOW_PROPS}
       >
-        <Controls className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg" />
+        <Controls
+          position="bottom-right"
+          className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg"
+        />
         <Background variant={BackgroundVariant.Dots} gap={16} size={1.2} />
         <OnViewportChange viewport={viewport} />
       </ReactFlow>

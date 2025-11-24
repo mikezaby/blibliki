@@ -22,7 +22,7 @@ export default function AudioModules() {
 
   return (
     <div
-      className="absolute z-10 top-12 w-[189px] bg-slate-50 dark:bg-slate-900 border-r border-b border-slate-200 dark:border-slate-700 shadow-xl transition-all duration-300 ease-in-out"
+      className="absolute z-10 top-12 w-[189px] h-[calc(100vh-3rem)] bg-slate-50 dark:bg-slate-900 border-r border-b border-slate-200 dark:border-slate-700 shadow-xl transition-all duration-300 ease-in-out flex flex-col"
       style={{ left }}
     >
       {/* Header Section */}
@@ -47,12 +47,7 @@ export default function AudioModules() {
         )}
       </Button>
 
-      <nav className="flex-1 overflow-y-auto py-2 max-h-[calc(100vh-8rem)]">
-        <div className="px-3 py-2">
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-3">
-            Available Modules
-          </p>
-        </div>
+      <nav className="flex-1 overflow-y-auto py-2">
         <ul className="px-3 space-y-1">
           {SupportedModules.map((moduleName) => (
             <li key={moduleName}>
