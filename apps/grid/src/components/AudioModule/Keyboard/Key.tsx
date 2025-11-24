@@ -49,10 +49,10 @@ export default function Key(props: KeyProps) {
 
   return (
     <div
-      onMouseEnter={trigger("noteOn")}
-      onMouseLeave={trigger("noteOff")}
-      onMouseDown={trigger("noteOn", true)}
-      onMouseUp={trigger("noteOff", true)}
+      onPointerEnter={trigger("noteOn")}
+      onPointerLeave={trigger("noteOff")}
+      onPointerDown={trigger("noteOn", true)}
+      onPointerUp={trigger("noteOff", true)}
       className={className}
     />
   );

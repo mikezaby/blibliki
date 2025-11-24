@@ -17,9 +17,9 @@ const Keyboard: ModuleComponent<ModuleType.VirtualMidi> = (props) => {
 
   return (
     <div
-      onMouseDown={enableTriggering}
-      onMouseUp={disableTriggering}
-      onMouseLeave={disableTriggering}
+      onPointerDown={enableTriggering}
+      onPointerUp={disableTriggering}
+      onPointerLeave={disableTriggering}
     >
       <Octave
         id={id}
