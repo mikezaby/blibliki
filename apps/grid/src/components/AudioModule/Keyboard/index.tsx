@@ -17,6 +17,7 @@ const Keyboard: ModuleComponent<ModuleType.VirtualMidi> = (props) => {
 
   return (
     <div
+      className="flex"
       onPointerDown={enableTriggering}
       onPointerUp={disableTriggering}
       onPointerLeave={disableTriggering}
