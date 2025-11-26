@@ -24,7 +24,12 @@ export type { TimeSignature, Position } from "@blibliki/transport";
 
 export { Context } from "@blibliki/utils";
 
-export { ModuleType, moduleSchemas, OscillatorWave } from "./modules";
+export {
+  ModuleType,
+  moduleSchemas,
+  OscillatorWave,
+  MidiMappingMode,
+} from "./modules";
 export type {
   IOscillator,
   IGain,

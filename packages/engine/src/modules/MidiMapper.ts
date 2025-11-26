@@ -1,6 +1,6 @@
 import { ContextTime } from "@blibliki/transport";
 import { IModule, MidiEvent, Module } from "@/core";
-import { ModulePropSchema, PropSchema } from "@/core/schema";
+import { ModulePropSchema, NumberProp, PropSchema } from "@/core/schema";
 import { ICreateModule, moduleSchemas, ModuleType } from ".";
 
 export type IMidiMapper = IModule<ModuleType.MidiMapper>;
@@ -14,12 +14,22 @@ export type MidiMappingPage = {
   mappings: MidiMapping<ModuleType>[];
 };
 
+export enum MidiMappingMode {
+  direct = "direct",
+  toggle = "toggle",
+  incDec = "incDec",
+  incDecRev = "incDecRev",
+}
+
 export type MidiMapping<T extends ModuleType> = {
   cc?: number;
   moduleId?: string;
   moduleType?: T;
   propName?: string;
   autoAssign?: boolean;
+  mode?: MidiMappingMode;
+  threshold?: number; // For incDec mode (default: 64)
+  step?: number;
 };
 
 export const midiMapperPropSchema: ModulePropSchema<IMidiMapperProps> = {
@@ -40,6 +50,39 @@ const DEFAULT_PROPS: IMidiMapperProps = {
   pages: [{ name: "Page 1", mappings: [{}] }],
   activePage: 0,
 };
+
+function getMidiFromMappedValue({
+  value,
+  midiValue,
+  propSchema,
+  mapping,
+}: {
+  value: number;
+  propSchema: NumberProp;
+  midiValue: number;
+  mapping: MidiMapping<ModuleType>;
+}): number {
+  const min = propSchema.min ?? 0;
+  const max = propSchema.max ?? 1;
+  const exp = propSchema.exp ?? 1;
+
+  const { threshold = 64, mode = MidiMappingMode.incDec } = mapping;
+
+  // Reverse the range mapping: get curvedValue
+  const curvedValue = (value - min) / (max - min);
+
+  // Reverse the exponential curve: get normalizedMidi
+  const normalizedMidi = Math.pow(curvedValue, 1 / exp);
+
+  // Reverse the MIDI normalization: get midiValue
+  let newMidiValue = normalizedMidi * 127;
+  newMidiValue =
+    (midiValue >= threshold && mode === MidiMappingMode.incDec) ||
+    (midiValue <= threshold && mode === MidiMappingMode.incDecRev)
+      ? newMidiValue + 1
+      : newMidiValue - 1;
+  return Math.round(Math.max(0, Math.min(127, newMidiValue))); // Valid MIDI range
+}
 
 export default class MidiMapper extends Module<ModuleType.MidiMapper> {
   declare audioNode: undefined;
@@ -73,6 +116,15 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
       return;
 
     const propName = mapping.propName;
+    let midiValue = event.ccValue;
+    if (midiValue === undefined) return;
+
+    const mode = mapping.mode ?? "direct";
+
+    // Toggle mode: only respond to 127 (button press), ignore 0
+    if (mode === MidiMappingMode.toggle && midiValue !== 127) {
+      return;
+    }
 
     const mappedModule = this.engine.findModule(mapping.moduleId);
     // @ts-expect-error TS7053 ignore this error
@@ -82,11 +134,21 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let mappedValue: any;
-    const midiValue = event.ccValue;
-    if (midiValue === undefined) return;
 
+    // Direct mode (default) or Toggle mode: map value directly
     switch (propSchema.kind) {
       case "number": {
+        midiValue =
+          mode === MidiMappingMode.incDec || mode === MidiMappingMode.incDecRev
+            ? getMidiFromMappedValue({
+                // @ts-expect-error TS7053 ignore this error
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                value: mappedModule.props[propName],
+                propSchema,
+                mapping,
+                midiValue,
+              })
+            : midiValue;
         const min = propSchema.min ?? 0;
         const max = propSchema.max ?? 1;
         const normalizedMidi = midiValue / 127;

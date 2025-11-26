@@ -1,30 +1,51 @@
-import { type MidiMapping, ModuleType, moduleSchemas } from "@blibliki/engine";
-import { SquarePlus, Trash2 } from "lucide-react";
-import { useEffect } from "react";
+import {
+  type MidiMapping,
+  MidiMappingMode,
+  ModuleType,
+  moduleSchemas,
+} from "@blibliki/engine";
+import { ChevronDown, ChevronUp, SquarePlus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import Select from "@/components/Select";
 import { useAppSelector, useAppDispatch } from "@/hooks";
 import { ModuleComponent } from ".";
 import { Button, Input, Label } from "../ui";
 import Container from "./Container";
 import { initialize } from "./MidiDeviceSelector/midiDevicesSlice";
-import { selectAllExceptSelf } from "./modulesSlice";
+import { modulesSelector } from "./modulesSlice";
 
 const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
   const {
-    id,
     updateProp,
     props: { pages, activePage },
   } = props;
 
   const dispatch = useAppDispatch();
-  const modules = useAppSelector((state) => selectAllExceptSelf(state, id));
+  const modules = useAppSelector((state) => modulesSelector.selectAll(state));
 
   const page = pages[activePage];
   const mappings = page?.mappings ?? [{}];
 
+  // Track which mappings have expanded settings
+  const [expandedMappings, setExpandedMappings] = useState<Set<number>>(
+    new Set(),
+  );
+
   useEffect(() => {
     dispatch(initialize());
   }, [dispatch]);
+
+  const toggleExpanded = (index: number) => {
+    setExpandedMappings((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
 
   const onAddPage = () => {
     const newPages = [
@@ -117,6 +138,51 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
     updatedMappings[index] = {
       ...updatedMappings[index],
       propName,
+    };
+    updateMappings(updatedMappings);
+  };
+
+  const updateMappedMode = ({
+    mode,
+    index,
+  }: {
+    mode: MidiMappingMode;
+    index: number;
+  }) => {
+    const updatedMappings = [...mappings];
+    updatedMappings[index] = {
+      ...updatedMappings[index],
+      mode,
+    };
+    updateMappings(updatedMappings);
+  };
+
+  const updateMappedThreshold = ({
+    threshold,
+    index,
+  }: {
+    threshold: number;
+    index: number;
+  }) => {
+    const updatedMappings = [...mappings];
+    updatedMappings[index] = {
+      ...updatedMappings[index],
+      threshold,
+    };
+    updateMappings(updatedMappings);
+  };
+
+  const updateMappedStep = ({
+    step,
+    index,
+  }: {
+    step: number;
+    index: number;
+  }) => {
+    const updatedMappings = [...mappings];
+    updatedMappings[index] = {
+      ...updatedMappings[index],
+      step,
     };
     updateMappings(updatedMappings);
   };
@@ -218,72 +284,197 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
         </div>
 
         <div className="flex flex-col gap-3">
-          {mappings.map((mapping, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors shadow-sm"
-            >
-              <div className="flex items-center gap-2">
-                <Label className="text-xs font-medium text-slate-500 dark:text-slate-400 min-w-fit">
-                  CC
-                </Label>
-                <Input
-                  className="w-24 text-center bg-slate-50 dark:bg-slate-950/50 font-mono"
-                  type="string"
-                  value={mapping.autoAssign ? "Mapping..." : mapping.cc}
-                  placeholder="Unmapped"
-                  readOnly
-                  onClick={() => {
-                    updateMappedAutoAssign({ index: i });
-                  }}
-                  onChange={(e) => {
-                    updateMappedCC({
-                      cc: Number(e.currentTarget.value),
-                      index: i,
-                    });
-                  }}
-                />
-              </div>
+          {mappings.map((mapping, i) => {
+            const isExpanded = expandedMappings.has(i);
+            const mode = mapping.mode ?? "direct";
 
-              <div className="flex items-center gap-2 flex-1">
-                <Select
-                  label="Select module"
-                  value={mapping.moduleId ?? ""}
-                  options={modules}
-                  onChange={(value: string) => {
-                    updateMappedModuleId({ id: value, index: i });
-                  }}
-                />
-              </div>
-
-              <div className="flex items-center gap-2 flex-1">
-                <Select
-                  label="Select prop"
-                  value={mapping.propName ?? ""}
-                  options={
-                    mapping.moduleType
-                      ? Object.keys(moduleSchemas[mapping.moduleType])
-                      : []
-                  }
-                  disabled={!mapping.moduleType}
-                  onChange={(value: string) => {
-                    updateMappedProp({ propName: value, index: i });
-                  }}
-                />
-              </div>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  onRemoveMapping(i);
-                }}
-                className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20"
+            return (
+              <div
+                key={i}
+                className="flex flex-col gap-3 p-3 rounded-lg bg-white dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors shadow-sm"
               >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
+                {/* Main mapping row */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs font-medium text-slate-500 dark:text-slate-400 min-w-fit">
+                      CC
+                    </Label>
+                    <Input
+                      className="w-24 text-center bg-slate-50 dark:bg-slate-950/50 font-mono"
+                      type="string"
+                      value={mapping.autoAssign ? "Mapping..." : mapping.cc}
+                      placeholder="Unmapped"
+                      readOnly
+                      onClick={() => {
+                        updateMappedAutoAssign({ index: i });
+                      }}
+                      onChange={(e) => {
+                        updateMappedCC({
+                          cc: Number(e.currentTarget.value),
+                          index: i,
+                        });
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-1">
+                    <Select
+                      label="Select module"
+                      value={mapping.moduleId ?? ""}
+                      options={modules}
+                      onChange={(value: string) => {
+                        updateMappedModuleId({ id: value, index: i });
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-1">
+                    <Select
+                      label="Select prop"
+                      value={mapping.propName ?? ""}
+                      options={
+                        mapping.moduleType
+                          ? Object.keys(moduleSchemas[mapping.moduleType])
+                          : []
+                      }
+                      disabled={!mapping.moduleType}
+                      onChange={(value: string) => {
+                        updateMappedProp({ propName: value, index: i });
+                      }}
+                    />
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      toggleExpanded(i);
+                    }}
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  >
+                    {isExpanded ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      onRemoveMapping(i);
+                    }}
+                    className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                {/* Advanced settings (expandable) */}
+                {isExpanded && (
+                  <div className="flex flex-col gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs font-medium text-slate-600 dark:text-slate-400 min-w-[80px]">
+                        Mode
+                      </Label>
+                      <Select
+                        label="Select mode"
+                        value={mode}
+                        options={[
+                          { id: "direct", name: "Direct" },
+                          { id: "toggle", name: "Toggle" },
+                          { id: "incDec", name: "Inc/Dec" },
+                          { id: "incDecRev", name: "Inc/Dec (rev)" },
+                        ]}
+                        onChange={(value: string) => {
+                          updateMappedMode({
+                            mode: value as MidiMappingMode,
+                            index: i,
+                          });
+                        }}
+                      />
+                      <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
+                        {mode === MidiMappingMode.direct &&
+                          "Maps MIDI value directly to parameter"}
+                        {mode === MidiMappingMode.toggle &&
+                          "Only responds to button press (127)"}
+                        {mode === MidiMappingMode.incDec &&
+                          "Increment/decrement based on threshold"}
+                        {mode === MidiMappingMode.incDecRev &&
+                          "Increment/decrement based on threshold reverse"}
+                      </span>
+                    </div>
+
+                    {(mode === MidiMappingMode.incDec ||
+                      mode === MidiMappingMode.incDecRev) && (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs font-medium text-slate-600 dark:text-slate-400 min-w-[80px]">
+                            Threshold
+                          </Label>
+                          <Input
+                            className="w-24 text-center bg-slate-50 dark:bg-slate-950/50"
+                            type="number"
+                            min={0}
+                            max={127}
+                            value={mapping.threshold ?? 64}
+                            onChange={(e) => {
+                              updateMappedThreshold({
+                                threshold: Number(e.currentTarget.value),
+                                index: i,
+                              });
+                            }}
+                          />
+                          <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
+                            Value &gt; threshold increments, ≤ threshold
+                            decrements
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs font-medium text-slate-600 dark:text-slate-400 min-w-[80px]">
+                            Step
+                          </Label>
+                          <Input
+                            className="w-24 text-center bg-slate-50 dark:bg-slate-950/50"
+                            type="number"
+                            step="any"
+                            value={mapping.step ?? ""}
+                            placeholder="Auto"
+                            onChange={(e) => {
+                              const value = e.currentTarget.value;
+                              if (value === "") {
+                                // Remove custom step, will use propSchema.step
+                                const updatedMappings = [...mappings];
+                                const currentMapping = updatedMappings[i];
+                                if (
+                                  currentMapping &&
+                                  "step" in currentMapping
+                                ) {
+                                  const { step: _, ...rest } = currentMapping;
+                                  updatedMappings[i] = rest;
+                                  updateMappings(updatedMappings);
+                                }
+                              } else {
+                                updateMappedStep({
+                                  step: Number(value),
+                                  index: i,
+                                });
+                              }
+                            }}
+                          />
+                          <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
+                            Amount to increment/decrement (leave empty for auto)
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 

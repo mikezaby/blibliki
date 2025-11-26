@@ -117,6 +117,7 @@ export type {
   ISequence,
 } from "./StepSequencer";
 export type { IMidiMapper, IMidiMapperProps, MidiMapping } from "./MidiMapper";
+export { MidiMappingMode } from "./MidiMapper";
 
 export type AnyModule = Module<ModuleType>;
 export type IAnyModule = IModule<ModuleType>;
