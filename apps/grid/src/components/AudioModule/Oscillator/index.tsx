@@ -1,4 +1,4 @@
-import { ModuleType, OscillatorWave } from "@blibliki/engine";
+import { moduleSchemas, ModuleType, OscillatorWave } from "@blibliki/engine";
 import Fader, { MarkProps } from "@/components/Fader";
 import { ModuleComponent } from "..";
 import Container from "../Container";
@@ -40,26 +40,30 @@ const Oscillator: ModuleComponent<ModuleType.Oscillator> = (props) => {
       <Fader
         name="Octave"
         marks={RANGES}
-        min={-1}
-        max={2}
+        min={moduleSchemas[ModuleType.Oscillator].octave.min}
+        max={moduleSchemas[ModuleType.Oscillator].octave.max}
+        step={moduleSchemas[ModuleType.Oscillator].octave.step}
+        exp={moduleSchemas[ModuleType.Oscillator].octave.exp}
         onChange={updateProp("octave")}
         value={octave}
       />
       <Fader
         name="Coarse"
         marks={Center}
-        min={-1}
-        max={1}
-        step={0.01}
+        min={moduleSchemas[ModuleType.Oscillator].coarse.min}
+        max={moduleSchemas[ModuleType.Oscillator].coarse.max}
+        step={moduleSchemas[ModuleType.Oscillator].coarse.step}
+        exp={moduleSchemas[ModuleType.Oscillator].coarse.exp}
         onChange={updateProp("coarse")}
         value={coarse}
       />
       <Fader
         name="Fine"
         marks={Center}
-        min={-1}
-        max={1}
-        step={0.01}
+        min={moduleSchemas[ModuleType.Oscillator].fine.min}
+        max={moduleSchemas[ModuleType.Oscillator].fine.max}
+        step={moduleSchemas[ModuleType.Oscillator].fine.step}
+        exp={moduleSchemas[ModuleType.Oscillator].fine.exp}
         onChange={updateProp("fine")}
         value={fine}
       />
