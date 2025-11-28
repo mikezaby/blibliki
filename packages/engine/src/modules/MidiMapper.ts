@@ -7,6 +7,7 @@ export type IMidiMapper = IModule<ModuleType.MidiMapper>;
 export type IMidiMapperProps = {
   pages: MidiMappingPage[];
   activePage: number;
+  globalMappings: MidiMapping<ModuleType>[];
 };
 
 export type MidiMappingPage = {
@@ -44,11 +45,16 @@ export const midiMapperPropSchema: ModulePropSchema<IMidiMapperProps> = {
     max: 100,
     step: 1,
   },
+  globalMappings: {
+    kind: "array",
+    label: "Global midi mappings",
+  },
 };
 
 const DEFAULT_PROPS: IMidiMapperProps = {
   pages: [{ name: "Page 1", mappings: [{}] }],
   activePage: 0,
+  globalMappings: [{}],
 };
 
 function getMidiFromMappedValue({
@@ -101,13 +107,24 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
     });
   }
 
-  handleCC = (event: MidiEvent, _triggeredAt: ContextTime) => {
+  handleCC = (event: MidiEvent, triggeredAt: ContextTime) => {
     this.checkAutoAssign(event);
 
     const activePage = this.props.pages[this.props.activePage];
 
-    const mapping = activePage.mappings.find((m) => m.cc === event.cc);
-    if (!mapping) return;
+    [
+      ...this.props.globalMappings.filter((m) => m.cc === event.cc),
+      ...activePage.mappings.filter((m) => m.cc === event.cc),
+    ].forEach((mapping) => {
+      this.forwardMapping(event, mapping, triggeredAt);
+    });
+  };
+
+  forwardMapping = (
+    event: MidiEvent,
+    mapping: MidiMapping<ModuleType>,
+    _triggeredAt: ContextTime,
+  ) => {
     if (
       mapping.moduleId === undefined ||
       mapping.moduleType === undefined ||
@@ -154,6 +171,9 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
         const normalizedMidi = midiValue / 127;
         const curvedValue = Math.pow(normalizedMidi, propSchema.exp ?? 1);
         mappedValue = min + curvedValue * (max - min);
+        console.log(
+          `min: ${min}, max: ${max}, curvedValue: ${curvedValue}, mappedValue: ${mappedValue}`,
+        );
         break;
       }
       case "enum": {
@@ -188,25 +208,48 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
     if (event.cc === undefined) return;
 
     const activePage = this.props.pages[this.props.activePage];
-    if (!activePage.mappings.some(({ autoAssign }) => autoAssign)) return;
+    const hasGlobalAutoAssign = this.props.globalMappings.some(
+      ({ autoAssign }) => autoAssign,
+    );
+    const hasPageAutoAssign = activePage.mappings.some(
+      ({ autoAssign }) => autoAssign,
+    );
 
-    const updatedMappings = activePage.mappings.map((mapping) => {
-      if (!mapping.autoAssign) return mapping;
+    if (!hasGlobalAutoAssign && !hasPageAutoAssign) return;
 
-      return {
-        ...mapping,
-        cc: event.cc,
-        autoAssign: false,
-      };
-    });
+    // Update global mappings if needed
+    const updatedGlobalMappings = hasGlobalAutoAssign
+      ? this.props.globalMappings.map((mapping) => {
+          if (!mapping.autoAssign) return mapping;
+
+          return {
+            ...mapping,
+            cc: event.cc,
+            autoAssign: false,
+          };
+        })
+      : this.props.globalMappings;
+
+    // Update page mappings if needed
+    const updatedPageMappings = hasPageAutoAssign
+      ? activePage.mappings.map((mapping) => {
+          if (!mapping.autoAssign) return mapping;
+
+          return {
+            ...mapping,
+            cc: event.cc,
+            autoAssign: false,
+          };
+        })
+      : activePage.mappings;
 
     const updatedPages = this.props.pages.map((page, index) =>
       index === this.props.activePage
-        ? { ...page, mappings: updatedMappings }
+        ? { ...page, mappings: updatedPageMappings }
         : page,
     );
 
-    this.props = { pages: updatedPages };
+    this.props = { pages: updatedPages, globalMappings: updatedGlobalMappings };
     this.triggerPropsUpdate();
   }
 }

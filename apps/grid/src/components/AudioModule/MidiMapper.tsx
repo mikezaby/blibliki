@@ -17,14 +17,20 @@ import { modulesSelector } from "./modulesSlice";
 const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
   const {
     updateProp,
-    props: { pages, activePage },
+    props: { pages, activePage, globalMappings = [] },
   } = props;
 
   const dispatch = useAppDispatch();
   const modules = useAppSelector((state) => modulesSelector.selectAll(state));
 
   const page = pages[activePage];
-  const mappings = page?.mappings ?? [{}];
+  const pageMappings = page?.mappings ?? [{}];
+
+  // Track whether we're viewing global or page-specific mappings
+  const [viewMode, setViewMode] = useState<"page" | "global">("page");
+
+  // Get the active mappings based on view mode
+  const mappings = viewMode === "global" ? globalMappings : pageMappings;
 
   // Track which mappings have expanded settings
   const [expandedMappings, setExpandedMappings] = useState<Set<number>>(
@@ -34,6 +40,11 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
   useEffect(() => {
     dispatch(initialize());
   }, [dispatch]);
+
+  // Reset expanded mappings when switching view modes
+  useEffect(() => {
+    setExpandedMappings(new Set());
+  }, [viewMode]);
 
   const toggleExpanded = (index: number) => {
     setExpandedMappings((prev) => {
@@ -84,10 +95,14 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
   const updateMappings = (
     updatedMappings: Partial<MidiMapping<ModuleType>>[],
   ) => {
-    const newPages = pages.map((page, index) =>
-      index === activePage ? { ...page, mappings: updatedMappings } : page,
-    );
-    updateProp("pages")(newPages);
+    if (viewMode === "global") {
+      updateProp("globalMappings")(updatedMappings);
+    } else {
+      const newPages = pages.map((page, index) =>
+        index === activePage ? { ...page, mappings: updatedMappings } : page,
+      );
+      updateProp("pages")(newPages);
+    }
   };
 
   const updateMappedCC = ({ cc, index }: { cc: number; index: number }) => {
@@ -272,11 +287,45 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
         </div>
       </div>
 
+      {/* View Mode Toggle */}
+      <div className="flex flex-col gap-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+          Mapping Scope
+        </h3>
+        <div className="flex gap-2">
+          <Button
+            variant={viewMode === "page" ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              setViewMode("page");
+            }}
+            className="flex-1"
+          >
+            Page Mappings
+          </Button>
+          <Button
+            variant={viewMode === "global" ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              setViewMode("global");
+            }}
+            className="flex-1"
+          >
+            Global Mappings
+          </Button>
+        </div>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          {viewMode === "page"
+            ? "These mappings apply only to the current page"
+            : "These mappings are available on all pages"}
+        </p>
+      </div>
+
       {/* MIDI Mappings */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between px-1">
           <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-            MIDI Mappings
+            {viewMode === "global" ? "Global " : "Page "}MIDI Mappings
           </h3>
           <span className="text-xs text-slate-500 dark:text-slate-400">
             {mappings.length} {mappings.length === 1 ? "mapping" : "mappings"}
@@ -290,7 +339,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
 
             return (
               <div
-                key={i}
+                key={`${viewMode}-${activePage}-${i}`}
                 className="flex flex-col gap-3 p-3 rounded-lg bg-white dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors shadow-sm"
               >
                 {/* Main mapping row */}
