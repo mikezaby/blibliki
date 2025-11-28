@@ -72,8 +72,8 @@ export const oscillatorPropSchema: ModulePropSchema<
   },
   octave: {
     kind: "number",
-    min: -4,
-    max: 4,
+    min: -1,
+    max: 2,
     step: 1,
     label: "Octave",
   },
