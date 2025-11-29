@@ -2,7 +2,7 @@ import { modulesSelector } from "@/components/AudioModule/modulesSlice";
 import { useAppSelector } from "@/hooks";
 import { IPatch } from "@/models/Patch";
 
-export default function Export() {
+export default function ExportGrid() {
   const { patch } = useAppSelector((state) => state.patch);
   const gridNodes = useAppSelector((state) => state.gridNodes);
   const modules = useAppSelector((state) => modulesSelector.selectAll(state));
@@ -25,5 +25,5 @@ export default function Export() {
     URL.revokeObjectURL(url);
   };
 
-  return <button onClick={exportJSON}>Export</button>;
+  return <button onClick={exportJSON}>Export for Grid</button>;
 }
