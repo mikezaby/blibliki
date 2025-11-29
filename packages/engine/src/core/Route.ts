@@ -37,9 +37,17 @@ export class Routes {
   }
 
   clear() {
-    for (const id in this.routes) {
+    this.routes.forEach((_, id) => {
       this.removeRoute(id);
-    }
+    });
+  }
+
+  replug() {
+    this.routes.forEach((_, id) => {
+      const { sourceIO, destinationIO } = this.getIOs(id);
+      sourceIO.rePlugAll();
+      destinationIO.rePlugAll();
+    });
   }
 
   private plug(id: string) {
