@@ -1,6 +1,6 @@
 import { ContextTime } from "@blibliki/transport";
 import { Context } from "@blibliki/utils";
-import { IModule, Module, ModulePropSchema } from "@/core";
+import { IModule, Module, ModulePropSchema, SetterHooks } from "@/core";
 import Note from "@/core/Note";
 import { ICreateModule, ModuleType } from ".";
 
@@ -21,7 +21,10 @@ export const constantPropSchema: ModulePropSchema<IConstantProps> = {
 
 const DEFAULT_PROPS: IConstantProps = { value: 1 };
 
-export default class Constant extends Module<ModuleType.Constant> {
+export default class Constant
+  extends Module<ModuleType.Constant>
+  implements Pick<SetterHooks<IConstantProps>, "onAfterSetValue">
+{
   declare audioNode: ConstantSourceNode;
   isStated = false;
 
@@ -39,9 +42,9 @@ export default class Constant extends Module<ModuleType.Constant> {
     this.registerDefaultIOs("out");
   }
 
-  protected onSetValue(value: IConstantProps["value"]) {
+  onAfterSetValue: SetterHooks<IConstantProps>["onAfterSetValue"] = (value) => {
     this.audioNode.offset.value = value;
-  }
+  };
 
   start(time: ContextTime) {
     if (this.isStated) return;

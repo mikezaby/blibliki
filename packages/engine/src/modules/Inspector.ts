@@ -1,5 +1,5 @@
 import { Context } from "@blibliki/utils";
-import { IModule, Module } from "@/core";
+import { IModule, Module, SetterHooks } from "@/core";
 import { EnumProp, ModulePropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
 
@@ -23,7 +23,10 @@ export const inspectorPropSchema: ModulePropSchema<
 
 const DEFAULT_PROPS: IInspectorProps = { fftSize: 512 };
 
-export default class Inspector extends Module<ModuleType.Inspector> {
+export default class Inspector
+  extends Module<ModuleType.Inspector>
+  implements Pick<SetterHooks<IInspectorProps>, "onAfterSetFftSize">
+{
   declare audioNode: AnalyserNode;
   private _buffer?: Float32Array<ArrayBuffer>;
 
@@ -41,9 +44,11 @@ export default class Inspector extends Module<ModuleType.Inspector> {
     this.registerDefaultIOs("in");
   }
 
-  protected onSetFftSize(value: number) {
+  onAfterSetFftSize: SetterHooks<IInspectorProps>["onAfterSetFftSize"] = (
+    value,
+  ) => {
     this._buffer = new Float32Array(value);
-  }
+  };
 
   get buffer() {
     if (this._buffer) return this._buffer;

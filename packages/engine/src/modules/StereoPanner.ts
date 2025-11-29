@@ -1,6 +1,6 @@
 import { Context } from "@blibliki/utils";
 import { IModule, Module, ModulePropSchema } from "@/core";
-import { IModuleConstructor } from "@/core/module/Module";
+import { IModuleConstructor, SetterHooks } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { ICreateModule, ModuleType } from ".";
 
@@ -23,7 +23,10 @@ const DEFAULT_PROPS: IStereoPannerProps = {
   pan: 0,
 };
 
-export class MonoStereoPanner extends Module<ModuleType.StereoPanner> {
+export class MonoStereoPanner
+  extends Module<ModuleType.StereoPanner>
+  implements Pick<SetterHooks<IStereoPannerProps>, "onAfterSetPan">
+{
   declare audioNode: StereoPannerNode;
 
   constructor(
@@ -44,9 +47,9 @@ export class MonoStereoPanner extends Module<ModuleType.StereoPanner> {
     this.registerAdditionalInputs();
   }
 
-  protected onSetPan(value: IStereoPannerProps["pan"]) {
+  onAfterSetPan: SetterHooks<IStereoPannerProps>["onAfterSetPan"] = (value) => {
     this.audioNode.pan.value = value;
-  }
+  };
 
   private registerAdditionalInputs() {
     this.registerAudioInput({

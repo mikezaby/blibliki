@@ -1,5 +1,5 @@
 import { Context } from "@blibliki/utils";
-import { IModule, Module } from "@/core";
+import { IModule, Module, SetterHooks } from "@/core";
 import { ModulePropSchema } from "@/core/schema";
 import { CustomWorklet, newAudioWorklet } from "@/processors";
 import { ICreateModule, ModuleType } from ".";
@@ -37,7 +37,14 @@ export const scalePropSchema: ModulePropSchema<IScaleProps> = {
 
 const DEFAULT_PROPS: IScaleProps = { min: 0, max: 1, current: 0.5 };
 
-export default class Scale extends Module<ModuleType.Scale> {
+export default class Scale
+  extends Module<ModuleType.Scale>
+  implements
+    Pick<
+      SetterHooks<IScaleProps>,
+      "onAfterSetMin" | "onAfterSetMax" | "onAfterSetCurrent"
+    >
+{
   declare audioNode: AudioWorkletNode;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Scale>) {
@@ -66,15 +73,17 @@ export default class Scale extends Module<ModuleType.Scale> {
     return this.audioNode.parameters.get("max")!;
   }
 
-  protected onSetMin(value: number) {
+  onAfterSetMin: SetterHooks<IScaleProps>["onAfterSetMin"] = (value) => {
     this.min.value = value;
-  }
+  };
 
-  protected onSetMax(value: number) {
+  onAfterSetMax: SetterHooks<IScaleProps>["onAfterSetMax"] = (value) => {
     this.max.value = value;
-  }
+  };
 
-  protected onSetCurrent(value: number) {
+  onAfterSetCurrent: SetterHooks<IScaleProps>["onAfterSetCurrent"] = (
+    value,
+  ) => {
     this.current.value = value;
-  }
+  };
 }

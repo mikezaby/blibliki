@@ -35,6 +35,49 @@ export type IModuleConstructor<T extends ModuleType> = Optional<
   audioNodeConstructor?: (context: Context) => AudioNode;
 };
 
+/**
+ * Helper type for type-safe property lifecycle hooks.
+ *
+ * Hooks are completely optional - only define the ones you need.
+ * Use explicit type annotation for automatic type inference.
+ *
+ * @example
+ * ```typescript
+ * export type IGainProps = {
+ *   gain: number;
+ *   muted: boolean;
+ * };
+ *
+ * export class MonoGain extends Module<ModuleType.Gain> {
+ *   // ✅ Define only the hooks you need with type annotation
+ *   // value type is automatically inferred as number!
+ *   onSetGain: SetterHooks<IGainProps>["onSetGain"] = (value) => {
+ *     this.audioNode.gain.value = value;
+ *     return value; // optional: return modified value
+ *   };
+ *
+ *   // ✅ onAfterSet is called after prop is set
+ *   onAfterSetMuted: SetterHooks<IGainProps>["onAfterSetMuted"] = (value) => {
+ *     if (value) this.audioNode.gain.value = 0;
+ *   };
+ *
+ *   // ✅ You can omit hooks you don't need - they're optional!
+ *   // No need to define onSetMuted if you don't need it
+ *
+ *   // ❌ This would cause a type error:
+ *   // onSetGain: SetterHooks<IGainProps>["onSetGain"] = (value: string) => value;
+ *   //                                                            ^^^^^^ Error!
+ * }
+ * ```
+ */
+export type SetterHooks<P> = {
+  [K in keyof P as `onSet${Capitalize<string & K>}`]: (value: P[K]) => P[K];
+} & {
+  [K in keyof P as `onAfterSet${Capitalize<string & K>}`]: (
+    value: P[K],
+  ) => void;
+};
+
 export abstract class Module<T extends ModuleType> implements IModule<T> {
   id: string;
   engineId: string;
@@ -74,23 +117,40 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   }
 
   set props(value: Partial<ModuleTypeToPropsMapping[T]>) {
-    Object.keys(value).forEach((key) => {
-      const onSetAttr = `onSet${upperFirst(key)}`;
+    const updatedValue = { ...value };
 
-      // @ts-expect-error TS7053 ignore this error
-      // eslint-disable-next-line
-      this[onSetAttr]?.(value[key]);
+    // Call onSet hooks and use returned values if any
+    (Object.keys(value) as Array<keyof ModuleTypeToPropsMapping[T]>).forEach(
+      (key) => {
+        const result = this.callPropHook("onSet", key, value[key]!);
+        if (result !== undefined) {
+          updatedValue[key] = result;
+        }
+      },
+    );
+
+    this._props = { ...this._props, ...updatedValue };
+
+    // Call onAfterSet hooks
+    (
+      Object.keys(updatedValue) as Array<keyof ModuleTypeToPropsMapping[T]>
+    ).forEach((key) => {
+      this.callPropHook("onAfterSet", key, updatedValue[key]!);
     });
+  }
 
-    this._props = { ...this._props, ...value };
+  private callPropHook<K extends keyof ModuleTypeToPropsMapping[T]>(
+    hookType: "onSet" | "onAfterSet",
+    key: K,
+    value: ModuleTypeToPropsMapping[T][K],
+  ): ModuleTypeToPropsMapping[T][K] | undefined {
+    const hookName = `${hookType}${upperFirst(key as string)}`;
+    const hook = (this as any)[hookName];
 
-    Object.keys(value).forEach((key) => {
-      const onSetAttr = `onAfterSet${upperFirst(key)}`;
-
-      // @ts-expect-error TS7053 ignore this error
-      // eslint-disable-next-line
-      this[onSetAttr]?.(value[key]);
-    });
+    if (typeof hook === "function") {
+      return hook.call(this, value);
+    }
+    return undefined;
   }
 
   serialize(): IModuleSerialize<T> {

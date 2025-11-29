@@ -1,4 +1,4 @@
-import { IModule, Module, MidiOutput } from "@/core";
+import { IModule, Module, MidiOutput, SetterHooks } from "@/core";
 import MidiEvent from "@/core/midi/MidiEvent";
 import { ModulePropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
@@ -17,7 +17,10 @@ export const midiSelectorPropSchema: ModulePropSchema<IMidiSelectorProps> = {
 
 const DEFAULT_PROPS: IMidiSelectorProps = { selectedId: undefined };
 
-export default class MidiSelector extends Module<ModuleType.MidiSelector> {
+export default class MidiSelector
+  extends Module<ModuleType.MidiSelector>
+  implements Pick<SetterHooks<IMidiSelectorProps>, "onSetSelectedId">
+{
   declare audioNode: undefined;
   midiOutput!: MidiOutput;
   _forwardMidiEvent?: (midiEvent: MidiEvent) => void;
@@ -38,12 +41,16 @@ export default class MidiSelector extends Module<ModuleType.MidiSelector> {
     this.registerOutputs();
   }
 
-  protected onSetSelectedId(value: string | null) {
+  onSetSelectedId: SetterHooks<IMidiSelectorProps>["onSetSelectedId"] = (
+    value,
+  ) => {
     if (!this.superInitialized) return;
 
     this.removeEventListener();
     this.addEventListener(value);
-  }
+
+    return value;
+  };
 
   private get forwardMidiEvent() {
     if (this._forwardMidiEvent) return this._forwardMidiEvent;

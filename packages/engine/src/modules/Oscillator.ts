@@ -2,7 +2,7 @@ import { ContextTime } from "@blibliki/transport";
 import { Context, dbToGain } from "@blibliki/utils";
 import { IModule, Module } from "@/core";
 import Note from "@/core/Note";
-import { IModuleConstructor } from "@/core/module/Module";
+import { IModuleConstructor, SetterHooks } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { EnumProp, ModulePropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
@@ -92,7 +92,20 @@ const DEFAULT_PROPS: IOscillatorProps = {
   lowGain: false,
 };
 
-export class MonoOscillator extends Module<ModuleType.Oscillator> {
+type OscillatorSetterHooks = Pick<
+  SetterHooks<IOscillatorProps>,
+  | "onAfterSetWave"
+  | "onAfterSetFrequency"
+  | "onAfterSetFine"
+  | "onAfterSetCoarse"
+  | "onAfterSetOctave"
+  | "onAfterSetLowGain"
+>;
+
+export class MonoOscillator
+  extends Module<ModuleType.Oscillator>
+  implements OscillatorSetterHooks
+{
   declare audioNode: OscillatorNode;
   isStated = false;
   lowOutputGain: GainNode;
@@ -119,31 +132,31 @@ export class MonoOscillator extends Module<ModuleType.Oscillator> {
     this.registerOutputs();
   }
 
-  protected onAfterSetWave(value: OscillatorWave) {
+  onAfterSetWave: OscillatorSetterHooks["onAfterSetWave"] = (value) => {
     this.audioNode.type = value;
-  }
+  };
 
-  protected onAfterSetFrequency() {
+  onAfterSetFrequency: OscillatorSetterHooks["onAfterSetFrequency"] = () => {
     this.updateFrequency();
-  }
+  };
 
-  protected onAfterSetFine() {
+  onAfterSetFine: OscillatorSetterHooks["onAfterSetFine"] = () => {
     this.updateFrequency();
-  }
+  };
 
-  protected onAfterSetCoarse() {
+  onAfterSetCoarse: OscillatorSetterHooks["onAfterSetCoarse"] = () => {
     this.updateFrequency();
-  }
+  };
 
-  protected onAfterSetOctave() {
+  onAfterSetOctave: OscillatorSetterHooks["onAfterSetOctave"] = () => {
     this.updateFrequency();
-  }
+  };
 
-  protected onAfterSetLowGain() {
+  onAfterSetLowGain: OscillatorSetterHooks["onAfterSetLowGain"] = () => {
     if (!this.superInitialized) return;
 
     this.rePlugAll();
-  }
+  };
 
   start(time: ContextTime) {
     if (this.isStated) return;

@@ -1,5 +1,5 @@
 import { Context } from "@blibliki/utils";
-import { IModule, Module, ModulePropSchema } from "@/core";
+import { IModule, Module, ModulePropSchema, SetterHooks } from "@/core";
 import { IModuleConstructor } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { ICreateModule, ModuleType } from ".";
@@ -21,7 +21,10 @@ export const gainPropSchema: ModulePropSchema<IGainProps> = {
 
 const DEFAULT_PROPS: IGainProps = { gain: 1 };
 
-export class MonoGain extends Module<ModuleType.Gain> {
+export class MonoGain
+  extends Module<ModuleType.Gain>
+  implements Pick<SetterHooks<IGainProps>, "onAfterSetGain">
+{
   declare audioNode: GainNode;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Gain>) {
@@ -39,9 +42,9 @@ export class MonoGain extends Module<ModuleType.Gain> {
     this.registerAdditionalInputs();
   }
 
-  protected onSetGain(value: IGainProps["gain"]) {
+  onAfterSetGain: SetterHooks<IGainProps>["onAfterSetGain"] = (value) => {
     this.audioNode.gain.value = value;
-  }
+  };
 
   private registerAdditionalInputs() {
     this.registerAudioInput({

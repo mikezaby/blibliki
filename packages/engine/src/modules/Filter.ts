@@ -1,6 +1,6 @@
 import { Context } from "@blibliki/utils";
 import { EnumProp, ModulePropSchema } from "@/core";
-import { IModuleConstructor, Module } from "@/core/module/Module";
+import { IModuleConstructor, Module, SetterHooks } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { createModule, ICreateModule, ModuleType } from ".";
 import { MonoGain } from "./Gain";
@@ -59,7 +59,17 @@ export const filterPropSchema: ModulePropSchema<
   },
 };
 
-class MonoFilter extends Module<ModuleType.Filter> {
+class MonoFilter
+  extends Module<ModuleType.Filter>
+  implements
+    Pick<
+      SetterHooks<IFilterProps>,
+      | "onAfterSetType"
+      | "onAfterSetCutoff"
+      | "onAfterSetQ"
+      | "onAfterSetEnvelopeAmount"
+    >
+{
   declare audioNode: BiquadFilterNode;
   private scale: Scale;
   private amount: MonoGain;
@@ -99,25 +109,26 @@ class MonoFilter extends Module<ModuleType.Filter> {
     this.registerInputs();
   }
 
-  protected onSetType(value: IFilterProps["type"]) {
+  onAfterSetType: SetterHooks<IFilterProps>["onAfterSetType"] = (value) => {
     this.audioNode.type = value;
-  }
+  };
 
-  protected onSetCutoff(value: IFilterProps["cutoff"]) {
+  onAfterSetCutoff: SetterHooks<IFilterProps>["onAfterSetCutoff"] = (value) => {
     if (!this.superInitialized) return;
 
     this.scale.props = { current: value };
-  }
+  };
 
-  protected onSetQ(value: IFilterProps["Q"]) {
+  onAfterSetQ: SetterHooks<IFilterProps>["onAfterSetQ"] = (value) => {
     this.audioNode.Q.value = value;
-  }
+  };
 
-  protected onSetEnvelopeAmount(value: IFilterProps["envelopeAmount"]) {
-    if (!this.superInitialized) return;
+  onAfterSetEnvelopeAmount: SetterHooks<IFilterProps>["onAfterSetEnvelopeAmount"] =
+    (value) => {
+      if (!this.superInitialized) return;
 
-    this.amount.props = { gain: value };
-  }
+      this.amount.props = { gain: value };
+    };
 
   private registerInputs() {
     this.registerAudioInput({
