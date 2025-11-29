@@ -153,8 +153,6 @@ export class MonoOscillator
   };
 
   onAfterSetLowGain: OscillatorSetterHooks["onAfterSetLowGain"] = () => {
-    if (!this.superInitialized) return;
-
     this.rePlugAll();
   };
 
@@ -203,7 +201,6 @@ export class MonoOscillator
 
   private get finalFrequency(): number | undefined {
     const { frequency, coarse, octave, fine } = this.props;
-    if (!this.superInitialized) return;
 
     const transposed =
       frequency * Math.pow(2, coarse / 12 + octave + fine / 12);

@@ -44,8 +44,6 @@ export default class MidiSelector
   onSetSelectedId: SetterHooks<IMidiSelectorProps>["onSetSelectedId"] = (
     value,
   ) => {
-    if (!this.superInitialized) return;
-
     this.removeEventListener();
     this.addEventListener(value);
 

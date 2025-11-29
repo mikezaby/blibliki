@@ -103,13 +103,17 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
     this.voiceNo = voiceNo ?? 0;
     this.activeNotes = [];
     this.audioNode = audioNodeConstructor?.(this.context);
-    this._props = {} as ModuleTypeToPropsMapping[T];
-    this.props = props;
+    this._props = props;
 
     this.inputs = new InputCollection(this);
     this.outputs = new OutputCollection(this);
 
     this.superInitialized = true;
+
+    // Defer hook calls until after subclass is fully initialized
+    queueMicrotask(() => {
+      this.props = props;
+    });
   }
 
   get props(): ModuleTypeToPropsMapping[T] {
@@ -119,23 +123,27 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   set props(value: Partial<ModuleTypeToPropsMapping[T]>) {
     const updatedValue = { ...value };
 
-    // Call onSet hooks and use returned values if any
-    (Object.keys(value) as Array<keyof ModuleTypeToPropsMapping[T]>).forEach(
+    (Object.keys(value) as (keyof ModuleTypeToPropsMapping[T])[]).forEach(
       (key) => {
-        const result = this.callPropHook("onSet", key, value[key]!);
-        if (result !== undefined) {
-          updatedValue[key] = result;
+        const propValue = value[key];
+        if (propValue !== undefined) {
+          const result = this.callPropHook("onSet", key, propValue);
+          if (result !== undefined) {
+            updatedValue[key] = result;
+          }
         }
       },
     );
 
     this._props = { ...this._props, ...updatedValue };
 
-    // Call onAfterSet hooks
     (
-      Object.keys(updatedValue) as Array<keyof ModuleTypeToPropsMapping[T]>
+      Object.keys(updatedValue) as (keyof ModuleTypeToPropsMapping[T])[]
     ).forEach((key) => {
-      this.callPropHook("onAfterSet", key, updatedValue[key]!);
+      const propValue = updatedValue[key];
+      if (propValue !== undefined) {
+        this.callPropHook("onAfterSet", key, propValue);
+      }
     });
   }
 
@@ -145,10 +153,15 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
     value: ModuleTypeToPropsMapping[T][K],
   ): ModuleTypeToPropsMapping[T][K] | undefined {
     const hookName = `${hookType}${upperFirst(key as string)}`;
-    const hook = (this as any)[hookName];
+    const hook = this[hookName as keyof this];
 
     if (typeof hook === "function") {
-      return hook.call(this, value);
+      const result = (
+        hook as (
+          value: ModuleTypeToPropsMapping[T][K],
+        ) => ModuleTypeToPropsMapping[T][K] | undefined
+      ).call(this, value);
+      return result;
     }
     return undefined;
   }

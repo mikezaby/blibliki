@@ -114,8 +114,6 @@ class MonoFilter
   };
 
   onAfterSetCutoff: SetterHooks<IFilterProps>["onAfterSetCutoff"] = (value) => {
-    if (!this.superInitialized) return;
-
     this.scale.props = { current: value };
   };
 
@@ -125,8 +123,6 @@ class MonoFilter
 
   onAfterSetEnvelopeAmount: SetterHooks<IFilterProps>["onAfterSetEnvelopeAmount"] =
     (value) => {
-      if (!this.superInitialized) return;
-
       this.amount.props = { gain: value };
     };
 

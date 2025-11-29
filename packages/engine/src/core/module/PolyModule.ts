@@ -61,8 +61,7 @@ export abstract class PolyModule<T extends ModuleType>
     this.name = name;
     this.moduleType = moduleType;
     this.voices = voices || 1;
-    this._props = {} as ModuleTypeToPropsMapping[T];
-    this.props = props;
+    this._props = props;
 
     this.inputs = new InputCollection(
       this as unknown as PolyModule<ModuleType>,
@@ -72,6 +71,11 @@ export abstract class PolyModule<T extends ModuleType>
     );
 
     this.superInitialized = true;
+
+    // Defer hook calls until after subclass is fully initialized
+    queueMicrotask(() => {
+      this.props = props;
+    });
   }
 
   get name() {
