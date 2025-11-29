@@ -1,5 +1,5 @@
 import { ContextTime } from "@blibliki/transport";
-import { IModule, MidiEvent, Module } from "@/core";
+import { IModule, MidiEvent, Module, SetterHooks } from "@/core";
 import { ModulePropSchema, NumberProp, PropSchema } from "@/core/schema";
 import { ICreateModule, moduleSchemas, ModuleType } from ".";
 
@@ -92,7 +92,15 @@ function getMidiFromMappedValue({
   return Math.round(Math.max(0, Math.min(127, newMidiValue))); // Valid MIDI range
 }
 
-export default class MidiMapper extends Module<ModuleType.MidiMapper> {
+type MidiMapperSetterHooks = Pick<
+  SetterHooks<IMidiMapperProps>,
+  "onSetActivePage"
+>;
+
+export default class MidiMapper
+  extends Module<ModuleType.MidiMapper>
+  implements MidiMapperSetterHooks
+{
   declare audioNode: undefined;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.MidiMapper>) {
@@ -108,6 +116,10 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
       onMidiEvent: this.onMidiEvent,
     });
   }
+
+  onSetActivePage: MidiMapperSetterHooks["onSetActivePage"] = (value) => {
+    return Math.max(Math.min(value, this.props.pages.length - 1), 0);
+  };
 
   handleCC = (event: MidiEvent, triggeredAt: ContextTime) => {
     this.checkAutoAssign(event);
