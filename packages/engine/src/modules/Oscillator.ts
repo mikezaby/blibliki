@@ -108,7 +108,7 @@ export class MonoOscillator
 {
   declare audioNode: OscillatorNode;
   isStated = false;
-  lowOutputGain: GainNode;
+  outputGain: GainNode;
   detuneGain!: GainNode;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Oscillator>) {
@@ -122,7 +122,7 @@ export class MonoOscillator
       audioNodeConstructor,
     });
 
-    this.lowOutputGain = new GainNode(this.context.audioContext, {
+    this.outputGain = new GainNode(this.context.audioContext, {
       gain: dbToGain(LOW_GAIN),
     });
 
@@ -152,8 +152,8 @@ export class MonoOscillator
     this.updateFrequency();
   };
 
-  onAfterSetLowGain: OscillatorSetterHooks["onAfterSetLowGain"] = () => {
-    this.rePlugAll();
+  onAfterSetLowGain: OscillatorSetterHooks["onAfterSetLowGain"] = (lowGain) => {
+    this.outputGain.gain.value = lowGain ? dbToGain(LOW_GAIN) : 1;
   };
 
   start(time: ContextTime) {
@@ -218,7 +218,7 @@ export class MonoOscillator
   }
 
   private applyOutputGain() {
-    this.audioNode.connect(this.lowOutputGain);
+    this.audioNode.connect(this.outputGain);
   }
 
   private initializeGainDetune() {
@@ -236,8 +236,7 @@ export class MonoOscillator
   private registerOutputs() {
     this.registerAudioOutput({
       name: "out",
-      getAudioNode: () =>
-        this.props.lowGain ? this.lowOutputGain : this.audioNode,
+      getAudioNode: () => this.outputGain,
     });
   }
 }
