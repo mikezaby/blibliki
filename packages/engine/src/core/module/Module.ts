@@ -88,7 +88,6 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   inputs: InputCollection;
   outputs: OutputCollection;
   protected _props!: ModuleTypeToPropsMapping[T];
-  protected superInitialized = false;
   protected activeNotes: Note[];
   private pendingUIUpdates = false;
 
@@ -107,8 +106,6 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
 
     this.inputs = new InputCollection(this);
     this.outputs = new OutputCollection(this);
-
-    this.superInitialized = true;
 
     // Defer hook calls until after subclass is fully initialized
     queueMicrotask(() => {

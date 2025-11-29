@@ -44,7 +44,6 @@ export abstract class PolyModule<T extends ModuleType>
   outputs: OutputCollection;
   protected monoModuleConstructor: IPolyModuleConstructor<T>["monoModuleConstructor"];
   protected _props!: ModuleTypeToPropsMapping[T];
-  protected superInitialized = false;
   private _voices!: number;
   private _name!: string;
   private pendingUIUpdates = false;
@@ -69,8 +68,6 @@ export abstract class PolyModule<T extends ModuleType>
     this.outputs = new OutputCollection(
       this as unknown as PolyModule<ModuleType>,
     );
-
-    this.superInitialized = true;
 
     // Defer hook calls until after subclass is fully initialized
     queueMicrotask(() => {
@@ -146,8 +143,6 @@ export abstract class PolyModule<T extends ModuleType>
   }
 
   rePlugAll(callback?: () => void) {
-    if (!this.superInitialized) return;
-
     this.inputs.rePlugAll(callback);
     this.outputs.rePlugAll(callback);
   }
