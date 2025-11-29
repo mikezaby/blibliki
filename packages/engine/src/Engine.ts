@@ -1,4 +1,5 @@
 import {
+  BPM,
   ContextTime,
   Ticks,
   TimeSignature,
@@ -12,7 +13,14 @@ import {
   pick,
   uuidv4,
 } from "@blibliki/utils";
-import { IRoute, Routes, MidiDeviceManager, IModule, MidiEvent } from "@/core";
+import {
+  IRoute,
+  Routes,
+  MidiDeviceManager,
+  IModule,
+  MidiEvent,
+  IModuleSerialize,
+} from "@/core";
 import {
   ICreateModule,
   ModuleParams,
@@ -20,7 +28,11 @@ import {
   ModuleTypeToModuleMapping,
   createModule,
 } from "@/modules";
-import { IPolyModule, PolyModule } from "./core/module/PolyModule";
+import {
+  IPolyModule,
+  IPolyModuleSerialize,
+  PolyModule,
+} from "./core/module/PolyModule";
 import { loadProcessors } from "./processors";
 
 export type IUpdateModule<T extends ModuleType> = {
@@ -32,6 +44,13 @@ export type IUpdateModule<T extends ModuleType> = {
 };
 
 export type ICreateRoute = Optional<IRoute, "id">;
+
+export interface IEngineSerialize {
+  bpm: BPM;
+  timeSignature: TimeSignature;
+  modules: (IModuleSerialize<ModuleType> | IPolyModuleSerialize<ModuleType>)[];
+  routes: IRoute[];
+}
 
 export class Engine {
   private static _engines = new Map<string, Engine>();
@@ -63,6 +82,24 @@ export class Engine {
     assertDefined(this._currentId);
 
     return this.getById(this._currentId);
+  }
+
+  static async load(data: IEngineSerialize): Promise<Engine> {
+    const { bpm, timeSignature, modules, routes } = data;
+    const context = new Context();
+    const engine = new Engine(context);
+    await engine.initialize();
+
+    engine.timeSignature = timeSignature;
+    engine.bpm = bpm;
+    modules.forEach((m) => {
+      engine.addModule(m);
+    });
+    routes.forEach((r) => {
+      engine.addRoute(r);
+    });
+
+    return engine;
   }
 
   constructor(context: Context) {
@@ -199,6 +236,15 @@ export class Engine {
       module.dispose();
     });
     this.modules.clear();
+  }
+
+  serialize(): IEngineSerialize {
+    return {
+      bpm: this.bpm,
+      timeSignature: this.timeSignature,
+      modules: Array.from(this.modules.values()).map((m) => m.serialize()),
+      routes: this.routes.serialize(),
+    };
   }
 
   findModule(

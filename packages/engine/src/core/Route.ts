@@ -50,6 +50,10 @@ export class Routes {
     });
   }
 
+  serialize(): IRoute[] {
+    return Array.from(this.routes.values());
+  }
+
   private plug(id: string) {
     const { sourceIO, destinationIO } = this.getIOs(id);
     sourceIO.plug(destinationIO);
