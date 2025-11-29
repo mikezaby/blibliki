@@ -25,7 +25,6 @@
     "@types/audioworklet": "^0.0.91"
   },
   "dependencies": {
-    "@blibliki/utils": "workspace:^",
-    "audio-context-timers": "^5.0.133"
+    "@blibliki/utils": "workspace:^"
   }
 }
