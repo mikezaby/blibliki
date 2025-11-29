@@ -173,14 +173,14 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
         mappedValue = min + curvedValue * (max - min);
 
         // Round to step if defined
-        if (propSchema.step !== undefined) {
+        if (
+          propSchema.step !== undefined &&
+          (!propSchema.exp || propSchema.exp === 1)
+        ) {
           const steps = Math.round((mappedValue - min) / propSchema.step);
           mappedValue = min + steps * propSchema.step;
         }
 
-        console.log(
-          `min: ${min}, max: ${max}, curvedValue: ${curvedValue}, mappedValue: ${mappedValue}`,
-        );
         break;
       }
       case "enum": {
