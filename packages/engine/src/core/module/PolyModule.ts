@@ -59,7 +59,6 @@ export abstract class PolyModule<T extends ModuleType>
     this.engineId = engineId;
     this.name = name;
     this.moduleType = moduleType;
-    this.voices = voices || 1;
     this._props = props;
 
     this.inputs = new InputCollection(
@@ -71,6 +70,7 @@ export abstract class PolyModule<T extends ModuleType>
 
     // Defer hook calls until after subclass is fully initialized
     queueMicrotask(() => {
+      this.voices = voices || 1;
       this.props = props;
     });
   }
