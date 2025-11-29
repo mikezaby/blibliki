@@ -35,41 +35,6 @@ export type IModuleConstructor<T extends ModuleType> = Optional<
   audioNodeConstructor?: (context: Context) => AudioNode;
 };
 
-/**
- * Helper type for type-safe property lifecycle hooks.
- *
- * Hooks are completely optional - only define the ones you need.
- * Use explicit type annotation for automatic type inference.
- *
- * @example
- * ```typescript
- * export type IGainProps = {
- *   gain: number;
- *   muted: boolean;
- * };
- *
- * export class MonoGain extends Module<ModuleType.Gain> {
- *   // ✅ Define only the hooks you need with type annotation
- *   // value type is automatically inferred as number!
- *   onSetGain: SetterHooks<IGainProps>["onSetGain"] = (value) => {
- *     this.audioNode.gain.value = value;
- *     return value; // optional: return modified value
- *   };
- *
- *   // ✅ onAfterSet is called after prop is set
- *   onAfterSetMuted: SetterHooks<IGainProps>["onAfterSetMuted"] = (value) => {
- *     if (value) this.audioNode.gain.value = 0;
- *   };
- *
- *   // ✅ You can omit hooks you don't need - they're optional!
- *   // No need to define onSetMuted if you don't need it
- *
- *   // ❌ This would cause a type error:
- *   // onSetGain: SetterHooks<IGainProps>["onSetGain"] = (value: string) => value;
- *   //                                                            ^^^^^^ Error!
- * }
- * ```
- */
 export type SetterHooks<P> = {
   [K in keyof P as `onSet${Capitalize<string & K>}`]: (value: P[K]) => P[K];
 } & {
