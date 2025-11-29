@@ -25,7 +25,8 @@ import { useAppDispatch, usePatch } from "@/hooks";
 import useUpload from "@/hooks/useUpload";
 import { IPatch } from "@/models/Patch";
 import { destroy, load, save } from "@/patchSlice";
-import Export from "./Export";
+import ExportEngine from "./ExportEngine";
+import ExportGrid from "./ExportGrid";
 
 export default function FileMenu() {
   const dispatch = useAppDispatch();
@@ -132,7 +133,13 @@ export default function FileMenu() {
           <DropdownMenuItem asChild>
             <div className="group flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition-all duration-200 w-full border border-transparent hover:border-slate-200 dark:hover:border-slate-600">
               <Download className="w-4 h-4" />
-              <Export />
+              <ExportGrid />
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <div className="group flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition-all duration-200 w-full border border-transparent hover:border-slate-200 dark:hover:border-slate-600">
+              <Download className="w-4 h-4" />
+              <ExportEngine />
             </div>
           </DropdownMenuItem>
         </DropdownMenuGroup>
