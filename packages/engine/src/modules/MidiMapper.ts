@@ -17,7 +17,9 @@ export type MidiMappingPage = {
 
 export enum MidiMappingMode {
   direct = "direct",
-  toggle = "toggle",
+  directRev = "directRev",
+  toggleInc = "toggleInc",
+  toggleDec = "toggleDec",
   incDec = "incDec",
   incDecRev = "incDecRev",
 }
@@ -72,7 +74,7 @@ function getMidiFromMappedValue({
   const max = propSchema.max ?? 1;
   const exp = propSchema.exp ?? 1;
 
-  const { threshold = 64, mode = MidiMappingMode.incDec } = mapping;
+  const { threshold = 64, mode } = mapping;
 
   // Reverse the range mapping: get curvedValue
   const curvedValue = (value - min) / (max - min);
@@ -139,7 +141,11 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
     const mode = mapping.mode ?? "direct";
 
     // Toggle mode: only respond to 127 (button press), ignore 0
-    if (mode === MidiMappingMode.toggle && midiValue !== 127) {
+    if (
+      (mode === MidiMappingMode.toggleInc ||
+        mode === MidiMappingMode.toggleDec) &&
+      midiValue !== 127
+    ) {
       return;
     }
 
@@ -155,30 +161,42 @@ export default class MidiMapper extends Module<ModuleType.MidiMapper> {
     // Direct mode (default) or Toggle mode: map value directly
     switch (propSchema.kind) {
       case "number": {
-        midiValue =
-          mode === MidiMappingMode.incDec || mode === MidiMappingMode.incDecRev
-            ? getMidiFromMappedValue({
-                // @ts-expect-error TS7053 ignore this error
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                value: mappedModule.props[propName],
-                propSchema,
-                mapping,
-                midiValue,
-              })
-            : midiValue;
-        const min = propSchema.min ?? 0;
-        const max = propSchema.max ?? 1;
-        const normalizedMidi = midiValue / 127;
-        const curvedValue = Math.pow(normalizedMidi, propSchema.exp ?? 1);
-        mappedValue = min + curvedValue * (max - min);
+        // @ts-expect-error TS7053 ignore this error
+        const currentValue = mappedModule.props[propName] as number;
 
-        // Round to step if defined
         if (
-          propSchema.step !== undefined &&
-          (!propSchema.exp || propSchema.exp === 1)
+          mode === MidiMappingMode.incDec ||
+          mode === MidiMappingMode.incDecRev
         ) {
-          const steps = Math.round((mappedValue - min) / propSchema.step);
-          mappedValue = min + steps * propSchema.step;
+          midiValue = getMidiFromMappedValue({
+            value: currentValue,
+            propSchema,
+            mapping,
+            midiValue,
+          });
+        } else if (mode === MidiMappingMode.directRev) {
+          midiValue = 127 - midiValue;
+        }
+
+        if (mode === MidiMappingMode.toggleInc) {
+          mappedValue = currentValue + (propSchema.step ?? 1);
+        } else if (mode === MidiMappingMode.toggleDec) {
+          mappedValue = currentValue - (propSchema.step ?? 1);
+        } else {
+          const min = propSchema.min ?? 0;
+          const max = propSchema.max ?? 1;
+          const normalizedMidi = midiValue / 127;
+          const curvedValue = Math.pow(normalizedMidi, propSchema.exp ?? 1);
+          mappedValue = min + curvedValue * (max - min);
+
+          // Round to step if defined
+          if (
+            propSchema.step !== undefined &&
+            (!propSchema.exp || propSchema.exp === 1)
+          ) {
+            const steps = Math.round((mappedValue - min) / propSchema.step);
+            mappedValue = min + steps * propSchema.step;
+          }
         }
 
         break;

@@ -431,10 +431,18 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                         label="Select mode"
                         value={mode}
                         options={[
-                          { id: "direct", name: "Direct" },
-                          { id: "toggle", name: "Toggle" },
-                          { id: "incDec", name: "Inc/Dec" },
-                          { id: "incDecRev", name: "Inc/Dec (rev)" },
+                          { id: MidiMappingMode.direct, name: "Direct" },
+                          {
+                            id: MidiMappingMode.directRev,
+                            name: "Direct (rev)",
+                          },
+                          { id: MidiMappingMode.toggleInc, name: "Toggle inc" },
+                          { id: MidiMappingMode.toggleDec, name: "Toggle dec" },
+                          { id: MidiMappingMode.incDec, name: "Inc/Dec" },
+                          {
+                            id: MidiMappingMode.incDecRev,
+                            name: "Inc/Dec (rev)",
+                          },
                         ]}
                         onChange={(value: string) => {
                           updateMappedMode({
@@ -446,7 +454,11 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                       <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
                         {mode === MidiMappingMode.direct &&
                           "Maps MIDI value directly to parameter"}
-                        {mode === MidiMappingMode.toggle &&
+                        {mode === MidiMappingMode.directRev &&
+                          "Maps MIDI value directly to parameter reverse"}
+                        {mode === MidiMappingMode.toggleInc &&
+                          "Only responds to button press (127)"}
+                        {mode === MidiMappingMode.toggleDec &&
                           "Only responds to button press (127)"}
                         {mode === MidiMappingMode.incDec &&
                           "Increment/decrement based on threshold"}
