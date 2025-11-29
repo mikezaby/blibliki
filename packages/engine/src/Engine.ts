@@ -265,6 +265,10 @@ export class Engine {
     return this.midiDeviceManager.find(id);
   }
 
+  findMidiDeviceByName(name: string) {
+    return this.midiDeviceManager.findByName(name);
+  }
+
   onPropsUpdate(
     callback: <T extends ModuleType>(
       params: IModule<T> | IPolyModule<T>,

@@ -1,4 +1,5 @@
-import { IModule, Module, MidiOutput, SetterHooks } from "@/core";
+import { IModule, Module, MidiOutput, SetterHooks, MidiDevice } from "@/core";
+import ComputerKeyboardInput from "@/core/midi/ComputerKeyboardDevice";
 import MidiEvent from "@/core/midi/MidiEvent";
 import { ModulePropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
@@ -6,6 +7,7 @@ import { ICreateModule, ModuleType } from ".";
 export type IMidiSelector = IModule<ModuleType.MidiSelector>;
 export type IMidiSelectorProps = {
   selectedId: string | undefined | null;
+  selectedName: string | undefined | null;
 };
 
 export const midiSelectorPropSchema: ModulePropSchema<IMidiSelectorProps> = {
@@ -13,9 +15,16 @@ export const midiSelectorPropSchema: ModulePropSchema<IMidiSelectorProps> = {
     kind: "string",
     label: "Midi device ID",
   },
+  selectedName: {
+    kind: "string",
+    label: "Midi device name",
+  },
 };
 
-const DEFAULT_PROPS: IMidiSelectorProps = { selectedId: undefined };
+const DEFAULT_PROPS: IMidiSelectorProps = {
+  selectedId: undefined,
+  selectedName: undefined,
+};
 
 export default class MidiSelector
   extends Module<ModuleType.MidiSelector>
@@ -36,7 +45,15 @@ export default class MidiSelector
       props,
     });
 
-    this.addEventListener(this.props.selectedId);
+    const midiDevice =
+      (this.props.selectedId &&
+        this.engine.findMidiDevice(this.props.selectedId)) ??
+      (this.props.selectedName &&
+        this.engine.findMidiDeviceByName(this.props.selectedName));
+
+    if (midiDevice) {
+      this.addEventListener(midiDevice);
+    }
 
     this.registerOutputs();
   }
@@ -45,7 +62,13 @@ export default class MidiSelector
     value,
   ) => {
     this.removeEventListener();
-    this.addEventListener(value);
+    if (!value) return value;
+
+    const midiDevice = this.engine.findMidiDevice(value);
+    if (!midiDevice) return undefined;
+
+    this.props = { selectedName: midiDevice.name };
+    this.addEventListener(midiDevice);
 
     return value;
   };
@@ -60,11 +83,8 @@ export default class MidiSelector
     return this._forwardMidiEvent;
   }
 
-  private addEventListener(midiId: string | undefined | null) {
-    if (!midiId) return;
-
-    const midiDevice = this.engine.findMidiDevice(midiId);
-    midiDevice?.addEventListener(this.forwardMidiEvent);
+  private addEventListener(midiDevice: MidiDevice | ComputerKeyboardInput) {
+    midiDevice.addEventListener(this.forwardMidiEvent);
   }
 
   private removeEventListener() {

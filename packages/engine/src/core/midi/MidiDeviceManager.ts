@@ -27,6 +27,10 @@ export default class MidiDeviceManager {
     return this.devices.get(id);
   }
 
+  findByName(name: string): MidiDevice | ComputerKeyboardDevice | undefined {
+    return Array.from(this.devices.values()).find((d) => d.name === name);
+  }
+
   addListener(callback: ListenerCallback) {
     this.listeners.push(callback);
   }
