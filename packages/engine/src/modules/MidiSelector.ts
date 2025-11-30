@@ -65,7 +65,7 @@ export default class MidiSelector
     if (!value) return value;
 
     const midiDevice = this.engine.findMidiDevice(value);
-    if (!midiDevice) return undefined;
+    if (!midiDevice) return value;
 
     this.props = { selectedName: midiDevice.name };
     this.addEventListener(midiDevice);

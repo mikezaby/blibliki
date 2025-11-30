@@ -1,5 +1,5 @@
 export { Engine } from "./Engine";
-export type { ICreateRoute, IUpdateModule } from "./Engine";
+export type { ICreateRoute, IUpdateModule, IEngineSerialize } from "./Engine";
 
 export type {
   IRoute,
