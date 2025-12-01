@@ -92,15 +92,19 @@ const scheduleFunction = (id: number, delay: number, type: TimerType) => {
   );
 };
 
-export const clearInterval = (id: number) => {
+const isNode = typeof window === "undefined";
+
+// exported methods
+
+const acClearInterval = (id: number) => {
   SCHEDULED_INTERVAL_FUNCTIONS.delete(id);
 };
 
-export const clearTimeout = (id: number) => {
+const acClearTimeout = (id: number) => {
   SCHEDULED_TIMEOUT_FUNCTIONS.delete(id);
 };
 
-export const setInterval = (func: () => void, delay: number) => {
+const acSetInterval = (func: () => void, delay: number) => {
   const id = generateUniqueNumber(SCHEDULED_INTERVAL_FUNCTIONS);
 
   SCHEDULED_INTERVAL_FUNCTIONS.set(id, () => {
@@ -114,7 +118,7 @@ export const setInterval = (func: () => void, delay: number) => {
   return id;
 };
 
-export const setTimeout = (func: () => void, delay: number) => {
+const acSetTimeout = (func: () => void, delay: number) => {
   const id = generateUniqueNumber(SCHEDULED_TIMEOUT_FUNCTIONS);
 
   SCHEDULED_TIMEOUT_FUNCTIONS.set(id, func);
@@ -122,4 +126,16 @@ export const setTimeout = (func: () => void, delay: number) => {
   scheduleFunction(id, delay, TimerType.timeout);
 
   return id;
+};
+
+const exportedClearInterval = isNode ? clearInterval : acClearInterval;
+const exportedClearTimeout = isNode ? clearTimeout : acClearTimeout;
+const exportedSetInterval = isNode ? setInterval : acSetInterval;
+const exportedSetTimeout = isNode ? setTimeout : acSetTimeout;
+
+export {
+  exportedClearInterval as clearInterval,
+  exportedClearTimeout as clearTimeout,
+  exportedSetInterval as setInterval,
+  exportedSetTimeout as setTimeout,
 };
