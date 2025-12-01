@@ -1,5 +1,4 @@
 import { Context } from "@blibliki/utils";
-import { Input, Output, WebMidi } from "webmidi";
 import ComputerKeyboardDevice from "./ComputerKeyboardDevice";
 import MidiDevice from "./MidiDevice";
 
@@ -10,6 +9,7 @@ export default class MidiDeviceManager {
   private initialized = false;
   private listeners: ListenerCallback[] = [];
   private context: Readonly<Context>;
+  private midiAccess: MIDIAccess | null = null;
 
   constructor(context: Context) {
     this.context = context;
@@ -39,15 +39,15 @@ export default class MidiDeviceManager {
     if (this.initialized) return;
 
     try {
-      await WebMidi.enable();
+      this.midiAccess = await navigator.requestMIDIAccess();
 
-      WebMidi.inputs.forEach((input) => {
+      this.midiAccess.inputs.forEach((input) => {
         if (!this.devices.has(input.id)) {
           this.devices.set(input.id, new MidiDevice(input, this.context));
         }
       });
     } catch (err) {
-      console.error("Error enabling WebMidi:", err);
+      console.error("Error enabling Web MIDI API:", err);
     }
   }
 
@@ -59,34 +59,40 @@ export default class MidiDeviceManager {
   }
 
   private listenChanges() {
-    WebMidi.addListener("connected", (event) => {
-      const port = event.port as Input | Output;
-      if (port instanceof Output) return;
+    if (!this.midiAccess) return;
 
-      if (this.devices.has(port.id)) return;
+    this.midiAccess.addEventListener("statechange", (event) => {
+      const port = event.port;
+      if (!port) return;
 
-      const device = new MidiDevice(port, this.context);
-      this.devices.set(device.id, device);
+      // Only handle input devices
+      if (port.type !== "input") return;
 
-      this.listeners.forEach((listener) => {
-        listener(device);
-      });
-    });
+      const input = port as MIDIInput;
 
-    WebMidi.addListener("disconnected", (event) => {
-      const port = event.port as Input | Output;
-      if (port instanceof Output) return;
+      if (input.state === "connected") {
+        // Device connected
+        if (this.devices.has(input.id)) return;
 
-      const device = this.devices.get(port.id);
-      if (!device) return;
-      if (device instanceof ComputerKeyboardDevice) return;
+        const device = new MidiDevice(input, this.context);
+        this.devices.set(device.id, device);
 
-      device.disconnect();
-      this.devices.delete(device.id);
+        this.listeners.forEach((listener) => {
+          listener(device);
+        });
+      } else if (input.state === "disconnected") {
+        // Device disconnected
+        const device = this.devices.get(input.id);
+        if (!device) return;
+        if (device instanceof ComputerKeyboardDevice) return;
 
-      this.listeners.forEach((listener) => {
-        listener(device);
-      });
+        device.disconnect();
+        this.devices.delete(device.id);
+
+        this.listeners.forEach((listener) => {
+          listener(device);
+        });
+      }
     });
   }
 }

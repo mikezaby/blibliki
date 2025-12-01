@@ -1,5 +1,5 @@
 import { Seconds } from "@blibliki/transport";
-import { Message } from "webmidi";
+import Message from "../midi/Message";
 import frequencyTable from "./frequencyTable";
 
 const Notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];

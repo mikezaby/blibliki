@@ -1,5 +1,5 @@
 import { ContextTime } from "@blibliki/transport";
-import { Message } from "webmidi";
+import Message from "./Message";
 import Note, { INote } from "../Note";
 
 export enum MidiEventType {

@@ -1,6 +1,6 @@
 import { Context } from "@blibliki/utils";
-import { MessageEvent, Input } from "webmidi";
 import MidiEvent, { MidiEventType } from "./MidiEvent";
+import Message from "./Message";
 
 export enum MidiPortState {
   connected = "connected",
@@ -25,9 +25,10 @@ export default class MidiDevice implements IMidiDevice {
   eventListerCallbacks: EventListerCallback[] = [];
 
   private context: Readonly<Context>;
-  private input: Input;
+  private input: MIDIInput;
+  private messageHandler: ((event: MIDIMessageEvent) => void) | null = null;
 
-  constructor(input: Input, context: Context) {
+  constructor(input: MIDIInput, context: Context) {
     this.id = input.id;
     this.name = input.name || `Device ${input.id}`;
     this.input = input;
@@ -41,13 +42,17 @@ export default class MidiDevice implements IMidiDevice {
   }
 
   connect() {
-    this.input.addListener("midimessage", (e: MessageEvent) => {
+    this.messageHandler = (e: MIDIMessageEvent) => {
       this.processEvent(e);
-    });
+    };
+    this.input.addEventListener("midimessage", this.messageHandler);
   }
 
   disconnect() {
-    this.input.removeListener();
+    if (this.messageHandler) {
+      this.input.removeEventListener("midimessage", this.messageHandler);
+      this.messageHandler = null;
+    }
   }
 
   serialize() {
@@ -66,10 +71,13 @@ export default class MidiDevice implements IMidiDevice {
     );
   }
 
-  private processEvent(event: MessageEvent) {
+  private processEvent(event: MIDIMessageEvent) {
+    if (!event.data) return;
+
+    const message = new Message(event.data);
     const midiEvent = new MidiEvent(
-      event.message,
-      this.context.browserToContextTime(event.timestamp),
+      message,
+      this.context.browserToContextTime(event.timeStamp),
     );
 
     switch (midiEvent.type) {
