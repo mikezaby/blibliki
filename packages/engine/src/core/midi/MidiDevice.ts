@@ -1,6 +1,7 @@
 import { Context } from "@blibliki/utils";
-import MidiEvent, { MidiEventType } from "./MidiEvent";
 import Message from "./Message";
+import MidiEvent, { MidiEventType } from "./MidiEvent";
+import type { IMidiInputPort, IMidiMessageEvent } from "./adapters";
 
 export enum MidiPortState {
   connected = "connected",
@@ -25,12 +26,12 @@ export default class MidiDevice implements IMidiDevice {
   eventListerCallbacks: EventListerCallback[] = [];
 
   private context: Readonly<Context>;
-  private input: MIDIInput;
-  private messageHandler: ((event: MIDIMessageEvent) => void) | null = null;
+  private input: IMidiInputPort;
+  private messageHandler: ((event: IMidiMessageEvent) => void) | null = null;
 
-  constructor(input: MIDIInput, context: Context) {
+  constructor(input: IMidiInputPort, context: Context) {
     this.id = input.id;
-    this.name = input.name || `Device ${input.id}`;
+    this.name = input.name;
     this.input = input;
     this.context = context;
 
@@ -42,15 +43,15 @@ export default class MidiDevice implements IMidiDevice {
   }
 
   connect() {
-    this.messageHandler = (e: MIDIMessageEvent) => {
+    this.messageHandler = (e: IMidiMessageEvent) => {
       this.processEvent(e);
     };
-    this.input.addEventListener("midimessage", this.messageHandler);
+    this.input.addEventListener(this.messageHandler);
   }
 
   disconnect() {
     if (this.messageHandler) {
-      this.input.removeEventListener("midimessage", this.messageHandler);
+      this.input.removeEventListener(this.messageHandler);
       this.messageHandler = null;
     }
   }
@@ -71,9 +72,7 @@ export default class MidiDevice implements IMidiDevice {
     );
   }
 
-  private processEvent(event: MIDIMessageEvent) {
-    if (!event.data) return;
-
+  private processEvent(event: IMidiMessageEvent) {
     const message = new Message(event.data);
     const midiEvent = new MidiEvent(
       message,

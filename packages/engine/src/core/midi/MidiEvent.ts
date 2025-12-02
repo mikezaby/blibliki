@@ -1,6 +1,6 @@
 import { ContextTime } from "@blibliki/transport";
-import Message from "./Message";
 import Note, { INote } from "../Note";
+import Message from "./Message";
 
 export enum MidiEventType {
   noteOn = "noteon",

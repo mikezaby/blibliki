@@ -30,6 +30,7 @@
   "dependencies": {
     "@blibliki/transport": "workspace:^",
     "@blibliki/utils": "workspace:^",
+    "@julusian/midi": "^3.6.1",
     "es-toolkit": "^1.41.0",
     "node-web-audio-api": "^1.0.3"
   }
