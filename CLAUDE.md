@@ -61,12 +61,14 @@ cd packages/engine && pnpm test
 The engine is the core of Blibliki. Key concepts:
 
 **Module System**: Audio modules are TypeScript classes that extend the `Module` or `PolyModule` base classes. Each module:
+
 - Has typed inputs/outputs (AudioIO for audio, MidiIO for MIDI)
 - Manages its own Web Audio API nodes
 - Defines a schema for its properties
 - Can be serialized/deserialized
 
 **IO System** (packages/engine/src/core/IO/):
+
 - `AudioIO` - Wraps Web Audio API connections for audio signals
 - `MidiIO` - Handles MIDI event routing between modules
 - Modules connect via a routing system managed by the `Routes` class
@@ -74,6 +76,7 @@ The engine is the core of Blibliki. Key concepts:
 **PolyModule**: A special module type that manages multiple voices for polyphonic synthesis. It uses `VoiceScheduler` to allocate voices on MIDI note events.
 
 **Available Modules** (packages/engine/src/modules/):
+
 - Oscillator, Filter, Gain, Envelope, Master
 - StepSequencer, MidiMapper, MidiSelector, VirtualMidi
 - Constant, Scale, Inspector, StereoPanner
@@ -86,6 +89,7 @@ Custom DSP code runs in the audio thread. Must be loaded via `loadProcessors()` 
 The transport provides musical timing separate from audio clock time:
 
 **Key Classes**:
+
 - `Transport` - Main transport controller, converts musical time to audio time
 - `Clock` - Tracks musical position in bars/beats/sixteenths
 - `Tempo` - Manages BPM and time signature
@@ -99,10 +103,12 @@ The transport provides musical timing separate from audio clock time:
 The grid app is a React application with:
 
 **State Management**:
+
 - Redux Toolkit with slices for global state, modules, MIDI devices, grid nodes, modals, and patches
 - Store configuration in `apps/grid/src/store/index.ts`
 
 **Key Slices**:
+
 - `modulesSlice` - Tracks all audio modules and their parameters
 - `gridNodesSlice` - Manages visual node positions and connections (using @xyflow/react)
 - `midiDevicesSlice` - MIDI device state
@@ -112,11 +118,13 @@ The grid app is a React application with:
 **Visual Patching**: Uses @xyflow/react for node-based visual interface. Nodes represent audio modules, edges represent routes/connections.
 
 **Firebase Integration**:
+
 - Authentication via Clerk
 - Firestore for patch storage
 - Models defined in `apps/grid/src/models/`
 
 **Component Structure**:
+
 - `AudioModule/` - Individual module UI components
 - `Grid/` - The main canvas with drag-and-drop nodes
 - `Modal/` - Various modal dialogs
@@ -146,6 +154,7 @@ Tests are in `packages/engine/test/modules/` and use vitest.
 **Dependency flow**: utils → transport → engine → apps
 
 When making changes:
+
 1. If you modify `utils` or `transport`, rebuild them before testing in `engine`
 2. If you modify `engine`, rebuild it before testing in `grid`
 3. Use `pnpm build:packages` to rebuild all packages at once
@@ -194,3 +203,12 @@ pnpm release # Builds and publishes to npm
 - ESLint with TypeScript strict rules (config in `eslint.config.js`)
 - React 19 with experimental compiler enabled
 - Tailwind CSS for styling (Grid app uses Tailwind v4)
+
+## Before Finish
+
+Always run this tasks to check if everything is ok
+
+- pnpm tsc
+- pnpm lint
+- pnpm test
+- pnpm format
