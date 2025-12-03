@@ -1,7 +1,6 @@
 import { Context } from "@blibliki/utils";
 import { afterEach, beforeEach } from "vitest";
 import { Engine } from "@/Engine";
-import "@/nodePolyfill";
 
 declare module "vitest" {
   export interface TestContext {

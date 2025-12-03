@@ -1,5 +1,6 @@
 import { ContextTime } from "@blibliki/transport";
 import { Context, cancelAndHoldAtTime } from "@blibliki/utils";
+import { GainNode } from "@blibliki/utils/web-audio-api";
 import { Module } from "@/core";
 import Note from "@/core/Note";
 import { IModuleConstructor } from "@/core/module/Module";

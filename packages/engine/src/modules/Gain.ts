@@ -1,4 +1,5 @@
 import { Context } from "@blibliki/utils";
+import { GainNode } from "@blibliki/utils/web-audio-api";
 import { IModule, Module, ModulePropSchema, SetterHooks } from "@/core";
 import { IModuleConstructor } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";

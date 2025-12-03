@@ -40,9 +40,7 @@
   "dependencies": {
     "crypto-js": "^4.2.0",
     "deepmerge-ts": "^7.1.5",
-    "es-toolkit": "^1.41.0"
-  },
-  "optionalDependencies": {
-    "node-web-audio-api": "^0.9.3"
+    "es-toolkit": "^1.41.0",
+    "node-web-audio-api": "1.0.7"
   }
 }

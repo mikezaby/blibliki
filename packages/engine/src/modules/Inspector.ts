@@ -1,4 +1,5 @@
 import { Context } from "@blibliki/utils";
+import { AnalyserNode } from "@blibliki/utils/web-audio-api";
 import { IModule, Module, SetterHooks } from "@/core";
 import { EnumProp, ModulePropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";

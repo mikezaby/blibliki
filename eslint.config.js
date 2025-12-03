@@ -22,6 +22,137 @@ export default defineConfig([
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      "no-restricted-globals": [
+        "error",
+        {
+          name: "OfflineAudioCompletionEvent",
+          message: "Use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "AudioProcessingEvent",
+          message: "Use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "BaseAudioContext",
+          message: "Use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "AudioContext",
+          message: "Use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "OfflineAudioContext",
+          message: "Use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "AudioNode",
+          message: "use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "AudioScheduledSourceNode",
+          message: "use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "AudioParam",
+          message: "Use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "AudioDestinationNode",
+          message: "use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "AudioListener",
+          message: "use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "AudioWorklet",
+          message: "Use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "AudioParamMap",
+          message: "use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "PeriodicWave",
+          message: "use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "AudioBuffer",
+          message: "Use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "ScriptProcessorNode",
+          message: "use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "AudioWorkletNode",
+          message: "use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "AnalyserNode",
+          message: "Use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "AudioBufferSourceNode",
+          message: "use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "BiquadFilterNode",
+          message: "use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "ChannelMergerNode",
+          message: "Use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "ChannelSplitterNode",
+          message: "use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "ConstantSourceNode",
+          message: "use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "ConvolverNode",
+          message: "Use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "DelayNode",
+          message: "use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "DynamicsCompressorNode",
+          message: "use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "GainNode",
+          message: "Use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "IIRFilterNode",
+          message: "use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "MediaStreamAudioSourceNode",
+          message: "Use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "OscillatorNode",
+          message: "use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "PannerNode",
+          message: "Use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "StereoPannerNode",
+          message: "use @blibliki/utils/web-audio-api.",
+        },
+        {
+          name: "WaveShaperNode",
+          message: "Use @blibliki/utils/web-audio-api.",
+        },
+      ],
       "react-refresh/only-export-components": [
         "warn",
         { allowConstantExport: true },

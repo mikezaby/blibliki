@@ -1,5 +1,6 @@
 import { ContextTime } from "@blibliki/transport";
 import { Context, dbToGain } from "@blibliki/utils";
+import { GainNode, OscillatorNode } from "@blibliki/utils/web-audio-api";
 import { IModule, Module } from "@/core";
 import Note from "@/core/Note";
 import { IModuleConstructor, SetterHooks } from "@/core/module/Module";

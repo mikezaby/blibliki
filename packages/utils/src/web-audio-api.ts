@@ -59,28 +59,28 @@ let AudioDestinationNodeExport: typeof AudioDestinationNode;
 
 if (isBrowser()) {
   // Use native browser Web Audio API
-  AudioContextExport = AudioContext;
-  OfflineAudioContextExport = OfflineAudioContext;
-  AudioBufferExport = AudioBuffer;
-  AudioBufferSourceNodeExport = AudioBufferSourceNode;
-  OscillatorNodeExport = OscillatorNode;
-  GainNodeExport = GainNode;
-  BiquadFilterNodeExport = BiquadFilterNode;
-  DelayNodeExport = DelayNode;
-  ConvolverNodeExport = ConvolverNode;
-  DynamicsCompressorNodeExport = DynamicsCompressorNode;
-  WaveShaperNodeExport = WaveShaperNode;
-  StereoPannerNodeExport = StereoPannerNode;
-  AnalyserNodeExport = AnalyserNode;
-  ChannelMergerNodeExport = ChannelMergerNode;
-  ChannelSplitterNodeExport = ChannelSplitterNode;
-  AudioWorkletNodeExport = AudioWorkletNode;
-  PeriodicWaveExport = PeriodicWave;
-  ConstantSourceNodeExport = ConstantSourceNode;
-  PannerNodeExport = PannerNode;
-  AudioListenerExport = AudioListener;
-  AudioParamExport = AudioParam;
-  AudioDestinationNodeExport = AudioDestinationNode;
+  AudioContextExport = window.AudioContext;
+  OfflineAudioContextExport = window.OfflineAudioContext;
+  AudioBufferExport = window.AudioBuffer;
+  AudioBufferSourceNodeExport = window.AudioBufferSourceNode;
+  OscillatorNodeExport = window.OscillatorNode;
+  GainNodeExport = window.GainNode;
+  BiquadFilterNodeExport = window.BiquadFilterNode;
+  DelayNodeExport = window.DelayNode;
+  ConvolverNodeExport = window.ConvolverNode;
+  DynamicsCompressorNodeExport = window.DynamicsCompressorNode;
+  WaveShaperNodeExport = window.WaveShaperNode;
+  StereoPannerNodeExport = window.StereoPannerNode;
+  AnalyserNodeExport = window.AnalyserNode;
+  ChannelMergerNodeExport = window.ChannelMergerNode;
+  ChannelSplitterNodeExport = window.ChannelSplitterNode;
+  AudioWorkletNodeExport = window.AudioWorkletNode;
+  PeriodicWaveExport = window.PeriodicWave;
+  ConstantSourceNodeExport = window.ConstantSourceNode;
+  PannerNodeExport = window.PannerNode;
+  AudioListenerExport = window.AudioListener;
+  AudioParamExport = window.AudioParam;
+  AudioDestinationNodeExport = window.AudioDestinationNode;
 } else {
   // Use node-web-audio-api for Node.js
   try {

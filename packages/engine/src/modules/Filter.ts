@@ -1,4 +1,5 @@
 import { Context } from "@blibliki/utils";
+import { BiquadFilterNode } from "@blibliki/utils/web-audio-api";
 import { EnumProp, ModulePropSchema } from "@/core";
 import { IModuleConstructor, Module, SetterHooks } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";

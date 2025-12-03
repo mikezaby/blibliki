@@ -1,5 +1,6 @@
 import { ContextTime } from "@blibliki/transport";
 import { Context } from "@blibliki/utils";
+import { ConstantSourceNode } from "@blibliki/utils/web-audio-api";
 import { IModule, Module, ModulePropSchema, SetterHooks } from "@/core";
 import Note from "@/core/Note";
 import { ICreateModule, ModuleType } from ".";

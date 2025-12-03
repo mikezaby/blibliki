@@ -265,9 +265,6 @@ importers:
       es-toolkit:
         specifier: ^1.41.0
         version: 1.41.0
-      node-web-audio-api:
-        specifier: ^1.0.3
-        version: 1.0.4
     devDependencies:
       '@types/audioworklet':
         specifier: ^0.0.91
@@ -300,6 +297,9 @@ importers:
       es-toolkit:
         specifier: ^1.41.0
         version: 1.41.0
+      node-web-audio-api:
+        specifier: 1.0.7
+        version: 1.0.7
     devDependencies:
       '@types/crypto-js':
         specifier: ^4.2.2
@@ -4203,8 +4203,8 @@ packages:
     resolution: {integrity: sha512-jn9vOIK/nfqoFCcpK89/VCVaLg1IHE6UVfDOzvqmANaJ/rWCTEdH8RZ1V278nv2jr36BJdyQXIAavBLXpzdlag==}
     engines: {node: '>=14'}
 
-  node-web-audio-api@1.0.4:
-    resolution: {integrity: sha512-lzhqTlHeosL6FEx4DtnU5c9pzxoesCUsucigA34Z+D1lBG8GRbULUuw1UeY5KMptnJctIANLHXOCc/ZbWkcSAA==}
+  node-web-audio-api@1.0.7:
+    resolution: {integrity: sha512-J1Po8THiPdh8ZOc6p8qrZau+DRK2HJkSyjGpaPGdbB5T+lugl2OmzSzc56nmESkWSEww9J30AjeAOdm94E5TBA==}
     engines: {node: '>= 14'}
 
   nopt@5.0.0:
@@ -9905,7 +9905,7 @@ snapshots:
     dependencies:
       '@babel/parser': 7.27.5
 
-  node-web-audio-api@1.0.4:
+  node-web-audio-api@1.0.7:
     dependencies:
       caller: 1.1.0
       node-fetch: 3.3.2

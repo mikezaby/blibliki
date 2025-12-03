@@ -1,3 +1,9 @@
+import {
+  AudioContext,
+  AudioBuffer,
+  AudioBufferSourceNode,
+} from "@blibliki/utils/web-audio-api";
+
 function generateUniqueNumber(map: Map<number, () => void>): number {
   let nextId = 1;
 

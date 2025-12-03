@@ -1,3 +1,4 @@
+import { AudioParam } from "@blibliki/utils/web-audio-api";
 import { ModuleType } from "@/modules";
 import { Module } from "../module";
 import IO, { IOProps, IOType } from "./Base";

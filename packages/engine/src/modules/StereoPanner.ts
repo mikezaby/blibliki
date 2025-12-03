@@ -1,4 +1,5 @@
 import { Context } from "@blibliki/utils";
+import { StereoPannerNode } from "@blibliki/utils/web-audio-api";
 import { IModule, Module, ModulePropSchema } from "@/core";
 import { IModuleConstructor, SetterHooks } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
