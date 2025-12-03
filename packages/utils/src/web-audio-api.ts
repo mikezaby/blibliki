@@ -111,10 +111,8 @@ if (isBrowser()) {
     AudioListenerExport = nodeWebAudio.AudioListener;
     AudioParamExport = nodeWebAudio.AudioParam;
     AudioDestinationNodeExport = nodeWebAudio.AudioDestinationNode;
-  } catch {
-    throw new Error(
-      "node-web-audio-api is required for Node.js environments. Install it with: pnpm add node-web-audio-api",
-    );
+  } catch (e) {
+    console.log(e);
   }
 }
 
