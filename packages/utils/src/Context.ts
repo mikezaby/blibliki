@@ -1,4 +1,12 @@
-export type AnyAudioContext = AudioContext | OfflineAudioContext;
+import {
+  AudioContext,
+  OfflineAudioContext,
+  AudioWorkletNode,
+} from "./web-audio-api";
+
+export type AnyAudioContext =
+  | InstanceType<typeof AudioContext>
+  | InstanceType<typeof OfflineAudioContext>;
 
 export class Context {
   audioContext: AnyAudioContext;
