@@ -1,11 +1,14 @@
 {
   "name": "@blibliki/transport",
-  "version": "0.3.10",
+  "version": "0.4.0",
   "type": "module",
-  "source": "src/index.ts",
-  "main": "dist/index.cjs",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "README.md",
     "src",

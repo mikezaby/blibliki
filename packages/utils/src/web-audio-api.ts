@@ -1,37 +1,4 @@
-/**
- * Web Audio API Shim
- *
- * Provides seamless usage of Web Audio API between browser and Node.js environments.
- * - In browser: Uses native Web Audio API
- * - In Node.js: Uses node-web-audio-api package
- */
 import { isBrowser } from "es-toolkit";
-
-// Define types for node-web-audio-api
-interface NodeWebAudioAPI {
-  AudioContext: typeof AudioContext;
-  OfflineAudioContext: typeof OfflineAudioContext;
-  AudioBuffer: typeof AudioBuffer;
-  AudioBufferSourceNode: typeof AudioBufferSourceNode;
-  OscillatorNode: typeof OscillatorNode;
-  GainNode: typeof GainNode;
-  BiquadFilterNode: typeof BiquadFilterNode;
-  DelayNode: typeof DelayNode;
-  ConvolverNode: typeof ConvolverNode;
-  DynamicsCompressorNode: typeof DynamicsCompressorNode;
-  WaveShaperNode: typeof WaveShaperNode;
-  StereoPannerNode: typeof StereoPannerNode;
-  AnalyserNode: typeof AnalyserNode;
-  ChannelMergerNode: typeof ChannelMergerNode;
-  ChannelSplitterNode: typeof ChannelSplitterNode;
-  AudioWorkletNode: typeof AudioWorkletNode;
-  PeriodicWave: typeof PeriodicWave;
-  ConstantSourceNode: typeof ConstantSourceNode;
-  PannerNode: typeof PannerNode;
-  AudioListener: typeof AudioListener;
-  AudioParam: typeof AudioParam;
-  AudioDestinationNode: typeof AudioDestinationNode;
-}
 
 // Browser exports - use native Web Audio API
 let AudioContextExport: typeof AudioContext;
@@ -82,12 +49,8 @@ if (isBrowser()) {
   AudioParamExport = window.AudioParam;
   AudioDestinationNodeExport = window.AudioDestinationNode;
 } else {
-  // Use node-web-audio-api for Node.js
   try {
-    // Dynamic import for Node.js environment
-    // We need to use require here since this is a CJS module in Node.js
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const nodeWebAudio = require("node-web-audio-api") as NodeWebAudioAPI;
+    const nodeWebAudio = await import("node-web-audio-api");
 
     AudioContextExport = nodeWebAudio.AudioContext;
     OfflineAudioContextExport = nodeWebAudio.OfflineAudioContext;

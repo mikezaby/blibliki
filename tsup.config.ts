@@ -5,7 +5,7 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   dts: true,
-  format: ["cjs", "esm"],
+  format: ["esm"],
   target: "es2022",
   minify: true,
   platform: "neutral", // Ensure compatibility for both Node.js and browser
