@@ -36,15 +36,18 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
   const [expandedMappings, setExpandedMappings] = useState<Set<number>>(
     new Set(),
   );
+  const [lastViewMode, setLastViewMode] = useState(viewMode);
+
+  // Reset expanded mappings during render when viewMode changes
+  // This avoids calling setState in an effect which can cause cascading renders
+  if (viewMode !== lastViewMode) {
+    setExpandedMappings(new Set());
+    setLastViewMode(viewMode);
+  }
 
   useEffect(() => {
     dispatch(initialize());
   }, [dispatch]);
-
-  // Reset expanded mappings when switching view modes
-  useEffect(() => {
-    setExpandedMappings(new Set());
-  }, [viewMode]);
 
   const toggleExpanded = (index: number) => {
     setExpandedMappings((prev) => {

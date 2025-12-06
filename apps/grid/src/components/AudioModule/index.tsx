@@ -58,18 +58,6 @@ const COMPONENT_MAPPING: {
   [ModuleType.VoiceScheduler]: VoiceScheduler,
 };
 
-function getModuleComponent<T extends ModuleType>(
-  moduleType: T,
-): ModuleComponent<T> {
-  const component = COMPONENT_MAPPING[moduleType];
-
-  if (!component) {
-    throw new Error(`No component found for module type: ${moduleType}`);
-  }
-
-  return component;
-}
-
 export default function AudioModule<T extends ModuleType>(audioModuleProps: {
   audioModule: AudioModuleProps<T>;
 }) {
@@ -77,7 +65,16 @@ export default function AudioModule<T extends ModuleType>(audioModuleProps: {
 
   const { id, name, moduleType, props } = audioModuleProps.audioModule;
 
-  const Component = getModuleComponent(moduleType);
+  // Direct component lookup from static mapping to avoid "creating components during render" error
+  const ComponentFromMapping = COMPONENT_MAPPING[moduleType];
+
+  if (!ComponentFromMapping) {
+    throw new Error(`No component found for module type: ${moduleType}`);
+  }
+
+  // Type assertion needed for TypeScript to understand the generic relationship
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+  const Component = ComponentFromMapping as ModuleComponent<T>;
 
   const updateProps: TUpdateProps<T> = (props) => {
     dispatch(updateModule({ id, moduleType, changes: { props } }));

@@ -81,7 +81,7 @@ class WebMidiAccess implements IMidiAccess {
   ): void {
     this.midiAccess.addEventListener(event, (e) => {
       const port = e.port;
-      if (!port || port.type !== "input") return;
+      if (port?.type !== "input") return;
 
       const input = port as MIDIInput;
       if (!this.portCache.has(input.id)) {

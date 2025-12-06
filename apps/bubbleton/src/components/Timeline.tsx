@@ -13,6 +13,9 @@ export default function Timeline() {
 
   const { getEngine, timeSignature } = useEngineStore();
 
+  // Use a ref to store the animation loop function to avoid forward reference issues
+  const updatePlayheadRef = useRef<(() => void) | undefined>(undefined);
+
   const updatePlayhead = useCallback(() => {
     if (!playheadRef.current || !timelineRef.current) return;
 
@@ -52,9 +55,18 @@ export default function Timeline() {
     lastPlayheadRef.current = totalBeats;
     wasPlayingRef.current = isPlaying;
 
-    // Continue the animation loop
-    animationFrameRef.current = requestAnimationFrame(updatePlayhead);
+    // Continue the animation loop using ref to avoid forward reference
+    if (updatePlayheadRef.current) {
+      animationFrameRef.current = requestAnimationFrame(
+        updatePlayheadRef.current,
+      );
+    }
   }, [getEngine]);
+
+  // Keep ref synchronized with latest callback in an effect
+  useEffect(() => {
+    updatePlayheadRef.current = updatePlayhead;
+  }, [updatePlayhead]);
 
   useEffect(() => {
     // Start the animation loop

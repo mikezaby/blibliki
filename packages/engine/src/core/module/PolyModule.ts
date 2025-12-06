@@ -33,9 +33,9 @@ export type IPolyModuleConstructor<T extends ModuleType> = Optional<
   ) => Module<T>;
 };
 
-export abstract class PolyModule<T extends ModuleType>
-  implements IPolyModule<T>
-{
+export abstract class PolyModule<
+  T extends ModuleType,
+> implements IPolyModule<T> {
   id: string;
   engineId: string;
   moduleType: T;
