@@ -26,7 +26,7 @@
     "release": "pnpm run build && pnpm publish --access public"
   },
   "devDependencies": {
-    "@types/audioworklet": "^0.0.91",
+    "@types/audioworklet": "catalog:web-audio",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "catalog:test"
   },

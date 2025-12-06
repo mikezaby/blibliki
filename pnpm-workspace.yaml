@@ -2,6 +2,8 @@ packages:
   - packages/*
   - apps/*
 catalogs:
+  web-audio:
+    "@types/audioworklet": 0.0.92
   vite:
     vite: ^7.2.6
     "vite-tsconfig-paths": ^5.1.4
