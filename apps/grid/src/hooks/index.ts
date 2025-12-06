@@ -1,7 +1,5 @@
-"use client";
-
 import { Engine } from "@blibliki/engine";
-import { useAuth, useUser } from "@clerk/tanstack-react-start";
+import { useAuth, useUser } from "@clerk/clerk-react";
 import { Connection, Edge, EdgeChange, Node, NodeChange } from "@xyflow/react";
 import { getAuth, signInWithCustomToken } from "firebase/auth";
 import { useCallback, useEffect, useState } from "react";

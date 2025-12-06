@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect } from "react";
 import { initialize, dispose } from "@/globalSlice";
 import { useAppDispatch } from "@/hooks";

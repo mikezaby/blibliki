@@ -1,10 +1,12 @@
 /// <reference types="vite/client" />
+import { TanStackDevtools } from "@tanstack/react-devtools";
 import {
   Outlet,
   createRootRoute,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import type { ReactNode } from "react";
 import Providers from "@/Providers";
 import { ColorSchemeBlockingScript } from "@/components/ColorSchemeBlockingScript";
@@ -34,7 +36,7 @@ export const Route = createRootRoute({
       },
     ],
   }),
-  component: RootComponent,
+  shellComponent: RootComponent,
 });
 
 function RootComponent() {
@@ -58,6 +60,19 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <Header />
         {children}
         <ColorSchemeBlockingScript />
+
+        <TanStackDevtools
+          config={{
+            position: "bottom-right",
+          }}
+          plugins={[
+            {
+              name: "Tanstack Router",
+              render: <TanStackRouterDevtoolsPanel />,
+            },
+          ]}
+        />
+
         <Scripts />
       </body>
     </html>

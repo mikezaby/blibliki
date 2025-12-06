@@ -1,9 +1,4 @@
-import {
-  SignedIn,
-  SignedOut,
-  UserButton,
-  useClerk,
-} from "@clerk/tanstack-react-start";
+import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/clerk-react";
 import { LogIn, Play, Square, SplinePointer } from "lucide-react";
 import { ChangeEvent } from "react";
 import { Button, Input, buttonVariants } from "@/components/ui";

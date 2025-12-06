@@ -1,4 +1,4 @@
-import { useUser } from "@clerk/tanstack-react-start";
+import { useUser } from "@clerk/clerk-react";
 import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {

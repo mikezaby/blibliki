@@ -1,5 +1,3 @@
-"use client";
-
 import { configureStore } from "@reduxjs/toolkit";
 import midiDevicesReducer from "@/components/AudioModule/MidiDeviceSelector/midiDevicesSlice";
 import modulesReducer from "@/components/AudioModule/modulesSlice";

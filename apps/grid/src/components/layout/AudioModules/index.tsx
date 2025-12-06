@@ -1,5 +1,3 @@
-"use client";
-
 import { ModuleType } from "@blibliki/engine";
 import { PanelLeftClose, PanelLeftOpen, Blocks } from "lucide-react";
 import { useState, DragEvent } from "react";
