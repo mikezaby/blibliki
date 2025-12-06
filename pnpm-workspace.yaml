@@ -5,6 +5,8 @@ catalogs:
   vite:
     vite: ^7.2.6
     "vite-tsconfig-paths": ^5.1.4
+  test:
+    vitest: 4.0.15
   tailwindcss:
     "@tailwindcss/vite": 4.1.17
     "tailwind-merge": 3.4.0
