@@ -72,6 +72,7 @@ export abstract class PolyModule<
     queueMicrotask(() => {
       this.voices = voices || 1;
       this.props = props;
+      this.triggerPropsUpdate();
     });
   }
 

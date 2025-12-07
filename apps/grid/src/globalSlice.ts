@@ -54,8 +54,16 @@ export const initialize =
       dispatch(patchInitialize());
     }
 
-    engine.onPropsUpdate(({ id, props }) => {
-      dispatch(updatePlainModule({ id, changes: { props } }));
+    engine.onPropsUpdate((update) => {
+      const { id, props } = update;
+
+      if ("voices" in update) {
+        dispatch(
+          updatePlainModule({ id, changes: { voices: update.voices, props } }),
+        );
+      } else {
+        dispatch(updatePlainModule({ id, changes: { props } }));
+      }
     });
 
     return dispatch(
