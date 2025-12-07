@@ -2,8 +2,6 @@ export { deterministicId } from "./deterministicId";
 export type { AtLeast, Optional, EmptyObject } from "./types";
 export { deepmerge } from "deepmerge-ts";
 export { oscilloscope } from "./oscilloscope";
-export { Context } from "./Context";
-export type { AnyAudioContext } from "./Context";
 
 export function assertNever(value: never, message?: string): never {
   console.error("Unknown value", value);

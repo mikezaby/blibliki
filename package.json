@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm -r --parallel run dev",
-    "build": "pnpm -r --parallel run build",
-    "build:packages": "pnpm -r --filter='./packages/**' run build",
+    "build": "pnpm -r run build",
+    "build:packages": "pnpm -r --filter='./packages/*' run build",
     "tsc": "pnpm -r --parallel --no-bail run tsc",
     "lint": "pnpm -r --parallel --no-bail run lint",
     "format": "pnpm -r --parallel run format",

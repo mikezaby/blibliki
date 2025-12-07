@@ -4,12 +4,32 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "browser": {
+        "types": "./dist/index.browser.d.ts",
+        "import": "./dist/index.browser.js"
+      },
+      "node": {
+        "types": "./dist/index.node.d.ts",
+        "import": "./dist/index.node.js"
+      },
+      "default": {
+        "types": "./dist/index.browser.d.ts",
+        "import": "./dist/index.browser.js"
+      }
     },
     "./web-audio-api": {
-      "types": "./dist/web-audio-api.d.ts",
-      "import": "./dist/web-audio-api.js"
+      "browser": {
+        "types": "./dist/web-audio-api.browser.d.ts",
+        "import": "./dist/web-audio-api.browser.js"
+      },
+      "node": {
+        "types": "./dist/web-audio-api.node.d.ts",
+        "import": "./dist/web-audio-api.node.js"
+      },
+      "default": {
+        "types": "./dist/web-audio-api.browser.d.ts",
+        "import": "./dist/web-audio-api.browser.js"
+      }
     },
     "./package.json": "./package.json"
   },

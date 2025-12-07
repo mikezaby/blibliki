@@ -1,0 +1,23 @@
+// Browser version - uses native Web Audio API from window
+export const AudioContext = window.AudioContext;
+export const OfflineAudioContext = window.OfflineAudioContext;
+export const AudioBuffer = window.AudioBuffer;
+export const AudioBufferSourceNode = window.AudioBufferSourceNode;
+export const OscillatorNode = window.OscillatorNode;
+export const GainNode = window.GainNode;
+export const BiquadFilterNode = window.BiquadFilterNode;
+export const DelayNode = window.DelayNode;
+export const ConvolverNode = window.ConvolverNode;
+export const DynamicsCompressorNode = window.DynamicsCompressorNode;
+export const WaveShaperNode = window.WaveShaperNode;
+export const StereoPannerNode = window.StereoPannerNode;
+export const AnalyserNode = window.AnalyserNode;
+export const ChannelMergerNode = window.ChannelMergerNode;
+export const ChannelSplitterNode = window.ChannelSplitterNode;
+export const AudioWorkletNode = window.AudioWorkletNode;
+export const PeriodicWave = window.PeriodicWave;
+export const ConstantSourceNode = window.ConstantSourceNode;
+export const PannerNode = window.PannerNode;
+export const AudioListener = window.AudioListener;
+export const AudioParam = window.AudioParam;
+export const AudioDestinationNode = window.AudioDestinationNode;
