@@ -10,6 +10,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import type { ReactNode } from "react";
 import Providers from "@/Providers";
 import { ColorSchemeBlockingScript } from "@/components/ColorSchemeBlockingScript";
+import { NotificationContainer } from "@/components/Notification";
 import AudioModules from "@/components/layout/AudioModules";
 import Header from "@/components/layout/Header";
 import indexCss from "@/styles/index.css?url";
@@ -59,6 +60,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <AudioModules />
         <Header />
         {children}
+        <NotificationContainer />
         <ColorSchemeBlockingScript />
 
         <TanStackDevtools

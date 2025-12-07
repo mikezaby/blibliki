@@ -10,6 +10,7 @@ import {
   setGridNodes,
 } from "@/components/Grid/gridNodesSlice";
 import Patch, { IPatch } from "@/models/Patch";
+import { addNotification } from "@/notificationsSlice";
 import { AppDispatch, RootState } from "@/store";
 import { dispose } from "./globalSlice";
 
@@ -48,8 +49,24 @@ export const loadById = (id: string) => async (dispatch: AppDispatch) => {
     return;
   }
 
-  const patch = await Patch.find(id);
-  dispatch(load(patch));
+  try {
+    const patch = await Patch.find(id);
+    dispatch(load(patch));
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+
+    dispatch(
+      addNotification({
+        type: "error",
+        title: "Failed to load patch",
+        message: errorMessage,
+        duration: 5000,
+      }),
+    );
+
+    throw error;
+  }
 };
 
 export const load = (patch: Patch | IPatch) => (dispatch: AppDispatch) => {
@@ -73,12 +90,37 @@ export const save =
     const gridNodes = state.gridNodes;
     const config = { modules, gridNodes };
 
-    const id = asNew ? undefined : originalPatch.id;
-    const userId = id ? originalPatch.userId : props.userId;
-    const patch = new Patch({ id, userId, name: originalPatch.name, config });
-    await patch.save();
+    try {
+      const id = asNew ? undefined : originalPatch.id;
+      const userId = id ? originalPatch.userId : props.userId;
+      const patch = new Patch({ id, userId, name: originalPatch.name, config });
+      await patch.save();
 
-    void dispatch(loadById(patch.id));
+      dispatch(
+        addNotification({
+          type: "success",
+          title: asNew ? "Patch saved as copy" : "Patch saved successfully",
+          message: `"${originalPatch.name}" has been saved.`,
+          duration: 3000,
+        }),
+      );
+
+      void dispatch(loadById(patch.id));
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+
+      dispatch(
+        addNotification({
+          type: "error",
+          title: "Failed to save patch",
+          message: errorMessage,
+          duration: 5000,
+        }),
+      );
+
+      throw error;
+    }
   };
 
 export const destroy =
@@ -87,10 +129,36 @@ export const destroy =
     const { patch } = state.patch;
     if (!patch.id) throw Error("This patch isn't saved yet");
 
-    await (await Patch.find(patch.id)).delete();
+    try {
+      const patchName = patch.name;
+      await (await Patch.find(patch.id)).delete();
 
-    dispatch(clearEngine());
-    dispatch(initialize());
+      dispatch(
+        addNotification({
+          type: "success",
+          title: "Patch deleted successfully",
+          message: `"${patchName}" has been deleted.`,
+          duration: 3000,
+        }),
+      );
+
+      dispatch(clearEngine());
+      dispatch(initialize());
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+
+      dispatch(
+        addNotification({
+          type: "error",
+          title: "Failed to delete patch",
+          message: errorMessage,
+          duration: 5000,
+        }),
+      );
+
+      throw error;
+    }
   };
 
 export const { setAttributes, setName } = patchSlice.actions;

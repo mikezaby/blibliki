@@ -4,6 +4,7 @@ import modulesReducer from "@/components/AudioModule/modulesSlice";
 import gridNodesReducer from "@/components/Grid/gridNodesSlice";
 import modalReducer from "@/components/Modal/modalSlice";
 import globalReducer from "@/globalSlice";
+import notificationsReducer from "@/notificationsSlice";
 import patchReducer from "@/patchSlice";
 
 export const store = configureStore({
@@ -14,6 +15,7 @@ export const store = configureStore({
     modal: modalReducer,
     gridNodes: gridNodesReducer,
     patch: patchReducer,
+    notifications: notificationsReducer,
   },
   devTools: true,
 });
