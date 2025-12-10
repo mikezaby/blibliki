@@ -1,15 +1,18 @@
 name: Publish Packages
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Continuous Integration"]
+    types:
+      - completed
     branches:
       - main
-    paths:
-      - "packages/*/package.json"
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # Only run if CI workflow succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: read
       id-token: write # Required for npm provenance
@@ -20,18 +23,33 @@ jobs:
         with:
           fetch-depth: 2 # Fetch current and previous commit to detect changes
 
+      - name: Check for package.json changes
+        id: check_changes
+        run: |
+          # Check if any package.json files changed in the last commit
+          if git diff --name-only HEAD~1 HEAD | grep -q 'packages/.*/package.json'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "✅ Package.json files changed, proceeding with publish checks"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "⏭️  No package.json changes detected, skipping publish"
+          fi
+
       - name: Use Node.js
+        if: steps.check_changes.outputs.changed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
           registry-url: "https://registry.npmjs.org"
 
       - name: Use pnpm
+        if: steps.check_changes.outputs.changed == 'true'
         uses: pnpm/action-setup@v4
         with:
           run_install: true
 
       - name: Detect version changes
+        if: steps.check_changes.outputs.changed == 'true'
         id: detect
         run: |
           # Function to check if package version changed
@@ -60,11 +78,11 @@ jobs:
           check_version_change "packages/engine" "engine"
 
       - name: Build all packages
-        if: steps.detect.outputs.utils == 'true' || steps.detect.outputs.transport == 'true' || steps.detect.outputs.engine == 'true'
+        if: steps.check_changes.outputs.changed == 'true' && (steps.detect.outputs.utils == 'true' || steps.detect.outputs.transport == 'true' || steps.detect.outputs.engine == 'true')
         run: pnpm build:packages
 
       - name: Publish @blibliki/utils
-        if: steps.detect.outputs.utils == 'true'
+        if: steps.check_changes.outputs.changed == 'true' && steps.detect.outputs.utils == 'true'
         working-directory: ./packages/utils
         run: |
           echo "Publishing @blibliki/utils..."
@@ -73,7 +91,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @blibliki/transport
-        if: steps.detect.outputs.transport == 'true'
+        if: steps.check_changes.outputs.changed == 'true' && steps.detect.outputs.transport == 'true'
         working-directory: ./packages/transport
         run: |
           echo "Publishing @blibliki/transport..."
@@ -82,7 +100,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @blibliki/engine
-        if: steps.detect.outputs.engine == 'true'
+        if: steps.check_changes.outputs.changed == 'true' && steps.detect.outputs.engine == 'true'
         working-directory: ./packages/engine
         run: |
           echo "Publishing @blibliki/engine..."
@@ -91,7 +109,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Summary
-        if: steps.detect.outputs.utils == 'true' || steps.detect.outputs.transport == 'true' || steps.detect.outputs.engine == 'true'
+        if: steps.check_changes.outputs.changed == 'true' && (steps.detect.outputs.utils == 'true' || steps.detect.outputs.transport == 'true' || steps.detect.outputs.engine == 'true')
         run: |
           echo "### 📦 Published Packages" >> $GITHUB_STEP_SUMMARY
           [ "${{ steps.detect.outputs.utils }}" == "true" ] && echo "- ✅ @blibliki/utils" >> $GITHUB_STEP_SUMMARY || true
