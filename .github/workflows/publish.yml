@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     # Only run if CI workflow succeeded
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    environment: npm
     permissions:
       contents: read
       id-token: write # Required for npm provenance
@@ -88,7 +89,7 @@ jobs:
           echo "Publishing @blibliki/utils..."
           pnpm publish --access public --no-git-checks
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
 
       - name: Publish @blibliki/transport
         if: steps.check_changes.outputs.changed == 'true' && steps.detect.outputs.transport == 'true'
@@ -97,7 +98,7 @@ jobs:
           echo "Publishing @blibliki/transport..."
           pnpm publish --access public --no-git-checks
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
 
       - name: Publish @blibliki/engine
         if: steps.check_changes.outputs.changed == 'true' && steps.detect.outputs.engine == 'true'
@@ -106,7 +107,7 @@ jobs:
           echo "Publishing @blibliki/engine..."
           pnpm publish --access public --no-git-checks
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
 
       - name: Summary
         if: steps.check_changes.outputs.changed == 'true' && (steps.detect.outputs.utils == 'true' || steps.detect.outputs.transport == 'true' || steps.detect.outputs.engine == 'true')
