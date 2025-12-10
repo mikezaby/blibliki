@@ -1,0 +1,103 @@
+name: Publish Packages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/*/package.json'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Required for npm provenance
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # Fetch current and previous commit to detect changes
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Use pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: true
+
+      - name: Detect version changes
+        id: detect
+        run: |
+          # Function to check if package version changed
+          check_version_change() {
+            local package_path=$1
+            local package_name=$2
+
+            # Get current version
+            current_version=$(node -p "require('./${package_path}/package.json').version")
+
+            # Get previous version (from previous commit)
+            previous_version=$(git show HEAD~1:./${package_path}/package.json | node -p "JSON.parse(require('fs').readFileSync(0, 'utf-8')).version")
+
+            if [ "$current_version" != "$previous_version" ]; then
+              echo "📦 ${package_name}: ${previous_version} → ${current_version}"
+              echo "${package_name}=true" >> $GITHUB_OUTPUT
+            else
+              echo "⏭️  ${package_name}: ${current_version} (no change)"
+              echo "${package_name}=false" >> $GITHUB_OUTPUT
+            fi
+          }
+
+          echo "Checking for version changes..."
+          check_version_change "packages/utils" "utils"
+          check_version_change "packages/transport" "transport"
+          check_version_change "packages/engine" "engine"
+
+      - name: Build all packages
+        if: steps.detect.outputs.utils == 'true' || steps.detect.outputs.transport == 'true' || steps.detect.outputs.engine == 'true'
+        run: pnpm build:packages
+
+      - name: Run tests
+        if: steps.detect.outputs.utils == 'true' || steps.detect.outputs.transport == 'true' || steps.detect.outputs.engine == 'true'
+        run: pnpm test
+
+      - name: Publish @blibliki/utils
+        if: steps.detect.outputs.utils == 'true'
+        working-directory: ./packages/utils
+        run: |
+          echo "Publishing @blibliki/utils..."
+          pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @blibliki/transport
+        if: steps.detect.outputs.transport == 'true'
+        working-directory: ./packages/transport
+        run: |
+          echo "Publishing @blibliki/transport..."
+          pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @blibliki/engine
+        if: steps.detect.outputs.engine == 'true'
+        working-directory: ./packages/engine
+        run: |
+          echo "Publishing @blibliki/engine..."
+          pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Summary
+        if: steps.detect.outputs.utils == 'true' || steps.detect.outputs.transport == 'true' || steps.detect.outputs.engine == 'true'
+        run: |
+          echo "### 📦 Published Packages" >> $GITHUB_STEP_SUMMARY
+          [ "${{ steps.detect.outputs.utils }}" == "true" ] && echo "- ✅ @blibliki/utils" >> $GITHUB_STEP_SUMMARY || true
+          [ "${{ steps.detect.outputs.transport }}" == "true" ] && echo "- ✅ @blibliki/transport" >> $GITHUB_STEP_SUMMARY || true
+          [ "${{ steps.detect.outputs.engine }}" == "true" ] && echo "- ✅ @blibliki/engine" >> $GITHUB_STEP_SUMMARY || true
