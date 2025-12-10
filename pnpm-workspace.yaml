@@ -5,7 +5,7 @@ catalogs:
   web-audio:
     "@types/audioworklet": 0.0.92
   vite:
-    vite: ^7.2.6
+    vite: 7.2.7
     "vite-tsconfig-paths": ^5.1.4
   test:
     vitest: 4.0.15
@@ -18,7 +18,7 @@ catalogs:
     react-dom: 19.2.1
     "@types/react": 19.2.7
     "@types/react-dom": 19.2.3
-    "@vitejs/plugin-react": 5.1.1
+    "@vitejs/plugin-react": 5.1.2
     babel-plugin-react-compiler: 1.0.0
 ignoredBuiltDependencies:
   - "@firebase/util"
