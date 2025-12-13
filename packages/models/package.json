@@ -1,0 +1,35 @@
+{
+  "name": "@blibliki/models",
+  "version": "0.4.2",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "README.md",
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "start": "NODE_ENV=development tsx src/index.ts",
+    "lint": "eslint src",
+    "tsc": "tsc --noEmit",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "bump": "npm version patch",
+    "release": "pnpm run build && pnpm publish --access public"
+  },
+  "devDependencies": {
+    "@types/audioworklet": "catalog:web-audio",
+    "@types/node": "^22.10.2"
+  },
+  "dependencies": {
+    "@blibliki/utils": "workspace:^"
+  }
+}
