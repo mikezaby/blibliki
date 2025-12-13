@@ -1,82 +1,37 @@
 /// <reference types="vite/client" />
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import {
-  Outlet,
-  createRootRoute,
-  HeadContent,
-  Scripts,
-} from "@tanstack/react-router";
+import { Outlet, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import type { ReactNode } from "react";
 import Providers from "@/Providers";
 import { ColorSchemeBlockingScript } from "@/components/ColorSchemeBlockingScript";
 import { NotificationContainer } from "@/components/Notification";
 import AudioModules from "@/components/layout/AudioModules";
 import Header from "@/components/layout/Header";
-import indexCss from "@/styles/index.css?url";
 
 export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      {
-        charSet: "utf-8",
-      },
-      {
-        name: "viewport",
-        content: "width=device-width, initial-scale=1",
-      },
-      {
-        title: "Blibliki Grid",
-        description: "Modular synthesizer for web",
-      },
-    ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: indexCss,
-      },
-    ],
-  }),
-  shellComponent: RootComponent,
+  component: RootComponent,
 });
 
 function RootComponent() {
   return (
     <Providers>
-      <RootDocument>
-        <Outlet />
-      </RootDocument>
+      <AudioModules />
+      <Header />
+      <Outlet />
+      <NotificationContainer />
+      <ColorSchemeBlockingScript />
+
+      <TanStackDevtools
+        config={{
+          position: "bottom-right",
+        }}
+        plugins={[
+          {
+            name: "Tanstack Router",
+            render: <TanStackRouterDevtoolsPanel />,
+          },
+        ]}
+      />
     </Providers>
-  );
-}
-
-function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
-  return (
-    <html>
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <AudioModules />
-        <Header />
-        {children}
-        <NotificationContainer />
-        <ColorSchemeBlockingScript />
-
-        <TanStackDevtools
-          config={{
-            position: "bottom-right",
-          }}
-          plugins={[
-            {
-              name: "Tanstack Router",
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-          ]}
-        />
-
-        <Scripts />
-      </body>
-    </html>
   );
 }

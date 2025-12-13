@@ -13,9 +13,9 @@ export const getRouter = () => {
   return router;
 };
 
-// Thid needed for type safety
+// This is needed for type safety
 declare module "@tanstack/react-router" {
   interface Register {
-    router: ReturnType<typeof createRouter>;
+    router: ReturnType<typeof getRouter>;
   }
 }

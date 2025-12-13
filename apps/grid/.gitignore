@@ -1,3 +1,2 @@
-.tanstack
-.netlify
-.nitro
+dist
+.vite
