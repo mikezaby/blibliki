@@ -1,3 +1,4 @@
+import netlify from "@netlify/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
@@ -11,6 +12,7 @@ const config = defineConfig({
       target: "react",
       autoCodeSplitting: true,
     }),
+    netlify(),
     devtools(),
     // this is the plugin that enables path aliases
     viteTsConfigPaths({
