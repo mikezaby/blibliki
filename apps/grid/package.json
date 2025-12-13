@@ -4,8 +4,9 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite dev --port 4000",
-    "build": "vite build",
+    "generate:firebase-config": "node scripts/generate-firebase-config.js",
+    "dev": "npm run generate:firebase-config && vite dev --port 4000",
+    "build": "npm run generate:firebase-config && vite build",
     "preview": "vite preview",
     "tsc": "tsc --noEmit",
     "lint": "eslint src",

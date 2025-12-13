@@ -1,10 +1,14 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
-import { homedir } from "node:os";
+import type { FirebaseConfig } from "@blibliki/utils";
 import { randomBytes } from "node:crypto";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 export interface Config {
   token: string;
+  firebase?: FirebaseConfig;
+  deviceId?: string;
+  patchId?: string;
 }
 
 const CONFIG_DIR = join(homedir(), ".config", "blibliki-pi");
@@ -105,4 +109,21 @@ export function loadOrCreateConfig(): Config {
  */
 export function getConfigPath(): string {
   return CONFIG_FILE;
+}
+
+/**
+ * Update config with new values
+ */
+export function updateConfig(updates: Partial<Config>): Config {
+  const config = loadOrCreateConfig();
+  const updatedConfig = { ...config, ...updates };
+  saveConfigToFile(updatedConfig);
+  return updatedConfig;
+}
+
+/**
+ * Get current config without creating if it doesn't exist
+ */
+export function getConfig(): Config | null {
+  return loadConfigFromFile();
 }

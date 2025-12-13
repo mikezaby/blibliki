@@ -17,7 +17,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "start": "tsx src/index.ts",
+    "start": "NODE_ENV=development tsx src/index.ts",
     "lint": "eslint src",
     "tsc": "tsc --noEmit",
     "format": "prettier . --write",
