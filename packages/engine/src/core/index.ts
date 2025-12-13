@@ -3,6 +3,7 @@ export type {
   IModule,
   IModuleSerialize,
   IPolyModuleSerialize,
+  IAnyModuleSerialize,
   SetterHooks,
 } from "./module";
 

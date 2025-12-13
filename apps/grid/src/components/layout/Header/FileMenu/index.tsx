@@ -1,3 +1,4 @@
+import { IPatch } from "@blibliki/models";
 import { useUser } from "@clerk/clerk-react";
 import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -23,7 +24,6 @@ import {
 } from "@/components/ui";
 import { useAppDispatch, usePatch } from "@/hooks";
 import useUpload from "@/hooks/useUpload";
-import { IPatch } from "@/models/Patch";
 import { destroy, load, save } from "@/patchSlice";
 import ExportEngine from "./ExportEngine";
 import ExportGrid from "./ExportGrid";

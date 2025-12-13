@@ -1,4 +1,5 @@
 import { Engine, TransportState } from "@blibliki/engine";
+import { initializeFirebase } from "@blibliki/models";
 import { Context } from "@blibliki/utils";
 import { AudioContext } from "@blibliki/utils/web-audio-api";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
@@ -17,6 +18,15 @@ type GlobalProps = {
   isStarted: boolean;
   context: IContext;
   bpm: number;
+};
+
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 const initialState: GlobalProps = {
@@ -40,6 +50,8 @@ export const globalSlice = createSlice({
 export const initialize =
   (patchId?: string) =>
   async (dispatch: AppDispatch, getState: () => RootState) => {
+    initializeFirebase(firebaseConfig);
+
     const { context: contextConf, bpm } = getState().global;
 
     const audioContext = new AudioContext(contextConf);

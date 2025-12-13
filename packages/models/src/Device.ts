@@ -1,4 +1,4 @@
-import { pick } from "@blibliki/utils";
+import { Optional, pick } from "@blibliki/utils";
 import {
   collection,
   addDoc,
@@ -10,8 +10,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import { Optional } from "@/types";
-import { db, getDb } from "./db";
+import { getDb } from "./db";
 
 export type IDevice = {
   id: string;
@@ -29,6 +28,8 @@ export default class Device implements IDevice {
   userId!: string;
 
   static async find(id: string): Promise<Device> {
+    const db = getDb();
+
     const docRef = doc(db, "devices", id);
     const docSnap = await getDoc(docRef);
 
@@ -41,6 +42,8 @@ export default class Device implements IDevice {
   }
 
   static async findByUserId(userId: string): Promise<Device[]> {
+    const db = getDb();
+
     const q = query(collection(db, "devices"), where("userId", "==", userId));
     const querySnapshot = await getDocs(q);
 
@@ -53,6 +56,8 @@ export default class Device implements IDevice {
   }
 
   static async all(): Promise<Device[]> {
+    const db = getDb();
+
     const querySnapshot = await getDocs(collection(db, "devices"));
 
     return querySnapshot.docs.map((doc) => {
@@ -95,6 +100,7 @@ export default class Device implements IDevice {
   }
 
   private get docRef() {
+    const db = getDb();
     return doc(db, "devices", this.id);
   }
 

@@ -62,7 +62,7 @@ export default function AudioNode(props: NodeProps) {
               moduleType={audioModule.moduleType}
               value={audioModule.name}
             />
-            {audioModule.voices && (
+            {"voices" in audioModule && (
               <Voices
                 id={audioModule.id}
                 moduleType={audioModule.moduleType}

@@ -4,17 +4,12 @@ import {
   ICreateModule,
   ICreateRoute,
   IUpdateModule,
-  IModuleSerialize,
-  IPolyModuleSerialize,
   IRoute,
   TimeSignature,
+  IAnyModuleSerialize,
 } from "@blibliki/engine";
 import { assertDefined, Context } from "@blibliki/utils";
 import { create } from "zustand";
-
-export type AnyModuleSerialize =
-  | IModuleSerialize<ModuleType>
-  | IPolyModuleSerialize<ModuleType>;
 
 type EngineStore = {
   id?: string;
@@ -22,7 +17,7 @@ type EngineStore = {
   isPlaying: boolean;
   bpm: number;
   timeSignature: TimeSignature;
-  modules: AnyModuleSerialize[];
+  modules: IAnyModuleSerialize[];
 
   init: () => void;
   dispose: () => void;
@@ -34,10 +29,10 @@ type EngineStore = {
   setTimeSignature: (value: TimeSignature) => void;
   addModule: <T extends ModuleType>(
     params: ICreateModule<T>,
-  ) => AnyModuleSerialize;
+  ) => IAnyModuleSerialize;
   updateModule: <T extends ModuleType>(
     params: IUpdateModule<T>,
-  ) => AnyModuleSerialize;
+  ) => IAnyModuleSerialize;
   removeModule: (id: string) => void;
   addRoute: (params: ICreateRoute) => IRoute;
   removeRoute: (id: string) => void;

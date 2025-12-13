@@ -30,6 +30,8 @@
     "@types/node": "^22.10.2"
   },
   "dependencies": {
-    "@blibliki/utils": "workspace:^"
+    "@blibliki/engine": "workspace:^",
+    "@blibliki/utils": "workspace:^",
+    "firebase": "12.6.0"
   }
 }

@@ -1,4 +1,4 @@
-import type { FirebaseConfig } from "@blibliki/utils";
+import { FirebaseConfig } from "@blibliki/models";
 import { randomBytes } from "node:crypto";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { homedir } from "node:os";

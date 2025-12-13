@@ -1,5 +1,5 @@
+import { Device, IDevice } from "@blibliki/models";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import Device, { IDevice } from "@/models/Device";
 import { addNotification } from "@/notificationsSlice";
 import { AppDispatch } from "@/store";
 

@@ -1,4 +1,4 @@
-import type { FirebaseConfig, IDevice } from "@blibliki/utils";
+import { FirebaseConfig, IDevice } from "@blibliki/models";
 
 /**
  * Get the default Grid URL based on environment
