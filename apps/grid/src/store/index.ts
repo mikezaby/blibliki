@@ -3,6 +3,7 @@ import midiDevicesReducer from "@/components/AudioModule/MidiDeviceSelector/midi
 import modulesReducer from "@/components/AudioModule/modulesSlice";
 import gridNodesReducer from "@/components/Grid/gridNodesSlice";
 import modalReducer from "@/components/Modal/modalSlice";
+import devicesReducer from "@/devicesSlice";
 import globalReducer from "@/globalSlice";
 import notificationsReducer from "@/notificationsSlice";
 import patchReducer from "@/patchSlice";
@@ -15,6 +16,7 @@ export const store = configureStore({
     modal: modalReducer,
     gridNodes: gridNodesReducer,
     patch: patchReducer,
+    devices: devicesReducer,
     notifications: notificationsReducer,
   },
   devTools: true,

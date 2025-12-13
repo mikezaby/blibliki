@@ -1,5 +1,6 @@
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/clerk-react";
-import { LogIn, Play, Square, SplinePointer } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Cpu, LogIn, Play, Square, SplinePointer } from "lucide-react";
 import { ChangeEvent } from "react";
 import { Button, Input, buttonVariants } from "@/components/ui";
 import { start, stop, setBpm } from "@/globalSlice";
@@ -36,8 +37,23 @@ export default function Header() {
         </h1>
       </div>
 
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         <FileMenu />
+        <SignedIn>
+          <Link
+            to="/devices"
+            className={
+              buttonVariants({
+                variant: "ghost",
+                size: "sm",
+              }) +
+              " text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 cursor-pointer"
+            }
+          >
+            <Cpu className="w-4 h-4" />
+            <span className="ml-2 text-sm">Devices</span>
+          </Link>
+        </SignedIn>
       </div>
 
       {/* Project Controls Section */}
