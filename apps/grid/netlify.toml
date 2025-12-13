@@ -1,0 +1,10 @@
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Ensure API routes serve JSON files correctly
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Content-Type = "application/json"
