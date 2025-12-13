@@ -1,0 +1,34 @@
+{
+  "name": "@blibliki/pi",
+  "version": "0.4.2",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "README.md",
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src",
+    "tsc": "tsc --noEmit",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "bump": "npm version patch",
+    "release": "pnpm run build && pnpm publish --access public"
+  },
+  "devDependencies": {
+    "@types/audioworklet": "catalog:web-audio"
+  },
+  "dependencies": {
+    "@blibliki/engine": "workspace:^",
+    "@blibliki/utils": "workspace:^"
+  }
+}
