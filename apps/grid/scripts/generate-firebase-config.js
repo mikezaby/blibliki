@@ -39,6 +39,15 @@ mkdirSync(publicApiDir, { recursive: true });
 const configPath = join(publicApiDir, "firebase-config.json");
 writeFileSync(configPath, JSON.stringify(config, null, 2));
 
+// Create _redirects file for Netlify SPA routing
+const publicDir = join(__dirname, "..", "public");
+const redirectsPath = join(publicDir, "_redirects");
+const redirectsContent = `# Netlify SPA redirect - serve index.html for all routes
+/*    /index.html   200
+`;
+writeFileSync(redirectsPath, redirectsContent);
+
 console.log(
   "✓ Generated firebase-config.json at public/api/firebase-config.json",
 );
+console.log("✓ Generated _redirects file for Netlify SPA routing");
