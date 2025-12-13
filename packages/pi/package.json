@@ -17,6 +17,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "start": "tsx src/index.ts",
     "lint": "eslint src",
     "tsc": "tsc --noEmit",
     "format": "prettier . --write",
@@ -25,7 +26,8 @@
     "release": "pnpm run build && pnpm publish --access public"
   },
   "devDependencies": {
-    "@types/audioworklet": "catalog:web-audio"
+    "@types/audioworklet": "catalog:web-audio",
+    "@types/node": "^22.10.2"
   },
   "dependencies": {
     "@blibliki/engine": "workspace:^",

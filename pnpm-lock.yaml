@@ -311,6 +311,22 @@ importers:
         specifier: catalog:test
         version: 4.0.15(@opentelemetry/api@1.9.0)(@types/node@25.0.0)(jiti@2.6.1)(jsdom@27.3.0(postcss@8.5.6))(lightningcss@1.30.2)(terser@5.39.2)(tsx@4.19.4)(yaml@2.8.2)
 
+  packages/pi:
+    dependencies:
+      '@blibliki/engine':
+        specifier: workspace:^
+        version: link:../engine
+      '@blibliki/utils':
+        specifier: workspace:^
+        version: link:../utils
+    devDependencies:
+      '@types/audioworklet':
+        specifier: catalog:web-audio
+        version: 0.0.92
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.19.1
+
   packages/transport:
     dependencies:
       '@blibliki/utils':
