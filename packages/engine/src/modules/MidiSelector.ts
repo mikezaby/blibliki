@@ -45,11 +45,32 @@ export default class MidiSelector
       props,
     });
 
-    const midiDevice =
-      (this.props.selectedId &&
-        this.engine.findMidiDevice(this.props.selectedId)) ??
-      (this.props.selectedName &&
-        this.engine.findMidiDeviceByName(this.props.selectedName));
+    // Try to find device in order of preference:
+    // 1. By exact ID match
+    // 2. By exact name match
+    // 3. By fuzzy name match (for cross-platform compatibility)
+    let midiDevice =
+      this.props.selectedId &&
+      this.engine.findMidiDevice(this.props.selectedId);
+
+    if (!midiDevice && this.props.selectedName) {
+      midiDevice = this.engine.findMidiDeviceByName(this.props.selectedName);
+
+      // If exact name match fails, try fuzzy matching
+      if (!midiDevice) {
+        const fuzzyMatch = this.engine.findMidiDeviceByFuzzyName(
+          this.props.selectedName,
+          0.6, // 60% similarity threshold
+        );
+
+        if (fuzzyMatch) {
+          midiDevice = fuzzyMatch.device;
+          console.log(
+            `MIDI device fuzzy matched: "${this.props.selectedName}" -> "${midiDevice.name}" (confidence: ${Math.round(fuzzyMatch.score * 100)}%)`,
+          );
+        }
+      }
+    }
 
     if (midiDevice) {
       this.addEventListener(midiDevice);

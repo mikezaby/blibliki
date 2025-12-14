@@ -269,6 +269,10 @@ export class Engine {
     return this.midiDeviceManager.findByName(name);
   }
 
+  findMidiDeviceByFuzzyName(name: string, threshold?: number) {
+    return this.midiDeviceManager.findByFuzzyName(name, threshold);
+  }
+
   onPropsUpdate(
     callback: <T extends ModuleType>(
       params: IModule<T> | IPolyModule<T>,
