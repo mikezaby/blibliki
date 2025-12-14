@@ -1,4 +1,8 @@
-import { IAnyModuleSerialize } from "@blibliki/engine";
+import {
+  IAnyModuleSerialize,
+  IEngineSerialize,
+  IRoute,
+} from "@blibliki/engine";
 import { AnyObject, Optional, pick } from "@blibliki/utils";
 import {
   collection,
@@ -117,6 +121,25 @@ export default class Patch implements IPatch {
     return {
       id: this.id,
       ...this.props,
+    };
+  }
+
+  engineSerialize(): IEngineSerialize {
+    const { modules, gridNodes } = this.props.config;
+
+    const routes: IRoute[] = gridNodes.edges.map((edge) => {
+      return {
+        id: edge.id,
+        source: { moduleId: edge.source, ioName: edge.sourceHandle! },
+        destination: { moduleId: edge.target, ioName: edge.targetHandle! },
+      };
+    });
+
+    return {
+      bpm: 120, // Temp: static until I set it from grid
+      timeSignature: [4, 4], // Temp: static until I set it from grid
+      modules,
+      routes,
     };
   }
 

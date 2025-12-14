@@ -1,3 +1,4 @@
+import { Device, initializeFirebase, Patch } from "@blibliki/models";
 import {
   fetchFirebaseConfig,
   getDefaultGridUrl,
@@ -115,20 +116,25 @@ export async function main(options?: { gridUrl?: string }): Promise<void> {
     );
   }
 
-  // Check if device is registered
-  if (finalConfig.deviceId) {
-    console.log(`\nDevice ID: ${finalConfig.deviceId}`);
+  initializeFirebase(finalConfig.firebase!);
 
-    if (finalConfig.patchId) {
-      console.log(`Assigned Patch: ${finalConfig.patchId}`);
-      console.log("\nReady to load and play patch!");
-    } else {
-      console.log("No patch assigned yet");
-    }
-  } else {
-    console.log("\nDevice: Not registered");
-    console.log("Use your token in Grid app to register this device");
+  const device = (
+    await Device.findBy({
+      userId: finalConfig.userId,
+      token: finalConfig.token,
+    })
+  )[0];
+
+  if (!device) {
+    throw Error("Device: Not found");
   }
+
+  if (!device.patchId) {
+    throw Error("Device: patch not configured");
+  }
+
+  const patch = await Patch.find(device.patchId);
+  console.log(patch.engineSerialize());
 }
 
 /**
