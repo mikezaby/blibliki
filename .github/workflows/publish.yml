@@ -77,9 +77,11 @@ jobs:
           check_version_change "packages/utils" "utils"
           check_version_change "packages/transport" "transport"
           check_version_change "packages/engine" "engine"
+          check_version_change "packages/models" "models"
+          check_version_change "packages/pi" "pi"
 
       - name: Build all packages
-        if: steps.check_changes.outputs.changed == 'true' && (steps.detect.outputs.utils == 'true' || steps.detect.outputs.transport == 'true' || steps.detect.outputs.engine == 'true')
+        if: steps.check_changes.outputs.changed == 'true' && (steps.detect.outputs.utils == 'true' || steps.detect.outputs.transport == 'true' || steps.detect.outputs.engine == 'true' || steps.detect.outputs.models == 'true' || steps.detect.outputs.pi == 'true')
         run: pnpm build:packages
 
       - name: Publish @blibliki/utils
@@ -109,10 +111,30 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
 
+      - name: Publish @blibliki/models
+        if: steps.check_changes.outputs.changed == 'true' && steps.detect.outputs.models == 'true'
+        working-directory: ./packages/models
+        run: |
+          echo "Publishing @blibliki/models..."
+          pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+
+      - name: Publish @blibliki/pi
+        if: steps.check_changes.outputs.changed == 'true' && steps.detect.outputs.pi == 'true'
+        working-directory: ./packages/pi
+        run: |
+          echo "Publishing @blibliki/pi..."
+          pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+
       - name: Summary
-        if: steps.check_changes.outputs.changed == 'true' && (steps.detect.outputs.utils == 'true' || steps.detect.outputs.transport == 'true' || steps.detect.outputs.engine == 'true')
+        if: steps.check_changes.outputs.changed == 'true' && (steps.detect.outputs.utils == 'true' || steps.detect.outputs.transport == 'true' || steps.detect.outputs.engine == 'true' || steps.detect.outputs.models == 'true' || steps.detect.outputs.pi == 'true')
         run: |
           echo "### 📦 Published Packages" >> $GITHUB_STEP_SUMMARY
           [ "${{ steps.detect.outputs.utils }}" == "true" ] && echo "- ✅ @blibliki/utils" >> $GITHUB_STEP_SUMMARY || true
           [ "${{ steps.detect.outputs.transport }}" == "true" ] && echo "- ✅ @blibliki/transport" >> $GITHUB_STEP_SUMMARY || true
           [ "${{ steps.detect.outputs.engine }}" == "true" ] && echo "- ✅ @blibliki/engine" >> $GITHUB_STEP_SUMMARY || true
+          [ "${{ steps.detect.outputs.models }}" == "true" ] && echo "- ✅ @blibliki/models" >> $GITHUB_STEP_SUMMARY || true
+          [ "${{ steps.detect.outputs.pi }}" == "true" ] && echo "- ✅ @blibliki/pi" >> $GITHUB_STEP_SUMMARY || true
