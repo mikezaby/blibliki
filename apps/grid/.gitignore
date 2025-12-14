@@ -1,2 +1,6 @@
 dist
 .vite
+public
+
+# Local Netlify folder
+.netlify

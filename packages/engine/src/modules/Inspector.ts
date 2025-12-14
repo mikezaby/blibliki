@@ -60,7 +60,8 @@ export default class Inspector
   }
 
   getValue(): number {
-    return this.getValues()[0];
+    const value = this.getValues()[0];
+    return value ?? 0;
   }
 
   getValues(): Float32Array {

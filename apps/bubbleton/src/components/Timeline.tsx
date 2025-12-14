@@ -1,4 +1,5 @@
 import { TransportState } from "@blibliki/engine";
+import { requestAnimationFrame, cancelAnimationFrame } from "@blibliki/utils";
 import { useEffect, useRef, useCallback } from "react";
 import { useEngineStore } from "../store/useEngineStore";
 

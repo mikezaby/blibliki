@@ -1,5 +1,10 @@
 import { ContextTime } from "@blibliki/transport";
-import { deterministicId, Optional, uuidv4 } from "@blibliki/utils";
+import {
+  deterministicId,
+  Optional,
+  uuidv4,
+  requestAnimationFrame,
+} from "@blibliki/utils";
 import { Engine } from "@/Engine";
 import { ModuleType, ModuleTypeToPropsMapping } from "@/modules";
 import {

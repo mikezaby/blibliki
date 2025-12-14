@@ -1,4 +1,9 @@
-import { pick } from "@blibliki/utils";
+import {
+  IAnyModuleSerialize,
+  IEngineSerialize,
+  IRoute,
+} from "@blibliki/engine";
+import { AnyObject, Optional, pick } from "@blibliki/utils";
 import {
   collection,
   addDoc,
@@ -8,10 +13,7 @@ import {
   getDocs,
   deleteDoc,
 } from "firebase/firestore";
-import { ModuleProps } from "@/components/AudioModule/modulesSlice";
-import { IGridNodes } from "@/components/Grid/gridNodesSlice";
-import { Optional } from "@/types";
-import { db, getDb } from "./db";
+import { getDb } from "./db";
 
 export type IPatch = {
   id: string;
@@ -20,8 +22,44 @@ export type IPatch = {
   config: IConfig;
 };
 
+type Viewport = {
+  x: number;
+  y: number;
+  zoom: number;
+};
+
+type Node = {
+  data: AnyObject;
+  dragging?: boolean;
+  id: string;
+  measured?: {
+    height?: number;
+    width?: number;
+  };
+  position: {
+    x: number;
+    y: number;
+  };
+  selected?: boolean;
+  type?: string;
+};
+
+type Edge = {
+  id: string;
+  source: string;
+  sourceHandle?: string | null;
+  target: string;
+  targetHandle?: string | null;
+};
+
+type IGridNodes = {
+  nodes: Node[];
+  edges: Edge[];
+  viewport: Viewport;
+};
+
 export type IConfig = {
-  modules: ModuleProps[];
+  modules: IAnyModuleSerialize[];
   gridNodes: IGridNodes;
 };
 
@@ -32,6 +70,8 @@ export default class Patch implements IPatch {
   config!: IConfig;
 
   static async find(id: string): Promise<Patch> {
+    const db = getDb();
+
     const docRef = doc(db, "patches", id);
     const docSnap = await getDoc(docRef);
 
@@ -44,6 +84,8 @@ export default class Patch implements IPatch {
   }
 
   static async all(): Promise<Patch[]> {
+    const db = getDb();
+
     const querySnapshot = await getDocs(collection(db, "patches"));
 
     return querySnapshot.docs.map((doc) => {
@@ -82,7 +124,28 @@ export default class Patch implements IPatch {
     };
   }
 
+  engineSerialize(): IEngineSerialize {
+    const { modules, gridNodes } = this.props.config;
+
+    const routes: IRoute[] = gridNodes.edges.map((edge) => {
+      return {
+        id: edge.id,
+        source: { moduleId: edge.source, ioName: edge.sourceHandle! },
+        destination: { moduleId: edge.target, ioName: edge.targetHandle! },
+      };
+    });
+
+    return {
+      bpm: 120, // Temp: static until I set it from grid
+      timeSignature: [4, 4], // Temp: static until I set it from grid
+      modules,
+      routes,
+    };
+  }
+
   private get docRef() {
+    const db = getDb();
+
     return doc(db, "patches", this.id);
   }
 

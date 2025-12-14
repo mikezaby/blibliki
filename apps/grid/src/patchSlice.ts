@@ -1,3 +1,4 @@
+import { IPatch, Patch } from "@blibliki/models";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
   addModule,
@@ -9,7 +10,6 @@ import {
   removeAllGridNodes,
   setGridNodes,
 } from "@/components/Grid/gridNodesSlice";
-import Patch, { IPatch } from "@/models/Patch";
 import { addNotification } from "@/notificationsSlice";
 import { AppDispatch, RootState } from "@/store";
 import { dispose } from "./globalSlice";

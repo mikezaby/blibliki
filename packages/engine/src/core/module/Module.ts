@@ -1,5 +1,11 @@
 import { ContextTime } from "@blibliki/transport";
-import { Context, Optional, upperFirst, uuidv4 } from "@blibliki/utils";
+import {
+  Context,
+  Optional,
+  upperFirst,
+  uuidv4,
+  requestAnimationFrame,
+} from "@blibliki/utils";
 import { Engine } from "@/Engine";
 import { AnyModule, ModuleType, ModuleTypeToPropsMapping } from "@/modules";
 import {

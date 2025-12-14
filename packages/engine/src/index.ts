@@ -7,6 +7,7 @@ export type {
   IModule,
   IModuleSerialize,
   IPolyModuleSerialize,
+  IAnyModuleSerialize,
   IMidiDevice,
   ModulePropSchema,
   PropSchema,

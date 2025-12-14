@@ -2,6 +2,7 @@ import { Context } from "@blibliki/utils";
 import ComputerKeyboardDevice from "./ComputerKeyboardDevice";
 import MidiDevice from "./MidiDevice";
 import { createMidiAdapter, type IMidiAccess } from "./adapters";
+import { findBestMatch } from "./deviceMatcher";
 
 type ListenerCallback = (device: MidiDevice) => void;
 
@@ -31,6 +32,30 @@ export default class MidiDeviceManager {
 
   findByName(name: string): MidiDevice | ComputerKeyboardDevice | undefined {
     return Array.from(this.devices.values()).find((d) => d.name === name);
+  }
+
+  /**
+   * Finds a device using fuzzy name matching
+   * Useful for matching devices across browser/Node.js environments where names differ
+   *
+   * @param targetName - The device name to match
+   * @param threshold - Minimum similarity score (0-1, default: 0.6)
+   * @returns The best matching device and confidence score, or null
+   */
+  findByFuzzyName(
+    targetName: string,
+    threshold: number = 0.6,
+  ): { device: MidiDevice | ComputerKeyboardDevice; score: number } | null {
+    const deviceEntries = Array.from(this.devices.values());
+    const candidateNames = deviceEntries.map((d) => d.name);
+
+    const match = findBestMatch(targetName, candidateNames, threshold);
+
+    if (!match) return null;
+
+    const device = deviceEntries.find((d) => d.name === match.name);
+
+    return device ? { device, score: match.score } : null;
   }
 
   addListener(callback: ListenerCallback) {

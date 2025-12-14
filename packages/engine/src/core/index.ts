@@ -3,6 +3,7 @@ export type {
   IModule,
   IModuleSerialize,
   IPolyModuleSerialize,
+  IAnyModuleSerialize,
   SetterHooks,
 } from "./module";
 
@@ -15,6 +16,12 @@ export { default as MidiDeviceManager } from "./midi/MidiDeviceManager";
 export { default as MidiDevice, MidiPortState } from "./midi/MidiDevice";
 export type { IMidiDevice } from "./midi/MidiDevice";
 export { default as MidiEvent, MidiEventType } from "./midi/MidiEvent";
+export {
+  normalizeDeviceName,
+  extractCoreTokens,
+  calculateSimilarity,
+  findBestMatch,
+} from "./midi/deviceMatcher";
 
 export type {
   MidiOutput,

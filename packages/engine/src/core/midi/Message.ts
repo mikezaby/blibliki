@@ -21,6 +21,7 @@ export default class Message {
    */
   get type(): string {
     const statusByte = this.data[0];
+    if (statusByte === undefined) return "unknown";
     const messageType = statusByte & 0xf0;
 
     switch (messageType) {

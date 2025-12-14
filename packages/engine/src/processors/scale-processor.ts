@@ -28,17 +28,20 @@ export const scaleProcessorURL = URL.createObjectURL(
           ) {
             const input = inputs[0];
             const output = outputs[0];
+            if (!input || !output) return true;
 
             const minValues = parameters.min;
             const maxValues = parameters.max;
             const currentValues = parameters.current;
+            if (!minValues || !maxValues || !currentValues) return true;
 
-            if (!input.length || input[0].length === 0) {
+            const firstInput = input[0];
+            if (!firstInput || firstInput.length === 0) {
               for (const outputChannel of output) {
                 const current =
-                  parameters.current.length > 1
-                    ? parameters.current[0]
-                    : parameters.current[0];
+                  currentValues.length > 1
+                    ? (currentValues[0] ?? 0.5)
+                    : (currentValues[0] ?? 0.5);
 
                 outputChannel.fill(current);
               }
@@ -49,16 +52,31 @@ export const scaleProcessorURL = URL.createObjectURL(
             for (let channel = 0; channel < input.length; channel++) {
               const inputChannel = input[channel];
               const outputChannel = output[channel];
+              if (!inputChannel || !outputChannel) continue;
 
               for (let i = 0; i < inputChannel.length; i++) {
                 const x = inputChannel[i];
+                if (x === undefined) continue;
 
-                const min = minValues.length > 1 ? minValues[i] : minValues[0];
-                const max = maxValues.length > 1 ? maxValues[i] : maxValues[0];
+                const min =
+                  minValues.length > 1
+                    ? (minValues[i] ?? minValues[0])
+                    : minValues[0];
+                const max =
+                  maxValues.length > 1
+                    ? (maxValues[i] ?? maxValues[0])
+                    : maxValues[0];
                 const current =
                   currentValues.length > 1
-                    ? currentValues[i]
+                    ? (currentValues[i] ?? currentValues[0])
                     : currentValues[0];
+
+                if (
+                  min === undefined ||
+                  max === undefined ||
+                  current === undefined
+                )
+                  continue;
 
                 if (x < 0) {
                   outputChannel[i] = current * Math.pow(min / current, -x);

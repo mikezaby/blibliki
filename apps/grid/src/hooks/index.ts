@@ -1,4 +1,5 @@
 import { Engine } from "@blibliki/engine";
+import { IPatch, Patch } from "@blibliki/models";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { Connection, Edge, EdgeChange, Node, NodeChange } from "@xyflow/react";
 import { getAuth, signInWithCustomToken } from "firebase/auth";
@@ -12,7 +13,6 @@ import {
   onConnect as _onConnect,
   addNode as _addNode,
 } from "@/components/Grid/gridNodesSlice";
-import Patch, { IPatch } from "@/models/Patch";
 import type { RootState, AppDispatch } from "@/store";
 
 // Use throughout your app instead of plain `useDispatch` and `useSelector`

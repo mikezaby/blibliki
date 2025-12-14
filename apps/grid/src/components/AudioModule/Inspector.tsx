@@ -1,5 +1,5 @@
 import { Engine, moduleSchemas, ModuleType } from "@blibliki/engine";
-import { oscilloscope } from "@blibliki/utils";
+import { oscilloscope, requestAnimationFrame } from "@blibliki/utils";
 import { useEffect, useRef } from "react";
 import { ModuleComponent } from ".";
 import Container from "./Container";

@@ -4,8 +4,9 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite dev --port 4000",
-    "build": "vite build",
+    "generate:firebase-config": "node scripts/generate-firebase-config.js",
+    "dev": "npm run generate:firebase-config && vite dev --port 4000",
+    "build": "npm run generate:firebase-config && vite build",
     "preview": "vite preview",
     "tsc": "tsc --noEmit",
     "lint": "eslint src",
@@ -14,6 +15,7 @@
   },
   "dependencies": {
     "@blibliki/engine": "workspace:^",
+    "@blibliki/models": "workspace:^",
     "@blibliki/utils": "workspace:^",
     "@clerk/clerk-react": "5.58.1",
     "@radix-ui/react-context-menu": "2.2.16",
@@ -43,6 +45,7 @@
     "vite-tsconfig-paths": "catalog:vite"
   },
   "devDependencies": {
+    "@netlify/vite-plugin": "^2.7.16",
     "@tanstack/devtools-vite": "0.3.12",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.2.0",

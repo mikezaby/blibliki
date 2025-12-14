@@ -125,6 +125,7 @@ export default class MidiMapper
     this.checkAutoAssign(event);
 
     const activePage = this.props.pages[this.props.activePage];
+    if (!activePage) return;
 
     [
       ...this.props.globalMappings.filter((m) => m.cc === event.cc),
@@ -245,6 +246,8 @@ export default class MidiMapper
     if (event.cc === undefined) return;
 
     const activePage = this.props.pages[this.props.activePage];
+    if (!activePage) return;
+
     const hasGlobalAutoAssign = this.props.globalMappings.some(
       ({ autoAssign }) => autoAssign,
     );

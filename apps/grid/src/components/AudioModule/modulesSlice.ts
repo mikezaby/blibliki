@@ -1,10 +1,11 @@
 import {
   Engine,
-  IIOSerialize,
+  IAnyModuleSerialize,
   IModule,
   IUpdateModule,
   ModuleType,
 } from "@blibliki/engine";
+import { Optional } from "@blibliki/utils";
 import {
   createSlice,
   createEntityAdapter,
@@ -14,17 +15,12 @@ import {
 import { XYPosition } from "@xyflow/react";
 import { addNode } from "@/components/Grid/gridNodesSlice";
 import { AppDispatch, RootState } from "@/store";
-import { Optional } from "@/types";
 
 type ModuleInterface = {
   voices?: number;
 } & Omit<IModule<ModuleType>, "id" | "voiceNo">;
 
-export type ModuleProps = {
-  id: string;
-  inputs: IIOSerialize[];
-  outputs: IIOSerialize[];
-} & ModuleInterface;
+export type ModuleProps = IAnyModuleSerialize;
 
 export const AvailableModules: Record<
   ModuleType,

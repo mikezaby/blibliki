@@ -1,6 +1,6 @@
+import type { IPatch } from "@blibliki/models";
 import { modulesSelector } from "@/components/AudioModule/modulesSlice";
 import { useAppSelector } from "@/hooks";
-import { IPatch } from "@/models/Patch";
 
 export default function ExportGrid() {
   const { patch } = useAppSelector((state) => state.patch);
