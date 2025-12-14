@@ -1,6 +1,6 @@
 {
   "name": "@blibliki/pi",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "type": "module",
   "bin": {
     "blibliki-pi": "./dist/cli.js"

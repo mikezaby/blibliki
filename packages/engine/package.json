@@ -1,6 +1,6 @@
 {
   "name": "@blibliki/engine",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "type": "module",
   "exports": {
     ".": {
