@@ -37,8 +37,15 @@ export default class Note implements INote {
   }
 
   static fromEvent(message: Message) {
-    const name = Notes[message.data[1] % 12];
-    const octave = Math.floor(message.data[1] / 12) - 2;
+    const dataByte = message.data[1];
+    if (dataByte === undefined) {
+      throw new Error("Invalid MIDI message: missing data byte");
+    }
+    const name = Notes[dataByte % 12];
+    if (!name) {
+      throw new Error(`Invalid MIDI note number: ${dataByte}`);
+    }
+    const octave = Math.floor(dataByte / 12) - 2;
 
     return new Note(`${name}${octave}`);
   }
@@ -95,9 +102,17 @@ export default class Note implements INote {
   }
 
   private fromString(string: string) {
-    const matches = /(\w#?)(\d)?/.exec(string) ?? [];
+    const matches = /(\w#?)(\d)?/.exec(string);
+    if (!matches) {
+      throw new Error(`Invalid note string: ${string}`);
+    }
 
-    this.name = matches[1];
+    const name = matches[1];
+    if (!name) {
+      throw new Error(`Invalid note name in: ${string}`);
+    }
+
+    this.name = name;
     this.octave = matches[2] ? parseInt(matches[2]) : 1;
   }
 

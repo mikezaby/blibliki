@@ -21,14 +21,22 @@ export function oscilloscope({
 }: OscilloscopeOptions) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
+
+  if (buffer.length === 0) return;
+
+  const firstSample = buffer[0];
+  if (firstSample === undefined) return;
+
   ctx.clearRect(0, 0, width, height);
 
   // --- Calculate min/max from buffer, but clamp to at least [-1, 1]
-  let minBuffer = buffer[0],
-    maxBuffer = buffer[0];
+  let minBuffer: number = firstSample;
+  let maxBuffer: number = firstSample;
   for (let i = 1; i < buffer.length; ++i) {
-    if (buffer[i] < minBuffer) minBuffer = buffer[i];
-    if (buffer[i] > maxBuffer) maxBuffer = buffer[i];
+    const val = buffer[i];
+    if (val === undefined) continue;
+    if (val < minBuffer) minBuffer = val;
+    if (val > maxBuffer) maxBuffer = val;
   }
   const minVal = Math.min(minBuffer, -1);
   const maxVal = Math.max(maxBuffer, 1);
@@ -36,9 +44,13 @@ export function oscilloscope({
   // 1. Find the first trigger crossing (default: rising zero-crossing)
   let start = 0;
   for (let i = 1; i < buffer.length; i++) {
+    const prev = buffer[i - 1];
+    const curr = buffer[i];
+    if (prev === undefined || curr === undefined) continue;
+
     if (
-      (rising && buffer[i - 1] < triggerLevel && buffer[i] >= triggerLevel) ||
-      (!rising && buffer[i - 1] > triggerLevel && buffer[i] <= triggerLevel)
+      (rising && prev < triggerLevel && curr >= triggerLevel) ||
+      (!rising && prev > triggerLevel && curr <= triggerLevel)
     ) {
       start = i;
       break;
@@ -48,9 +60,13 @@ export function oscilloscope({
   // 2. Find subsequent zero-crossings to delimit cycles
   const crossings: number[] = [start];
   for (let i = start + 1; i < buffer.length; i++) {
+    const prev = buffer[i - 1];
+    const curr = buffer[i];
+    if (prev === undefined || curr === undefined) continue;
+
     if (
-      (rising && buffer[i - 1] < triggerLevel && buffer[i] >= triggerLevel) ||
-      (!rising && buffer[i - 1] > triggerLevel && buffer[i] <= triggerLevel)
+      (rising && prev < triggerLevel && curr >= triggerLevel) ||
+      (!rising && prev > triggerLevel && curr <= triggerLevel)
     ) {
       crossings.push(i);
       if (crossings.length > cyclesToShow) break;
@@ -58,8 +74,8 @@ export function oscilloscope({
   }
 
   // If not enough cycles found, just use what we have
-  const end =
-    crossings.length > cyclesToShow ? crossings[cyclesToShow] : buffer.length;
+  const endIndex = crossings[cyclesToShow];
+  const end = endIndex !== undefined ? endIndex : buffer.length;
 
   // Draw y=0 baseline
   const norm0 = (0 - minVal) / (maxVal - minVal);
@@ -74,6 +90,8 @@ export function oscilloscope({
   ctx.beginPath();
   for (let i = start; i < end; i++) {
     const val = buffer[i];
+    if (val === undefined) continue;
+
     const normVal = (val - minVal) / (maxVal - minVal);
     const x = ((i - start) / (end - start - 1)) * width;
     const y = height - normVal * height;

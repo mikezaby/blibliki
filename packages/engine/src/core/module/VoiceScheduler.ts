@@ -102,9 +102,15 @@ export default class VoiceScheduler extends PolyModule<ModuleType.VoiceScheduler
     let voice = this.audioModules.find((v) => !v.activeNote);
 
     // If no available voice, get the one with the lowest triggeredAt
-    voice ??= this.audioModules.sort((a, b) => {
-      return a.triggeredAt - b.triggeredAt;
-    })[0];
+    if (!voice) {
+      const sorted = this.audioModules.sort((a, b) => {
+        return a.triggeredAt - b.triggeredAt;
+      });
+      voice = sorted[0];
+      if (!voice) {
+        throw new Error("No voices available in voice scheduler");
+      }
+    }
 
     return voice;
   }

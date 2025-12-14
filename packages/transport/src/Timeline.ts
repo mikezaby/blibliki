@@ -37,7 +37,7 @@ export class Timeline<T extends TimelineEvent = TimelineEvent> {
   lastEventBefore(time: ClockTime) {
     for (let i = this._events.length - 1; i >= 0; i--) {
       const event = this._events[i];
-      if (event.time <= time) {
+      if (event && event.time <= time) {
         return event;
       }
     }
