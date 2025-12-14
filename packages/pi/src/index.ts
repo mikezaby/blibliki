@@ -9,6 +9,7 @@ import {
   updateConfig,
   getConfig,
 } from "./config.js";
+import { promptForUserId } from "./prompt.js";
 
 export { loadOrCreateConfig, getConfigPath, updateConfig, getConfig };
 export {
@@ -16,6 +17,7 @@ export {
   getDefaultGridUrl,
   areFirebaseConfigsEqual,
 } from "./api.js";
+export { promptForUserId, confirmUserIdUpdate } from "./prompt.js";
 
 /**
  * Check and update Firebase config if necessary
@@ -65,6 +67,23 @@ async function checkAndUpdateFirebaseConfig(
 }
 
 /**
+ * Check and setup userId if needed
+ */
+async function checkAndSetupUserId(): Promise<string> {
+  const config = loadOrCreateConfig();
+
+  if (!config.userId) {
+    console.log("\n⚠ User ID not configured.");
+    const userId = await promptForUserId();
+    updateConfig({ userId });
+    console.log(`\n✓ User ID saved: ${userId}`);
+    return userId;
+  }
+
+  return config.userId;
+}
+
+/**
  * Main entry point for blibliki-pi
  */
 export async function main(options?: { gridUrl?: string }): Promise<void> {
@@ -72,8 +91,12 @@ export async function main(options?: { gridUrl?: string }): Promise<void> {
 
   const config = loadOrCreateConfig();
 
-  console.log(`Config file location: ${getConfigPath()}`);
+  console.log(`\nConfig file location: ${getConfigPath()}`);
   console.log(`Token: ${config.token}`);
+
+  // Check and setup userId (prompt if not set)
+  const userId = await checkAndSetupUserId();
+  console.log(`\nUser ID: ${userId}`);
 
   // Automatically check and update Firebase config on startup
   const configUpdated = await checkAndUpdateFirebaseConfig(options?.gridUrl);
@@ -90,6 +113,21 @@ export async function main(options?: { gridUrl?: string }): Promise<void> {
     console.log(
       'Firebase config check failed. Ensure Grid app is running or use "blibliki-pi setup-firebase <grid-url>"',
     );
+  }
+
+  // Check if device is registered
+  if (finalConfig.deviceId) {
+    console.log(`\nDevice ID: ${finalConfig.deviceId}`);
+
+    if (finalConfig.patchId) {
+      console.log(`Assigned Patch: ${finalConfig.patchId}`);
+      console.log("\nReady to load and play patch!");
+    } else {
+      console.log("No patch assigned yet");
+    }
+  } else {
+    console.log("\nDevice: Not registered");
+    console.log("Use your token in Grid app to register this device");
   }
 }
 

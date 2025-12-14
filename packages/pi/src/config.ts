@@ -6,6 +6,7 @@ import { join } from "node:path";
 
 export interface Config {
   token: string;
+  userId?: string;
   firebase?: FirebaseConfig;
   deviceId?: string;
   patchId?: string;

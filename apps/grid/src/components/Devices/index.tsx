@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/clerk-react";
-import { Plus, Trash2, Edit2, Cpu } from "lucide-react";
-import { useEffect } from "react";
+import { Plus, Trash2, Edit2, Cpu, Copy, Check } from "lucide-react";
+import { useEffect, useState } from "react";
 import { open } from "@/components/Modal/modalSlice";
 import {
   Button,
@@ -17,6 +17,7 @@ export default function Devices() {
   const dispatch = useAppDispatch();
   const { user } = useUser();
   const { devices, status } = useAppSelector((state) => state.devices);
+  const [copiedUserId, setCopiedUserId] = useState(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -36,6 +37,16 @@ export default function Devices() {
 
   const handleAdd = () => {
     dispatch(open("device-new"));
+  };
+
+  const handleCopyUserId = async () => {
+    if (user?.id) {
+      await navigator.clipboard.writeText(user.id);
+      setCopiedUserId(true);
+      setTimeout(() => {
+        setCopiedUserId(false);
+      }, 2000);
+    }
   };
 
   if (status === "loading") {
@@ -68,6 +79,48 @@ export default function Devices() {
             Add Device
           </Button>
         </div>
+
+        {/* User ID Card for Pi Setup */}
+        {user?.id && (
+          <Card className="mb-6 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                    Your User ID (for Pi setup)
+                  </div>
+                  <div className="font-mono text-sm text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/50 px-3 py-2 rounded inline-block">
+                    {user.id}
+                  </div>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                    Copy this ID and paste it when starting your Blibliki Pi
+                    device
+                  </p>
+                </div>
+                <Button
+                  onClick={() => {
+                    handleCopyUserId().catch(console.error);
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="ml-4 border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/50"
+                >
+                  {copiedUserId ? (
+                    <>
+                      <Check className="w-4 h-4 mr-2 text-green-600" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {devices.length === 0 ? (
           <Card className="border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800">
