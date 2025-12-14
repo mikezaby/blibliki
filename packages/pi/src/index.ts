@@ -1,3 +1,4 @@
+import { Engine } from "@blibliki/engine";
 import { Device, initializeFirebase, Patch } from "@blibliki/models";
 import {
   fetchFirebaseConfig,
@@ -134,7 +135,9 @@ export async function main(options?: { gridUrl?: string }): Promise<void> {
   }
 
   const patch = await Patch.find(device.patchId);
-  console.log(patch.engineSerialize());
+
+  const engine = await Engine.load(patch.engineSerialize());
+  await engine.start();
 }
 
 /**
