@@ -75,7 +75,7 @@ export function oscilloscope({
 
   // If not enough cycles found, just use what we have
   const endIndex = crossings[cyclesToShow];
-  const end = endIndex !== undefined ? endIndex : buffer.length;
+  const end = endIndex ?? buffer.length;
 
   // Draw y=0 baseline
   const norm0 = (0 - minVal) / (maxVal - minVal);

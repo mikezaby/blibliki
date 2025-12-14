@@ -10,9 +10,9 @@ export function deterministicId(
   const newId = `${hash.substring(0, 8)}-${hash.substring(
     8,
     12,
-  )}-4${hash.substring(13, 16)}-${
-    "89AB"[parseInt(hash.substring(17, 18), 16) % 4]
-  }${hash.substring(18, 21)}-${hash.substring(21, 33)}`;
+  )}-4${hash.substring(13, 16)}-${"89AB"[
+    parseInt(hash.substring(17, 18), 16) % 4
+  ]!}${hash.substring(18, 21)}-${hash.substring(21, 33)}`;
 
   return newId;
 }

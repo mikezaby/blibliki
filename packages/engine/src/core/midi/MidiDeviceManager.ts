@@ -44,7 +44,7 @@ export default class MidiDeviceManager {
    */
   findByFuzzyName(
     targetName: string,
-    threshold: number = 0.6,
+    threshold = 0.6,
   ): { device: MidiDevice | ComputerKeyboardDevice; score: number } | null {
     const deviceEntries = Array.from(this.devices.values());
     const candidateNames = deviceEntries.map((d) => d.name);
