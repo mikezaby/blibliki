@@ -2,6 +2,9 @@
   "name": "@blibliki/pi",
   "version": "0.4.2",
   "type": "module",
+  "bin": {
+    "blibliki-pi": "./dist/cli.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

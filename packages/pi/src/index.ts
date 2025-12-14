@@ -161,14 +161,3 @@ export async function setupFirebase(gridUrl?: string): Promise<void> {
     throw error;
   }
 }
-
-// If running as main module
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const args = process.argv.slice(2);
-
-  if (args[0] === "setup-firebase" && args[1]) {
-    setupFirebase(args[1]).catch(console.error);
-  } else {
-    main().catch(console.error);
-  }
-}
