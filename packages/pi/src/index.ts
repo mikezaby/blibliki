@@ -91,21 +91,6 @@ export async function main(options?: { gridUrl?: string }): Promise<void> {
       'Firebase config check failed. Ensure Grid app is running or use "blibliki-pi setup-firebase <grid-url>"',
     );
   }
-
-  // Check if device is registered
-  if (finalConfig.deviceId) {
-    console.log(`\nDevice ID: ${finalConfig.deviceId}`);
-
-    if (finalConfig.patchId) {
-      console.log(`Assigned Patch: ${finalConfig.patchId}`);
-      console.log("\nReady to load and play patch!");
-    } else {
-      console.log("No patch assigned yet");
-    }
-  } else {
-    console.log("\nDevice: Not registered");
-    console.log("Use your token in Grid app to register this device");
-  }
 }
 
 /**

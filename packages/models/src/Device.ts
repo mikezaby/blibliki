@@ -55,6 +55,26 @@ export default class Device implements IDevice {
     });
   }
 
+  static async findBy(opts: {
+    userId?: string;
+    token?: string;
+  }): Promise<Device[]> {
+    const db = getDb();
+
+    const whereClauses = Object.entries(opts).map(([key, value]) =>
+      where(key, "==", value),
+    );
+    const q = query(collection(db, "devices"), ...whereClauses);
+    const querySnapshot = await getDocs(q);
+
+    return querySnapshot.docs.map((doc) => {
+      return new Device({
+        id: doc.id,
+        ...doc.data(),
+      } as IDevice);
+    });
+  }
+
   static async all(): Promise<Device[]> {
     const db = getDb();
 
