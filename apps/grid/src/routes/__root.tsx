@@ -5,7 +5,6 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import Providers from "@/Providers";
 import { ColorSchemeBlockingScript } from "@/components/ColorSchemeBlockingScript";
 import { NotificationContainer } from "@/components/Notification";
-import AudioModules from "@/components/layout/AudioModules";
 import Header from "@/components/layout/Header";
 
 export const Route = createRootRoute({
@@ -15,7 +14,6 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <Providers>
-      <AudioModules />
       <Header />
       <Outlet />
       <NotificationContainer />

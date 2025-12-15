@@ -9,6 +9,7 @@ import {
 } from "@xyflow/react";
 import { useEffect } from "react";
 import { useAppDispatch, useGridNodes, usePatch } from "@/hooks";
+import AudioModules from "./AudioModules";
 import { NodeTypes } from "./AudioNode";
 import { setViewport } from "./gridNodesSlice";
 import useDrag from "./useDrag";
@@ -31,6 +32,7 @@ export default function Grid() {
 
   return (
     <div className="grid-container h-full bg-slate-200 dark:bg-slate-600">
+      <AudioModules />
       <ReactFlow
         nodes={nodes}
         edges={edges}
