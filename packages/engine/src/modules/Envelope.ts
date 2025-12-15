@@ -1,5 +1,5 @@
 import { ContextTime } from "@blibliki/transport";
-import { Context, cancelAndHoldAtTime } from "@blibliki/utils";
+import { Context } from "@blibliki/utils";
 import { GainNode } from "@blibliki/utils/web-audio-api";
 import { Module } from "@/core";
 import Note from "@/core/Note";
@@ -17,25 +17,25 @@ export type IEnvelopeProps = {
 
 const DEFAULT_PROPS: IEnvelopeProps = {
   attack: 0.01,
-  decay: 0,
-  sustain: 1,
-  release: 0,
+  decay: 0.1,
+  sustain: 0.7,
+  release: 0.3,
 };
 
 export const envelopePropSchema: ModulePropSchema<IEnvelopeProps> = {
   attack: {
     kind: "number",
-    min: 0.0001,
-    max: 20,
-    step: 0.01,
+    min: 0.001,
+    max: 10,
+    step: 0.001,
     exp: 3,
     label: "Attack",
   },
   decay: {
     kind: "number",
-    min: 0,
-    max: 20,
-    step: 0.01,
+    min: 0.001,
+    max: 10,
+    step: 0.001,
     exp: 3,
     label: "Decay",
   },
@@ -48,13 +48,18 @@ export const envelopePropSchema: ModulePropSchema<IEnvelopeProps> = {
   },
   release: {
     kind: "number",
-    min: 0,
-    max: 20,
-    step: 0.01,
+    min: 0.001,
+    max: 10,
+    step: 0.001,
     exp: 3,
     label: "Release",
   },
 };
+
+// Constants for safe audio parameter automation
+const MIN_GAIN = 0.00001; // Minimum gain value for exponential ramps (below hearing threshold ~-100dB)
+const MIN_TIME = 0.001; // Minimum time segment (1ms) to prevent automation issues
+const RELEASE_TIME_CONSTANT_RATIO = 0.3; // For setTargetAtTime, produces ~95% decay
 
 class MonoEnvelope extends Module<ModuleType.Envelope> {
   declare audioNode: GainNode;
@@ -79,59 +84,71 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
   triggerAttack(note: Note, triggeredAt: ContextTime) {
     super.triggerAttack(note, triggeredAt);
 
-    const attack = this.props.attack;
-    const decay = this.props.decay;
-    const sustain = this.props.sustain;
+    const { attack, decay, sustain } = this.props;
+    const gain = this.audioNode.gain;
 
-    cancelAndHoldAtTime(this.audioNode.gain, triggeredAt);
+    // Ensure minimum time values to prevent automation issues
+    const safeAttack = Math.max(attack, MIN_TIME);
+    const safeDecay = Math.max(decay, MIN_TIME);
+    const safeSustain = Math.max(sustain, MIN_GAIN);
 
-    // Always start from a tiny value, can't ramp from 0
-    if (this.audioNode.gain.value === 0) {
-      this.audioNode.gain.setValueAtTime(0.001, triggeredAt);
-    }
+    // Cancel all scheduled automations
+    gain.cancelScheduledValues(triggeredAt);
 
-    // Attack
-    this.audioNode.gain.exponentialRampToValueAtTime(1.0, triggeredAt + attack);
+    // Get current gain value for smooth retriggering
+    // Note: We read the value synchronously, which may not be perfectly accurate
+    // during scheduled automations, but it's better than hard-coded values
+    const currentValue = gain.value;
 
-    // Decay
-    if (sustain > 0) {
-      this.audioNode.gain.exponentialRampToValueAtTime(
-        sustain,
-        triggeredAt + attack + decay,
-      );
-      // Do not set to zero or anything else!
-    } else {
-      this.audioNode.gain.exponentialRampToValueAtTime(
-        0.001,
-        triggeredAt + attack + decay,
-      );
-    }
+    // If we're retriggering from a non-zero value, start from there
+    // Otherwise start from MIN_GAIN to enable exponential ramp
+    const attackStartValue = currentValue > MIN_GAIN ? currentValue : MIN_GAIN;
+
+    // Set the starting value
+    gain.setValueAtTime(attackStartValue, triggeredAt);
+
+    // Attack phase: ramp to peak (1.0)
+    const attackEndTime = triggeredAt + safeAttack;
+    gain.exponentialRampToValueAtTime(1.0, attackEndTime);
+
+    // Decay phase: ramp to sustain level
+    const decayEndTime = attackEndTime + safeDecay;
+    gain.exponentialRampToValueAtTime(safeSustain, decayEndTime);
   }
 
   triggerRelease(note: Note, triggeredAt: ContextTime) {
     super.triggerRelease(note, triggeredAt);
+
+    // Only release if this is the last active note
     if (this.activeNotes.length > 0) return;
 
-    const release = this.props.release;
+    const { release } = this.props;
+    const gain = this.audioNode.gain;
 
-    // Cancel scheduled automations and set gain to the ACTUAL value at this moment
-    const currentGainValue = cancelAndHoldAtTime(
-      this.audioNode.gain,
-      triggeredAt,
-    );
+    // Ensure minimum release time
+    const safeRelease = Math.max(release, MIN_TIME);
 
-    if (currentGainValue >= 0.0001) {
-      // Always set the value at the release time to ensure a smooth ramp from here
-      this.audioNode.gain.setValueAtTime(currentGainValue, triggeredAt);
-      // Exponential ramp to a tiny value
-      this.audioNode.gain.exponentialRampToValueAtTime(
-        0.0001,
-        triggeredAt + release - 0.0001,
-      );
-    }
+    // Cancel all scheduled automations from this point forward
+    gain.cancelScheduledValues(triggeredAt);
 
-    // Set to zero at the very end
-    this.audioNode.gain.setValueAtTime(0, triggeredAt + release);
+    // Get the current gain value at release time
+    // This ensures smooth transitions regardless of which phase we're releasing from
+    const currentValue = gain.value;
+
+    // Set the starting value for the release
+    gain.setValueAtTime(currentValue, triggeredAt);
+
+    // Release phase: exponential decay to silence
+    // We use setTargetAtTime with a time constant for a smooth exponential decay
+    // Time constant = release time * RELEASE_TIME_CONSTANT_RATIO
+    // This produces approximately 95% decay over the release time
+    const timeConstant = safeRelease * RELEASE_TIME_CONSTANT_RATIO;
+    gain.setTargetAtTime(0, triggeredAt, timeConstant);
+
+    // Schedule final silence slightly after the release time
+    // This ensures we reach true zero for garbage collection
+    const releaseEndTime = triggeredAt + safeRelease * 1.5;
+    gain.setValueAtTime(0, releaseEndTime);
   }
 }
 
