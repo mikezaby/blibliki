@@ -1,3 +1,4 @@
+import { IDevice } from "@blibliki/models";
 import { useUser } from "@clerk/clerk-react";
 import { Cpu, Save } from "lucide-react";
 import { useState } from "react";
@@ -11,14 +12,17 @@ type DeviceModalProps = {
   deviceId: string;
 };
 
-export default function DeviceModal({ deviceId }: DeviceModalProps) {
+type DeviceFormProps = {
+  device: IDevice | null;
+  isNew: boolean;
+  deviceId: string;
+  onClose: () => void;
+};
+
+function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
   const dispatch = useAppDispatch();
   const { user } = useUser();
   const patches = usePatches();
-  const devices = useAppSelector((state) => state.devices.devices);
-
-  const isNew = deviceId === "new";
-  const device = isNew ? null : devices.find((d) => d.id === deviceId);
 
   const [formData, setFormData] = useState({
     token: device?.token ?? "",
@@ -27,18 +31,6 @@ export default function DeviceModal({ deviceId }: DeviceModalProps) {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const modalName = `device-${deviceId}`;
-
-  const close = () => {
-    dispatch(closeModal(modalName));
-    setFormData({
-      token: "",
-      name: "",
-      patchId: "",
-    });
-    setErrors({});
-  };
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -68,17 +60,14 @@ export default function DeviceModal({ deviceId }: DeviceModalProps) {
           userId: user.id,
         }),
       );
-      close();
+      onClose();
     } catch (error) {
       console.error("Error saving device:", error);
     }
   };
 
   return (
-    <Modal
-      modalName={modalName}
-      className="sm:max-w-lg max-w-[calc(100vw-2rem)] p-0 gap-0 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-    >
+    <>
       {/* Header */}
       <div className="flex items-center gap-3 p-6 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-t-lg">
         <div className="w-8 h-8 bg-linear-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
@@ -163,7 +152,7 @@ export default function DeviceModal({ deviceId }: DeviceModalProps) {
       {/* Footer */}
       <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-b-lg">
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" size="sm" onClick={close}>
+          <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
           <Button
@@ -178,6 +167,43 @@ export default function DeviceModal({ deviceId }: DeviceModalProps) {
           </Button>
         </div>
       </div>
+    </>
+  );
+}
+
+export default function DeviceModal({ deviceId }: DeviceModalProps) {
+  const dispatch = useAppDispatch();
+  const devices = useAppSelector((state) => state.devices.devices);
+  const { isOpen, modalName: currentModalName } = useAppSelector(
+    (state) => state.modal,
+  );
+
+  const isNew = deviceId === "new";
+  const device = isNew
+    ? null
+    : (devices.find((d) => d.id === deviceId) ?? null);
+  const modalName = `device-${deviceId}`;
+  const isThisModalOpen = isOpen && currentModalName === modalName;
+
+  const close = () => {
+    dispatch(closeModal(modalName));
+  };
+
+  return (
+    <Modal
+      modalName={modalName}
+      className="sm:max-w-lg max-w-[calc(100vw-2rem)] p-0 gap-0 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+      onClose={close}
+    >
+      {isThisModalOpen && (
+        <DeviceForm
+          key={modalName}
+          device={device}
+          isNew={isNew}
+          deviceId={deviceId}
+          onClose={close}
+        />
+      )}
     </Modal>
   );
 }

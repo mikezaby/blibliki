@@ -32,8 +32,10 @@ export default function Modal(props: ModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={close}>
-      <DialogTitle>{modalName}</DialogTitle>
-      <DialogContent className={className}>{children}</DialogContent>
+      <DialogContent className={className}>
+        <DialogTitle className="sr-only">{modalName}</DialogTitle>
+        {children}
+      </DialogContent>
     </Dialog>
   );
 }
