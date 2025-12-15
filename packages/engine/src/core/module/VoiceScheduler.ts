@@ -104,7 +104,7 @@ export default class VoiceScheduler extends PolyModule<ModuleType.VoiceScheduler
   private findFreeVoice(): Voice {
     let voice = this.audioModules.find((v) => !v.activeNote);
 
-    // If no available voice, get the one with the lowest triggeredAt
+    // If no available voice, steal the oldest one (voice stealing)
     if (!voice) {
       const sorted = this.audioModules.sort((a, b) => {
         return a.triggeredAt - b.triggeredAt;
@@ -112,6 +112,24 @@ export default class VoiceScheduler extends PolyModule<ModuleType.VoiceScheduler
       voice = sorted[0];
       if (!voice) {
         throw new Error("No voices available in voice scheduler");
+      }
+
+      // Important: Send a noteOff event for the stolen voice's current note
+      // This ensures the envelope releases properly before the new note starts
+      if (voice.activeNote) {
+        const stolenNoteName = voice.activeNote;
+        // Create a noteOff event for the stolen note
+        const currentTime = this.context.audioContext.currentTime;
+        const noteOffEvent = MidiEvent.fromNote(
+          stolenNoteName,
+          false, // noteOn = false means noteOff
+          currentTime,
+        );
+        noteOffEvent.voiceNo = voice.voiceNo;
+
+        // Trigger the note off on this voice before reusing it
+        voice.midiTriggered(noteOffEvent);
+        this.midiOutput.onMidiEvent(noteOffEvent);
       }
     }
 
