@@ -87,6 +87,9 @@ export default class VoiceScheduler extends PolyModule<ModuleType.VoiceScheduler
           (v) => v.activeNote === midiEvent.note!.fullName,
         );
         break;
+      case MidiEventType.cc:
+        this.midiOutput.onMidiEvent(midiEvent);
+        return;
       default:
         throw Error("This type is not a note");
     }

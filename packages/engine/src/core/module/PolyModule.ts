@@ -167,6 +167,13 @@ export abstract class PolyModule<
   }
 
   onMidiEvent = (midiEvent: MidiEvent) => {
+    if (midiEvent.cc) {
+      this.audioModules.forEach((m) => {
+        m.onMidiEvent(midiEvent);
+      });
+      return;
+    }
+
     const voiceNo = midiEvent.voiceNo ?? 0;
     const audioModule = this.findVoice(voiceNo);
     audioModule.onMidiEvent(midiEvent);
