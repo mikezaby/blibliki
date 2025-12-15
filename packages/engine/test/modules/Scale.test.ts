@@ -3,19 +3,19 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { createModule, ModuleType } from "@/modules";
 import Constant from "@/modules/Constant";
 import Inspector from "@/modules/Inspector";
-import Scale from "@/modules/Scale";
+import { MonoScale } from "@/modules/Scale";
 
 describe("Scale", () => {
-  let scale: Scale;
+  let scale: MonoScale;
   let amount: Constant;
   let inspector: Inspector;
 
   beforeEach((ctx) => {
-    scale = createModule(ctx.engine.id, {
+    scale = new MonoScale(ctx.engine.id, {
       name: "filterScale",
       moduleType: ModuleType.Scale,
       props: { min: 20, max: 20000, current: 440 },
-    }) as Scale;
+    });
 
     amount = createModule(ctx.engine.id, {
       name: "amount",

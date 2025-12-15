@@ -3,9 +3,9 @@ import { BiquadFilterNode } from "@blibliki/utils/web-audio-api";
 import { EnumProp, ModulePropSchema } from "@/core";
 import { IModuleConstructor, Module, SetterHooks } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
-import { createModule, ICreateModule, ModuleType } from ".";
+import { ICreateModule, ModuleType } from ".";
 import { MonoGain } from "./Gain";
-import Scale from "./Scale";
+import { MonoScale } from "./Scale";
 
 export type IFilterProps = {
   cutoff: number;
@@ -72,7 +72,7 @@ class MonoFilter
     >
 {
   declare audioNode: BiquadFilterNode;
-  private scale: Scale;
+  private scale: MonoScale;
   private amount: MonoGain;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Filter>) {
@@ -97,11 +97,11 @@ class MonoFilter
       props: { gain: props.envelopeAmount },
     });
 
-    this.scale = createModule(engineId, {
+    this.scale = new MonoScale(engineId, {
       name: "scale",
       moduleType: ModuleType.Scale,
       props: { min: MIN_FREQ, max: MAX_FREQ, current: this.props.cutoff },
-    }) as Scale;
+    });
 
     this.amount.plug({ audioModule: this.scale, from: "out", to: "in" });
     this.scale.audioNode.connect(this.audioNode.frequency);

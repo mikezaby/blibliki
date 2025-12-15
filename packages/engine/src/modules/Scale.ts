@@ -1,5 +1,7 @@
 import { Context } from "@blibliki/utils";
 import { IModule, Module, SetterHooks } from "@/core";
+import { IModuleConstructor } from "@/core/module/Module";
+import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { ModulePropSchema } from "@/core/schema";
 import { CustomWorklet, newAudioWorklet } from "@/processors";
 import { ICreateModule, ModuleType } from ".";
@@ -37,7 +39,7 @@ export const scalePropSchema: ModulePropSchema<IScaleProps> = {
 
 const DEFAULT_PROPS: IScaleProps = { min: 0, max: 1, current: 0.5 };
 
-export default class Scale
+export class MonoScale
   extends Module<ModuleType.Scale>
   implements
     Pick<
@@ -86,4 +88,25 @@ export default class Scale
   ) => {
     this.current.value = value;
   };
+}
+
+export default class Scale extends PolyModule<ModuleType.Scale> {
+  constructor(
+    engineId: string,
+    params: IPolyModuleConstructor<ModuleType.Scale>,
+  ) {
+    const props = { ...DEFAULT_PROPS, ...params.props };
+    const monoModuleConstructor = (
+      engineId: string,
+      params: IModuleConstructor<ModuleType.Scale>,
+    ) => new MonoScale(engineId, params);
+
+    super(engineId, {
+      ...params,
+      props,
+      monoModuleConstructor,
+    });
+
+    this.registerDefaultIOs();
+  }
 }

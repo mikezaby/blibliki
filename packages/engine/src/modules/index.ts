@@ -137,6 +137,7 @@ export type ModuleParams = {
     | ModuleType.Filter
     | ModuleType.StereoPanner
     | ModuleType.VoiceScheduler
+    | ModuleType.Scale
     ? IPolyModuleConstructor<K>
     : ICreateModule<K>;
 }[ModuleType];
