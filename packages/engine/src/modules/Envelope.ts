@@ -109,7 +109,7 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
 
     // Attack phase: ramp to peak (1.0)
     const attackEndTime = triggeredAt + safeAttack;
-    gain.exponentialRampToValueAtTime(1.0, attackEndTime);
+    gain.linearRampToValueAtTime(1.0, attackEndTime);
 
     // Decay phase: ramp to sustain level
     const decayEndTime = attackEndTime + safeDecay;
