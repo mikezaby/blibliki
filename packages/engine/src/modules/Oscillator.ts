@@ -232,6 +232,11 @@ export class MonoOscillator
       name: "detune",
       getAudioNode: () => this.detuneGain,
     });
+
+    this.registerAudioInput({
+      name: "fm",
+      getAudioNode: () => this.audioNode.frequency,
+    });
   }
 
   private registerOutputs() {
@@ -277,5 +282,6 @@ export default class Oscillator extends PolyModule<ModuleType.Oscillator> {
 
   private registerInputs() {
     this.registerAudioInput({ name: "detune" });
+    this.registerAudioInput({ name: "fm" });
   }
 }
