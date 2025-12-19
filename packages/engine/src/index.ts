@@ -30,6 +30,9 @@ export {
   moduleSchemas,
   OscillatorWave,
   MidiMappingMode,
+  LFOMode,
+  LFOWaveform,
+  NOTE_DIVISIONS,
 } from "./modules";
 export type {
   IOscillator,
@@ -44,4 +47,7 @@ export type {
   IMidiMapper,
   IMidiMapperProps,
   MidiMapping,
+  ILFO,
+  ILFOProps,
+  NoteDivision,
 } from "./modules";

@@ -7,6 +7,7 @@ import { Filter } from "./Filter";
 import Gain from "./Gain";
 import Inspector from "./Inspector";
 import Keyboard from "./Keyboard";
+import LFO from "./LFO";
 import Master from "./Master";
 import MidiDeviceSelector from "./MidiDeviceSelector";
 import MidiMapper from "./MidiMapper";
@@ -56,6 +57,7 @@ const COMPONENT_MAPPING: {
   [ModuleType.StereoPanner]: StereoPanner,
   [ModuleType.StepSequencer]: undefined,
   [ModuleType.VoiceScheduler]: VoiceScheduler,
+  [ModuleType.LFO]: LFO,
 };
 
 export default function AudioModule<T extends ModuleType>(audioModuleProps: {

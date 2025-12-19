@@ -10,6 +10,7 @@ import Envelope, { envelopePropSchema, IEnvelopeProps } from "./Envelope";
 import Filter, { filterPropSchema, IFilterProps } from "./Filter";
 import Gain, { gainPropSchema, IGainProps } from "./Gain";
 import Inspector, { IInspectorProps, inspectorPropSchema } from "./Inspector";
+import LFO, { ILFOProps, lfoPropSchema } from "./LFO";
 import Master, { IMasterProps, masterPropSchema } from "./Master";
 import MidiMapper, {
   IMidiMapperProps,
@@ -52,6 +53,7 @@ export enum ModuleType {
   VirtualMidi = "VirtualMidi",
   StepSequencer = "StepSequencer",
   VoiceScheduler = "VoiceScheduler",
+  LFO = "LFO",
 }
 
 export type ModuleTypeToPropsMapping = {
@@ -69,6 +71,7 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.VirtualMidi]: IVirtualMidiProps;
   [ModuleType.StepSequencer]: IStepSequencerProps;
   [ModuleType.VoiceScheduler]: IVoiceSchedulerProps;
+  [ModuleType.LFO]: ILFOProps;
 };
 
 export type ModuleTypeToModuleMapping = {
@@ -86,6 +89,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.VirtualMidi]: VirtualMidi;
   [ModuleType.StepSequencer]: StepSequencer;
   [ModuleType.VoiceScheduler]: VoiceScheduler;
+  [ModuleType.LFO]: LFO;
 };
 
 export const moduleSchemas = {
@@ -103,6 +107,7 @@ export const moduleSchemas = {
   [ModuleType.VirtualMidi]: virtualMidiPropSchema,
   [ModuleType.StepSequencer]: stepSequencerPropSchema,
   [ModuleType.VoiceScheduler]: voiceSchedulerPropSchema,
+  [ModuleType.LFO]: lfoPropSchema,
 };
 
 export type { IOscillator } from "./Oscillator";
@@ -118,6 +123,8 @@ export type {
 } from "./StepSequencer";
 export type { IMidiMapper, IMidiMapperProps, MidiMapping } from "./MidiMapper";
 export { MidiMappingMode } from "./MidiMapper";
+export type { ILFO, ILFOProps, NoteDivision } from "./LFO";
+export { LFOMode, LFOWaveform, NOTE_DIVISIONS } from "./LFO";
 
 export type AnyModule = Module<ModuleType>;
 export type IAnyModule = IModule<ModuleType>;
@@ -138,6 +145,7 @@ export type ModuleParams = {
     | ModuleType.StereoPanner
     | ModuleType.VoiceScheduler
     | ModuleType.Scale
+    | ModuleType.LFO
     ? IPolyModuleConstructor<K>
     : ICreateModule<K>;
 }[ModuleType];
@@ -175,6 +183,8 @@ export function createModule(
       return new StepSequencer(engineId, params);
     case ModuleType.VoiceScheduler:
       return new VoiceScheduler(engineId, params);
+    case ModuleType.LFO:
+      return new LFO(engineId, params);
     default:
       assertNever(params);
   }
