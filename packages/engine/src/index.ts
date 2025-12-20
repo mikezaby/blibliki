@@ -33,14 +33,22 @@ export {
   LFOMode,
   LFOWaveform,
   NOTE_DIVISIONS,
+  Resolution,
+  PlaybackMode,
+  stepPropSchema,
 } from "./modules";
+export { default as StepSequencer } from "./modules/StepSequencer";
 export type {
   IOscillator,
   IGain,
   IMaster,
-  ISequence,
   IStepSequencerProps,
   IStepSequencer,
+  IStep,
+  IPage,
+  IPattern,
+  IStepNote,
+  IStepCC,
   ModuleTypeToPropsMapping,
   ICreateModule,
   ModuleParams,

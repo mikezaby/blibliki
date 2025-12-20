@@ -48,7 +48,7 @@ export default function Slider(props: SliderProps) {
   const wrapperClassName = useMemo(() => {
     const rules = ["flex", "gap-x-2", "nodrag", "relative", "group"];
 
-    if (orientation === "horizontal") rules.push("flex-col");
+    if (orientation === "horizontal") rules.push("flex-col w-full");
 
     return rules.join(" ");
   }, [orientation]);
