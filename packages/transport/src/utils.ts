@@ -104,3 +104,103 @@ export function swing(time: Ticks, amount: NormalRange): Ticks {
   // Map transformed time back into ticks
   return Math.floor((t8i + tn) * 7680);
 }
+
+/**
+ * Duration notation:
+ * - "n" = note (64n = 64th note, 32n = 32nd note, 16n = 16th note, etc.)
+ * - "t" = triplet (16t = 16th note triplet)
+ * - "." = dotted (adds half the duration, e.g., 4n. = quarter + eighth)
+ * - "m" = measure/bar (1m = 1 bar, 1.5m = 1.5 bars, etc.)
+ * - "infinite" = hold forever (no noteoff, caller must handle)
+ */
+export type NoteDuration =
+  | "64n"
+  | "64t"
+  | "32n"
+  | "32t"
+  | "32n."
+  | "16n"
+  | "16t"
+  | "16n."
+  | "8n"
+  | "8t"
+  | "8n."
+  | "4n"
+  | "4t"
+  | "4n."
+  | "2n"
+  | "2t"
+  | "2n."
+  | "1n"
+  | "1n."
+  | "1m"
+  | "1.5m"
+  | "2m"
+  | "2.5m"
+  | "3m"
+  | "3.5m"
+  | "4m"
+  | "5m"
+  | "6m"
+  | "7m"
+  | "8m"
+  | "infinite";
+
+/**
+ * Convert NoteDuration to ticks.
+ * Returns null for "infinite" duration.
+ *
+ * Calculation:
+ * - Base note: TPB * (4 / noteValue)
+ *   - 64n = TPB * 4/64 = TPB/16
+ *   - 32n = TPB * 4/32 = TPB/8
+ *   - 16n = TPB * 4/16 = TPB/4
+ *   - 8n = TPB * 4/8 = TPB/2
+ *   - 4n = TPB * 4/4 = TPB (quarter note)
+ *   - 2n = TPB * 4/2 = TPB*2 (half note)
+ *   - 1n = TPB * 4/1 = TPB*4 (whole note = 1 bar in 4/4)
+ * - Triplet (t): multiply by 2/3
+ * - Dotted (.): multiply by 1.5
+ * - Measure (m): multiply by 4 * TPB
+ */
+export function durationToTicks(duration: NoteDuration): Ticks | null {
+  // Defensive: handle invalid input (runtime safety for old data)
+  if (typeof duration !== "string") {
+    console.warn(`Invalid duration value, using default "8n."`);
+    duration = "8n." as NoteDuration;
+  }
+
+  if (duration === "infinite") return null;
+
+  // Handle measure notation (bars)
+  if (duration.endsWith("m")) {
+    const bars = parseFloat(duration.slice(0, -1));
+    return Math.round(bars * 4 * TPB); // 1 bar = 4 quarters = 4 * TPB
+  }
+
+  // Parse note notation
+  const isDotted = duration.endsWith(".");
+  const isTriplet = duration.endsWith("t");
+  const noteStr = isDotted
+    ? duration.slice(0, -2)
+    : isTriplet
+      ? duration.slice(0, -1)
+      : duration.slice(0, -1);
+
+  const noteValue = parseInt(noteStr, 10);
+
+  // Calculate base duration in ticks
+  let ticks = (TPB * 4) / noteValue;
+
+  // Apply triplet (2/3 of normal duration)
+  if (isTriplet) {
+    ticks = (ticks * 2) / 3;
+  }
+
+  // Apply dotted (1.5x normal duration)
+  if (isDotted) {
+    ticks = ticks * 1.5;
+  }
+
+  return Math.round(ticks);
+}
