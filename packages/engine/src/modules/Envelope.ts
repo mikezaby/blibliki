@@ -129,17 +129,12 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
     const safeRelease = Math.max(release, MIN_TIME);
 
     // Cancel all scheduled automations from this point forward
+    // The automation curve is preserved up to triggeredAt
     gain.cancelScheduledValues(triggeredAt);
 
-    // Get the current gain value at release time
-    // This ensures smooth transitions regardless of which phase we're releasing from
-    const currentValue = gain.value;
-
-    // Set the starting value for the release
-    gain.setValueAtTime(currentValue, triggeredAt);
-
     // Release phase: exponential decay to silence
-    // We use setTargetAtTime with a time constant for a smooth exponential decay
+    // setTargetAtTime automatically starts from whatever value exists at triggeredAt
+    // This ensures smooth transitions regardless of which phase we're releasing from
     // Time constant = release time * RELEASE_TIME_CONSTANT_RATIO
     // This produces approximately 95% decay over the release time
     const timeConstant = safeRelease * RELEASE_TIME_CONSTANT_RATIO;
