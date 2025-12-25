@@ -4,18 +4,23 @@ import { Outlet, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import Providers from "@/Providers";
 import { ColorSchemeBlockingScript } from "@/components/ColorSchemeBlockingScript";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { NotificationContainer } from "@/components/Notification";
+import { RouterErrorComponent } from "@/components/RouterErrorComponent";
 import Header from "@/components/layout/Header";
 
 export const Route = createRootRoute({
   component: RootComponent,
+  errorComponent: RouterErrorComponent,
 });
 
 function RootComponent() {
   return (
     <Providers>
       <Header />
-      <Outlet />
+      <ErrorBoundary>
+        <Outlet />
+      </ErrorBoundary>
       <NotificationContainer />
       <ColorSchemeBlockingScript />
 
