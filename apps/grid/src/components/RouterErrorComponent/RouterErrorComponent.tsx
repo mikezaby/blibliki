@@ -1,7 +1,7 @@
 import { ErrorComponentProps, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { addNotification } from "@/notificationsSlice";
 import { useAppDispatch } from "@/hooks";
+import { addNotification } from "@/notificationsSlice";
 
 export function RouterErrorComponent({ error, reset }: ErrorComponentProps) {
   const dispatch = useAppDispatch();
