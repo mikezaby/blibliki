@@ -131,8 +131,6 @@ export type NoteDuration =
   | "2n"
   | "2t"
   | "2n."
-  | "1n"
-  | "1n."
   | "1m"
   | "1.5m"
   | "2m"
