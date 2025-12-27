@@ -12,7 +12,7 @@ import {
 } from "@/components/Grid/gridNodesSlice";
 import { addNotification } from "@/notificationsSlice";
 import { AppDispatch, RootState } from "@/store";
-import { dispose } from "./globalSlice";
+import { dispose, setBpm } from "./globalSlice";
 
 type PatchProps = {
   patch: Omit<IPatch, "config">;
@@ -71,11 +71,12 @@ export const loadById = (id: string) => async (dispatch: AppDispatch) => {
 
 export const load = (patch: Patch | IPatch) => (dispatch: AppDispatch) => {
   const { id, name, config, userId } = patch;
-  const { modules, gridNodes } = config;
+  const { bpm = 120, modules, gridNodes } = config;
 
   dispatch(clearEngine());
   dispatch(loadModules(modules));
   dispatch(setGridNodes(gridNodes));
+  dispatch(setBpm(bpm));
 
   dispatch(setAttributes({ patch: { id, name, userId }, status: "succeeded" }));
 };
@@ -88,7 +89,8 @@ export const save =
     const { patch: originalPatch } = state.patch;
     const modules = modulesSelector.selectAll(state);
     const gridNodes = state.gridNodes;
-    const config = { modules, gridNodes };
+    const bpm = state.global.bpm;
+    const config = { bpm, modules, gridNodes };
 
     try {
       const id = asNew ? undefined : originalPatch.id;

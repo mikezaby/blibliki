@@ -21,7 +21,7 @@ export type {
 export { MidiDevice, MidiPortState, Note } from "./core";
 
 export { TransportState } from "@blibliki/transport";
-export type { TimeSignature, Position } from "@blibliki/transport";
+export type { BPM, TimeSignature, Position } from "@blibliki/transport";
 
 export { Context } from "@blibliki/utils";
 
