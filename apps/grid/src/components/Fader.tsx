@@ -14,6 +14,7 @@ type FaderProps = {
   value?: number;
   orientation?: TOrientation;
   marks?: readonly MarkProps[];
+  hideMarks?: boolean;
   max?: number;
   min?: number;
   step?: number;
@@ -58,6 +59,7 @@ export default function Fader(props: FaderProps) {
     value,
     defaultValue,
     marks,
+    hideMarks = false,
     exp,
     min = 0,
     orientation = "vertical",
@@ -84,16 +86,16 @@ export default function Fader(props: FaderProps) {
         orientation={orientation}
         onChange={debouncedOnChange}
         value={revValue}
-        displayValue={value}
         defaultValue={defaultValue}
         min={min}
         max={max}
         step={step ?? 0.01}
         marks={marks}
+        hideMarks={hideMarks}
       />
 
       <div className="flex items-center w-full gap-1.5 mt-1">
-        <div className="w-1.5 h-1.5 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
+        <div className="w-1.5 h-1.5 bg-linear-to-br from-blue-500 to-purple-600 rounded-full" />
         <label className="text-xs font-medium text-slate-700 dark:text-slate-300 tracking-tight text-center">
           {name}
         </label>
