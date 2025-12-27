@@ -4,10 +4,10 @@ type SliderProps = {
   min: number;
   max: number;
   value?: number;
-  displayValue?: number;
   defaultValue?: number;
   step?: number;
   marks?: readonly MarkProps[];
+  hideMarks?: boolean;
   orientation?: TOrientation;
   onChange: (newValue: number) => void;
 };
@@ -22,11 +22,11 @@ type MarkProps = {
   label: string;
 };
 
-const Tooltip = ({ value }: { value: number | undefined }) => {
+const Tooltip = ({ value }: { value: MarkProps | number | undefined }) => {
   return (
     <div className="absolute right-full hidden group-hover:block rounded bg-primary px-2 py-1 mx-2 text-primary-foreground text-xs ">
       <div className="rounded bg-primary px-2 py-1 text-primary-foreground text-xs">
-        {value?.toFixed(2)}
+        {typeof value === "object" ? value.label : value?.toFixed(2)}
       </div>
     </div>
   );
@@ -37,9 +37,9 @@ export default function Slider(props: SliderProps) {
     min,
     max,
     value,
-    displayValue,
     defaultValue,
     marks,
+    hideMarks = false,
     onChange,
     step = 0.01,
     orientation = "horizontal",
@@ -48,12 +48,12 @@ export default function Slider(props: SliderProps) {
   const wrapperClassName = useMemo(() => {
     const rules = ["flex", "gap-x-2", "nodrag", "relative", "group"];
 
-    if (orientation === "horizontal") rules.push("flex-col");
+    if (orientation === "horizontal") rules.push("flex-col w-full");
 
     return rules.join(" ");
   }, [orientation]);
 
-  const hasMarks = marks?.some((m) => m.value);
+  const showTooltip = hideMarks || !marks?.some((m) => m.value);
 
   const inputClassName = useMemo(() => {
     return orientation === "horizontal"
@@ -64,6 +64,8 @@ export default function Slider(props: SliderProps) {
   const _onChange = (event: ChangeEvent<HTMLInputElement>) => {
     onChange(Number(event.target.value));
   };
+
+  const displayedValue = marks && value !== undefined ? marks[value] : value;
 
   return (
     <div className={wrapperClassName}>
@@ -77,9 +79,13 @@ export default function Slider(props: SliderProps) {
         className={inputClassName}
         onChange={_onChange}
       />
-      {!hasMarks && <Tooltip value={displayValue ?? value} />}
+      {showTooltip && <Tooltip value={displayedValue} />}
 
-      <Labels marks={marks} orientation={orientation} onClick={onChange} />
+      <Labels
+        marks={hideMarks ? undefined : marks}
+        orientation={orientation}
+        onClick={onChange}
+      />
     </div>
   );
 }
@@ -112,7 +118,7 @@ function Labels({
           className="flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors px-1.5 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
           onClick={_onClick(mark.value)}
         >
-          <div className="w-1 h-1 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
+          <div className="w-1 h-1 bg-linear-to-br from-blue-500 to-purple-600 rounded-full" />
           {mark.label}
         </button>
       ))}

@@ -13,6 +13,7 @@ import MidiDeviceSelector from "./MidiDeviceSelector";
 import MidiMapper from "./MidiMapper";
 import Oscillator from "./Oscillator";
 import Scale from "./Scale";
+import StepSequencer from "./StepSequencer";
 import StereoPanner from "./StereoPanner";
 import VoiceScheduler from "./VoiceScheduler";
 import { updateModule } from "./modulesSlice";
@@ -55,7 +56,7 @@ const COMPONENT_MAPPING: {
   [ModuleType.Scale]: Scale,
   [ModuleType.Inspector]: Inspector,
   [ModuleType.StereoPanner]: StereoPanner,
-  [ModuleType.StepSequencer]: undefined,
+  [ModuleType.StepSequencer]: StepSequencer,
   [ModuleType.VoiceScheduler]: VoiceScheduler,
   [ModuleType.LFO]: LFO,
 };

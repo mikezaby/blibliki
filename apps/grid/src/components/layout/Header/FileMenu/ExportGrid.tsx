@@ -4,6 +4,7 @@ import { useAppSelector } from "@/hooks";
 
 export default function ExportGrid() {
   const { patch } = useAppSelector((state) => state.patch);
+  const { bpm } = useAppSelector((state) => state.global);
   const gridNodes = useAppSelector((state) => state.gridNodes);
   const modules = useAppSelector((state) => modulesSelector.selectAll(state));
 
@@ -12,7 +13,7 @@ export default function ExportGrid() {
       id: "",
       userId: "",
       name: patch.name,
-      config: { modules, gridNodes },
+      config: { bpm, modules, gridNodes },
     };
 
     const jsonData = JSON.stringify(data);

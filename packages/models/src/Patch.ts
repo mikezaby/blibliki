@@ -1,4 +1,5 @@
 import {
+  BPM,
   IAnyModuleSerialize,
   IEngineSerialize,
   IRoute,
@@ -59,6 +60,7 @@ type IGridNodes = {
 };
 
 export type IConfig = {
+  bpm: BPM;
   modules: IAnyModuleSerialize[];
   gridNodes: IGridNodes;
 };
@@ -125,7 +127,7 @@ export default class Patch implements IPatch {
   }
 
   engineSerialize(): IEngineSerialize {
-    const { modules, gridNodes } = this.props.config;
+    const { bpm = 120, modules, gridNodes } = this.props.config;
 
     const routes: IRoute[] = gridNodes.edges.map((edge) => {
       return {
@@ -136,7 +138,7 @@ export default class Patch implements IPatch {
     });
 
     return {
-      bpm: 120, // Temp: static until I set it from grid
+      bpm,
       timeSignature: [4, 4], // Temp: static until I set it from grid
       modules,
       routes,

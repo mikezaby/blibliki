@@ -119,8 +119,13 @@ export type { IStereoPanner } from "./StereoPanner";
 export type {
   IStepSequencer,
   IStepSequencerProps,
-  ISequence,
+  IStep,
+  IPage,
+  IPattern,
+  IStepNote,
+  IStepCC,
 } from "./StepSequencer";
+export { Resolution, PlaybackMode, stepPropSchema } from "./StepSequencer";
 export type { IMidiMapper, IMidiMapperProps, MidiMapping } from "./MidiMapper";
 export { MidiMappingMode } from "./MidiMapper";
 export type { ILFO, ILFOProps, NoteDivision } from "./LFO";

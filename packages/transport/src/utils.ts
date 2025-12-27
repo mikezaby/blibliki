@@ -131,8 +131,6 @@ export type NoteDuration =
   | "2n"
   | "2t"
   | "2n."
-  | "1n"
-  | "1n."
   | "1m"
   | "1.5m"
   | "2m"
@@ -163,14 +161,14 @@ export type NoteDuration =
  * - Dotted (.): multiply by 1.5
  * - Measure (m): multiply by 4 * TPB
  */
-export function durationToTicks(duration: NoteDuration): Ticks | null {
+export function durationToTicks(duration: NoteDuration): Ticks {
   // Defensive: handle invalid input (runtime safety for old data)
   if (typeof duration !== "string") {
     console.warn(`Invalid duration value, using default "8n."`);
     duration = "8n." as NoteDuration;
   }
 
-  if (duration === "infinite") return null;
+  if (duration === "infinite") return Infinity;
 
   // Handle measure notation (bars)
   if (duration.endsWith("m")) {
