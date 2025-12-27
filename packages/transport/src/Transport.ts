@@ -59,7 +59,10 @@ export type TransportListener<T extends TransportEvent> = {
  * It is only accurate up to the precision of the event sheduler rate, and may
  * "jump" if the scheduling is struggling to keep up.
  */
-export type TransportClockCallback = (time: ClockTime) => void;
+export type TransportClockCallback = (
+  time: ClockTime,
+  contextTime: ContextTime,
+) => void;
 
 export enum TransportState {
   playing = "playing",
@@ -108,12 +111,13 @@ export class Transport<T extends TransportEvent> {
 
     this.timer = new Timer(() => {
       const time = this.clock.time();
+      const contextTime = this.clock.clockTimeToContextTime(time);
       if (time <= this.clockTime) return;
 
       this.clockTime = time;
       this.scheduler.runUntil(time);
       this._clockCallbacks.forEach((callback) => {
-        callback(this.clockTime);
+        callback(this.clockTime, contextTime);
       });
     }, SCHEDULE_INTERVAL_MS / 1000);
 
@@ -237,7 +241,10 @@ export class Transport<T extends TransportEvent> {
     this.clockTime = clockTime;
     this.listener.onJump(ticks);
     this._clockCallbacks.forEach((callback) => {
-      callback(this.clockTime);
+      callback(
+        this.clockTime,
+        this.clock.clockTimeToContextTime(this.clockTime),
+      );
     });
   }
 
