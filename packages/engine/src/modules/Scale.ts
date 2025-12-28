@@ -11,9 +11,13 @@ export type IScaleProps = {
   min: number;
   max: number;
   current: number;
+  mode: "exponential" | "linear";
 };
 
-export const scalePropSchema: ModulePropSchema<IScaleProps> = {
+export const scalePropSchema: ModulePropSchema<
+  IScaleProps,
+  { mode: import("@/core/schema").EnumProp<"exponential" | "linear"> }
+> = {
   min: {
     kind: "number",
     min: -Infinity,
@@ -35,16 +39,26 @@ export const scalePropSchema: ModulePropSchema<IScaleProps> = {
     step: 0.01,
     label: "Current",
   },
+  mode: {
+    kind: "enum",
+    label: "Mode",
+    options: ["exponential", "linear"],
+  },
 };
 
-const DEFAULT_PROPS: IScaleProps = { min: 0, max: 1, current: 0.5 };
+const DEFAULT_PROPS: IScaleProps = {
+  min: 0,
+  max: 1,
+  current: 0.5,
+  mode: "exponential",
+};
 
 export class MonoScale
   extends Module<ModuleType.Scale>
   implements
     Pick<
       SetterHooks<IScaleProps>,
-      "onAfterSetMin" | "onAfterSetMax" | "onAfterSetCurrent"
+      "onAfterSetMin" | "onAfterSetMax" | "onAfterSetCurrent" | "onAfterSetMode"
     >
 {
   declare audioNode: AudioWorkletNode;
@@ -75,6 +89,10 @@ export class MonoScale
     return this.audioNode.parameters.get("max")!;
   }
 
+  get mode() {
+    return this.audioNode.parameters.get("mode")!;
+  }
+
   onAfterSetMin: SetterHooks<IScaleProps>["onAfterSetMin"] = (value) => {
     this.min.value = value;
   };
@@ -87,6 +105,10 @@ export class MonoScale
     value,
   ) => {
     this.current.value = value;
+  };
+
+  onAfterSetMode: SetterHooks<IScaleProps>["onAfterSetMode"] = (value) => {
+    this.mode.value = value === "exponential" ? 0 : 1;
   };
 }
 

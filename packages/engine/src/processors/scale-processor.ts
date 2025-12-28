@@ -18,6 +18,10 @@ export const scaleProcessorURL = URL.createObjectURL(
                 name: "current",
                 defaultValue: 0.5,
               },
+              {
+                name: "mode",
+                defaultValue: 0, // 0 = exponential, 1 = linear
+              },
             ];
           }
 
@@ -33,7 +37,9 @@ export const scaleProcessorURL = URL.createObjectURL(
             const minValues = parameters.min;
             const maxValues = parameters.max;
             const currentValues = parameters.current;
-            if (!minValues || !maxValues || !currentValues) return true;
+            const modeValues = parameters.mode;
+            if (!minValues || !maxValues || !currentValues || !modeValues)
+              return true;
 
             const firstInput = input[0];
             if (!firstInput || firstInput.length === 0) {
@@ -70,18 +76,49 @@ export const scaleProcessorURL = URL.createObjectURL(
                   currentValues.length > 1
                     ? (currentValues[i] ?? currentValues[0])
                     : currentValues[0];
+                const mode =
+                  modeValues.length > 1
+                    ? (modeValues[i] ?? modeValues[0])
+                    : modeValues[0];
 
                 if (
                   min === undefined ||
                   max === undefined ||
-                  current === undefined
+                  current === undefined ||
+                  mode === undefined
                 )
                   continue;
 
-                if (x < 0) {
-                  outputChannel[i] = current * Math.pow(min / current, -x);
+                const isLinearMode = mode >= 0.5; // 0 = exponential, 1 = linear
+
+                if (isLinearMode) {
+                  // Linear interpolation
+                  if (x < 0) {
+                    outputChannel[i] = current + -x * (min - current);
+                  } else {
+                    outputChannel[i] = current + x * (max - current);
+                  }
                 } else {
-                  outputChannel[i] = current * Math.pow(max / current, x);
+                  // Exponential scaling
+                  // Handle edge cases where exponential would fail
+                  if (
+                    current === 0 ||
+                    (x < 0 && min === 0) ||
+                    (x > 0 && max === 0)
+                  ) {
+                    // Fallback to linear for invalid exponential cases
+                    if (x < 0) {
+                      outputChannel[i] = current + -x * (min - current);
+                    } else {
+                      outputChannel[i] = current + x * (max - current);
+                    }
+                  } else {
+                    if (x < 0) {
+                      outputChannel[i] = current * Math.pow(min / current, -x);
+                    } else {
+                      outputChannel[i] = current * Math.pow(max / current, x);
+                    }
+                  }
                 }
               }
             }
