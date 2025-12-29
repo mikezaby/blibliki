@@ -36,6 +36,7 @@ export {
   Resolution,
   PlaybackMode,
   stepPropSchema,
+  NoiseType,
 } from "./modules";
 export { default as StepSequencer } from "./modules/StepSequencer";
 export type {
@@ -58,4 +59,5 @@ export type {
   ILFO,
   ILFOProps,
   NoteDivision,
+  INoise,
 } from "./modules";

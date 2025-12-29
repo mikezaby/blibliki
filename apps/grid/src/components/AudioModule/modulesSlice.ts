@@ -66,6 +66,7 @@ export const AvailableModules: Record<
     moduleType: ModuleType.VoiceScheduler,
   },
   [ModuleType.LFO]: { name: "LFO", moduleType: ModuleType.LFO },
+  [ModuleType.Noise]: { name: "Noise", moduleType: ModuleType.Noise },
 };
 
 const modulesAdapter = createEntityAdapter<ModuleProps>({});

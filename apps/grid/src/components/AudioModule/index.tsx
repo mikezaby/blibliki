@@ -11,6 +11,7 @@ import LFO from "./LFO";
 import Master from "./Master";
 import MidiDeviceSelector from "./MidiDeviceSelector";
 import MidiMapper from "./MidiMapper";
+import Noise from "./Noise";
 import Oscillator from "./Oscillator";
 import Scale from "./Scale";
 import StepSequencer from "./StepSequencer";
@@ -59,6 +60,7 @@ const COMPONENT_MAPPING: {
   [ModuleType.StepSequencer]: StepSequencer,
   [ModuleType.VoiceScheduler]: VoiceScheduler,
   [ModuleType.LFO]: LFO,
+  [ModuleType.Noise]: Noise,
 };
 
 export default function AudioModule<T extends ModuleType>(audioModuleProps: {
