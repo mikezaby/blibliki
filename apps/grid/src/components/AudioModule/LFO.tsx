@@ -1,37 +1,15 @@
-import {
-  LFOMode,
-  LFOWaveform,
-  ModuleType,
-  NOTE_DIVISIONS,
-} from "@blibliki/engine";
+import { LFOMode, ModuleType } from "@blibliki/engine";
 import { moduleSchemas } from "@blibliki/engine";
-import { Label } from "@radix-ui/react-label";
 import type { MarkProps } from "@/components/Fader";
 import Fader from "@/components/Fader";
-import Select from "@/components/Select";
 import type { ModuleComponent } from ".";
 import Container from "./Container";
+import { SelectField } from "./attributes/Field";
 
 const MODE_MARKS: MarkProps[] = [
   { value: 0, label: "Free" },
   { value: 1, label: "BPM" },
 ];
-
-// Waveform options for dropdown
-const WAVEFORM_OPTIONS = [
-  { name: "Sine", value: LFOWaveform.sine },
-  { name: "Triangle", value: LFOWaveform.triangle },
-  { name: "Square", value: LFOWaveform.square },
-  { name: "Sawtooth", value: LFOWaveform.sawtooth },
-  { name: "Ramp Down", value: LFOWaveform.rampDown },
-  { name: "Random", value: LFOWaveform.random },
-];
-
-// Division options for dropdown (all 24 divisions)
-const DIVISION_OPTIONS = NOTE_DIVISIONS.map((div) => ({
-  name: div,
-  value: div,
-}));
 
 const OFFSET_MARKS: MarkProps[] = [
   { value: -1, label: "-1" },
@@ -63,26 +41,20 @@ const LFO: ModuleComponent<ModuleType.LFO> = (props) => {
     <div className="flex flex-col gap-y-8">
       <Container className="justify-start">
         {mode === LFOMode.bpm && (
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold">Division</Label>
-            <Select
-              label="Division"
-              value={division}
-              options={DIVISION_OPTIONS}
-              onChange={updateProp("division")}
-            />
-          </div>
+          <SelectField
+            name="Division"
+            value={division}
+            schema={moduleSchemas[ModuleType.LFO].division}
+            onChange={updateProp("division")}
+          />
         )}
 
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold">Waveform</Label>
-          <Select
-            label="Waveform"
-            value={waveform}
-            options={WAVEFORM_OPTIONS}
-            onChange={updateProp("waveform")}
-          />
-        </div>
+        <SelectField
+          name="Waveform"
+          value={waveform}
+          schema={moduleSchemas[ModuleType.LFO].waveform}
+          onChange={updateProp("waveform")}
+        />
       </Container>
 
       <Container>
