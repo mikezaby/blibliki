@@ -11,6 +11,9 @@ export enum ReverbType {
   room = "room",
   hall = "hall",
   plate = "plate",
+  spring = "spring",
+  chamber = "chamber",
+  reflections = "reflections",
 }
 
 export type IReverbProps = {
@@ -54,7 +57,14 @@ export const reverbPropSchema: ModulePropSchema<
   },
   type: {
     kind: "enum",
-    options: [ReverbType.room, ReverbType.hall, ReverbType.plate],
+    options: [
+      ReverbType.room,
+      ReverbType.hall,
+      ReverbType.plate,
+      ReverbType.spring,
+      ReverbType.chamber,
+      ReverbType.reflections,
+    ],
   },
 };
 
@@ -75,12 +85,79 @@ function generateImpulseResponse(
   decayTime: number,
 ): AudioBuffer {
   const sampleRate = context.audioContext.sampleRate;
-  const length = Math.floor(sampleRate * decayTime);
+
+  // Special handling for reflections - use short buffer
+  const effectiveDecayTime =
+    type === ReverbType.reflections
+      ? Math.min(decayTime, 0.2) // Max 200ms for reflections
+      : decayTime;
+
+  const length = Math.floor(sampleRate * effectiveDecayTime);
   const buffer = context.audioContext.createBuffer(2, length, sampleRate);
 
   // Room type tuning parameters
   const tuning = getRoomTuning(type);
 
+  // Reflections type uses discrete early reflections
+  if (type === ReverbType.reflections) {
+    generateEarlyReflections(buffer, sampleRate, tuning);
+  } else {
+    // Standard diffuse reverb tail
+    generateDiffuseTail(buffer, sampleRate, length, tuning);
+  }
+
+  // Normalize
+  normalizeBuffer(buffer);
+
+  return buffer;
+}
+
+// Generate discrete early reflections for small spaces
+function generateEarlyReflections(
+  buffer: AudioBuffer,
+  sampleRate: number,
+  tuning: { decayFactor: number; damping: number; cutoff: number },
+) {
+  // Reflection times in milliseconds (psychoacoustic early reflection pattern)
+  const reflectionTimes = [
+    0, 7, 11, 17, 23, 31, 41, 47, 59, 67, 79, 89, 103, 127,
+  ];
+
+  for (let channel = 0; channel < 2; channel++) {
+    const data = buffer.getChannelData(channel);
+
+    // Add slight variation between channels for stereo width
+    const channelOffset = channel * 2.3;
+
+    for (const reflectionMs of reflectionTimes) {
+      const time = (reflectionMs + channelOffset) / 1000;
+      const position = Math.floor(time * sampleRate);
+
+      if (position >= data.length) break;
+
+      // Each reflection has a short burst
+      const burstLength = Math.floor(sampleRate * 0.003); // 3ms burst
+      const amplitude = Math.exp(-time * tuning.decayFactor);
+
+      for (let i = 0; i < burstLength && position + i < data.length; i++) {
+        const noise = Math.random() * 2 - 1;
+        const envelope = Math.exp(-i / (burstLength * 0.3)); // Quick decay within burst
+        data[position + i] = data[position + i]! + noise * amplitude * envelope;
+      }
+    }
+
+    // Apply lowpass filter
+    applyLowpass(data, tuning.cutoff);
+  }
+}
+
+// Generate standard diffuse reverb tail
+function generateDiffuseTail(
+  buffer: AudioBuffer,
+  sampleRate: number,
+  length: number,
+  tuning: { decayFactor: number; damping: number; cutoff: number },
+) {
   for (let channel = 0; channel < 2; channel++) {
     const data = buffer.getChannelData(channel);
 
@@ -101,11 +178,6 @@ function generateImpulseResponse(
     // Apply simple lowpass filter for damping
     applyLowpass(data, tuning.cutoff);
   }
-
-  // Normalize
-  normalizeBuffer(buffer);
-
-  return buffer;
 }
 
 function getRoomTuning(type: ReverbType) {
@@ -132,6 +204,30 @@ function getRoomTuning(type: ReverbType) {
         decayFactor: 2.5, // Medium decay
         damping: 0.2, // Very little damping (bright character)
         cutoff: 0.9, // Very bright (minimal filtering)
+      };
+
+    case ReverbType.spring:
+      // Vintage spring reverb - metallic, bright, resonant
+      return {
+        decayFactor: 4, // Fast decay (spring tanks have quick decay)
+        damping: 0.1, // Very little damping (bright, metallic)
+        cutoff: 0.95, // Very bright (minimal filtering, metallic character)
+      };
+
+    case ReverbType.chamber:
+      // Echo chamber - medium-large space, smooth, diffuse
+      return {
+        decayFactor: 2.0, // Medium decay
+        damping: 0.35, // Moderate damping
+        cutoff: 0.75, // Moderate brightness
+      };
+
+    case ReverbType.reflections:
+      // Early reflections only - small space acoustics
+      return {
+        decayFactor: 5, // Fast decay for discrete reflections
+        damping: 0.4, // Moderate damping
+        cutoff: 0.8, // Fairly bright
       };
 
     default:

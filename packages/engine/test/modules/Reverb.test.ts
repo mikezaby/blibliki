@@ -71,7 +71,8 @@ describe("Reverb", () => {
       reverb.props = { mix: 1 };
       await sleep(100);
       const value = inspector.getValue();
-      expect(value).toBeGreaterThan(0);
+      // Convolution can produce positive or negative values, check for non-zero
+      expect(Math.abs(value)).toBeGreaterThan(0);
     });
   });
 
@@ -146,6 +147,51 @@ describe("Reverb", () => {
 
       // Same decay time but hall has slower decay factor, so similar length
       expect(hallBuffer.length).toBe(roomBuffer.length);
+    });
+
+    it("should work with spring type", () => {
+      reverb.props = { type: ReverbType.spring };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const buffer = (reverb as any).convolverNode.buffer;
+
+      expect(buffer).toBeDefined();
+      expect(buffer.length).toBeGreaterThan(0);
+    });
+
+    it("should work with chamber type", () => {
+      reverb.props = { type: ReverbType.chamber };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const buffer = (reverb as any).convolverNode.buffer;
+
+      expect(buffer).toBeDefined();
+      expect(buffer.length).toBeGreaterThan(0);
+    });
+
+    it("should work with reflections type", () => {
+      reverb.props = { type: ReverbType.reflections, decayTime: 1.5 };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const buffer = (reverb as any).convolverNode.buffer;
+
+      expect(buffer).toBeDefined();
+      expect(buffer.length).toBeGreaterThan(0);
+    });
+
+    it("should limit reflections to 200ms max", () => {
+      reverb.props = { type: ReverbType.reflections, decayTime: 5 };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const reflectionsBuffer = (reverb as any).convolverNode.buffer;
+
+      reverb.props = { type: ReverbType.room, decayTime: 5 };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const roomBuffer = (reverb as any).convolverNode.buffer;
+
+      // Reflections should be much shorter (max 200ms vs 5s)
+      expect(reflectionsBuffer.length).toBeLessThan(roomBuffer.length * 0.1);
     });
   });
 });
