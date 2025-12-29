@@ -25,6 +25,7 @@ import Oscillator, {
   IOscillatorProps,
   oscillatorPropSchema,
 } from "./Oscillator";
+import Reverb, { IReverbProps, reverbPropSchema } from "./Reverb";
 import Scale, { IScaleProps, scalePropSchema } from "./Scale";
 import StepSequencer, {
   IStepSequencerProps,
@@ -56,6 +57,7 @@ export enum ModuleType {
   VoiceScheduler = "VoiceScheduler",
   LFO = "LFO",
   Noise = "Noise",
+  Reverb = "Reverb",
 }
 
 export type ModuleTypeToPropsMapping = {
@@ -75,6 +77,7 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.VoiceScheduler]: IVoiceSchedulerProps;
   [ModuleType.LFO]: ILFOProps;
   [ModuleType.Noise]: INoiseProps;
+  [ModuleType.Reverb]: IReverbProps;
 };
 
 export type ModuleTypeToModuleMapping = {
@@ -94,6 +97,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.VoiceScheduler]: VoiceScheduler;
   [ModuleType.LFO]: LFO;
   [ModuleType.Noise]: Noise;
+  [ModuleType.Reverb]: Reverb;
 };
 
 export const moduleSchemas = {
@@ -113,6 +117,7 @@ export const moduleSchemas = {
   [ModuleType.VoiceScheduler]: voiceSchedulerPropSchema,
   [ModuleType.LFO]: lfoPropSchema,
   [ModuleType.Noise]: noisePropSchema,
+  [ModuleType.Reverb]: reverbPropSchema,
 };
 
 export type { IOscillator } from "./Oscillator";
@@ -137,6 +142,8 @@ export type { ILFO, ILFOProps, NoteDivision } from "./LFO";
 export { LFOMode, LFOWaveform, NOTE_DIVISIONS } from "./LFO";
 export type { INoise } from "./Noise";
 export { NoiseType } from "./Noise";
+export type { IReverb, IReverbProps } from "./Reverb";
+export { ReverbType } from "./Reverb";
 
 export type AnyModule = Module<ModuleType>;
 export type IAnyModule = IModule<ModuleType>;
@@ -199,6 +206,8 @@ export function createModule(
       return new LFO(engineId, params);
     case ModuleType.Noise:
       return new Noise(engineId, params);
+    case ModuleType.Reverb:
+      return new Reverb(engineId, params);
     default:
       assertNever(params);
   }
