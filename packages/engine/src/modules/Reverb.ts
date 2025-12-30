@@ -1,6 +1,7 @@
 import { Context } from "@blibliki/utils";
 import { ModulePropSchema } from "@/core";
 import { Module, SetterHooks } from "@/core/module/Module";
+import { WetDryMixer } from "@/utils";
 import { ICreateModule, ModuleType } from ".";
 
 // ============================================================================
@@ -286,17 +287,16 @@ export default class Reverb
     >
 {
   // Audio graph nodes
-  declare audioNode: GainNode; // Input splitter node
+  declare audioNode: GainNode; // Input node
   private outputNode: GainNode; // Final output node
   private convolverNode: ConvolverNode;
   private preDelayNode: DelayNode;
-  private dryGainNode: GainNode;
-  private wetGainNode: GainNode;
+  private wetDryMixer: WetDryMixer;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Reverb>) {
     const props = { ...DEFAULT_REVERB_PROPS, ...params.props };
 
-    // Input splitter node (this will be audioNode for Module interface)
+    // Input node (this will be audioNode for Module interface)
     const audioNodeConstructor = (context: Context) =>
       context.audioContext.createGain();
 
@@ -306,32 +306,31 @@ export default class Reverb
       audioNodeConstructor,
     });
 
-    // Set input splitter gain
+    // Set input gain
     this.audioNode.gain.value = 1;
 
-    // Create audio graph
-    this.outputNode = this.context.audioContext.createGain();
-    this.outputNode.gain.value = 1;
+    // Create wet/dry mixer
+    this.wetDryMixer = new WetDryMixer(this.context);
+
+    // Create audio processing nodes
     this.convolverNode = this.context.audioContext.createConvolver();
     this.preDelayNode = this.context.audioContext.createDelay(0.1); // 100ms max
-    this.dryGainNode = this.context.audioContext.createGain();
-    this.wetGainNode = this.context.audioContext.createGain();
 
     // Connect graph:
-    // audioNode (input) -> preDelay -> convolver -> wetGain -> outputNode
-    //                   -> dryGain -> outputNode
+    // audioNode (input) -> wetDryMixer (dry path)
+    //                   -> preDelay -> convolver -> wetDryMixer (wet path)
+    // wetDryMixer -> outputNode
+    this.wetDryMixer.connectInput(this.audioNode);
     this.audioNode.connect(this.preDelayNode);
-    this.audioNode.connect(this.dryGainNode);
     this.preDelayNode.connect(this.convolverNode);
-    this.convolverNode.connect(this.wetGainNode);
-    this.wetGainNode.connect(this.outputNode);
-    this.dryGainNode.connect(this.outputNode);
+    this.convolverNode.connect(this.wetDryMixer.getWetInput());
+    this.outputNode = this.wetDryMixer.getOutput();
 
     // Generate initial impulse response
     this.regenerateImpulseResponse();
 
     // Set initial parameters
-    this.updateMixGains(props.mix);
+    this.wetDryMixer.setMix(props.mix);
     this.preDelayNode.delayTime.value = props.preDelay / 1000;
 
     this.registerDefaultIOs("in");
@@ -350,7 +349,7 @@ export default class Reverb
   // ============================================================================
 
   onAfterSetMix = (value: number) => {
-    this.updateMixGains(value);
+    this.wetDryMixer.setMix(value);
   };
 
   onAfterSetDecayTime = () => {
@@ -368,15 +367,6 @@ export default class Reverb
   // ============================================================================
   // Private Methods
   // ============================================================================
-
-  private updateMixGains(mix: number) {
-    // Equal-power crossfade
-    const dryGain = Math.cos((mix * Math.PI) / 2);
-    const wetGain = Math.sin((mix * Math.PI) / 2);
-
-    this.dryGainNode.gain.value = dryGain;
-    this.wetGainNode.gain.value = wetGain;
-  }
 
   private regenerateImpulseResponse() {
     const impulse = generateImpulseResponse(
