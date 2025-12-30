@@ -6,6 +6,7 @@ import VoiceScheduler, {
   voiceSchedulerPropSchema,
 } from "@/core/module/VoiceScheduler";
 import Constant, { constantPropSchema, IConstantProps } from "./Constant";
+import Delay, { delayPropSchema, IDelayProps } from "./Delay";
 import Envelope, { envelopePropSchema, IEnvelopeProps } from "./Envelope";
 import Filter, { filterPropSchema, IFilterProps } from "./Filter";
 import Gain, { gainPropSchema, IGainProps } from "./Gain";
@@ -51,6 +52,7 @@ export enum ModuleType {
   StereoPanner = "StereoPanner",
   Inspector = "Inspector",
   Constant = "Constant",
+  Delay = "Delay",
   MidiMapper = "MidiMapper",
   VirtualMidi = "VirtualMidi",
   StepSequencer = "StepSequencer",
@@ -71,6 +73,7 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.StereoPanner]: IStereoPannerProps;
   [ModuleType.Inspector]: IInspectorProps;
   [ModuleType.Constant]: IConstantProps;
+  [ModuleType.Delay]: IDelayProps;
   [ModuleType.MidiMapper]: IMidiMapperProps;
   [ModuleType.VirtualMidi]: IVirtualMidiProps;
   [ModuleType.StepSequencer]: IStepSequencerProps;
@@ -91,6 +94,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.StereoPanner]: StereoPanner;
   [ModuleType.Inspector]: Inspector;
   [ModuleType.Constant]: Constant;
+  [ModuleType.Delay]: Delay;
   [ModuleType.MidiMapper]: MidiMapper;
   [ModuleType.VirtualMidi]: VirtualMidi;
   [ModuleType.StepSequencer]: StepSequencer;
@@ -111,6 +115,7 @@ export const moduleSchemas = {
   [ModuleType.StereoPanner]: stereoPannerPropSchema,
   [ModuleType.Inspector]: inspectorPropSchema,
   [ModuleType.Constant]: constantPropSchema,
+  [ModuleType.Delay]: delayPropSchema,
   [ModuleType.MidiMapper]: midiMapperPropSchema,
   [ModuleType.VirtualMidi]: virtualMidiPropSchema,
   [ModuleType.StepSequencer]: stepSequencerPropSchema,
@@ -144,6 +149,8 @@ export type { INoise } from "./Noise";
 export { NoiseType } from "./Noise";
 export type { IReverb, IReverbProps } from "./Reverb";
 export { ReverbType } from "./Reverb";
+export { DelayTimeMode } from "./Delay";
+export type { IDelay, IDelayProps } from "./Delay";
 
 export type AnyModule = Module<ModuleType>;
 export type IAnyModule = IModule<ModuleType>;
@@ -194,6 +201,8 @@ export function createModule(
       return new Inspector(engineId, params);
     case ModuleType.Constant:
       return new Constant(engineId, params);
+    case ModuleType.Delay:
+      return new Delay(engineId, params);
     case ModuleType.MidiMapper:
       return new MidiMapper(engineId, params);
     case ModuleType.VirtualMidi:

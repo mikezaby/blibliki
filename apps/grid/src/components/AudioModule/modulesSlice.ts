@@ -45,6 +45,7 @@ export const AvailableModules: Record<
     moduleType: ModuleType.Inspector,
   },
   [ModuleType.Constant]: { name: "Constant", moduleType: ModuleType.Constant },
+  [ModuleType.Delay]: { name: "Delay", moduleType: ModuleType.Delay },
   [ModuleType.StereoPanner]: {
     name: "Stereo Panner",
     moduleType: ModuleType.StereoPanner,

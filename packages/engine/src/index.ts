@@ -37,6 +37,7 @@ export {
   PlaybackMode,
   stepPropSchema,
   NoiseType,
+  DelayTimeMode,
 } from "./modules";
 export { default as StepSequencer } from "./modules/StepSequencer";
 export type {

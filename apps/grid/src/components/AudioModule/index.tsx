@@ -2,6 +2,7 @@ import { ModuleType, ModuleTypeToPropsMapping } from "@blibliki/engine";
 import { ReactNode } from "react";
 import { useAppDispatch } from "@/hooks";
 import Constant from "./Constant";
+import Delay from "./Delay";
 import Envelope from "./Envelope";
 import { Filter } from "./Filter";
 import Gain from "./Gain";
@@ -55,6 +56,7 @@ const COMPONENT_MAPPING: {
   [ModuleType.MidiMapper]: MidiMapper,
   [ModuleType.VirtualMidi]: Keyboard,
   [ModuleType.Constant]: Constant,
+  [ModuleType.Delay]: Delay,
   [ModuleType.Scale]: Scale,
   [ModuleType.Inspector]: Inspector,
   [ModuleType.StereoPanner]: StereoPanner,

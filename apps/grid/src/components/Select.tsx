@@ -36,7 +36,7 @@ export default function Select<T extends string | number | undefined>(
   } = props;
 
   const opts: TDefOption[] = useMemo(() => {
-    if (!options.length) return options as TDefOption[];
+    if (!options.length) return [];
 
     if (options[0] instanceof Object) {
       if ("value" in options[0]) return options as TDefOption[];
