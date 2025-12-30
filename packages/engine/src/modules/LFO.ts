@@ -252,7 +252,7 @@ export class MonoLFO
   }
 
   private setupBPMListener() {
-    this.engine.transport.addClockCallback(() => {
+    this.engine.transport.addPropertyChangeCallback("bpm", () => {
       if (this.props.mode === LFOMode.bpm) {
         this.updateFrequencyFromBPM();
       }

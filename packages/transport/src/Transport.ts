@@ -64,6 +64,19 @@ export type TransportClockCallback = (
   contextTime: ContextTime,
 ) => void;
 
+/**
+ * Transport properties that can be observed for changes.
+ */
+export type TransportProperty = "bpm" | "timeSignature" | "swingAmount";
+
+/**
+ * Transport callback that gets invoked when a property changes.
+ */
+export type TransportPropertyChangeCallback<T = unknown> = (
+  value: T,
+  contextTime: ContextTime,
+) => void;
+
 export enum TransportState {
   playing = "playing",
   stopped = "stopped",
@@ -90,6 +103,10 @@ export class Transport<T extends TransportEvent> {
   private listener: Readonly<TransportListener<T>>;
 
   private _clockCallbacks: TransportClockCallback[] = [];
+  private _propertyChangeCallbacks = new Map<
+    TransportProperty,
+    TransportPropertyChangeCallback[]
+  >();
 
   constructor(
     context: Readonly<Context>,
@@ -138,6 +155,26 @@ export class Transport<T extends TransportEvent> {
         currentBar = pos.bars;
       }
     });
+  }
+
+  addPropertyChangeCallback(
+    property: TransportProperty,
+    callback: TransportPropertyChangeCallback,
+  ) {
+    if (!this._propertyChangeCallbacks.has(property)) {
+      this._propertyChangeCallbacks.set(property, []);
+    }
+    this._propertyChangeCallbacks.get(property)!.push(callback);
+  }
+
+  private triggerPropertyChange(property: TransportProperty, value: unknown) {
+    const callbacks = this._propertyChangeCallbacks.get(property);
+    if (callbacks) {
+      const contextTime = this.context.currentTime;
+      callbacks.forEach((callback) => {
+        callback(value, contextTime);
+      });
+    }
   }
 
   get time() {
@@ -208,7 +245,13 @@ export class Transport<T extends TransportEvent> {
   }
 
   set bpm(bpm: BPM) {
+    const oldBpm = this.tempo.bpm;
     this.tempo.update(this.clockTime, bpm);
+
+    // Trigger property change callbacks if BPM actually changed
+    if (oldBpm !== bpm) {
+      this.triggerPropertyChange("bpm", bpm);
+    }
   }
 
   get timeSignature() {
@@ -216,7 +259,13 @@ export class Transport<T extends TransportEvent> {
   }
 
   set timeSignature(value: TimeSignature) {
+    const oldValue = this._timeSignature;
     this._timeSignature = value;
+
+    // Trigger property change callbacks if time signature actually changed
+    if (oldValue[0] !== value[0] || oldValue[1] !== value[1]) {
+      this.triggerPropertyChange("timeSignature", value);
+    }
   }
 
   get state() {
@@ -230,7 +279,13 @@ export class Transport<T extends TransportEvent> {
   }
 
   set swingAmount(amount: NormalRange) {
+    const oldValue = this._swingAmount;
     this._swingAmount = amount;
+
+    // Trigger property change callbacks if swing amount actually changed
+    if (oldValue !== amount) {
+      this.triggerPropertyChange("swingAmount", amount);
+    }
   }
 
   private jumpTo(ticks: Ticks) {

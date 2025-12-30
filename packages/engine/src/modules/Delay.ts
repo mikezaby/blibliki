@@ -202,10 +202,10 @@ export default class Delay
   }
 
   private setupBPMListener() {
-    this.engine.transport.addClockCallback(() => {
-      if (this.props.sync) {
-        this.updateDelayTime();
-      }
+    this.engine.transport.addPropertyChangeCallback("bpm", () => {
+      if (!this.props.sync) return;
+
+      this.updateDelayTime();
     });
   }
 
@@ -318,9 +318,9 @@ export default class Delay
   // ============================================================================
 
   onAfterSetTime = (_value: number) => {
-    if (!this.props.sync) {
-      this.updateDelayTime();
-    }
+    if (this.props.sync) return;
+
+    this.updateDelayTime();
   };
 
   onAfterSetTimeMode = (value: DelayTimeMode) => {
