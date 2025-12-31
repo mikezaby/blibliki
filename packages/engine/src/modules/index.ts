@@ -5,6 +5,7 @@ import VoiceScheduler, {
   IVoiceSchedulerProps,
   voiceSchedulerPropSchema,
 } from "@/core/module/VoiceScheduler";
+import Chorus, { chorusPropSchema, IChorusProps } from "./Chorus";
 import Constant, { constantPropSchema, IConstantProps } from "./Constant";
 import Delay, { delayPropSchema, IDelayProps } from "./Delay";
 import Distortion, {
@@ -55,6 +56,7 @@ export enum ModuleType {
   Scale = "Scale",
   StereoPanner = "StereoPanner",
   Inspector = "Inspector",
+  Chorus = "Chorus",
   Constant = "Constant",
   Delay = "Delay",
   Distortion = "Distortion",
@@ -77,6 +79,7 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.Scale]: IScaleProps;
   [ModuleType.StereoPanner]: IStereoPannerProps;
   [ModuleType.Inspector]: IInspectorProps;
+  [ModuleType.Chorus]: IChorusProps;
   [ModuleType.Constant]: IConstantProps;
   [ModuleType.Delay]: IDelayProps;
   [ModuleType.Distortion]: IDistortionProps;
@@ -99,6 +102,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.Scale]: Scale;
   [ModuleType.StereoPanner]: StereoPanner;
   [ModuleType.Inspector]: Inspector;
+  [ModuleType.Chorus]: Chorus;
   [ModuleType.Constant]: Constant;
   [ModuleType.Delay]: Delay;
   [ModuleType.Distortion]: Distortion;
@@ -121,6 +125,7 @@ export const moduleSchemas = {
   [ModuleType.Scale]: scalePropSchema,
   [ModuleType.StereoPanner]: stereoPannerPropSchema,
   [ModuleType.Inspector]: inspectorPropSchema,
+  [ModuleType.Chorus]: chorusPropSchema,
   [ModuleType.Constant]: constantPropSchema,
   [ModuleType.Delay]: delayPropSchema,
   [ModuleType.Distortion]: distortionPropSchema,
@@ -160,6 +165,7 @@ export { ReverbType } from "./Reverb";
 export { DelayTimeMode } from "./Delay";
 export type { IDelay, IDelayProps } from "./Delay";
 export type { IDistortion, IDistortionProps } from "./Distortion";
+export type { IChorus, IChorusProps } from "./Chorus";
 
 export type AnyModule = Module<ModuleType>;
 export type IAnyModule = IModule<ModuleType>;
@@ -209,6 +215,8 @@ export function createModule(
       return new StereoPanner(engineId, params);
     case ModuleType.Inspector:
       return new Inspector(engineId, params);
+    case ModuleType.Chorus:
+      return new Chorus(engineId, params);
     case ModuleType.Constant:
       return new Constant(engineId, params);
     case ModuleType.Delay:

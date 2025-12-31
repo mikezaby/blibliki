@@ -45,6 +45,7 @@ export const AvailableModules: Record<
     moduleType: ModuleType.Inspector,
   },
   [ModuleType.Constant]: { name: "Constant", moduleType: ModuleType.Constant },
+  [ModuleType.Chorus]: { name: "Chorus", moduleType: ModuleType.Chorus },
   [ModuleType.Delay]: { name: "Delay", moduleType: ModuleType.Delay },
   [ModuleType.Distortion]: {
     name: "Distortion",

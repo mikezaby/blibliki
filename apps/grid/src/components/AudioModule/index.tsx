@@ -1,6 +1,7 @@
 import { ModuleType, ModuleTypeToPropsMapping } from "@blibliki/engine";
 import { ReactNode } from "react";
 import { useAppDispatch } from "@/hooks";
+import Chorus from "./Chorus";
 import Constant from "./Constant";
 import Delay from "./Delay";
 import Distortion from "./Distortion";
@@ -56,6 +57,7 @@ const COMPONENT_MAPPING: {
   [ModuleType.MidiSelector]: MidiDeviceSelector,
   [ModuleType.MidiMapper]: MidiMapper,
   [ModuleType.VirtualMidi]: Keyboard,
+  [ModuleType.Chorus]: Chorus,
   [ModuleType.Constant]: Constant,
   [ModuleType.Delay]: Delay,
   [ModuleType.Distortion]: Distortion,
