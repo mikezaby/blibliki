@@ -1,13 +1,9 @@
-import { TPB } from "@blibliki/transport";
+import { Division, divisionToMilliseconds } from "@blibliki/transport";
 import { Context } from "@blibliki/utils";
 import { EnumProp, ModulePropSchema } from "@/core";
 import { Module, SetterHooks } from "@/core/module/Module";
 import { WetDryMixer } from "@/utils";
-import { ICreateModule, ModuleType, NOTE_DIVISIONS, NoteDivision } from ".";
-
-// ============================================================================
-// Types
-// ============================================================================
+import { ICreateModule, ModuleType } from ".";
 
 export enum DelayTimeMode {
   short = "short",
@@ -18,7 +14,7 @@ export type IDelayProps = {
   time: number; // 0-2000 ms (short) or 0-5000 ms (long)
   timeMode: DelayTimeMode; // short (2s) or long (5s)
   sync: boolean; // Enable BPM sync
-  division: NoteDivision; // Note division when sync is enabled
+  division: Division; // Note division when sync is enabled
   feedback: number; // 0-0.95 (feedback amount)
   mix: number; // 0-1 (dry/wet)
   stereo: boolean; // Enable ping-pong stereo mode
@@ -26,50 +22,38 @@ export type IDelayProps = {
 
 export type IDelay = Module<ModuleType.Delay>;
 
-// Map note divisions to ticks (from LFO module)
-const DIVISION_TO_TICKS: Record<NoteDivision, number> = {
-  "1/64": TPB / 16,
-  "1/48": TPB / 12,
-  "1/32": TPB / 8,
-  "1/24": TPB / 6,
-  "1/16": TPB / 4,
-  "1/12": TPB / 3,
-  "1/8": TPB / 2,
-  "1/6": (TPB * 2) / 3,
-  "3/16": (TPB * 3) / 4,
-  "1/4": TPB,
-  "5/16": (TPB * 5) / 4,
-  "1/3": (TPB * 4) / 3,
-  "3/8": (TPB * 3) / 2,
-  "1/2": TPB * 2,
-  "3/4": TPB * 3,
-  "1": TPB * 4,
-  "1.5": TPB * 6,
-  "2": TPB * 8,
-  "3": TPB * 12,
-  "4": TPB * 16,
-  "6": TPB * 24,
-  "8": TPB * 32,
-  "16": TPB * 64,
-  "32": TPB * 128,
-};
-
-function divisionToMilliseconds(division: NoteDivision, bpm: number): number {
-  const ticksPerDivision = DIVISION_TO_TICKS[division];
-  const beatsPerDivision = ticksPerDivision / TPB;
-  const secondsPerDivision = beatsPerDivision * (60 / bpm);
-  return secondsPerDivision * 1000;
-}
-
-// ============================================================================
-// Schema
-// ============================================================================
+const NOTE_DIVISIONS: Division[] = [
+  "1/64",
+  "1/48",
+  "1/32",
+  "1/24",
+  "1/16",
+  "1/12",
+  "1/8",
+  "1/6",
+  "3/16",
+  "1/4",
+  "5/16",
+  "1/3",
+  "3/8",
+  "1/2",
+  "3/4",
+  "1",
+  "1.5",
+  "2",
+  "3",
+  "4",
+  "6",
+  "8",
+  "16",
+  "32",
+];
 
 export const delayPropSchema: ModulePropSchema<
   IDelayProps,
   {
     timeMode: EnumProp<DelayTimeMode>;
-    division: EnumProp<NoteDivision>;
+    division: EnumProp<Division>;
   }
 > = {
   time: {
@@ -335,7 +319,7 @@ export default class Delay
     this.updateDelayTime();
   };
 
-  onAfterSetDivision = (_value: NoteDivision) => {
+  onAfterSetDivision = (_value: Division) => {
     if (this.props.sync) {
       this.updateDelayTime();
     }

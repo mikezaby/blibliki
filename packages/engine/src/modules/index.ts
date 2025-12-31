@@ -143,8 +143,8 @@ export type {
 export { Resolution, PlaybackMode, stepPropSchema } from "./StepSequencer";
 export type { IMidiMapper, IMidiMapperProps, MidiMapping } from "./MidiMapper";
 export { MidiMappingMode } from "./MidiMapper";
-export type { ILFO, ILFOProps, NoteDivision } from "./LFO";
-export { LFOMode, LFOWaveform, NOTE_DIVISIONS } from "./LFO";
+export type { ILFO, ILFOProps } from "./LFO";
+export { LFOWaveform } from "./LFO";
 export type { INoise } from "./Noise";
 export { NoiseType } from "./Noise";
 export type { IReverb, IReverbProps } from "./Reverb";

@@ -105,100 +105,68 @@ export function swing(time: Ticks, amount: NormalRange): Ticks {
   return Math.floor((t8i + tn) * 7680);
 }
 
-/**
- * Duration notation:
- * - "n" = note (64n = 64th note, 32n = 32nd note, 16n = 16th note, etc.)
- * - "t" = triplet (16t = 16th note triplet)
- * - "." = dotted (adds half the duration, e.g., 4n. = quarter + eighth)
- * - "m" = measure/bar (1m = 1 bar, 1.5m = 1.5 bars, etc.)
- * - "infinite" = hold forever (no noteoff, caller must handle)
- */
-export type NoteDuration =
-  | "64n"
-  | "64t"
-  | "32n"
-  | "32t"
-  | "32n."
-  | "16n"
-  | "16t"
-  | "16n."
-  | "8n"
-  | "8t"
-  | "8n."
-  | "4n"
-  | "4t"
-  | "4n."
-  | "2n"
-  | "2t"
-  | "2n."
-  | "1m"
-  | "1.5m"
-  | "2m"
-  | "2.5m"
-  | "3m"
-  | "3.5m"
-  | "4m"
-  | "5m"
-  | "6m"
-  | "7m"
-  | "8m"
-  | "infinite";
+// We will update the type to be more flexible when there is a need for it
+export type Division =
+  | "1/64"
+  | "1/48"
+  | "1/32"
+  | "1/24"
+  | "1/16"
+  | "1/12"
+  | "1/8"
+  | "1/6"
+  | "3/16"
+  | "1/4"
+  | "5/16"
+  | "1/3"
+  | "3/8"
+  | "1/2"
+  | "3/4"
+  | "1"
+  | "1.5"
+  | "2"
+  | "3"
+  | "4"
+  | "6"
+  | "8"
+  | "16"
+  | "32"
+  | "infinity";
 
-/**
- * Convert NoteDuration to ticks.
- * Returns null for "infinite" duration.
- *
- * Calculation:
- * - Base note: TPB * (4 / noteValue)
- *   - 64n = TPB * 4/64 = TPB/16
- *   - 32n = TPB * 4/32 = TPB/8
- *   - 16n = TPB * 4/16 = TPB/4
- *   - 8n = TPB * 4/8 = TPB/2
- *   - 4n = TPB * 4/4 = TPB (quarter note)
- *   - 2n = TPB * 4/2 = TPB*2 (half note)
- *   - 1n = TPB * 4/1 = TPB*4 (whole note = 1 bar in 4/4)
- * - Triplet (t): multiply by 2/3
- * - Dotted (.): multiply by 1.5
- * - Measure (m): multiply by 4 * TPB
- */
-export function durationToTicks(duration: NoteDuration): Ticks {
+export function divisionToTicks(division: Division): Ticks {
   // Defensive: handle invalid input (runtime safety for old data)
-  if (typeof duration !== "string") {
-    console.warn(`Invalid duration value, using default "8n."`);
-    duration = "8n." as NoteDuration;
+  if (typeof division !== "string") {
+    console.error(`Invalid duration value, using default "8n."`);
+    division = "1/8";
   }
 
-  if (duration === "infinite") return Infinity;
+  let ticks: Ticks;
 
-  // Handle measure notation (bars)
-  if (duration.endsWith("m")) {
-    const bars = parseFloat(duration.slice(0, -1));
-    return Math.round(bars * 4 * TPB); // 1 bar = 4 quarters = 4 * TPB
-  }
+  if (division === "infinity") return Infinity;
 
-  // Parse note notation
-  const isDotted = duration.endsWith(".");
-  const isTriplet = duration.endsWith("t");
-  const noteStr = isDotted
-    ? duration.slice(0, -2)
-    : isTriplet
-      ? duration.slice(0, -1)
-      : duration.slice(0, -1);
+  if (division.match(/\d\/\d/)) {
+    const [num, den] = division.split("/").map(Number);
+    if (!num || !den)
+      throw Error(`Note duration parsing error for value: ${division}`);
 
-  const noteValue = parseInt(noteStr, 10);
-
-  // Calculate base duration in ticks
-  let ticks = (TPB * 4) / noteValue;
-
-  // Apply triplet (2/3 of normal duration)
-  if (isTriplet) {
-    ticks = (ticks * 2) / 3;
-  }
-
-  // Apply dotted (1.5x normal duration)
-  if (isDotted) {
-    ticks = ticks * 1.5;
+    ticks = (TPB * num) / (den / 4);
+  } else {
+    ticks = TPB * Number(division) * 4;
   }
 
   return Math.round(ticks);
+}
+
+export function divisionToFrequency(division: Division, bpm: BPM): number {
+  const ticks = divisionToTicks(division);
+  const beatsPerDivision = ticks / TPB;
+  const secondsPerDivision = beatsPerDivision * (60 / bpm);
+  return 1 / secondsPerDivision;
+}
+
+export function divisionToMilliseconds(division: Division, bpm: BPM): number {
+  const ticksPerDivision = divisionToTicks(division);
+  const beatsPerDivision = ticksPerDivision / TPB;
+  const secondsPerDivision = beatsPerDivision * (60 / bpm);
+  return secondsPerDivision * 1000;
 }

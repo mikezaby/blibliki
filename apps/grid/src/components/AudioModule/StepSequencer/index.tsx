@@ -22,7 +22,7 @@ const createDefaultStep = (): IStep => ({
   ccMessages: [],
   probability: 100,
   microtimeOffset: 0,
-  duration: "16n",
+  duration: "1/16",
 });
 
 // Helper to create default page

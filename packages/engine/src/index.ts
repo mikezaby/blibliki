@@ -30,9 +30,7 @@ export {
   moduleSchemas,
   OscillatorWave,
   MidiMappingMode,
-  LFOMode,
   LFOWaveform,
-  NOTE_DIVISIONS,
   Resolution,
   PlaybackMode,
   stepPropSchema,
@@ -59,6 +57,5 @@ export type {
   MidiMapping,
   ILFO,
   ILFOProps,
-  NoteDivision,
   INoise,
 } from "./modules";

@@ -1,9 +1,4 @@
-import {
-  DelayTimeMode,
-  ModuleType,
-  moduleSchemas,
-  NOTE_DIVISIONS,
-} from "@blibliki/engine";
+import { DelayTimeMode, ModuleType, moduleSchemas } from "@blibliki/engine";
 import Fader, { MarkProps } from "@/components/Fader";
 import { ModuleComponent } from ".";
 import Container from "./Container";
@@ -22,28 +17,27 @@ const MIX_MARKS: MarkProps[] = [
   { value: 1, label: "Wet" },
 ];
 
+const schema = moduleSchemas.Delay;
+
+const DIVISIONS = schema.division.options;
+const DIVISION_MARKS: MarkProps[] = DIVISIONS.map((duration, i) => {
+  return { value: i, label: duration };
+});
+
 const Delay: ModuleComponent<ModuleType.Delay> = (props) => {
   const {
     updateProp,
     props: { time, timeMode, sync, division, feedback, mix, stereo },
   } = props;
 
-  const schema = moduleSchemas[ModuleType.Delay];
-
   // Calculate max time based on mode
   const maxTime = timeMode === DelayTimeMode.short ? 2000 : 5000;
 
   // Division index for fader (0-22)
-  const divisionIndex = NOTE_DIVISIONS.indexOf(division);
+  const divisionIndex = DIVISIONS.indexOf(division);
   const updateDivision = (index: number) => {
-    updateProp("division")(NOTE_DIVISIONS[index]!);
+    updateProp("division")(DIVISIONS[index]!);
   };
-
-  // Create marks for division fader to show in tooltip
-  const DIVISION_MARKS: MarkProps[] = NOTE_DIVISIONS.map((div, index) => ({
-    value: index,
-    label: div,
-  }));
 
   return (
     <div className="flex flex-col gap-y-8">
@@ -76,7 +70,7 @@ const Delay: ModuleComponent<ModuleType.Delay> = (props) => {
           <Fader
             name="Time"
             min={0}
-            max={NOTE_DIVISIONS.length - 1}
+            max={DIVISIONS.length - 1}
             step={1}
             value={divisionIndex}
             onChange={updateDivision}

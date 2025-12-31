@@ -5,8 +5,13 @@ export type {
   TransportPropertyChangeCallback,
 } from "./Transport";
 export { Position } from "./Position";
-export { TPB, durationToTicks } from "./utils";
-export type { NoteDuration } from "./utils";
+export {
+  TPB,
+  divisionToTicks,
+  divisionToFrequency,
+  divisionToMilliseconds,
+} from "./utils";
+export type { Division } from "./utils";
 export type {
   Seconds,
   Ticks,

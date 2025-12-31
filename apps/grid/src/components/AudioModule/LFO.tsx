@@ -1,15 +1,10 @@
-import { LFOMode, ModuleType } from "@blibliki/engine";
+import { ModuleType } from "@blibliki/engine";
 import { moduleSchemas } from "@blibliki/engine";
 import type { MarkProps } from "@/components/Fader";
 import Fader from "@/components/Fader";
 import type { ModuleComponent } from ".";
 import Container from "./Container";
-import { SelectField } from "./attributes/Field";
-
-const MODE_MARKS: MarkProps[] = [
-  { value: 0, label: "Free" },
-  { value: 1, label: "BPM" },
-];
+import { CheckboxField, SelectField } from "./attributes/Field";
 
 const OFFSET_MARKS: MarkProps[] = [
   { value: -1, label: "-1" },
@@ -23,52 +18,52 @@ const AMOUNT_MARKS: MarkProps[] = [
   { value: 1, label: "1" },
 ];
 
+const schema = moduleSchemas.LFO;
+
+const DIVISIONS = schema.division.options;
+const DIVISION_MARKS: MarkProps[] = DIVISIONS.map((division, i) => {
+  return { value: i, label: division };
+});
+
 const LFO: ModuleComponent<ModuleType.LFO> = (props) => {
   const {
     updateProp,
-    props: { mode, frequency, division, waveform, offset, amount },
+    props: { sync, frequency, division, waveform, offset, amount },
   } = props;
 
-  const schema = moduleSchemas[ModuleType.LFO];
-
-  // Mode conversion
-  const modeIndex = mode === LFOMode.free ? 0 : 1;
-  const updateModeProp = (value: number) => {
-    updateProp("mode")(value === 0 ? LFOMode.free : LFOMode.bpm);
+  const divisionIndex = DIVISIONS.indexOf(division);
+  const updateDivision = (index: number) => {
+    updateProp("division")(DIVISIONS[index]!);
   };
 
   return (
     <div className="flex flex-col gap-y-8">
       <Container className="justify-start">
-        {mode === LFOMode.bpm && (
-          <SelectField
-            name="Division"
-            value={division}
-            schema={moduleSchemas[ModuleType.LFO].division}
-            onChange={updateProp("division")}
-          />
-        )}
-
         <SelectField
           name="Waveform"
           value={waveform}
           schema={moduleSchemas[ModuleType.LFO].waveform}
           onChange={updateProp("waveform")}
         />
+
+        <CheckboxField
+          name="Sync"
+          value={sync}
+          schema={schema.sync}
+          onChange={updateProp("sync")}
+        />
       </Container>
 
       <Container>
-        <Fader
-          name="Mode"
-          marks={MODE_MARKS}
-          min={0}
-          max={1}
-          step={1}
-          value={modeIndex}
-          onChange={updateModeProp}
-        />
-
-        {mode === LFOMode.free && (
+        {sync ? (
+          <Fader
+            name="Devision"
+            value={divisionIndex}
+            onChange={updateDivision}
+            marks={DIVISION_MARKS}
+            hideMarks={true}
+          />
+        ) : (
           <Fader
             name="Freq (Hz)"
             min={schema.frequency.min}

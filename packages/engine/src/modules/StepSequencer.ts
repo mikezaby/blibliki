@@ -1,8 +1,8 @@
 import {
   ClockTime,
   ContextTime,
-  durationToTicks,
-  NoteDuration,
+  Division,
+  divisionToMilliseconds,
   Ticks,
   TPB,
   TransportState,
@@ -40,7 +40,7 @@ export type IStep = {
   ccMessages: IStepCC[]; // Multiple CC messages per step
   probability: number; // 0-100% chance to trigger
   microtimeOffset: number; // -50 to +50 ticks offset
-  duration: NoteDuration;
+  duration: Division;
 };
 
 // Page contains multiple steps
@@ -127,11 +127,37 @@ export const stepSequencerPropSchema: ModulePropSchema<
   },
 };
 
-// Schema for step properties (used by UI to configure faders)
+const NOTE_DIVISIONS: Division[] = [
+  "1/64",
+  "1/48",
+  "1/32",
+  "1/24",
+  "1/16",
+  "1/12",
+  "1/8",
+  "1/6",
+  "3/16",
+  "1/4",
+  "5/16",
+  "1/3",
+  "3/8",
+  "1/2",
+  "3/4",
+  "1",
+  "1.5",
+  "2",
+  "3",
+  "4",
+  "6",
+  "8",
+  "16",
+  "32",
+];
+
 export const stepPropSchema: ModulePropSchema<
   Pick<IStep, "probability" | "duration" | "microtimeOffset">,
   {
-    duration: EnumProp<NoteDuration>;
+    duration: EnumProp<Division>;
   }
 > = {
   probability: {
@@ -144,37 +170,7 @@ export const stepPropSchema: ModulePropSchema<
   duration: {
     kind: "enum",
     label: "Duration",
-    options: [
-      "64n",
-      "64t",
-      "32n",
-      "32t",
-      "32n.",
-      "16n",
-      "16t",
-      "16n.",
-      "8n",
-      "8t",
-      "8n.",
-      "4n",
-      "4t",
-      "4n.",
-      "2n",
-      "2t",
-      "2n.",
-      "1m",
-      "1.5m",
-      "2m",
-      "2.5m",
-      "3m",
-      "3.5m",
-      "4m",
-      "5m",
-      "6m",
-      "7m",
-      "8m",
-      "infinite",
-    ] as const,
+    options: NOTE_DIVISIONS,
   },
   microtimeOffset: {
     kind: "number",
@@ -192,7 +188,7 @@ const createDefaultStep = (): IStep => ({
   ccMessages: [],
   probability: 100,
   microtimeOffset: 0,
-  duration: "16n",
+  duration: "1/16",
 });
 
 // Create a default page with 16 empty steps
@@ -445,7 +441,7 @@ export default class StepSequencer
     const microtimeOffsetSeconds =
       (step.microtimeOffset / MICROTIMING_STEP) * (60 / bpm);
     const noteDurationSeconds =
-      (durationToTicks(step.duration) / TPB) * (60 / bpm);
+      divisionToMilliseconds(step.duration, bpm) * 1000;
 
     const noteTime = contextTime + microtimeOffsetSeconds;
 

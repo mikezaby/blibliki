@@ -1,4 +1,4 @@
-import { TPB } from "@blibliki/transport";
+import { Division, divisionToFrequency } from "@blibliki/transport";
 import { Context } from "@blibliki/utils";
 import { ConstantSourceNode, GainNode } from "@blibliki/utils/web-audio-api";
 import { IModule, Module } from "@/core";
@@ -10,11 +10,6 @@ import { ICreateModule, ModuleType } from ".";
 
 export type ILFO = IModule<ModuleType.LFO>;
 
-export enum LFOMode {
-  free = "free",
-  bpm = "bpm",
-}
-
 export enum LFOWaveform {
   sine = "sine",
   triangle = "triangle",
@@ -24,33 +19,7 @@ export enum LFOWaveform {
   random = "random",
 }
 
-export type NoteDivision =
-  | "1/64"
-  | "1/48"
-  | "1/32"
-  | "1/24"
-  | "1/16"
-  | "1/12"
-  | "1/8"
-  | "1/6"
-  | "3/16"
-  | "1/4"
-  | "5/16"
-  | "1/3"
-  | "3/8"
-  | "1/2"
-  | "3/4"
-  | "1"
-  | "1.5"
-  | "2"
-  | "3"
-  | "4"
-  | "6"
-  | "8"
-  | "16"
-  | "32";
-
-export const NOTE_DIVISIONS: NoteDivision[] = [
+const DIVISIONS: Division[] = [
   "1/64",
   "1/48",
   "1/32",
@@ -78,16 +47,16 @@ export const NOTE_DIVISIONS: NoteDivision[] = [
 ];
 
 export type ILFOProps = {
-  mode: LFOMode;
+  sync: boolean;
   frequency: number;
-  division: NoteDivision;
+  division: Division;
   waveform: LFOWaveform;
   offset: number;
   amount: number;
 };
 
 const DEFAULT_PROPS: ILFOProps = {
-  mode: LFOMode.free,
+  sync: false,
   frequency: 1.0,
   division: "1/4",
   waveform: LFOWaveform.sine,
@@ -98,15 +67,13 @@ const DEFAULT_PROPS: ILFOProps = {
 export const lfoPropSchema: ModulePropSchema<
   ILFOProps,
   {
-    mode: EnumProp<LFOMode>;
-    division: EnumProp<NoteDivision>;
+    division: EnumProp<Division>;
     waveform: EnumProp<LFOWaveform>;
   }
 > = {
-  mode: {
-    kind: "enum",
-    options: Object.values(LFOMode),
-    label: "Mode",
+  sync: {
+    kind: "boolean",
+    label: "Sync",
   },
   frequency: {
     kind: "number",
@@ -118,7 +85,7 @@ export const lfoPropSchema: ModulePropSchema<
   },
   division: {
     kind: "enum",
-    options: NOTE_DIVISIONS,
+    options: DIVISIONS,
     label: "Division",
   },
   waveform: {
@@ -142,41 +109,6 @@ export const lfoPropSchema: ModulePropSchema<
   },
 };
 
-// Map note divisions to ticks
-const DIVISION_TO_TICKS: Record<NoteDivision, number> = {
-  "1/64": TPB / 16,
-  "1/48": TPB / 12,
-  "1/32": TPB / 8,
-  "1/24": TPB / 6,
-  "1/16": TPB / 4,
-  "1/12": TPB / 3,
-  "1/8": TPB / 2,
-  "1/6": (TPB * 2) / 3,
-  "3/16": (TPB * 3) / 4,
-  "1/4": TPB,
-  "5/16": (TPB * 5) / 4,
-  "1/3": (TPB * 4) / 3,
-  "3/8": (TPB * 3) / 2,
-  "1/2": TPB * 2,
-  "3/4": TPB * 3,
-  "1": TPB * 4,
-  "1.5": TPB * 6,
-  "2": TPB * 8,
-  "3": TPB * 12,
-  "4": TPB * 16,
-  "6": TPB * 24,
-  "8": TPB * 32,
-  "16": TPB * 64,
-  "32": TPB * 128,
-};
-
-function divisionToFrequency(division: NoteDivision, bpm: number): number {
-  const ticksPerDivision = DIVISION_TO_TICKS[division];
-  const beatsPerDivision = ticksPerDivision / TPB;
-  const secondsPerDivision = beatsPerDivision * (60 / bpm);
-  return 1 / secondsPerDivision;
-}
-
 type LFOSetterHooks = SetterHooks<ILFOProps>;
 
 export class MonoLFO
@@ -184,7 +116,7 @@ export class MonoLFO
   implements
     Pick<
       LFOSetterHooks,
-      | "onAfterSetMode"
+      | "onAfterSetSync"
       | "onAfterSetFrequency"
       | "onAfterSetDivision"
       | "onAfterSetWaveform"
@@ -253,9 +185,9 @@ export class MonoLFO
 
   private setupBPMListener() {
     this.engine.transport.addPropertyChangeCallback("bpm", () => {
-      if (this.props.mode === LFOMode.bpm) {
-        this.updateFrequencyFromBPM();
-      }
+      if (!this.props.sync) return;
+
+      this.updateFrequencyFromBPM();
     });
   }
 
@@ -267,10 +199,10 @@ export class MonoLFO
   }
 
   private updateFrequency() {
-    if (this.props.mode === LFOMode.free) {
-      this.frequencyParam.value = this.props.frequency;
-    } else {
+    if (this.props.sync) {
       this.updateFrequencyFromBPM();
+    } else {
+      this.frequencyParam.value = this.props.frequency;
     }
   }
 
@@ -302,20 +234,16 @@ export class MonoLFO
     return this.audioNode.parameters.get("phase")!;
   }
 
-  onAfterSetMode: LFOSetterHooks["onAfterSetMode"] = () => {
+  onAfterSetSync: LFOSetterHooks["onAfterSetSync"] = () => {
     this.updateFrequency();
   };
 
   onAfterSetFrequency: LFOSetterHooks["onAfterSetFrequency"] = (value) => {
-    if (this.props.mode === LFOMode.free) {
-      this.frequencyParam.value = value;
-    }
+    this.frequencyParam.value = value;
   };
 
   onAfterSetDivision: LFOSetterHooks["onAfterSetDivision"] = () => {
-    if (this.props.mode === LFOMode.bpm) {
-      this.updateFrequencyFromBPM();
-    }
+    this.updateFrequencyFromBPM();
   };
 
   onAfterSetWaveform: LFOSetterHooks["onAfterSetWaveform"] = (value) => {
