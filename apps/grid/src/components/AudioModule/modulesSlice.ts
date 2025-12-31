@@ -46,6 +46,10 @@ export const AvailableModules: Record<
   },
   [ModuleType.Constant]: { name: "Constant", moduleType: ModuleType.Constant },
   [ModuleType.Delay]: { name: "Delay", moduleType: ModuleType.Delay },
+  [ModuleType.Distortion]: {
+    name: "Distortion",
+    moduleType: ModuleType.Distortion,
+  },
   [ModuleType.StereoPanner]: {
     name: "Stereo Panner",
     moduleType: ModuleType.StereoPanner,

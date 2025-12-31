@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 import { useAppDispatch } from "@/hooks";
 import Constant from "./Constant";
 import Delay from "./Delay";
+import Distortion from "./Distortion";
 import Envelope from "./Envelope";
 import { Filter } from "./Filter";
 import Gain from "./Gain";
@@ -57,6 +58,7 @@ const COMPONENT_MAPPING: {
   [ModuleType.VirtualMidi]: Keyboard,
   [ModuleType.Constant]: Constant,
   [ModuleType.Delay]: Delay,
+  [ModuleType.Distortion]: Distortion,
   [ModuleType.Scale]: Scale,
   [ModuleType.Inspector]: Inspector,
   [ModuleType.StereoPanner]: StereoPanner,
