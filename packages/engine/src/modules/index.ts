@@ -181,6 +181,7 @@ export type ModuleParams = {
     | ModuleType.VoiceScheduler
     | ModuleType.Scale
     | ModuleType.LFO
+    | ModuleType.Distortion
     ? IPolyModuleConstructor<K>
     : ICreateModule<K>;
 }[ModuleType];
