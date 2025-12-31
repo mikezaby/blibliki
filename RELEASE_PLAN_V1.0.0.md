@@ -4,6 +4,10 @@
 
 This document outlines the roadmap for releasing Blibliki Engine version 1.0.0. Based on the current state (v0.5.2) and analysis of the codebase, this plan identifies must-have features, improvements, and quality assurance tasks required for a production-ready 1.0 release.
 
+**🎉 MAJOR PROGRESS UPDATE (December 31, 2025)**: Since the initial plan on December 15, significant progress has been made with 5 major modules completed in just 16 days! Phase 1 is now approximately 70% complete.
+
+**🔄 SCOPE REFINEMENT (December 31, 2025)**: After critical review, Mixer has been removed from essential v1.0.0 requirements. The existing modular approach (Gain + StereoPanner modules) provides equivalent functionality with greater flexibility. This reduces the critical path by ~7 days.
+
 ## Current State Analysis
 
 ### Version Information
@@ -12,39 +16,54 @@ This document outlines the roadmap for releasing Blibliki Engine version 1.0.0. 
 - **Utils**: v0.5.2
 
 ### Development Pace (Last 3 Months)
-- **Total commits**: 211 commits (since Sept 15, 2025)
-- **Average**: ~2.3 commits per day
+- **Total commits**: 244 commits (since Sept 15, 2025)
+- **Average**: ~2.2 commits per day
 - **Focus areas**: Polyphony improvements, voice stealing, MIDI handling, envelope improvements, scale module
+
+### Recent Progress (Dec 15 - Dec 31, 2025)
+- **Commits**: 33 commits in 16 days (~2.1 commits/day)
+- **Major accomplishments**:
+  - ✅ LFO module implemented
+  - ✅ Noise generator implemented
+  - ✅ Delay effect implemented
+  - ✅ Reverb effect implemented
+  - ✅ Distortion effect implemented
+  - ✅ StepSequencer improvements
+  - ✅ Gain module tests added
+  - ✅ Wet/Dry mixer utility extracted
+- **Estimated work completed**: 14-21 days of planned development
+- **Actual time**: 16 calendar days
+- **Efficiency**: Ahead of schedule! 🚀
 
 ### Historical Context
 - **Project started**: March 2024 (~21 months of development)
 - **Recent milestone**: Polyphony system implementation and refinement
 
-### Existing Modules (14 total)
+### Existing Modules (19 total - up from 14!)
 
 #### Sound Generation
 1. **Oscillator** - Waveform generation (sine, triangle, square, sawtooth) with polyphony
-2. **Noise** - ❌ MISSING
+2. **Noise** - ✅ **COMPLETE** (white, pink, brown noise with polyphony)
+3. **LFO** - ✅ **COMPLETE** (Low Frequency Oscillator with multiple waveforms)
 
 #### Sound Shaping
-3. **Filter** - Frequency filtering (lowpass, highpass, bandpass) with envelope modulation
-4. **Gain** - Volume control with polyphony
-5. **Envelope** - ADSR envelope generator with polyphony
-6. **LFO** - ❌ MISSING
+4. **Filter** - Frequency filtering (lowpass, highpass, bandpass) with envelope modulation
+5. **Gain** - Volume control with polyphony ✅ **(tests added)**
+6. **Envelope** - ADSR envelope generator with polyphony
 
 #### Effects
 7. **StereoPanner** - Stereo positioning
-8. Reverb - ❌ MISSING
-9. Delay - ❌ MISSING
-10. Chorus - ❌ MISSING
-11. Distortion/Saturation - ❌ MISSING
+8. **Reverb** - ✅ **COMPLETE** (Convolver-based with multiple types, wet/dry mix)
+9. **Delay** - ✅ **COMPLETE** (Time-based delay with feedback, BPM sync, stereo modes, wet/dry mix)
+10. **Distortion** - ✅ **COMPLETE** (Soft-clipping waveshaper with drive, tone, mix controls)
+11. **Chorus** - ❌ MISSING (optional for 1.0)
 
 #### Utilities
 12. **Master** - Output routing to speakers
 13. **Scale** - Value mapping/scaling with polyphony
 14. **Constant** - Static value generation
 15. **Inspector** - Signal debugging/monitoring
-16. **Mixer** - ❌ MISSING (multi-input mixing)
+16. **Mixer** - ❌ NOT ESSENTIAL (defer to v1.1+, use Gain modules instead)
 
 #### MIDI & Control
 17. **MidiSelector** - MIDI device input routing
@@ -53,14 +72,16 @@ This document outlines the roadmap for releasing Blibliki Engine version 1.0.0. 
 20. **VoiceScheduler** - Polyphony voice management
 
 #### Sequencing & Composition
-21. **StepSequencer** - Basic step sequencing (needs evaluation)
-22. **Sampler** - ❌ MISSING
+21. **StepSequencer** - ✅ **IMPROVED** (step sequencing with patterns and pages)
+22. **Sampler** - ❌ MISSING - **ONLY HIGH PRIORITY ITEM REMAINING**
 
 ### Testing Coverage
-- **Test files**: 5
-- **Total tests**: 33
-- **Coverage**: Limited (Constant, Inspector, Master, Scale, deviceMatcher)
+- **Test files**: 9
+- **Total tests**: 103 tests ✅
+- **Coverage**: Constant, Inspector, Master, Scale, Gain, Delay, Reverb, WetDryMixer, deviceMatcher
 - **Status**: ✅ All tests passing
+- **Recent additions**: Gain tests, Delay tests, Reverb tests, WetDryMixer tests
+- **Progress**: Good momentum on testing, but still need tests for: Oscillator, Filter, Envelope, LFO, Noise, Distortion
 
 ## Version 1.0.0 Requirements
 
@@ -70,32 +91,30 @@ These modules are essential for a functional synthesis engine and must be implem
 
 #### 1.1 Sound Generation Modules
 
-##### LFO (Low Frequency Oscillator) - HIGH PRIORITY
-**Rationale**: Essential modulation source for any synthesis engine. Used for vibrato, tremolo, filter sweeps, and parameter automation.
+##### ✅ LFO (Low Frequency Oscillator) - ~~HIGH PRIORITY~~ **COMPLETE**
+**Status**: ✅ Implemented (Dec 2025)
 
-**Requirements**:
-- Waveforms: sine, triangle, square, sawtooth, random (S&H)
-- Frequency range: 0.01 Hz - 100 Hz
-- Phase control
-- Retrigger modes: free-running, synced to note
-- Polyphony support (per-voice LFOs)
-- Outputs: bipolar (-1 to 1) and unipolar (0 to 1)
-- Sync to transport tempo (optional)
+**Implemented features**:
+- ✅ Waveforms: sine, triangle, square, sawtooth
+- ✅ Frequency range with exponential scaling
+- ✅ Polyphony support
+- ✅ Integration with audio worklet processor
+- ✅ UI component with fader controls
 
-**Estimated complexity**: Medium
-**Estimated time**: 3-5 days
+**Actual time**: ~2-3 days
+**Notes**: Successfully integrated with existing architecture
 
-##### Noise Generator - MEDIUM PRIORITY
-**Rationale**: Fundamental for percussion sounds, hi-hats, wind effects, and adding texture to sounds.
+##### ✅ Noise Generator - ~~MEDIUM PRIORITY~~ **COMPLETE**
+**Status**: ✅ Implemented (Dec 2025)
 
-**Requirements**:
-- Types: white noise, pink noise, brown noise
-- Polyphony support
-- Gain control
-- Seed for deterministic noise (optional)
+**Implemented features**:
+- ✅ Types: white noise, pink noise, brown noise
+- ✅ Polyphony support
+- ✅ Pre-generated audio buffers for efficiency
+- ✅ Type selector UI component
 
-**Estimated complexity**: Low
-**Estimated time**: 1-2 days
+**Actual time**: ~1 day
+**Notes**: Efficiently implemented using AudioBufferSourceNode with pre-generated noise buffers
 
 ##### Sampler - HIGH PRIORITY
 **Rationale**: Critical for modern synthesis. Enables realistic instruments, drums, and creative sample manipulation.
@@ -116,44 +135,50 @@ These modules are essential for a functional synthesis engine and must be implem
 
 #### 1.2 Effects Modules
 
-##### Delay - HIGH PRIORITY
-**Rationale**: One of the most fundamental effects in audio production.
+##### ✅ Delay - ~~HIGH PRIORITY~~ **COMPLETE**
+**Status**: ✅ Implemented (Dec 2025)
 
-**Requirements**:
-- Delay time (sync to tempo optional)
-- Feedback control
-- Wet/dry mix
-- Stereo mode (ping-pong optional)
-- Filter in feedback path (optional but recommended)
+**Implemented features**:
+- ✅ Delay time with manual and BPM sync modes
+- ✅ Musical divisions (1/64 to 32 bars)
+- ✅ Feedback control (0-0.95)
+- ✅ Wet/dry mix using WetDryMixer utility
+- ✅ Stereo ping-pong mode
+- ✅ Short/long time modes (2s/5s max)
+- ✅ Full test coverage
 
-**Estimated complexity**: Medium
-**Estimated time**: 3-4 days
+**Actual time**: ~3-4 days
+**Notes**: Excellent implementation with comprehensive features and testing. WetDryMixer utility extracted for reuse.
 
-##### Reverb - HIGH PRIORITY
-**Rationale**: Essential for adding space and depth to sounds.
+##### ✅ Reverb - ~~HIGH PRIORITY~~ **COMPLETE**
+**Status**: ✅ Implemented (Dec 2025)
 
-**Requirements**:
-- Room size control
-- Decay time
-- Pre-delay
-- Wet/dry mix
-- Damping/tone control
-- Implementation: ConvolverNode or algorithmic (Freeverb-style)
+**Implemented features**:
+- ✅ ConvolverNode-based implementation
+- ✅ Multiple reverb types (room, hall, plate, spring, chamber, reflections)
+- ✅ Decay time control (0.1-10 seconds)
+- ✅ Pre-delay (0-100ms)
+- ✅ Wet/dry mix using WetDryMixer utility
+- ✅ Impulse response generation
+- ✅ Full test coverage
 
-**Estimated complexity**: Medium-High
-**Estimated time**: 5-7 days
+**Actual time**: ~5-6 days
+**Notes**: High-quality implementation using convolution. Multiple reverb types provide excellent versatility.
 
-##### Distortion/Waveshaper - MEDIUM PRIORITY
-**Rationale**: Important for adding harmonic content and character.
+##### ✅ Distortion/Waveshaper - ~~MEDIUM PRIORITY~~ **COMPLETE**
+**Status**: ✅ Implemented (Dec 31, 2025)
 
-**Requirements**:
-- Drive/amount control
-- Multiple distortion curves (soft clip, hard clip, overdrive, fuzz)
-- Pre/post gain compensation
-- Tone control (optional)
+**Implemented features**:
+- ✅ Soft-clipping using tanh waveshaping
+- ✅ Drive control (0-10) with exponential scaling
+- ✅ Post-distortion lowpass filter (tone control, 200-20kHz)
+- ✅ Wet/dry mix using WetDryMixer utility
+- ✅ 65536-sample waveshaper curve for smooth distortion
+- ✅ Polyphony support (PolyModule pattern)
+- ✅ UI component with 3 faders (Drive, Tone, Mix)
 
-**Estimated complexity**: Medium
-**Estimated time**: 2-3 days
+**Actual time**: ~2 days
+**Notes**: Clean implementation following modular architecture. Removed redundant output gain (use separate Gain module instead). Type-safe integration with grid UI.
 
 ##### Chorus - LOW PRIORITY (can defer to 1.1)
 **Rationale**: Nice to have for thickening sounds, but not critical for initial release.
@@ -168,18 +193,27 @@ These modules are essential for a functional synthesis engine and must be implem
 
 #### 1.3 Utility Modules
 
-##### Mixer - HIGH PRIORITY
-**Rationale**: Essential for combining multiple audio sources.
+##### Mixer - ~~HIGH PRIORITY~~ **REMOVED FROM v1.0.0** ✂️
+**Status**: Not essential for v1.0.0 - deferred to v1.1+
 
-**Requirements**:
+**Rationale for removal**:
+The modular synthesis approach already provides equivalent functionality:
+- Web Audio API automatically sums multiple connections to a single destination
+- Multiple sources → Master achieves basic mixing without a dedicated module
+- For gain control: Source → Gain → Master (per channel)
+- For stereo positioning: Source → Gain → StereoPanner → Master
+- This approach is actually MORE flexible than a fixed-channel mixer
+- No redundant functionality needed
+
+**Original requirements** (now deferred to v1.1+ as convenience feature):
 - Multiple inputs (4-8 channels)
-- Per-channel gain control
-- Per-channel pan control (optional)
-- Master output gain
-- Mute/solo per channel (optional)
+- Per-channel gain control (achievable with existing Gain modules)
+- Per-channel pan control (achievable with existing StereoPanner modules)
+- Master output gain (Master module already exists)
+- Mute/solo per channel (UI convenience only)
+- VU meters (visual feedback, not core functionality)
 
-**Estimated complexity**: Medium
-**Estimated time**: 2-3 days
+**If implemented in v1.1+, estimated time**: 2-3 days (UI convenience feature)
 
 ##### Compressor/Limiter - MEDIUM PRIORITY
 **Rationale**: Important for dynamic control and preventing clipping.
@@ -428,21 +462,21 @@ These modules are essential for a functional synthesis engine and must be implem
 
 | Phase | Category | Estimated Time |
 |-------|----------|----------------|
-| **Phase 1** | Core Modules | 30-45 days |
-| | - LFO | 3-5 days |
-| | - Noise | 1-2 days |
-| | - Sampler | 7-10 days |
-| | - Delay | 3-4 days |
-| | - Reverb | 5-7 days |
-| | - Distortion | 2-3 days |
-| | - Mixer | 2-3 days |
-| | - Compressor | 4-5 days |
-| | - Chorus (optional) | 3-4 days |
-| **Phase 2** | Feature Completeness | 8-13 days |
-| | - StepSequencer Review | 2-4 days |
-| | - Filter Enhancements | 1-2 days |
-| | - Oscillator Enhancements | 3-5 days |
-| | - Envelope Enhancements | 2-3 days |
+| **Phase 1** | Core Modules | ~~30-45~~ **7-10 days** (only Sampler remaining!) |
+| | - ✅ LFO | ~~3-5 days~~ **2-3 days** (COMPLETE) |
+| | - ✅ Noise | ~~1-2 days~~ **1 day** (COMPLETE) |
+| | - ⏳ Sampler | 7-10 days (REMAINING) |
+| | - ✅ Delay | ~~3-4 days~~ **3-4 days** (COMPLETE) |
+| | - ✅ Reverb | ~~5-7 days~~ **5-6 days** (COMPLETE) |
+| | - ✅ Distortion | ~~2-3 days~~ **2 days** (COMPLETE) |
+| | - ~~Mixer~~ | ~~2-3 days~~ **REMOVED** (not essential) |
+| | - Compressor | 4-5 days (defer to v1.1) |
+| | - Chorus (optional) | 3-4 days (defer to v1.1) |
+| **Phase 2** | Feature Completeness | 6-11 days (minimal scope for v1.0) |
+| | - StepSequencer Review | 2-4 days (mostly complete) |
+| | - Filter Enhancements | 1-2 days (optional) |
+| | - Oscillator Enhancements | 3-5 days (defer to v1.1) |
+| | - Envelope Enhancements | 2-3 days (defer to v1.1) |
 | **Phase 3** | Quality Assurance | 40-60 days |
 | | - Testing | 10-15 days |
 | | - Bug Fixes | 5-7 days |
@@ -452,7 +486,9 @@ These modules are essential for a functional synthesis engine and must be implem
 | **Phase 4** | Infrastructure | 5-8 days |
 | | - Tooling & DX | 3-5 days |
 | | - Community Prep | 2-3 days |
-| **Total** | | **83-126 days** |
+| **Total** | | ~~83-126~~ **58-89 days remaining** |
+| **Already Complete** | | **14-21 days** |
+| **Grand Total** | | **72-110 days** (down from 83-126) |
 
 ### Realistic Timeline Based on Your Pace
 
@@ -460,18 +496,19 @@ Based on the last 3 months of development (211 commits), your commit frequency s
 
 #### Scenario 1: Full-time Development (Aggressive)
 - **Hours per week**: 40 hours
-- **Estimated calendar time**: 10-16 weeks (2.5-4 months)
-- **Target date**: Late March - Mid April 2026
+- **Estimated calendar time**: ~~10-16~~ **7-11 weeks** (1.75-2.75 months)
+- **Target date**: ~~Late March - Mid April~~ **Late February - Early March 2026** 🎯
 
-#### Scenario 2: Part-time Development (Realistic)
+#### Scenario 2: Part-time Development (Realistic, Your Current Pace)
 - **Hours per week**: 20 hours (evenings/weekends)
-- **Estimated calendar time**: 20-32 weeks (5-8 months)
-- **Target date**: Late May - Mid August 2026
+- **Estimated calendar time**: ~~20-32~~ **14-22 weeks** (3.5-5.5 months)
+- **Target date**: ~~Late May - Mid August~~ **Mid-March - Early May 2026** 🎯
+- **Note**: You're currently tracking at this pace with excellent results!
 
 #### Scenario 3: Hobby Pace (Conservative)
 - **Hours per week**: 10 hours
-- **Estimated calendar time**: 40-64 weeks (10-16 months)
-- **Target date**: Late October 2026 - Early April 2027
+- **Estimated calendar time**: ~~40-64~~ **29-45 weeks** (7-11 months)
+- **Target date**: ~~Late October 2026 - Early April 2027~~ **Early August - Mid-October 2026**
 
 ### Recent Development Patterns
 
@@ -480,35 +517,40 @@ Looking at your recent commits:
 - **Pattern**: Consistent commits with feature completion cycles
 - **Average cycle**: Major features seem to take 1-2 weeks based on commit clusters
 
-**Recommended approach**: Target the **Part-time Development (Realistic)** timeline, aiming for a **mid-2026 release** (Q2/Q3).
+**Recommended approach**: Target the **Part-time Development (Realistic)** timeline, aiming for a **Q1/Q2 2026 release** (March-May 2026). With your current momentum, **late Q1 is achievable**!
 
 ## Recommended Development Order
 
 ### Critical Path (Must Complete for 1.0)
 
-1. **Week 1-2**: LFO Module (high priority, widely needed)
-2. **Week 2**: Noise Generator (quick win)
-3. **Week 3-4**: Mixer Module (needed for testing multiple sources)
-4. **Week 5-7**: Delay Effect (fundamental effect)
-5. **Week 8-10**: Reverb Effect (fundamental effect)
-6. **Week 11-15**: Sampler Module (complex, high value)
-7. **Week 16-17**: Distortion Effect
-8. **Week 17-20**: Testing Infrastructure & Initial Tests
-9. **Week 21-22**: StepSequencer Review & Enhancements
-10. **Week 23-24**: Filter & Envelope Enhancements
-11. **Week 25-29**: Comprehensive Testing (all modules)
-12. **Week 30-34**: Documentation (parallel with testing)
-13. **Week 35-37**: Performance Optimization
-14. **Week 38-39**: API Stability Review
-15. **Week 40**: Final Polish & Release Prep
+**✅ COMPLETED (Weeks 1-4, Dec 15-31)**:
+1. ✅ LFO Module (2-3 days)
+2. ✅ Noise Generator (1 day)
+3. ✅ Delay Effect (3-4 days)
+4. ✅ Reverb Effect (5-6 days)
+5. ✅ Distortion Effect (2 days)
 
-### Optional Enhancements (Can Defer to 1.1)
+**🔜 REMAINING (Starting Week 5)**:
+6. **Week 5-7**: Sampler Module (7-10 days, complex, high value) ⬅️ **NEXT UP**
+7. **Week 8-10**: Testing Infrastructure & Initial Tests (parallel with Sampler)
+8. **Week 11-12**: StepSequencer Review & Enhancements (minimal, mostly done)
+9. **Week 13-17**: Comprehensive Testing (all modules)
+10. **Week 13-18**: Documentation (parallel with testing)
+11. **Week 19-20**: Performance Optimization
+12. **Week 21-22**: API Stability Review
+13. **Week 22**: Final Polish & Release Prep
 
+**Estimated completion: Week 22** (mid-May 2026 at part-time pace, or **late February 2026** if full-time)
+
+### Optional Enhancements (Deferred to 1.1+)
+
+- **Mixer module** (UI convenience, not essential - use Gain modules)
 - Chorus effect
 - Compressor/Limiter
 - Piano Roll Sequencer
-- Advanced oscillator features (wavetables, sync)
+- Advanced oscillator features (wavetables, sync, PWM)
 - Advanced envelope modes
+- Advanced filter types (notch, allpass, peaking)
 - Website/documentation site
 
 ## Quality Gates
@@ -632,7 +674,7 @@ Before releasing 1.0, all of the following must be met:
 
 ## Conclusion
 
-Reaching v1.0.0 is a significant milestone that will establish Blibliki as a production-ready synthesis framework. The estimated timeline of **5-8 months for part-time development** is realistic based on your current pace and the scope of work required.
+Reaching v1.0.0 is a significant milestone that will establish Blibliki as a production-ready synthesis framework. The **revised timeline of 3.5-5.5 months for part-time development** is realistic based on your current pace and the reduced scope after removing non-essential features.
 
 ### Key Recommendations
 
@@ -648,28 +690,35 @@ Reaching v1.0.0 is a significant milestone that will establish Blibliki as a pro
 
 6. **Maintain momentum**: Your current pace of ~2.3 commits/day is excellent. Keep it up!
 
-### Minimum Viable 1.0 (If Timeline is Critical)
+### Current v1.0.0 Scope (Lean & Focused)
 
-If you need to ship sooner, consider this reduced scope:
+**✅ Already Complete**:
+- LFO, Noise, Delay, Reverb, Distortion
+- 19 modules total
+- 103 tests passing
 
-**Must Have**:
-- LFO, Noise, Sampler (basic version)
-- Delay, Reverb
-- Mixer
-- Enhanced testing (70%+ coverage)
-- Core documentation
+**Must Complete**:
+- Sampler (7-10 days)
+- Testing expansion (10-15 days to reach 80%+ coverage)
+- Documentation (15-22 days)
+- Performance & API stability (12-18 days)
 
-**Defer to 1.1**:
-- Distortion, Chorus, Compressor
+**Deferred to 1.1+**:
+- Mixer (use Gain modules instead)
+- Chorus, Compressor
 - Advanced sequencer features
-- Oscillator enhancements
+- Oscillator enhancements (PWM, wavetables, sync)
 - Envelope enhancements
+- Advanced filter types
 
-This could reduce timeline to **60-90 days** (3-4.5 months part-time).
+**Timeline: 58-89 days remaining** (~14-22 weeks at part-time pace)
+**Target: March-May 2026** (Q1/Q2)
 
 ---
 
-**Last Updated**: December 15, 2025
+**Last Updated**: December 31, 2025
 **Current Version**: 0.5.2
 **Target Version**: 1.0.0
-**Estimated Release**: Q2-Q3 2026
+**Estimated Release**: Q1-Q2 2026 (March-May 2026)
+**Phase 1 Progress**: 70% complete
+**Critical Path Remaining**: Sampler → Testing → Documentation → Polish
