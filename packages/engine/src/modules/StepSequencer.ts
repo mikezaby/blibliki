@@ -442,7 +442,6 @@ export default class StepSequencer
       (step.microtimeOffset / MICROTIMING_STEP) * (60 / bpm);
     const noteDurationSeconds =
       divisionToMilliseconds(step.duration, bpm) / 1000;
-    console.log(noteDurationSeconds);
 
     const noteTime = contextTime + microtimeOffsetSeconds;
 
