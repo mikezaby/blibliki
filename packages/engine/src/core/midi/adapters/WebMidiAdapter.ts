@@ -5,6 +5,8 @@ import type {
   IMidiAccess,
   IMidiAdapter,
   IMidiInputPort,
+  IMidiOutputPort,
+  IMidiPort,
   MidiMessageCallback,
 } from "./types";
 
@@ -23,6 +25,10 @@ class WebMidiInputPort implements IMidiInputPort {
 
   get name(): string {
     return this.input.name ?? `Device ${this.input.id}`;
+  }
+
+  get type() {
+    return this.input.type;
   }
 
   get state(): "connected" | "disconnected" {
@@ -58,9 +64,38 @@ class WebMidiInputPort implements IMidiInputPort {
   }
 }
 
+class WebMidiOutputPort implements IMidiOutputPort {
+  private output: MIDIOutput;
+
+  constructor(output: MIDIOutput) {
+    this.output = output;
+  }
+
+  get id(): string {
+    return this.output.id;
+  }
+
+  get name(): string {
+    return this.output.name ?? `Device ${this.output.id}`;
+  }
+
+  get type() {
+    return this.output.type;
+  }
+
+  get state(): "connected" | "disconnected" {
+    return this.output.state as "connected" | "disconnected";
+  }
+
+  send(data: number[] | Uint8Array, timestamp?: number): void {
+    this.output.send(data, timestamp);
+  }
+}
+
 class WebMidiAccess implements IMidiAccess {
   private midiAccess: MIDIAccess;
-  private portCache = new Map<string, WebMidiInputPort>();
+  private inputCache = new Map<string, WebMidiInputPort>();
+  private outputCache = new Map<string, WebMidiOutputPort>();
 
   constructor(midiAccess: MIDIAccess) {
     this.midiAccess = midiAccess;
@@ -68,27 +103,50 @@ class WebMidiAccess implements IMidiAccess {
 
   *inputs(): IterableIterator<IMidiInputPort> {
     for (const [, input] of this.midiAccess.inputs) {
-      if (!this.portCache.has(input.id)) {
-        this.portCache.set(input.id, new WebMidiInputPort(input));
+      if (!this.inputCache.has(input.id)) {
+        this.inputCache.set(input.id, new WebMidiInputPort(input));
       }
-      yield this.portCache.get(input.id)!;
+      yield this.inputCache.get(input.id)!;
+    }
+  }
+
+  *outputs(): IterableIterator<IMidiOutputPort> {
+    for (const [, output] of this.midiAccess.outputs) {
+      if (!this.outputCache.has(output.id)) {
+        this.outputCache.set(output.id, new WebMidiOutputPort(output));
+      }
+      yield this.outputCache.get(output.id)!;
     }
   }
 
   addEventListener(
     event: "statechange",
-    callback: (port: IMidiInputPort) => void,
+    callback: (port: IMidiPort) => void,
   ): void {
     this.midiAccess.addEventListener(event, (e) => {
       const port = e.port;
-      if (port?.type !== "input") return;
+      if (!port) return;
 
-      const input = port as MIDIInput;
-      if (!this.portCache.has(input.id)) {
-        this.portCache.set(input.id, new WebMidiInputPort(input));
+      const midiPort: IMidiPort = {
+        id: port.id,
+        name: port.name ?? `Device ${port.id}`,
+        state: port.state as "connected" | "disconnected",
+        type: port.type as "input" | "output",
+      };
+
+      if (port.type === "input") {
+        const input = port as MIDIInput;
+        if (!this.inputCache.has(input.id)) {
+          this.inputCache.set(input.id, new WebMidiInputPort(input));
+        }
+      } else {
+        const output = port as MIDIOutput;
+        if (!this.outputCache.has(output.id)) {
+          this.outputCache.set(output.id, new WebMidiOutputPort(output));
+        }
       }
 
-      callback(this.portCache.get(input.id)!);
+      callback(midiPort);
     });
   }
 }

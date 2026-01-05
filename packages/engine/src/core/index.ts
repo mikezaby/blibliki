@@ -13,8 +13,16 @@ export { Routes } from "./Route";
 export type { IRoute } from "./Route";
 
 export { default as MidiDeviceManager } from "./midi/MidiDeviceManager";
-export { default as MidiDevice, MidiPortState } from "./midi/MidiDevice";
-export type { IMidiDevice } from "./midi/MidiDevice";
+export {
+  default as BaseMidiDevice,
+  MidiPortState,
+} from "./midi/BaseMidiDevice";
+export type { IMidiDevice } from "./midi/BaseMidiDevice";
+export { default as MidiInputDevice } from "./midi/MidiInputDevice";
+export type { IMidiInput, EventListerCallback } from "./midi/MidiInputDevice";
+export { default as MidiOutputDevice } from "./midi/MidiOutputDevice";
+// Legacy export for backwards compatibility
+export { default as MidiDevice } from "./midi/MidiInputDevice";
 export { default as MidiEvent, MidiEventType } from "./midi/MidiEvent";
 export {
   normalizeDeviceName,

@@ -273,6 +273,30 @@ export class Engine {
     return this.midiDeviceManager.findByFuzzyName(name, threshold);
   }
 
+  findMidiInputDevice(id: string) {
+    return this.midiDeviceManager.findInput(id);
+  }
+
+  findMidiInputDeviceByName(name: string) {
+    return this.midiDeviceManager.findInputByName(name);
+  }
+
+  findMidiInputDeviceByFuzzyName(name: string, threshold?: number) {
+    return this.midiDeviceManager.findInputByFuzzyName(name, threshold);
+  }
+
+  findMidiOutputDevice(id: string) {
+    return this.midiDeviceManager.findOutput(id);
+  }
+
+  findMidiOutputDeviceByName(name: string) {
+    return this.midiDeviceManager.findOutputByName(name);
+  }
+
+  findMidiOutputDeviceByFuzzyName(name: string, threshold?: number) {
+    return this.midiDeviceManager.findOutputByFuzzyName(name, threshold);
+  }
+
   onPropsUpdate(
     callback: <T extends ModuleType>(
       params: IModule<T> | IPolyModule<T>,

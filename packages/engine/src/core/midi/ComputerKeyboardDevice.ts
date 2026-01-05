@@ -1,7 +1,8 @@
 import { Context } from "@blibliki/utils";
 import Note from "../Note";
-import { EventListerCallback, IMidiInput, MidiPortState } from "./MidiDevice";
+import { MidiPortState } from "./BaseMidiDevice";
 import MidiEvent from "./MidiEvent";
+import { EventListerCallback, IMidiInput } from "./MidiInputDevice";
 
 const MAP_KEYS: Record<string, Note> = {
   a: new Note("C3"),

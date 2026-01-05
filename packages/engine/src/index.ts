@@ -18,7 +18,13 @@ export type {
   ArrayProp,
   INote,
 } from "./core";
-export { MidiDevice, MidiPortState, Note } from "./core";
+export {
+  MidiDevice,
+  MidiInputDevice,
+  MidiOutputDevice,
+  MidiPortState,
+  Note,
+} from "./core";
 
 export { TransportState } from "@blibliki/transport";
 export type { BPM, TimeSignature, Position } from "@blibliki/transport";

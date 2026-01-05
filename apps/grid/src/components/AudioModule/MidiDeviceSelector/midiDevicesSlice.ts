@@ -1,6 +1,6 @@
 import {
   Engine,
-  MidiDevice,
+  MidiInputDevice,
   IMidiDevice,
   MidiPortState,
 } from "@blibliki/engine";
@@ -28,11 +28,11 @@ export const initialize =
     if (any) return;
 
     const devices = Array.from(
-      Engine.current.midiDeviceManager.devices.values(),
+      Engine.current.midiDeviceManager.inputDevices.values(),
     );
     dispatch(setDevices(devices.map((d) => d.serialize())));
 
-    Engine.current.midiDeviceManager.addListener((device: MidiDevice) => {
+    Engine.current.midiDeviceManager.addListener((device: MidiInputDevice) => {
       if (device.state === MidiPortState.disconnected) {
         device.disconnect();
         dispatch(removeDevice(device.id));

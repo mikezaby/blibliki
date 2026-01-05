@@ -1,4 +1,10 @@
-import { IModule, Module, MidiOutput, SetterHooks, MidiDevice } from "@/core";
+import {
+  IModule,
+  Module,
+  MidiOutput,
+  SetterHooks,
+  MidiInputDevice,
+} from "@/core";
 import ComputerKeyboardInput from "@/core/midi/ComputerKeyboardDevice";
 import MidiEvent from "@/core/midi/MidiEvent";
 import { ModulePropSchema } from "@/core/schema";
@@ -51,14 +57,16 @@ export default class MidiSelector
     // 3. By fuzzy name match (for cross-platform compatibility)
     let midiDevice =
       this.props.selectedId &&
-      this.engine.findMidiDevice(this.props.selectedId);
+      this.engine.findMidiInputDevice(this.props.selectedId);
 
     if (!midiDevice && this.props.selectedName) {
-      midiDevice = this.engine.findMidiDeviceByName(this.props.selectedName);
+      midiDevice = this.engine.findMidiInputDeviceByName(
+        this.props.selectedName,
+      );
 
       // If exact name match fails, try fuzzy matching
       if (!midiDevice) {
-        const fuzzyMatch = this.engine.findMidiDeviceByFuzzyName(
+        const fuzzyMatch = this.engine.findMidiInputDeviceByFuzzyName(
           this.props.selectedName,
           0.6, // 60% similarity threshold
         );
@@ -85,7 +93,7 @@ export default class MidiSelector
     this.removeEventListener();
     if (!value) return value;
 
-    const midiDevice = this.engine.findMidiDevice(value);
+    const midiDevice = this.engine.findMidiInputDevice(value);
     if (!midiDevice) return value;
 
     if (this.props.selectedName !== midiDevice.name) {
@@ -107,14 +115,16 @@ export default class MidiSelector
     return this._forwardMidiEvent;
   }
 
-  private addEventListener(midiDevice: MidiDevice | ComputerKeyboardInput) {
+  private addEventListener(
+    midiDevice: MidiInputDevice | ComputerKeyboardInput,
+  ) {
     midiDevice.addEventListener(this.forwardMidiEvent);
   }
 
   private removeEventListener() {
     if (!this.props.selectedId) return;
 
-    const midiDevice = this.engine.findMidiDevice(this.props.selectedId);
+    const midiDevice = this.engine.findMidiInputDevice(this.props.selectedId);
     midiDevice?.removeEventListener(this.forwardMidiEvent);
   }
 

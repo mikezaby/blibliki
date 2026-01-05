@@ -1,13 +1,15 @@
 import { Context } from "@blibliki/utils";
 import ComputerKeyboardDevice from "./ComputerKeyboardDevice";
-import MidiDevice from "./MidiDevice";
+import MidiInputDevice from "./MidiInputDevice";
+import MidiOutputDevice from "./MidiOutputDevice";
 import { createMidiAdapter, type IMidiAccess } from "./adapters";
 import { findBestMatch } from "./deviceMatcher";
 
-type ListenerCallback = (device: MidiDevice) => void;
+type ListenerCallback = (device: MidiInputDevice) => void;
 
 export default class MidiDeviceManager {
-  devices = new Map<string, MidiDevice | ComputerKeyboardDevice>();
+  inputDevices = new Map<string, MidiInputDevice | ComputerKeyboardDevice>();
+  outputDevices = new Map<string, MidiOutputDevice>();
   private initialized = false;
   private listeners: ListenerCallback[] = [];
   private context: Readonly<Context>;
@@ -26,12 +28,47 @@ export default class MidiDeviceManager {
     this.initialized = true;
   }
 
-  find(id: string): MidiDevice | ComputerKeyboardDevice | undefined {
-    return this.devices.get(id);
+  find(
+    id: string,
+  ): MidiInputDevice | ComputerKeyboardDevice | MidiOutputDevice | undefined {
+    return this.findInput(id) ?? this.findOutput(id);
   }
 
-  findByName(name: string): MidiDevice | ComputerKeyboardDevice | undefined {
-    return Array.from(this.devices.values()).find((d) => d.name === name);
+  findByName(
+    name: string,
+  ): MidiInputDevice | ComputerKeyboardDevice | MidiOutputDevice | undefined {
+    return this.findInputByName(name) ?? this.findOutputByName(name);
+  }
+
+  findByFuzzyName(
+    name: string,
+    threshold = 0.6,
+  ): MidiInputDevice | ComputerKeyboardDevice | MidiOutputDevice | undefined {
+    const input = this.findInputByFuzzyName(name, threshold);
+    const output = this.findOutputByFuzzyName(name, threshold);
+
+    if (!input) return output?.device;
+    if (!output) return input.device;
+
+    return input.score > output.score ? input.device : output.device;
+  }
+
+  findInput(id: string): MidiInputDevice | ComputerKeyboardDevice | undefined {
+    return this.inputDevices.get(id);
+  }
+
+  findInputByName(
+    name: string,
+  ): MidiInputDevice | ComputerKeyboardDevice | undefined {
+    return Array.from(this.inputDevices.values()).find((d) => d.name === name);
+  }
+
+  findOutput(id: string): MidiOutputDevice | undefined {
+    return this.outputDevices.get(id);
+  }
+
+  findOutputByName(name: string): MidiOutputDevice | undefined {
+    return Array.from(this.outputDevices.values()).find((d) => d.name === name);
   }
 
   /**
@@ -42,11 +79,30 @@ export default class MidiDeviceManager {
    * @param threshold - Minimum similarity score (0-1, default: 0.6)
    * @returns The best matching device and confidence score, or null
    */
-  findByFuzzyName(
+  findInputByFuzzyName(
     targetName: string,
     threshold = 0.6,
-  ): { device: MidiDevice | ComputerKeyboardDevice; score: number } | null {
-    const deviceEntries = Array.from(this.devices.values());
+  ): {
+    device: MidiInputDevice | ComputerKeyboardDevice;
+    score: number;
+  } | null {
+    const deviceEntries = Array.from(this.inputDevices.values());
+    const candidateNames = deviceEntries.map((d) => d.name);
+
+    const match = findBestMatch(targetName, candidateNames, threshold);
+
+    if (!match) return null;
+
+    const device = deviceEntries.find((d) => d.name === match.name);
+
+    return device ? { device, score: match.score } : null;
+  }
+
+  findOutputByFuzzyName(
+    targetName: string,
+    threshold = 0.6,
+  ): { device: MidiOutputDevice; score: number } | null {
+    const deviceEntries = Array.from(this.outputDevices.values());
     const candidateNames = deviceEntries.map((d) => d.name);
 
     const match = findBestMatch(targetName, candidateNames, threshold);
@@ -79,8 +135,17 @@ export default class MidiDeviceManager {
       }
 
       for (const input of this.midiAccess.inputs()) {
-        if (!this.devices.has(input.id)) {
-          this.devices.set(input.id, new MidiDevice(input, this.context));
+        if (!this.inputDevices.has(input.id)) {
+          this.inputDevices.set(
+            input.id,
+            new MidiInputDevice(input, this.context),
+          );
+        }
+      }
+
+      for (const output of this.midiAccess.outputs()) {
+        if (!this.outputDevices.has(output.id)) {
+          this.outputDevices.set(output.id, new MidiOutputDevice(output));
         }
       }
     } catch (err) {
@@ -92,7 +157,7 @@ export default class MidiDeviceManager {
     if (typeof document === "undefined") return;
 
     const computerKeyboardDevice = new ComputerKeyboardDevice(this.context);
-    this.devices.set(computerKeyboardDevice.id, computerKeyboardDevice);
+    this.inputDevices.set(computerKeyboardDevice.id, computerKeyboardDevice);
   }
 
   private listenChanges() {
@@ -101,26 +166,55 @@ export default class MidiDeviceManager {
     this.midiAccess.addEventListener("statechange", (port) => {
       if (port.state === "connected") {
         // Device connected
-        if (this.devices.has(port.id)) return;
+        if (port.type === "input") {
+          if (this.inputDevices.has(port.id)) return;
 
-        const device = new MidiDevice(port, this.context);
-        this.devices.set(device.id, device);
+          // Find the actual input port from midiAccess
+          for (const input of this.midiAccess!.inputs()) {
+            if (input.id === port.id) {
+              const device = new MidiInputDevice(input, this.context);
+              this.inputDevices.set(device.id, device);
 
-        this.listeners.forEach((listener) => {
-          listener(device);
-        });
+              this.listeners.forEach((listener) => {
+                listener(device);
+              });
+              break;
+            }
+          }
+        } else {
+          // Output device connected
+          if (this.outputDevices.has(port.id)) return;
+
+          // Find the actual output port from midiAccess
+          for (const output of this.midiAccess!.outputs()) {
+            if (output.id === port.id) {
+              const device = new MidiOutputDevice(output);
+              this.outputDevices.set(device.id, device);
+              break;
+            }
+          }
+        }
       } else {
         // Device disconnected
-        const device = this.devices.get(port.id);
-        if (!device) return;
-        if (device instanceof ComputerKeyboardDevice) return;
+        if (port.type === "input") {
+          const device = this.inputDevices.get(port.id);
+          if (!device) return;
+          if (device instanceof ComputerKeyboardDevice) return;
 
-        device.disconnect();
-        this.devices.delete(device.id);
+          device.disconnect();
+          this.inputDevices.delete(device.id);
 
-        this.listeners.forEach((listener) => {
-          listener(device);
-        });
+          this.listeners.forEach((listener) => {
+            listener(device);
+          });
+        } else {
+          // Output device disconnected
+          const device = this.outputDevices.get(port.id);
+          if (!device) return;
+
+          device.disconnect();
+          this.outputDevices.delete(device.id);
+        }
       }
     });
   }
