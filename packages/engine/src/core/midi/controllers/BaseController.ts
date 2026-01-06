@@ -7,9 +7,9 @@ interface ControllerProps {
 }
 
 export abstract class BaseController implements ControllerProps {
-  protected input: MidiInputDevice;
-  protected output: MidiOutputDevice;
-  protected isInDawMode = false;
+  input: MidiInputDevice;
+  output: MidiOutputDevice;
+  isInDawMode = false;
 
   constructor(props: ControllerProps) {
     this.input = props.input;
@@ -22,7 +22,11 @@ export abstract class BaseController implements ControllerProps {
   abstract enterDawMode(): void;
   abstract exitDawMode(): void;
 
-  start() {}
+  start() {
+    // TODO: implement
+  }
 
-  stop() {}
+  stop() {
+    // TODO: implement
+  }
 }

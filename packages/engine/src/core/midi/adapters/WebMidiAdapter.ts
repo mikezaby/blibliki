@@ -161,7 +161,7 @@ export default class WebMidiAdapter implements IMidiAdapter {
         return null;
       }
 
-      const midiAccess = await navigator.requestMIDIAccess();
+      const midiAccess = await navigator.requestMIDIAccess({ sysex: true });
       return new WebMidiAccess(midiAccess);
     } catch (err) {
       console.error("Error enabling Web MIDI API:", err);

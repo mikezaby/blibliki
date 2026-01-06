@@ -296,10 +296,6 @@ export class LaunchControlXL3 extends BaseController {
     this.isInDawMode = false;
   }
 
-  start() {}
-
-  stop() {}
-
   setColor(control: Control, color: Color) {
     this.output.send([176, control, color]);
   }
