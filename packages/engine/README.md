@@ -241,6 +241,26 @@ const midi = engine.addModule({
 });
 ```
 
+#### MidiOutput
+
+Sends MIDI events to external hardware devices (keyboards, controllers, DAWs).
+
+```typescript
+const midiOut = engine.addModule({
+  name: "MIDI Out",
+  moduleType: ModuleType.MidiOutput,
+  props: {
+    selectedId: "your-midi-device-id",
+  },
+});
+
+// Connect a step sequencer to MIDI output
+engine.addRoute({
+  source: { moduleId: stepSeq.id, ioName: "midi out" },
+  destination: { moduleId: midiOut.id, ioName: "midi in" },
+});
+```
+
 #### Constant
 
 Creates a fixed value for modulation.

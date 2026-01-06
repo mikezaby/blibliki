@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import midiDevicesReducer from "@/components/AudioModule/MidiDeviceSelector/midiDevicesSlice";
+import midiOutputDevicesReducer from "@/components/AudioModule/MidiOutput/midiDevicesSlice";
 import modulesReducer from "@/components/AudioModule/modulesSlice";
 import gridNodesReducer from "@/components/Grid/gridNodesSlice";
 import modalReducer from "@/components/Modal/modalSlice";
@@ -12,6 +13,7 @@ export const store = configureStore({
   reducer: {
     global: globalReducer,
     midiDevices: midiDevicesReducer,
+    midiOutputDevices: midiOutputDevicesReducer,
     modules: modulesReducer,
     modal: modalReducer,
     gridNodes: gridNodesReducer,

@@ -14,6 +14,7 @@ import LFO from "./LFO";
 import Master from "./Master";
 import MidiInput from "./MidiInput";
 import MidiMapper from "./MidiMapper";
+import MidiOutput from "./MidiOutput";
 import Noise from "./Noise";
 import Oscillator from "./Oscillator";
 import Reverb from "./Reverb";
@@ -55,6 +56,7 @@ const COMPONENT_MAPPING: {
   [ModuleType.Gain]: Gain,
   [ModuleType.Envelope]: Envelope,
   [ModuleType.MidiInput]: MidiInput,
+  [ModuleType.MidiOutput]: MidiOutput,
   // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
   [ModuleType.MidiSelector]:
     MidiInput as unknown as ModuleComponent<ModuleType.MidiSelector>,

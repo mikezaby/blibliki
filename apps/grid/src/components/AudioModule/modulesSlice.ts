@@ -39,6 +39,10 @@ export const AvailableModules: Record<
     name: "MIDI Input",
     moduleType: ModuleType.MidiInput,
   },
+  [ModuleType.MidiOutput]: {
+    name: "MIDI Output",
+    moduleType: ModuleType.MidiOutput,
+  },
   // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
   [ModuleType.MidiSelector]: {
     name: "Midi Selector (deprecated)",

@@ -5,7 +5,7 @@ import MidiOutputDevice from "./MidiOutputDevice";
 import { createMidiAdapter, type IMidiAccess } from "./adapters";
 import { findBestMatch } from "./deviceMatcher";
 
-type ListenerCallback = (device: MidiInputDevice) => void;
+type ListenerCallback = (device: MidiInputDevice | MidiOutputDevice) => void;
 
 export default class MidiDeviceManager {
   inputDevices = new Map<string, MidiInputDevice | ComputerKeyboardDevice>();

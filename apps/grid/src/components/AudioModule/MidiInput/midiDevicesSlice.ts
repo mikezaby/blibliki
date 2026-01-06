@@ -1,9 +1,4 @@
-import {
-  Engine,
-  MidiInputDevice,
-  IMidiDevice,
-  MidiPortState,
-} from "@blibliki/engine";
+import { Engine, IMidiDevice, MidiPortState } from "@blibliki/engine";
 import { createSlice, createEntityAdapter } from "@reduxjs/toolkit";
 import { RootState, AppDispatch } from "@/store";
 
@@ -32,7 +27,9 @@ export const initialize =
     );
     dispatch(setDevices(devices.map((d) => d.serialize())));
 
-    Engine.current.midiDeviceManager.addListener((device: MidiInputDevice) => {
+    Engine.current.midiDeviceManager.addListener((device) => {
+      if (device.type === "output") return;
+
       if (device.state === MidiPortState.disconnected) {
         device.disconnect();
         dispatch(removeDevice(device.id));

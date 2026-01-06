@@ -4,8 +4,8 @@ import { RootState, AppDispatch } from "@/store";
 
 const devicesAdapter = createEntityAdapter<IMidiDevice>({});
 
-export const midiDevicesSlice = createSlice({
-  name: "midiDevices",
+export const midiOutputDevicesSlice = createSlice({
+  name: "midiOutputDevices",
   initialState: devicesAdapter.getInitialState(),
   reducers: {
     setDevices: (state, action) => devicesAdapter.setAll(state, action),
@@ -15,7 +15,7 @@ export const midiDevicesSlice = createSlice({
   },
 });
 
-const { setDevices, addDevice, removeDevice } = midiDevicesSlice.actions;
+const { setDevices, addDevice, removeDevice } = midiOutputDevicesSlice.actions;
 
 export const initialize =
   () => (dispatch: AppDispatch, getState: () => RootState) => {
@@ -23,15 +23,14 @@ export const initialize =
     if (any) return;
 
     const devices = Array.from(
-      Engine.current.midiDeviceManager.inputDevices.values(),
+      Engine.current.midiDeviceManager.outputDevices.values(),
     );
     dispatch(setDevices(devices.map((d) => d.serialize())));
 
     Engine.current.midiDeviceManager.addListener((device) => {
-      if (device.type === "output") return;
+      if (device.type === "input") return;
 
       if (device.state === MidiPortState.disconnected) {
-        device.disconnect();
         dispatch(removeDevice(device.id));
       } else {
         dispatch(addDevice(device.serialize()));
@@ -40,7 +39,7 @@ export const initialize =
   };
 
 export const devicesSelector = devicesAdapter.getSelectors(
-  (state: RootState) => state.midiDevices,
+  (state: RootState) => state.midiOutputDevices,
 );
 
-export default midiDevicesSlice.reducer;
+export default midiOutputDevicesSlice.reducer;
