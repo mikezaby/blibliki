@@ -1,5 +1,5 @@
 import { ContextTime } from "@blibliki/transport";
-import { IModule, MidiEvent, Module, SetterHooks } from "@/core";
+import { IModule, MidiEvent, MidiOutput, Module, SetterHooks } from "@/core";
 import { ModulePropSchema, NumberProp, PropSchema } from "@/core/schema";
 import { ICreateModule, moduleSchemas, ModuleType } from ".";
 
@@ -26,6 +26,7 @@ export enum MidiMappingMode {
 
 export type MidiMapping<T extends ModuleType> = {
   cc?: number;
+  value?: number;
   moduleId?: string;
   moduleType?: T;
   propName?: string;
@@ -102,6 +103,7 @@ export default class MidiMapper
   implements MidiMapperSetterHooks
 {
   declare audioNode: undefined;
+  private _midiOut: MidiOutput; // Will be used to send CC values on page change
 
   constructor(engineId: string, params: ICreateModule<ModuleType.MidiMapper>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
@@ -115,10 +117,31 @@ export default class MidiMapper
       name: "midi in",
       onMidiEvent: this.onMidiEvent,
     });
+
+    this._midiOut = this.registerMidiOutput({
+      name: "midi out",
+    });
   }
 
   onSetActivePage: MidiMapperSetterHooks["onSetActivePage"] = (value) => {
-    return Math.max(Math.min(value, this.props.pages.length - 1), 0);
+    const activePage = Math.max(
+      Math.min(value, this.props.pages.length - 1),
+      0,
+    );
+
+    const newPage = this.props.pages[activePage];
+
+    // Send stored CC values to MIDI output when changing pages
+    const now = this.context.currentTime;
+    newPage?.mappings.forEach((mapping) => {
+      if (mapping.cc !== undefined && mapping.value !== undefined) {
+        // Create CC MIDI event and send it
+        const midiEvent = MidiEvent.fromCC(mapping.cc, mapping.value, now);
+        this._midiOut.onMidiEvent(midiEvent);
+      }
+    });
+
+    return activePage;
   };
 
   handleCC = (event: MidiEvent, triggeredAt: ContextTime) => {
@@ -127,12 +150,44 @@ export default class MidiMapper
     const activePage = this.props.pages[this.props.activePage];
     if (!activePage) return;
 
-    [
+    const matchingMappings = [
       ...this.props.globalMappings.filter((m) => m.cc === event.cc),
       ...activePage.mappings.filter((m) => m.cc === event.cc),
-    ].forEach((mapping) => {
+    ];
+
+    // Forward all matching mappings
+    matchingMappings.forEach((mapping) => {
       this.forwardMapping(event, mapping, triggeredAt);
     });
+
+    // Update mapping values if we have matching CCs
+    if (matchingMappings.length > 0 && event.ccValue !== undefined) {
+      const updatedGlobalMappings = this.props.globalMappings.map((mapping) => {
+        if (mapping.cc === event.cc) {
+          return { ...mapping, value: event.ccValue };
+        }
+        return mapping;
+      });
+
+      const updatedPageMappings = activePage.mappings.map((mapping) => {
+        if (mapping.cc === event.cc) {
+          return { ...mapping, value: event.ccValue };
+        }
+        return mapping;
+      });
+
+      const updatedPages = this.props.pages.map((page, index) =>
+        index === this.props.activePage
+          ? { ...page, mappings: updatedPageMappings }
+          : page,
+      );
+
+      this.props = {
+        pages: updatedPages,
+        globalMappings: updatedGlobalMappings,
+      };
+      this.triggerPropsUpdate();
+    }
   };
 
   forwardMapping = (
