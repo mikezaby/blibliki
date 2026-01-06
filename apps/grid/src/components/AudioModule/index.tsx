@@ -12,7 +12,7 @@ import Inspector from "./Inspector";
 import Keyboard from "./Keyboard";
 import LFO from "./LFO";
 import Master from "./Master";
-import MidiDeviceSelector from "./MidiDeviceSelector";
+import MidiInput from "./MidiInput";
 import MidiMapper from "./MidiMapper";
 import Noise from "./Noise";
 import Oscillator from "./Oscillator";
@@ -54,7 +54,10 @@ const COMPONENT_MAPPING: {
   [ModuleType.Filter]: Filter,
   [ModuleType.Gain]: Gain,
   [ModuleType.Envelope]: Envelope,
-  [ModuleType.MidiSelector]: MidiDeviceSelector,
+  [ModuleType.MidiInput]: MidiInput,
+  // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
+  [ModuleType.MidiSelector]:
+    MidiInput as unknown as ModuleComponent<ModuleType.MidiSelector>,
   [ModuleType.MidiMapper]: MidiMapper,
   [ModuleType.VirtualMidi]: Keyboard,
   [ModuleType.Chorus]: Chorus,

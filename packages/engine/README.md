@@ -227,14 +227,14 @@ const master = engine.addModule({
 });
 ```
 
-#### MidiSelector
+#### MidiInput
 
 Handles MIDI input from keyboards or controllers.
 
 ```typescript
 const midi = engine.addModule({
   name: "MIDI",
-  moduleType: ModuleType.MidiSelector,
+  moduleType: ModuleType.MidiInput,
   props: {
     selectedId: "your-midi-device-id",
   },

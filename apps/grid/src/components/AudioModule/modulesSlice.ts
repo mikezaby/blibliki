@@ -35,8 +35,13 @@ export const AvailableModules: Record<
   [ModuleType.Envelope]: { name: "Envelope", moduleType: ModuleType.Envelope },
   [ModuleType.Filter]: { name: "Filter", moduleType: ModuleType.Filter },
   [ModuleType.Gain]: { name: "Gain", moduleType: ModuleType.Gain },
+  [ModuleType.MidiInput]: {
+    name: "MIDI Input",
+    moduleType: ModuleType.MidiInput,
+  },
+  // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
   [ModuleType.MidiSelector]: {
-    name: "Midi Selector",
+    name: "Midi Selector (deprecated)",
     moduleType: ModuleType.MidiSelector,
   },
   [ModuleType.Scale]: { name: "Scale", moduleType: ModuleType.Scale },

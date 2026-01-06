@@ -6,7 +6,7 @@ export function load() {
 
   const midi = addModule({
     name: "Midi",
-    moduleType: ModuleType.MidiSelector,
+    moduleType: ModuleType.MidiInput,
     props: { selectedId: "1695389404" },
   });
 

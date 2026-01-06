@@ -18,6 +18,7 @@ import Gain, { gainPropSchema, IGainProps } from "./Gain";
 import Inspector, { IInspectorProps, inspectorPropSchema } from "./Inspector";
 import LFO, { ILFOProps, lfoPropSchema } from "./LFO";
 import Master, { IMasterProps, masterPropSchema } from "./Master";
+import MidiInput, { IMidiInputProps, midiInputPropSchema } from "./MidiInput";
 import MidiMapper, {
   IMidiMapperProps,
   midiMapperPropSchema,
@@ -50,7 +51,8 @@ export enum ModuleType {
   Master = "Master",
   Oscillator = "Oscillator",
   Gain = "Gain",
-  MidiSelector = "MidiSelector",
+  MidiInput = "MidiInput",
+  MidiSelector = "MidiSelector", // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
   Envelope = "Envelope",
   Filter = "Filter",
   Scale = "Scale",
@@ -73,7 +75,8 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.Oscillator]: IOscillatorProps;
   [ModuleType.Gain]: IGainProps;
   [ModuleType.Master]: IMasterProps;
-  [ModuleType.MidiSelector]: IMidiSelectorProps;
+  [ModuleType.MidiInput]: IMidiInputProps;
+  [ModuleType.MidiSelector]: IMidiSelectorProps; // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
   [ModuleType.Envelope]: IEnvelopeProps;
   [ModuleType.Filter]: IFilterProps;
   [ModuleType.Scale]: IScaleProps;
@@ -96,7 +99,8 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.Oscillator]: Oscillator;
   [ModuleType.Gain]: Gain;
   [ModuleType.Master]: Master;
-  [ModuleType.MidiSelector]: MidiSelector;
+  [ModuleType.MidiInput]: MidiInput;
+  [ModuleType.MidiSelector]: MidiSelector; // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
   [ModuleType.Envelope]: Envelope;
   [ModuleType.Filter]: Filter;
   [ModuleType.Scale]: Scale;
@@ -119,7 +123,8 @@ export const moduleSchemas = {
   [ModuleType.Oscillator]: oscillatorPropSchema,
   [ModuleType.Gain]: gainPropSchema,
   [ModuleType.Master]: masterPropSchema,
-  [ModuleType.MidiSelector]: midiSelectorPropSchema,
+  [ModuleType.MidiInput]: midiInputPropSchema,
+  [ModuleType.MidiSelector]: midiSelectorPropSchema, // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
   [ModuleType.Envelope]: envelopePropSchema,
   [ModuleType.Filter]: filterPropSchema,
   [ModuleType.Scale]: scalePropSchema,
@@ -142,7 +147,8 @@ export type { IOscillator } from "./Oscillator";
 export { OscillatorWave } from "./Oscillator";
 export type { IGain } from "./Gain";
 export type { IMaster } from "./Master";
-export type { IMidiSelector } from "./MidiSelector";
+export type { IMidiInput, IMidiInputProps } from "./MidiInput";
+export type { IMidiSelector } from "./MidiSelector"; // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
 export type { IStereoPanner } from "./StereoPanner";
 export type {
   IStepSequencer,
@@ -203,8 +209,15 @@ export function createModule(
       return new Gain(engineId, params);
     case ModuleType.Master:
       return new Master(engineId, params);
+    case ModuleType.MidiInput:
+      return new MidiInput(engineId, params);
+    // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
     case ModuleType.MidiSelector:
-      return new MidiSelector(engineId, params);
+      // Convert old MidiSelector to MidiInput
+      return new MidiInput(engineId, {
+        ...params,
+        moduleType: ModuleType.MidiInput,
+      } as ICreateModule<ModuleType.MidiInput>);
     case ModuleType.Envelope:
       return new Envelope(engineId, params);
     case ModuleType.Filter:
