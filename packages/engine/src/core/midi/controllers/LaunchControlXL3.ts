@@ -1,3 +1,4 @@
+import MidiOutputDevice from "../MidiOutputDevice";
 import { BaseController } from "./BaseController";
 
 enum Color {
@@ -229,61 +230,65 @@ enum Control {
 
 export class LaunchControlXL3 extends BaseController {
   initialize() {
+    this.exitDawMode();
     this.enterDawMode();
     this.setColor(Control.Play, Color.Green0);
-    this.output.send([
-      // SysEx header
-      0xf0,
-      0x00,
-      0x20,
-      0x29,
-      0x02,
-      0x15,
+    this.setColor(Control.Record, Color.Red0);
+    // this.output.send([
+    //   // SysEx header
+    //   0xf0,
+    //   0x00,
+    //   0x20,
+    //   0x29,
+    //   0x02,
+    //   0x15,
+    //
+    //   // Configure display (command 0x04)
+    //   0x04,
+    //   0x35, // target: Stationary display
+    //   0x01, // config: arrangement 1 (simple 2-line display)
+    //
+    //   0xf7,
+    // ]);
+    //
+    // this.output.send([
+    //   // SysEx header
+    //   0xf0,
+    //   0x00,
+    //   0x20,
+    //   0x29,
+    //   0x02,
+    //   0x15,
+    //
+    //   // Set text (command 0x06)
+    //   0x06,
+    //   0x35, // target: Stationary display
+    //   0x00, // field F0
+    //
+    //   // "Blibliki"
+    //   0x42,
+    //   0x6c,
+    //   0x69,
+    //   0x62,
+    //   0x6c,
+    //   0x69,
+    //   0x6b,
+    //   0x69,
+    //
+    //   0xf7,
+    // ]);
+    //
+    // this.output.send([
+    //   // SysEx header
+    //   0xf0, 0x00, 0x20, 0x29, 0x02, 0x15,
+    //
+    //   // Trigger display (special config = 0x7F)
+    //   0x04, 0x35, 0x7f,
+    //
+    //   0xf7,
+    // ]);
 
-      // Configure display (command 0x04)
-      0x04,
-      0x35, // target: Stationary display
-      0x01, // config: arrangement 1 (simple 2-line display)
-
-      0xf7,
-    ]);
-
-    this.output.send([
-      // SysEx header
-      0xf0,
-      0x00,
-      0x20,
-      0x29,
-      0x02,
-      0x15,
-
-      // Set text (command 0x06)
-      0x06,
-      0x35, // target: Stationary display
-      0x00, // field F0
-
-      // "Blibliki"
-      0x42,
-      0x6c,
-      0x69,
-      0x62,
-      0x6c,
-      0x69,
-      0x6b,
-      0x69,
-
-      0xf7,
-    ]);
-
-    this.output.send([
-      // SysEx header
-      0xf0, 0x00, 0x20, 0x29, 0x02, 0x15,
-
-      // Trigger display (special config = 0x7F)
-      0x04, 0x35, 0x7f,
-
-      0xf7,
-    ]);
+    sendBigBlibliki(this.output);
   }
 
   enterDawMode() {
@@ -300,3 +305,67 @@ export class LaunchControlXL3 extends BaseController {
     this.output.send([176, control, color]);
   }
 }
+
+export function sendBigBlibliki(output: MidiOutputDevice) {
+  const W = 128,
+    H = 64,
+    BPR = 19; // 19 bytes/row, 64 rows => 1216 bytes
+
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) throw new Error("2D canvas not available");
+
+  // draw text
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#fff";
+  ctx.font = "900 32px system-ui, Arial"; // big + bold
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("Blibliki", W / 2, H / 2 + 1);
+
+  const img = ctx.getImageData(0, 0, W, H).data;
+
+  // pack pixels into 1216 bytes (7 pixels per byte, bit6 is leftmost)
+  const bmp = new Uint8Array(BPR * H);
+  let k = 0;
+
+  for (let y = 0; y < H; y++) {
+    for (let bx = 0; bx < BPR; bx++) {
+      let v = 0;
+      for (let bit = 0; bit < 7; bit++) {
+        const x = bx * 7 + bit;
+        if (x >= W) continue;
+
+        const i = (y * W + x) * 4;
+        const on = img[i]! + img[i + 1]! + img[i + 2]! > 30; // simple threshold
+        if (on) v |= 0x40 >> bit;
+      }
+      bmp[k++] = v; // always 0..127
+    }
+  }
+
+  // SysEx: F0 00 20 29 02 15 09 <target> <1216 bytes> 7F F7
+  // target per your doc: 0x20 stationary bitmap, 0x21 global temp bitmap
+  const msg: number[] = [
+    0xf0,
+    0x00,
+    0x20,
+    0x29,
+    0x02,
+    0x15,
+    0x09,
+    0x20,
+    ...bmp,
+    0x7f,
+    0xf7,
+  ];
+
+  output.send(msg);
+}
+
+// usage:
+// sendBigBlibliki(this.output);
