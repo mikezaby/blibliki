@@ -234,60 +234,6 @@ export class LaunchControlXL3 extends BaseController {
     this.enterDawMode();
     this.setColor(Control.Play, Color.Green0);
     this.setColor(Control.Record, Color.Red0);
-    // this.output.send([
-    //   // SysEx header
-    //   0xf0,
-    //   0x00,
-    //   0x20,
-    //   0x29,
-    //   0x02,
-    //   0x15,
-    //
-    //   // Configure display (command 0x04)
-    //   0x04,
-    //   0x35, // target: Stationary display
-    //   0x01, // config: arrangement 1 (simple 2-line display)
-    //
-    //   0xf7,
-    // ]);
-    //
-    // this.output.send([
-    //   // SysEx header
-    //   0xf0,
-    //   0x00,
-    //   0x20,
-    //   0x29,
-    //   0x02,
-    //   0x15,
-    //
-    //   // Set text (command 0x06)
-    //   0x06,
-    //   0x35, // target: Stationary display
-    //   0x00, // field F0
-    //
-    //   // "Blibliki"
-    //   0x42,
-    //   0x6c,
-    //   0x69,
-    //   0x62,
-    //   0x6c,
-    //   0x69,
-    //   0x6b,
-    //   0x69,
-    //
-    //   0xf7,
-    // ]);
-    //
-    // this.output.send([
-    //   // SysEx header
-    //   0xf0, 0x00, 0x20, 0x29, 0x02, 0x15,
-    //
-    //   // Trigger display (special config = 0x7F)
-    //   0x04, 0x35, 0x7f,
-    //
-    //   0xf7,
-    // ]);
-
     sendBigBlibliki(this.output);
   }
 
@@ -306,12 +252,37 @@ export class LaunchControlXL3 extends BaseController {
   }
 }
 
-export function sendBigBlibliki(output: MidiOutputDevice) {
-  // Fill entire screen white to test
-  const bmp = new Uint8Array(1216);
-  for (let i = 0; i < 1216; i++) bmp[i] = 0x7f; // all pixels on (7 bits = 0111 1111)
-  output.send([0xf0, 0x00, 0x20, 0x29, 0x02, 0x15, 0x09, 0x20, ...bmp, 0x7f, 0xf7]);
-}
+function sendBigBlibliki(output: MidiOutputDevice) {
+  const bitmap = new Uint8Array(1216);
 
-// usage:
-// sendBigBlibliki(this.output);
+  // Large BLIBLIKI filling the screen
+  const lines = [
+    "██████  ██      ████  ██████  ██      ████  ██ ██  ████",
+    "██  ██  ██       ██   ██  ██  ██       ██   ████    ██  ",
+    "██████  ██       ██   ██████  ██       ██   █████   ██  ",
+    "██  ██  ██       ██   ██  ██  ██       ██   ██ ██   ██  ",
+    "██████  ██████  ████  ██████  ██████  ████  ██  ██ ████ ",
+  ];
+
+  for (let row = 0; row < 64; row++) {
+    const lineIdx = Math.floor((row - 18) / 5);
+    const line = lineIdx >= 0 && lineIdx < lines.length ? lines[lineIdx] : "";
+
+    for (let byteIdx = 0; byteIdx < 19; byteIdx++) {
+      let byte = 0;
+      for (let bit = 0; bit < 7; bit++) {
+        const pixelX = byteIdx * 7 + bit + 34; // center horizontally
+        const charIdx = pixelX - 34;
+        if (charIdx >= 0 && charIdx < line.length && line[charIdx] !== " ") {
+          byte |= (1 << (6 - bit)); // bit 6 is leftmost
+        }
+      }
+      bitmap[row * 19 + byteIdx] = byte;
+    }
+  }
+
+  // Configure stationary display (target 0x20) with arrangement 0x7F (trigger)
+  output.send([0xf0, 0x00, 0x20, 0x29, 0x02, 0x15, 0x04, 0x20, 0x7f, 0xf7]);
+  // Send bitmap to stationary display
+  output.send([0xf0, 0x00, 0x20, 0x29, 0x02, 0x15, 0x09, 0x20, ...bitmap, 0x7f, 0xf7]);
+}
