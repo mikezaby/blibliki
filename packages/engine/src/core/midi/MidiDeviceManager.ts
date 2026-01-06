@@ -3,6 +3,7 @@ import ComputerKeyboardDevice from "./ComputerKeyboardDevice";
 import MidiInputDevice from "./MidiInputDevice";
 import MidiOutputDevice from "./MidiOutputDevice";
 import { createMidiAdapter, type IMidiAccess } from "./adapters";
+import { LaunchControlXL3 } from "./controllers/LaunchControlXL3";
 import { findBestMatch } from "./deviceMatcher";
 
 type ListenerCallback = (device: MidiInputDevice | MidiOutputDevice) => void;
@@ -23,6 +24,14 @@ export default class MidiDeviceManager {
 
   async initialize() {
     await this.initializeDevices();
+
+    const input = this.findInputByFuzzyName("LCXL3 DAW");
+    const output = this.findOutputByFuzzyName("LCXL3 DAW");
+    const constroller = new LaunchControlXL3({
+      input: input!.device as MidiInputDevice,
+      output: output!.device,
+    });
+    constroller.initialize();
 
     this.listenChanges();
     this.initialized = true;

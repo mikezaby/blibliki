@@ -1,14 +1,28 @@
-import type { IMidiOutputPort } from "../adapters";
+import MidiInputDevice from "../MidiInputDevice";
+import MidiOutputDevice from "../MidiOutputDevice";
 
-export abstract class BaseController {
-  protected outputPort: IMidiOutputPort;
+interface ControllerProps {
+  input: MidiInputDevice;
+  output: MidiOutputDevice;
+}
+
+export abstract class BaseController implements ControllerProps {
+  protected input: MidiInputDevice;
+  protected output: MidiOutputDevice;
   protected isInDawMode = false;
 
-  constructor(outputPort: IMidiOutputPort) {
-    this.outputPort = outputPort;
+  constructor(props: ControllerProps) {
+    this.input = props.input;
+    this.output = props.output;
+
+    this.initialize();
   }
 
-  abstract enterDawMode(): Promise<void>;
+  abstract initialize(): void;
+  abstract enterDawMode(): void;
+  abstract exitDawMode(): void;
 
-  abstract exitDawMode(): Promise<void>;
+  start() {}
+
+  stop() {}
 }
