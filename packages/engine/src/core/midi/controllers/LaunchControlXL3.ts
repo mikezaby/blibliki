@@ -307,64 +307,10 @@ export class LaunchControlXL3 extends BaseController {
 }
 
 export function sendBigBlibliki(output: MidiOutputDevice) {
-  const W = 128,
-    H = 64,
-    BPR = 19; // 19 bytes/row, 64 rows => 1216 bytes
-
-  const canvas = document.createElement("canvas");
-  canvas.width = W;
-  canvas.height = H;
-
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) throw new Error("2D canvas not available");
-
-  // draw text
-  ctx.fillStyle = "#000";
-  ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = "#fff";
-  ctx.font = "900 32px system-ui, Arial"; // big + bold
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("Blibliki", W / 2, H / 2 + 1);
-
-  const img = ctx.getImageData(0, 0, W, H).data;
-
-  // pack pixels into 1216 bytes (7 pixels per byte, bit6 is leftmost)
-  const bmp = new Uint8Array(BPR * H);
-  let k = 0;
-
-  for (let y = 0; y < H; y++) {
-    for (let bx = 0; bx < BPR; bx++) {
-      let v = 0;
-      for (let bit = 0; bit < 7; bit++) {
-        const x = bx * 7 + bit;
-        if (x >= W) continue;
-
-        const i = (y * W + x) * 4;
-        const on = img[i]! + img[i + 1]! + img[i + 2]! > 30; // simple threshold
-        if (on) v |= 0x40 >> bit;
-      }
-      bmp[k++] = v; // always 0..127
-    }
-  }
-
-  // SysEx: F0 00 20 29 02 15 09 <target> <1216 bytes> 7F F7
-  // target per your doc: 0x20 stationary bitmap, 0x21 global temp bitmap
-  const msg: number[] = [
-    0xf0,
-    0x00,
-    0x20,
-    0x29,
-    0x02,
-    0x15,
-    0x09,
-    0x20,
-    ...bmp,
-    0x7f,
-    0xf7,
-  ];
-
-  output.send(msg);
+  // Fill entire screen white to test
+  const bmp = new Uint8Array(1216);
+  for (let i = 0; i < 1216; i++) bmp[i] = 0x7f; // all pixels on (7 bits = 0111 1111)
+  output.send([0xf0, 0x00, 0x20, 0x29, 0x02, 0x15, 0x09, 0x20, ...bmp, 0x7f, 0xf7]);
 }
 
 // usage:
