@@ -57,9 +57,7 @@ export const envelopePropSchema: ModulePropSchema<IEnvelopeProps> = {
 };
 
 // Constants for safe audio parameter automation
-const MIN_GAIN = 0.00001; // Minimum gain value for exponential ramps (below hearing threshold ~-100dB)
-const MIN_TIME = 0.001; // Minimum time segment (1ms) to prevent automation issues
-const RELEASE_TIME_CONSTANT_RATIO = 0.3; // For setTargetAtTime, produces ~95% decay
+const MIN_GAIN = 0.00001;
 
 class MonoEnvelope extends Module<ModuleType.Envelope> {
   declare audioNode: GainNode;
@@ -87,33 +85,14 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
     const { attack, decay, sustain } = this.props;
     const gain = this.audioNode.gain;
 
-    // Ensure minimum time values to prevent automation issues
-    const safeAttack = Math.max(attack, MIN_TIME);
-    const safeDecay = Math.max(decay, MIN_TIME);
-    const safeSustain = Math.max(sustain, MIN_GAIN);
-
-    // Cancel all scheduled automations
     gain.cancelScheduledValues(triggeredAt);
+    gain.setValueAtTime(MIN_GAIN, triggeredAt);
 
-    // Get current gain value for smooth retriggering
-    // Note: We read the value synchronously, which may not be perfectly accurate
-    // during scheduled automations, but it's better than hard-coded values
-    const currentValue = gain.value;
+    gain.setTargetAtTime(1.0, triggeredAt, attack);
 
-    // If we're retriggering from a non-zero value, start from there
-    // Otherwise start from MIN_GAIN to enable exponential ramp
-    const attackStartValue = currentValue > MIN_GAIN ? currentValue : MIN_GAIN;
-
-    // Set the starting value
-    gain.setValueAtTime(attackStartValue, triggeredAt);
-
-    // Attack phase: ramp to peak (1.0)
-    const attackEndTime = triggeredAt + safeAttack;
-    gain.linearRampToValueAtTime(1.0, attackEndTime);
-
-    // Decay phase: ramp to sustain level
-    const decayEndTime = attackEndTime + safeDecay;
-    gain.exponentialRampToValueAtTime(safeSustain, decayEndTime);
+    if (sustain < 1) {
+      gain.setTargetAtTime(sustain, triggeredAt + attack, decay);
+    }
   }
 
   triggerRelease(note: Note, triggeredAt: ContextTime) {
@@ -125,25 +104,8 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
     const { release } = this.props;
     const gain = this.audioNode.gain;
 
-    // Ensure minimum release time
-    const safeRelease = Math.max(release, MIN_TIME);
-
-    // Cancel all scheduled automations from this point forward
-    // The automation curve is preserved up to triggeredAt
-    gain.cancelScheduledValues(triggeredAt);
-
-    // Release phase: exponential decay to silence
-    // setTargetAtTime automatically starts from whatever value exists at triggeredAt
-    // This ensures smooth transitions regardless of which phase we're releasing from
-    // Time constant = release time * RELEASE_TIME_CONSTANT_RATIO
-    // This produces approximately 95% decay over the release time
-    const timeConstant = safeRelease * RELEASE_TIME_CONSTANT_RATIO;
-    gain.setTargetAtTime(0, triggeredAt, timeConstant);
-
-    // Schedule final silence slightly after the release time
-    // This ensures we reach true zero for garbage collection
-    const releaseEndTime = triggeredAt + safeRelease * 1.5;
-    gain.setValueAtTime(0, releaseEndTime);
+    gain.cancelAndHoldAtTime(triggeredAt);
+    gain.setTargetAtTime(MIN_GAIN, triggeredAt, release);
   }
 }
 
