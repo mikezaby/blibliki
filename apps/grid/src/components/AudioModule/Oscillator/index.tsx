@@ -2,6 +2,7 @@ import { moduleSchemas, ModuleType, OscillatorWave } from "@blibliki/engine";
 import Fader, { MarkProps } from "@/components/Fader";
 import { ModuleComponent } from "..";
 import Container from "../Container";
+import { CheckboxField } from "../attributes/Field";
 
 const Center: MarkProps[] = [{ value: 0, label: "" }];
 
@@ -21,10 +22,12 @@ const RANGES: MarkProps[] = [
   { value: 2, label: "2" },
 ];
 
+const schema = moduleSchemas[ModuleType.Oscillator];
+
 const Oscillator: ModuleComponent<ModuleType.Oscillator> = (props) => {
   const {
     updateProp,
-    props: { octave, coarse, fine, wave: waveName },
+    props: { octave, coarse, fine, wave: waveName, lowGain },
   } = props;
 
   const waveIndex = WAVES.findIndex((w) => w === waveName);
@@ -36,44 +39,54 @@ const Oscillator: ModuleComponent<ModuleType.Oscillator> = (props) => {
   };
 
   return (
-    <Container>
-      <Fader
-        name="Octave"
-        marks={RANGES}
-        min={moduleSchemas[ModuleType.Oscillator].octave.min}
-        max={moduleSchemas[ModuleType.Oscillator].octave.max}
-        step={moduleSchemas[ModuleType.Oscillator].octave.step}
-        exp={moduleSchemas[ModuleType.Oscillator].octave.exp}
-        onChange={updateProp("octave")}
-        value={octave}
-      />
-      <Fader
-        name="Coarse"
-        marks={Center}
-        min={moduleSchemas[ModuleType.Oscillator].coarse.min}
-        max={moduleSchemas[ModuleType.Oscillator].coarse.max}
-        step={moduleSchemas[ModuleType.Oscillator].coarse.step}
-        exp={moduleSchemas[ModuleType.Oscillator].coarse.exp}
-        onChange={updateProp("coarse")}
-        value={coarse}
-      />
-      <Fader
-        name="Fine"
-        marks={Center}
-        min={moduleSchemas[ModuleType.Oscillator].fine.min}
-        max={moduleSchemas[ModuleType.Oscillator].fine.max}
-        step={moduleSchemas[ModuleType.Oscillator].fine.step}
-        exp={moduleSchemas[ModuleType.Oscillator].fine.exp}
-        onChange={updateProp("fine")}
-        value={fine}
-      />
-      <Fader
-        name="Wave"
-        marks={WAVE_MARKS}
-        onChange={updateWaveProp}
-        value={waveIndex}
-      />
-    </Container>
+    <div className="flex flex-col gap-y-8">
+      <Container className="justify-start">
+        <CheckboxField
+          name="Low gain"
+          value={lowGain}
+          schema={schema.lowGain}
+          onChange={updateProp("lowGain")}
+        />
+      </Container>
+      <Container>
+        <Fader
+          name="Octave"
+          marks={RANGES}
+          min={schema.octave.min}
+          max={schema.octave.max}
+          step={schema.octave.step}
+          exp={schema.octave.exp}
+          onChange={updateProp("octave")}
+          value={octave}
+        />
+        <Fader
+          name="Coarse"
+          marks={Center}
+          min={schema.coarse.min}
+          max={schema.coarse.max}
+          step={schema.coarse.step}
+          exp={schema.coarse.exp}
+          onChange={updateProp("coarse")}
+          value={coarse}
+        />
+        <Fader
+          name="Fine"
+          marks={Center}
+          min={schema.fine.min}
+          max={schema.fine.max}
+          step={schema.fine.step}
+          exp={schema.fine.exp}
+          onChange={updateProp("fine")}
+          value={fine}
+        />
+        <Fader
+          name="Wave"
+          marks={WAVE_MARKS}
+          onChange={updateWaveProp}
+          value={waveIndex}
+        />
+      </Container>
+    </div>
   );
 };
 
