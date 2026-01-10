@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 import { useAppDispatch } from "@/hooks";
 import Chorus from "./Chorus";
 import Constant from "./Constant";
+import CustomEnvelope from "./CustomEnvelope";
 import Delay from "./Delay";
 import Distortion from "./Distortion";
 import Envelope from "./Envelope";
@@ -55,6 +56,7 @@ const COMPONENT_MAPPING: {
   [ModuleType.Filter]: Filter,
   [ModuleType.Gain]: Gain,
   [ModuleType.Envelope]: Envelope,
+  [ModuleType.CustomEnvelope]: CustomEnvelope,
   [ModuleType.MidiInput]: MidiInput,
   [ModuleType.MidiOutput]: MidiOutput,
   // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration

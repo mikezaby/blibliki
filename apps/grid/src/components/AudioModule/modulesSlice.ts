@@ -33,6 +33,10 @@ export const AvailableModules: Record<
     props: { lowGain: true },
   },
   [ModuleType.Envelope]: { name: "Envelope", moduleType: ModuleType.Envelope },
+  [ModuleType.CustomEnvelope]: {
+    name: "Custom Envelope",
+    moduleType: ModuleType.CustomEnvelope,
+  },
   [ModuleType.Filter]: { name: "Filter", moduleType: ModuleType.Filter },
   [ModuleType.Gain]: { name: "Gain", moduleType: ModuleType.Gain },
   [ModuleType.MidiInput]: {

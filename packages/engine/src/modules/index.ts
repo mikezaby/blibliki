@@ -7,6 +7,10 @@ import VoiceScheduler, {
 } from "@/core/module/VoiceScheduler";
 import Chorus, { chorusPropSchema, IChorusProps } from "./Chorus";
 import Constant, { constantPropSchema, IConstantProps } from "./Constant";
+import CustomEnvelope, {
+  customEnvelopePropSchema,
+  ICustomEnvelopeProps,
+} from "./CustomEnvelope";
 import Delay, { delayPropSchema, IDelayProps } from "./Delay";
 import Distortion, {
   distortionPropSchema,
@@ -59,6 +63,7 @@ export enum ModuleType {
   MidiOutput = "MidiOutput",
   MidiSelector = "MidiSelector", // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
   Envelope = "Envelope",
+  CustomEnvelope = "CustomEnvelope",
   Filter = "Filter",
   Scale = "Scale",
   StereoPanner = "StereoPanner",
@@ -84,6 +89,7 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.MidiOutput]: IMidiOutputProps;
   [ModuleType.MidiSelector]: IMidiSelectorProps; // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
   [ModuleType.Envelope]: IEnvelopeProps;
+  [ModuleType.CustomEnvelope]: ICustomEnvelopeProps;
   [ModuleType.Filter]: IFilterProps;
   [ModuleType.Scale]: IScaleProps;
   [ModuleType.StereoPanner]: IStereoPannerProps;
@@ -109,6 +115,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.MidiOutput]: MidiOutput;
   [ModuleType.MidiSelector]: MidiSelector; // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
   [ModuleType.Envelope]: Envelope;
+  [ModuleType.CustomEnvelope]: CustomEnvelope;
   [ModuleType.Filter]: Filter;
   [ModuleType.Scale]: Scale;
   [ModuleType.StereoPanner]: StereoPanner;
@@ -134,6 +141,7 @@ export const moduleSchemas = {
   [ModuleType.MidiOutput]: midiOutputPropSchema,
   [ModuleType.MidiSelector]: midiSelectorPropSchema, // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
   [ModuleType.Envelope]: envelopePropSchema,
+  [ModuleType.CustomEnvelope]: customEnvelopePropSchema,
   [ModuleType.Filter]: filterPropSchema,
   [ModuleType.Scale]: scalePropSchema,
   [ModuleType.StereoPanner]: stereoPannerPropSchema,
@@ -197,6 +205,7 @@ export type ModuleParams = {
     | ModuleType.Oscillator
     | ModuleType.Gain
     | ModuleType.Envelope
+    | ModuleType.CustomEnvelope
     | ModuleType.Filter
     | ModuleType.StereoPanner
     | ModuleType.VoiceScheduler
@@ -231,6 +240,8 @@ export function createModule(
       } as ICreateModule<ModuleType.MidiInput>);
     case ModuleType.Envelope:
       return new Envelope(engineId, params);
+    case ModuleType.CustomEnvelope:
+      return new CustomEnvelope(engineId, params);
     case ModuleType.Filter:
       return new Filter(engineId, params);
     case ModuleType.Scale:
