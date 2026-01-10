@@ -85,13 +85,24 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
     const { attack, decay, sustain } = this.props;
     const gain = this.audioNode.gain;
 
-    gain.cancelScheduledValues(triggeredAt);
-    gain.setValueAtTime(MIN_GAIN, triggeredAt);
+    // Exponential reset to avoid clicks when retriggering (production-style)
+    gain.cancelAndHoldAtTime(triggeredAt);
+    const resetTimeConstant = 0.002; // 2ms time constant for exponential decay
+    const resetDuration = resetTimeConstant * 5; // ~10ms total (5 time constants ≈ 99% complete)
+    gain.setTargetAtTime(MIN_GAIN, triggeredAt, resetTimeConstant);
 
-    gain.setTargetAtTime(1.0, triggeredAt, attack);
+    // Attack phase: linear ramp to peak
+    const attackStartTime = triggeredAt + resetDuration;
+    const attackEndTime = attackStartTime + attack;
+    gain.setValueAtTime(MIN_GAIN, attackStartTime); // Ensure we start from MIN_GAIN
+    gain.linearRampToValueAtTime(1.0, attackEndTime);
 
+    // Decay phase: exponential ramp to sustain level
     if (sustain < 1) {
-      gain.setTargetAtTime(sustain, triggeredAt + attack, decay);
+      const decayEndTime = attackEndTime + decay;
+      // exponentialRampToValueAtTime cannot reach 0, use MIN_GAIN instead
+      const sustainValue = sustain > 0 ? sustain : MIN_GAIN;
+      gain.exponentialRampToValueAtTime(sustainValue, decayEndTime);
     }
   }
 
@@ -104,6 +115,7 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
     const { release } = this.props;
     const gain = this.audioNode.gain;
 
+    // Release phase: exponential fade to silence (analog-style)
     gain.cancelAndHoldAtTime(triggeredAt);
     gain.setTargetAtTime(MIN_GAIN, triggeredAt, release);
   }
