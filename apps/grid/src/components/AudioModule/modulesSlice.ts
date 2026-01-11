@@ -16,14 +16,19 @@ import { XYPosition } from "@xyflow/react";
 import { addNode } from "@/components/Grid/gridNodesSlice";
 import { AppDispatch, RootState } from "@/store";
 
+export type AvailableModuleType = Exclude<
+  ModuleType,
+  ModuleType.LegacyEnvelope
+>;
+
 type ModuleInterface = {
   voices?: number;
-} & Omit<IModule<ModuleType>, "id" | "voiceNo">;
+} & Omit<IModule<AvailableModuleType>, "id" | "voiceNo">;
 
-export type ModuleProps = IAnyModuleSerialize;
+export type ModuleProps = IAnyModuleSerialize<AvailableModuleType>;
 
 export const AvailableModules: Record<
-  ModuleType,
+  AvailableModuleType,
   Optional<ModuleInterface, "props">
 > = {
   [ModuleType.Master]: { name: "Master", moduleType: ModuleType.Master },
@@ -35,11 +40,6 @@ export const AvailableModules: Record<
   [ModuleType.Envelope]: {
     name: "Envelope",
     moduleType: ModuleType.Envelope,
-  },
-  // BACKWARD_COMPAT: Legacy envelope for loading old patches only
-  [ModuleType.LegacyEnvelope]: {
-    name: "Legacy Envelope (internal)",
-    moduleType: ModuleType.LegacyEnvelope,
   },
   [ModuleType.Filter]: { name: "Filter", moduleType: ModuleType.Filter },
   [ModuleType.Gain]: { name: "Gain", moduleType: ModuleType.Gain },
@@ -147,7 +147,7 @@ export const addModule =
   };
 
 export const addNewModule =
-  (params: { type: ModuleType; position?: XYPosition }) =>
+  (params: { type: AvailableModuleType; position?: XYPosition }) =>
   (dispatch: AppDispatch) => {
     const { type, position } = params;
     const { props = {}, ...moduleAttrs } = AvailableModules[type];

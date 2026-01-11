@@ -1,8 +1,7 @@
-import { ModuleType } from "@blibliki/engine";
 import { useReactFlow } from "@xyflow/react";
 import { DragEvent } from "react";
 import { useAppDispatch } from "@/hooks";
-import { addNewModule } from "../AudioModule/modulesSlice";
+import { addNewModule, AvailableModuleType } from "../AudioModule/modulesSlice";
 
 function onDragStart(event: DragEvent, nodeType: string) {
   event.dataTransfer.setData("application/reactflow", nodeType);
@@ -23,7 +22,7 @@ export default function useDrag() {
 
     const type = event.dataTransfer.getData(
       "application/reactflow",
-    ) as ModuleType;
+    ) as AvailableModuleType;
     const position = screenToFlowPosition({
       x: event.clientX - 20,
       y: event.clientY - 20,

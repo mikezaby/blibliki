@@ -74,7 +74,7 @@ export const load = (patch: Patch | IPatch) => (dispatch: AppDispatch) => {
   const { bpm = 120, modules, gridNodes } = config;
 
   dispatch(clearEngine());
-  dispatch(loadModules(modules));
+  dispatch(loadModules(modules as ModuleProps[]));
   dispatch(setGridNodes(gridNodes));
   dispatch(setBpm(bpm));
 

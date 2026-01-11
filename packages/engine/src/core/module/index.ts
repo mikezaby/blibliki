@@ -6,6 +6,6 @@ export { Module } from "./Module";
 export type { IModule, IModuleSerialize, SetterHooks } from "./Module";
 export type { IPolyModule, IPolyModuleSerialize } from "./PolyModule";
 
-export type IAnyModuleSerialize =
-  | IModuleSerialize<ModuleType>
-  | IPolyModuleSerialize<ModuleType>;
+export type IAnyModuleSerialize<MT extends ModuleType = ModuleType> =
+  | IModuleSerialize<MT>
+  | IPolyModuleSerialize<MT>;
