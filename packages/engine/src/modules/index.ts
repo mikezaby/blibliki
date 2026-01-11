@@ -7,20 +7,23 @@ import VoiceScheduler, {
 } from "@/core/module/VoiceScheduler";
 import Chorus, { chorusPropSchema, IChorusProps } from "./Chorus";
 import Constant, { constantPropSchema, IConstantProps } from "./Constant";
-import CustomEnvelope, {
-  customEnvelopePropSchema,
-  ICustomEnvelopeProps,
-} from "./CustomEnvelope";
 import Delay, { delayPropSchema, IDelayProps } from "./Delay";
 import Distortion, {
   distortionPropSchema,
   IDistortionProps,
 } from "./Distortion";
-import Envelope, { envelopePropSchema, IEnvelopeProps } from "./Envelope";
+import CustomEnvelope, {
+  customEnvelopePropSchema,
+  ICustomEnvelopeProps,
+} from "./Envelope";
 import Filter, { filterPropSchema, IFilterProps } from "./Filter";
 import Gain, { gainPropSchema, IGainProps } from "./Gain";
 import Inspector, { IInspectorProps, inspectorPropSchema } from "./Inspector";
 import LFO, { ILFOProps, lfoPropSchema } from "./LFO";
+import LegacyEnvelope, {
+  envelopePropSchema as legacyEnvelopePropSchema,
+  IEnvelopeProps as ILegacyEnvelopeProps,
+} from "./LegacyEnvelope";
 import Master, { IMasterProps, masterPropSchema } from "./Master";
 import MidiInput, { IMidiInputProps, midiInputPropSchema } from "./MidiInput";
 import MidiMapper, {
@@ -62,8 +65,8 @@ export enum ModuleType {
   MidiInput = "MidiInput",
   MidiOutput = "MidiOutput",
   MidiSelector = "MidiSelector", // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
+  LegacyEnvelope = "LegacyEnvelope", // BACKWARD_COMPAT: Legacy envelope for old patches
   Envelope = "Envelope",
-  CustomEnvelope = "CustomEnvelope",
   Filter = "Filter",
   Scale = "Scale",
   StereoPanner = "StereoPanner",
@@ -88,8 +91,8 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.MidiInput]: IMidiInputProps;
   [ModuleType.MidiOutput]: IMidiOutputProps;
   [ModuleType.MidiSelector]: IMidiSelectorProps; // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
-  [ModuleType.Envelope]: IEnvelopeProps;
-  [ModuleType.CustomEnvelope]: ICustomEnvelopeProps;
+  [ModuleType.LegacyEnvelope]: ILegacyEnvelopeProps; // BACKWARD_COMPAT: Legacy envelope for old patches
+  [ModuleType.Envelope]: ICustomEnvelopeProps;
   [ModuleType.Filter]: IFilterProps;
   [ModuleType.Scale]: IScaleProps;
   [ModuleType.StereoPanner]: IStereoPannerProps;
@@ -114,8 +117,8 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.MidiInput]: MidiInput;
   [ModuleType.MidiOutput]: MidiOutput;
   [ModuleType.MidiSelector]: MidiSelector; // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
-  [ModuleType.Envelope]: Envelope;
-  [ModuleType.CustomEnvelope]: CustomEnvelope;
+  [ModuleType.LegacyEnvelope]: LegacyEnvelope; // BACKWARD_COMPAT: Legacy envelope for old patches
+  [ModuleType.Envelope]: CustomEnvelope;
   [ModuleType.Filter]: Filter;
   [ModuleType.Scale]: Scale;
   [ModuleType.StereoPanner]: StereoPanner;
@@ -140,8 +143,8 @@ export const moduleSchemas = {
   [ModuleType.MidiInput]: midiInputPropSchema,
   [ModuleType.MidiOutput]: midiOutputPropSchema,
   [ModuleType.MidiSelector]: midiSelectorPropSchema, // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
-  [ModuleType.Envelope]: envelopePropSchema,
-  [ModuleType.CustomEnvelope]: customEnvelopePropSchema,
+  [ModuleType.LegacyEnvelope]: legacyEnvelopePropSchema, // BACKWARD_COMPAT: Legacy envelope for old patches
+  [ModuleType.Envelope]: customEnvelopePropSchema,
   [ModuleType.Filter]: filterPropSchema,
   [ModuleType.Scale]: scalePropSchema,
   [ModuleType.StereoPanner]: stereoPannerPropSchema,
@@ -204,8 +207,8 @@ export type ModuleParams = {
   [K in ModuleType]: K extends
     | ModuleType.Oscillator
     | ModuleType.Gain
+    | ModuleType.LegacyEnvelope
     | ModuleType.Envelope
-    | ModuleType.CustomEnvelope
     | ModuleType.Filter
     | ModuleType.StereoPanner
     | ModuleType.VoiceScheduler
@@ -238,9 +241,10 @@ export function createModule(
         ...params,
         moduleType: ModuleType.MidiInput,
       } as ICreateModule<ModuleType.MidiInput>);
+    // BACKWARD_COMPAT: Legacy envelope for old patches
+    case ModuleType.LegacyEnvelope:
+      return new LegacyEnvelope(engineId, params);
     case ModuleType.Envelope:
-      return new Envelope(engineId, params);
-    case ModuleType.CustomEnvelope:
       return new CustomEnvelope(engineId, params);
     case ModuleType.Filter:
       return new Filter(engineId, params);

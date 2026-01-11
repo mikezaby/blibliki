@@ -2,7 +2,7 @@ import { sleep } from "@blibliki/utils";
 import { describe, expect, it } from "vitest";
 import { ModuleType } from "@/modules";
 import Constant from "@/modules/Constant";
-import CustomEnvelope from "@/modules/CustomEnvelope";
+import Envelope from "@/modules/Envelope";
 import Inspector from "@/modules/Inspector";
 
 const DEFAULT_PROPS = {
@@ -13,12 +13,12 @@ const DEFAULT_PROPS = {
   release: 0.3,
 };
 
-describe("CustomEnvelope", () => {
+describe("Envelope", () => {
   describe("Initialize", () => {
     it("has proper type", (ctx) => {
-      const envelope = new CustomEnvelope(ctx.engine.id, {
+      const envelope = new Envelope(ctx.engine.id, {
         name: "envelope",
-        moduleType: ModuleType.CustomEnvelope,
+        moduleType: ModuleType.Envelope,
         props: DEFAULT_PROPS,
         voices: 1,
         monoModuleConstructor: () => {
@@ -26,13 +26,13 @@ describe("CustomEnvelope", () => {
         },
       });
 
-      expect(envelope.moduleType).toBe(ModuleType.CustomEnvelope);
+      expect(envelope.moduleType).toBe(ModuleType.Envelope);
     });
 
     it("has default ADSR values", (ctx) => {
-      const envelope = new CustomEnvelope(ctx.engine.id, {
+      const envelope = new Envelope(ctx.engine.id, {
         name: "envelope",
-        moduleType: ModuleType.CustomEnvelope,
+        moduleType: ModuleType.Envelope,
         props: DEFAULT_PROPS,
         voices: 1,
         monoModuleConstructor: () => {
@@ -47,9 +47,9 @@ describe("CustomEnvelope", () => {
     });
 
     it("accepts custom ADSR values", (ctx) => {
-      const envelope = new CustomEnvelope(ctx.engine.id, {
+      const envelope = new Envelope(ctx.engine.id, {
         name: "envelope",
-        moduleType: ModuleType.CustomEnvelope,
+        moduleType: ModuleType.Envelope,
         props: {
           attack: 0.05,
           attackCurve: 0.5,
@@ -72,9 +72,9 @@ describe("CustomEnvelope", () => {
 
   describe("Triggering with Constant module", () => {
     it("should output silence when not triggered", async (ctx) => {
-      const envelope = new CustomEnvelope(ctx.engine.id, {
+      const envelope = new Envelope(ctx.engine.id, {
         name: "envelope",
-        moduleType: ModuleType.CustomEnvelope,
+        moduleType: ModuleType.Envelope,
         props: DEFAULT_PROPS,
         voices: 1,
         monoModuleConstructor: () => {
@@ -104,9 +104,9 @@ describe("CustomEnvelope", () => {
     });
 
     it("should rise during attack when triggered", async (ctx) => {
-      const envelope = new CustomEnvelope(ctx.engine.id, {
+      const envelope = new Envelope(ctx.engine.id, {
         name: "envelope",
-        moduleType: ModuleType.CustomEnvelope,
+        moduleType: ModuleType.Envelope,
         props: {
           attack: 0.1, // 100ms attack
           attackCurve: 0.5,
@@ -157,9 +157,9 @@ describe("CustomEnvelope", () => {
     });
 
     it("should reach sustain level and hold", async (ctx) => {
-      const envelope = new CustomEnvelope(ctx.engine.id, {
+      const envelope = new Envelope(ctx.engine.id, {
         name: "envelope",
-        moduleType: ModuleType.CustomEnvelope,
+        moduleType: ModuleType.Envelope,
         props: {
           attack: 0.02, // 20ms attack (fast)
           attackCurve: 0.5,
@@ -205,9 +205,9 @@ describe("CustomEnvelope", () => {
     });
 
     it("should release when trigger goes to 0", async (ctx) => {
-      const envelope = new CustomEnvelope(ctx.engine.id, {
+      const envelope = new Envelope(ctx.engine.id, {
         name: "envelope",
-        moduleType: ModuleType.CustomEnvelope,
+        moduleType: ModuleType.Envelope,
         props: {
           attack: 0.01, // 10ms attack (very fast)
           attackCurve: 0.5,
@@ -261,9 +261,9 @@ describe("CustomEnvelope", () => {
     });
 
     it("should handle retriggering during release", async (ctx) => {
-      const envelope = new CustomEnvelope(ctx.engine.id, {
+      const envelope = new Envelope(ctx.engine.id, {
         name: "envelope",
-        moduleType: ModuleType.CustomEnvelope,
+        moduleType: ModuleType.Envelope,
         props: {
           attack: 0.02,
           attackCurve: 0.5,
@@ -319,9 +319,9 @@ describe("CustomEnvelope", () => {
 
   describe("Parameter updates", () => {
     it("should update attack parameter", (ctx) => {
-      const envelope = new CustomEnvelope(ctx.engine.id, {
+      const envelope = new Envelope(ctx.engine.id, {
         name: "envelope",
-        moduleType: ModuleType.CustomEnvelope,
+        moduleType: ModuleType.Envelope,
         props: { ...DEFAULT_PROPS, attack: 0.01 },
         voices: 1,
         monoModuleConstructor: () => {
@@ -334,9 +334,9 @@ describe("CustomEnvelope", () => {
     });
 
     it("should update decay parameter", (ctx) => {
-      const envelope = new CustomEnvelope(ctx.engine.id, {
+      const envelope = new Envelope(ctx.engine.id, {
         name: "envelope",
-        moduleType: ModuleType.CustomEnvelope,
+        moduleType: ModuleType.Envelope,
         props: { ...DEFAULT_PROPS, decay: 0.1 },
         voices: 1,
         monoModuleConstructor: () => {
@@ -349,9 +349,9 @@ describe("CustomEnvelope", () => {
     });
 
     it("should update sustain parameter", (ctx) => {
-      const envelope = new CustomEnvelope(ctx.engine.id, {
+      const envelope = new Envelope(ctx.engine.id, {
         name: "envelope",
-        moduleType: ModuleType.CustomEnvelope,
+        moduleType: ModuleType.Envelope,
         props: { ...DEFAULT_PROPS, sustain: 0.7 },
         voices: 1,
         monoModuleConstructor: () => {
@@ -364,9 +364,9 @@ describe("CustomEnvelope", () => {
     });
 
     it("should update release parameter", (ctx) => {
-      const envelope = new CustomEnvelope(ctx.engine.id, {
+      const envelope = new Envelope(ctx.engine.id, {
         name: "envelope",
-        moduleType: ModuleType.CustomEnvelope,
+        moduleType: ModuleType.Envelope,
         props: { ...DEFAULT_PROPS, release: 0.3 },
         voices: 1,
         monoModuleConstructor: () => {
