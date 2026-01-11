@@ -4,6 +4,7 @@ type SliderProps = {
   min: number;
   max: number;
   value?: number;
+  displayValue?: number;
   defaultValue?: number;
   step?: number;
   marks?: readonly MarkProps[];
@@ -37,6 +38,7 @@ export default function Slider(props: SliderProps) {
     min,
     max,
     value,
+    displayValue,
     defaultValue,
     marks,
     hideMarks = false,
@@ -65,7 +67,8 @@ export default function Slider(props: SliderProps) {
     onChange(Number(event.target.value));
   };
 
-  const displayedValue = marks && value !== undefined ? marks[value] : value;
+  const displayedValue =
+    marks && value !== undefined ? marks[value] : (displayValue ?? value);
 
   return (
     <div className={wrapperClassName}>

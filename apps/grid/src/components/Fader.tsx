@@ -85,6 +85,7 @@ export default function Fader(props: FaderProps) {
       <Slider
         orientation={orientation}
         onChange={debouncedOnChange}
+        displayValue={value}
         value={revValue}
         defaultValue={defaultValue}
         min={min}
