@@ -32,7 +32,15 @@ export const AvailableModules: Record<
     moduleType: ModuleType.Oscillator,
     props: { lowGain: true },
   },
-  [ModuleType.Envelope]: { name: "Envelope", moduleType: ModuleType.Envelope },
+  [ModuleType.Envelope]: {
+    name: "Envelope",
+    moduleType: ModuleType.Envelope,
+  },
+  // BACKWARD_COMPAT: Legacy envelope for loading old patches only
+  [ModuleType.LegacyEnvelope]: {
+    name: "Legacy Envelope (internal)",
+    moduleType: ModuleType.LegacyEnvelope,
+  },
   [ModuleType.Filter]: { name: "Filter", moduleType: ModuleType.Filter },
   [ModuleType.Gain]: { name: "Gain", moduleType: ModuleType.Gain },
   [ModuleType.MidiInput]: {

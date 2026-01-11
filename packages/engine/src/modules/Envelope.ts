@@ -3,70 +3,102 @@ import { Context } from "@blibliki/utils";
 import { GainNode } from "@blibliki/utils/web-audio-api";
 import { Module } from "@/core";
 import Note from "@/core/Note";
-import { IModuleConstructor } from "@/core/module/Module";
+import { IModuleConstructor, SetterHooks } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { ModulePropSchema } from "@/core/schema";
+import { CustomWorklet, newAudioWorklet } from "@/processors";
 import { ICreateModule, ModuleType } from ".";
 
-export type IEnvelopeProps = {
+export type ICustomEnvelopeProps = {
   attack: number;
+  attackCurve: number;
   decay: number;
   sustain: number;
   release: number;
 };
 
-const DEFAULT_PROPS: IEnvelopeProps = {
-  attack: 0.01,
+const DEFAULT_PROPS: ICustomEnvelopeProps = {
+  attack: 0.1,
+  attackCurve: 0.5,
   decay: 0.1,
-  sustain: 0.7,
-  release: 0.3,
+  sustain: 1,
+  release: 0.1,
 };
 
-export const envelopePropSchema: ModulePropSchema<IEnvelopeProps> = {
-  attack: {
-    kind: "number",
-    min: 0.001,
-    max: 10,
-    step: 0.001,
-    exp: 3,
-    label: "Attack",
-  },
-  decay: {
-    kind: "number",
-    min: 0.001,
-    max: 10,
-    step: 0.001,
-    exp: 3,
-    label: "Decay",
-  },
-  sustain: {
-    kind: "number",
-    min: 0,
-    max: 1,
-    step: 0.01,
-    label: "Sustain",
-  },
-  release: {
-    kind: "number",
-    min: 0.001,
-    max: 10,
-    step: 0.001,
-    exp: 3,
-    label: "Release",
-  },
-};
+export const customEnvelopePropSchema: ModulePropSchema<ICustomEnvelopeProps> =
+  {
+    attack: {
+      kind: "number",
+      min: 0,
+      max: 10,
+      step: 0.01,
+      exp: 7,
+      label: "Attack",
+    },
+    attackCurve: {
+      kind: "number",
+      min: 0,
+      max: 1,
+      step: 0.01,
+      label: "Attack Curve",
+    },
+    decay: {
+      kind: "number",
+      min: 0,
+      max: 10,
+      step: 0.01,
+      exp: 6.6,
+      label: "Decay",
+    },
+    sustain: {
+      kind: "number",
+      min: 0,
+      max: 1,
+      step: 0.01,
+      label: "Sustain",
+    },
+    release: {
+      kind: "number",
+      min: 0,
+      max: 10,
+      step: 0.01,
+      exp: 5,
+      label: "Release",
+    },
+  };
 
-// Constants for safe audio parameter automation
-const MIN_GAIN = 0.00001;
+type CustomEnvelopeSetterHooks = SetterHooks<ICustomEnvelopeProps>;
 
-class MonoEnvelope extends Module<ModuleType.Envelope> {
-  declare audioNode: GainNode;
+class MonoCustomEnvelope
+  extends Module<ModuleType.Envelope>
+  implements
+    Pick<
+      CustomEnvelopeSetterHooks,
+      | "onAfterSetAttack"
+      | "onAfterSetAttackCurve"
+      | "onAfterSetDecay"
+      | "onAfterSetSustain"
+      | "onAfterSetRelease"
+    >
+{
+  declare audioNode: ReturnType<typeof newAudioWorklet>;
+  private gainNode!: GainNode;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Envelope>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
     const audioNodeConstructor = (context: Context) => {
-      const audioNode = new GainNode(context.audioContext);
-      audioNode.gain.value = 0;
+      const audioNode = newAudioWorklet(
+        context,
+        CustomWorklet.CustomEnvelopeProcessor,
+      );
+
+      // Set initial parameter values
+      audioNode.parameters.get("attack")!.value = props.attack;
+      audioNode.parameters.get("attackcurve")!.value = props.attackCurve;
+      audioNode.parameters.get("decay")!.value = props.decay;
+      audioNode.parameters.get("sustain")!.value = props.sustain;
+      audioNode.parameters.get("release")!.value = props.release;
+
       return audioNode;
     };
 
@@ -76,34 +108,70 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
       audioNodeConstructor,
     });
 
-    this.registerDefaultIOs();
+    this.gainNode = new GainNode(this.context.audioContext, {
+      gain: 0,
+    });
+    this.audioNode.connect(this.gainNode.gain);
+
+    this.registerIOs();
   }
+
+  // AudioParam getters
+  get attackParam() {
+    return this.audioNode.parameters.get("attack")!;
+  }
+
+  get attackCurveParam() {
+    return this.audioNode.parameters.get("attackcurve")!;
+  }
+
+  get decayParam() {
+    return this.audioNode.parameters.get("decay")!;
+  }
+
+  get sustainParam() {
+    return this.audioNode.parameters.get("sustain")!;
+  }
+
+  get releaseParam() {
+    return this.audioNode.parameters.get("release")!;
+  }
+
+  get triggerParam() {
+    return this.audioNode.parameters.get("trigger")!;
+  }
+
+  // Setter hooks that update AudioParams
+  onAfterSetAttack: CustomEnvelopeSetterHooks["onAfterSetAttack"] = (value) => {
+    this.attackParam.value = value;
+  };
+
+  onAfterSetAttackCurve: CustomEnvelopeSetterHooks["onAfterSetAttackCurve"] = (
+    value,
+  ) => {
+    this.attackCurveParam.value = value;
+  };
+
+  onAfterSetDecay: CustomEnvelopeSetterHooks["onAfterSetDecay"] = (value) => {
+    this.decayParam.value = value;
+  };
+
+  onAfterSetSustain: CustomEnvelopeSetterHooks["onAfterSetSustain"] = (
+    value,
+  ) => {
+    this.sustainParam.value = value;
+  };
+
+  onAfterSetRelease: CustomEnvelopeSetterHooks["onAfterSetRelease"] = (
+    value,
+  ) => {
+    this.releaseParam.value = value;
+  };
 
   triggerAttack(note: Note, triggeredAt: ContextTime) {
     super.triggerAttack(note, triggeredAt);
 
-    const { attack, decay, sustain } = this.props;
-    const gain = this.audioNode.gain;
-
-    // Exponential reset to avoid clicks when retriggering (production-style)
-    gain.cancelAndHoldAtTime(triggeredAt);
-    const resetTimeConstant = 0.002; // 2ms time constant for exponential decay
-    const resetDuration = resetTimeConstant * 5; // ~10ms total (5 time constants ≈ 99% complete)
-    gain.setTargetAtTime(MIN_GAIN, triggeredAt, resetTimeConstant);
-
-    // Attack phase: linear ramp to peak
-    const attackStartTime = triggeredAt + resetDuration;
-    const attackEndTime = attackStartTime + attack;
-    gain.setValueAtTime(MIN_GAIN, attackStartTime); // Ensure we start from MIN_GAIN
-    gain.linearRampToValueAtTime(1.0, attackEndTime);
-
-    // Decay phase: exponential ramp to sustain level
-    if (sustain < 1) {
-      const decayEndTime = attackEndTime + decay;
-      // exponentialRampToValueAtTime cannot reach 0, use MIN_GAIN instead
-      const sustainValue = sustain > 0 ? sustain : MIN_GAIN;
-      gain.exponentialRampToValueAtTime(sustainValue, decayEndTime);
-    }
+    this.triggerParam.setValueAtTime(1, triggeredAt);
   }
 
   triggerRelease(note: Note, triggeredAt: ContextTime) {
@@ -112,16 +180,28 @@ class MonoEnvelope extends Module<ModuleType.Envelope> {
     // Only release if this is the last active note
     if (this.activeNotes.length > 0) return;
 
-    const { release } = this.props;
-    const gain = this.audioNode.gain;
+    this.triggerParam.setValueAtTime(0, triggeredAt);
+  }
 
-    // Release phase: exponential fade to silence (analog-style)
-    gain.cancelAndHoldAtTime(triggeredAt);
-    gain.setTargetAtTime(MIN_GAIN, triggeredAt, release);
+  dispose() {
+    this.gainNode.disconnect();
+    super.dispose();
+  }
+
+  private registerIOs() {
+    this.registerAudioInput({
+      name: "in",
+      getAudioNode: () => this.gainNode,
+    });
+
+    this.registerAudioOutput({
+      name: "out",
+      getAudioNode: () => this.gainNode,
+    });
   }
 }
 
-export default class Envelope extends PolyModule<ModuleType.Envelope> {
+export default class CustomEnvelope extends PolyModule<ModuleType.Envelope> {
   constructor(
     engineId: string,
     params: IPolyModuleConstructor<ModuleType.Envelope>,
@@ -130,7 +210,7 @@ export default class Envelope extends PolyModule<ModuleType.Envelope> {
     const monoModuleConstructor = (
       engineId: string,
       params: IModuleConstructor<ModuleType.Envelope>,
-    ) => new MonoEnvelope(engineId, params);
+    ) => new MonoCustomEnvelope(engineId, params);
 
     super(engineId, {
       ...params,

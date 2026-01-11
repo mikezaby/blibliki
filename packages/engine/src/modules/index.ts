@@ -12,11 +12,18 @@ import Distortion, {
   distortionPropSchema,
   IDistortionProps,
 } from "./Distortion";
-import Envelope, { envelopePropSchema, IEnvelopeProps } from "./Envelope";
+import CustomEnvelope, {
+  customEnvelopePropSchema,
+  ICustomEnvelopeProps,
+} from "./Envelope";
 import Filter, { filterPropSchema, IFilterProps } from "./Filter";
 import Gain, { gainPropSchema, IGainProps } from "./Gain";
 import Inspector, { IInspectorProps, inspectorPropSchema } from "./Inspector";
 import LFO, { ILFOProps, lfoPropSchema } from "./LFO";
+import LegacyEnvelope, {
+  envelopePropSchema as legacyEnvelopePropSchema,
+  IEnvelopeProps as ILegacyEnvelopeProps,
+} from "./LegacyEnvelope";
 import Master, { IMasterProps, masterPropSchema } from "./Master";
 import MidiInput, { IMidiInputProps, midiInputPropSchema } from "./MidiInput";
 import MidiMapper, {
@@ -58,6 +65,7 @@ export enum ModuleType {
   MidiInput = "MidiInput",
   MidiOutput = "MidiOutput",
   MidiSelector = "MidiSelector", // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
+  LegacyEnvelope = "LegacyEnvelope", // BACKWARD_COMPAT: Legacy envelope for old patches
   Envelope = "Envelope",
   Filter = "Filter",
   Scale = "Scale",
@@ -83,7 +91,8 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.MidiInput]: IMidiInputProps;
   [ModuleType.MidiOutput]: IMidiOutputProps;
   [ModuleType.MidiSelector]: IMidiSelectorProps; // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
-  [ModuleType.Envelope]: IEnvelopeProps;
+  [ModuleType.LegacyEnvelope]: ILegacyEnvelopeProps; // BACKWARD_COMPAT: Legacy envelope for old patches
+  [ModuleType.Envelope]: ICustomEnvelopeProps;
   [ModuleType.Filter]: IFilterProps;
   [ModuleType.Scale]: IScaleProps;
   [ModuleType.StereoPanner]: IStereoPannerProps;
@@ -108,7 +117,8 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.MidiInput]: MidiInput;
   [ModuleType.MidiOutput]: MidiOutput;
   [ModuleType.MidiSelector]: MidiSelector; // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
-  [ModuleType.Envelope]: Envelope;
+  [ModuleType.LegacyEnvelope]: LegacyEnvelope; // BACKWARD_COMPAT: Legacy envelope for old patches
+  [ModuleType.Envelope]: CustomEnvelope;
   [ModuleType.Filter]: Filter;
   [ModuleType.Scale]: Scale;
   [ModuleType.StereoPanner]: StereoPanner;
@@ -133,7 +143,8 @@ export const moduleSchemas = {
   [ModuleType.MidiInput]: midiInputPropSchema,
   [ModuleType.MidiOutput]: midiOutputPropSchema,
   [ModuleType.MidiSelector]: midiSelectorPropSchema, // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
-  [ModuleType.Envelope]: envelopePropSchema,
+  [ModuleType.LegacyEnvelope]: legacyEnvelopePropSchema, // BACKWARD_COMPAT: Legacy envelope for old patches
+  [ModuleType.Envelope]: customEnvelopePropSchema,
   [ModuleType.Filter]: filterPropSchema,
   [ModuleType.Scale]: scalePropSchema,
   [ModuleType.StereoPanner]: stereoPannerPropSchema,
@@ -196,6 +207,7 @@ export type ModuleParams = {
   [K in ModuleType]: K extends
     | ModuleType.Oscillator
     | ModuleType.Gain
+    | ModuleType.LegacyEnvelope
     | ModuleType.Envelope
     | ModuleType.Filter
     | ModuleType.StereoPanner
@@ -229,8 +241,11 @@ export function createModule(
         ...params,
         moduleType: ModuleType.MidiInput,
       } as ICreateModule<ModuleType.MidiInput>);
+    // BACKWARD_COMPAT: Legacy envelope for old patches
+    case ModuleType.LegacyEnvelope:
+      return new LegacyEnvelope(engineId, params);
     case ModuleType.Envelope:
-      return new Envelope(engineId, params);
+      return new CustomEnvelope(engineId, params);
     case ModuleType.Filter:
       return new Filter(engineId, params);
     case ModuleType.Scale:
