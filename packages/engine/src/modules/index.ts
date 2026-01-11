@@ -34,10 +34,6 @@ import MidiOutput, {
   IMidiOutputProps,
   midiOutputPropSchema,
 } from "./MidiOutput";
-import MidiSelector, {
-  IMidiSelectorProps,
-  midiSelectorPropSchema,
-} from "./MidiSelector";
 import Noise, { INoiseProps, noisePropSchema } from "./Noise";
 import Oscillator, {
   IOscillatorProps,
@@ -64,7 +60,6 @@ export enum ModuleType {
   Gain = "Gain",
   MidiInput = "MidiInput",
   MidiOutput = "MidiOutput",
-  MidiSelector = "MidiSelector", // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
   LegacyEnvelope = "LegacyEnvelope", // BACKWARD_COMPAT: Legacy envelope for old patches
   Envelope = "Envelope",
   Filter = "Filter",
@@ -90,7 +85,6 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.Master]: IMasterProps;
   [ModuleType.MidiInput]: IMidiInputProps;
   [ModuleType.MidiOutput]: IMidiOutputProps;
-  [ModuleType.MidiSelector]: IMidiSelectorProps; // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
   [ModuleType.LegacyEnvelope]: ILegacyEnvelopeProps; // BACKWARD_COMPAT: Legacy envelope for old patches
   [ModuleType.Envelope]: ICustomEnvelopeProps;
   [ModuleType.Filter]: IFilterProps;
@@ -116,7 +110,6 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.Master]: Master;
   [ModuleType.MidiInput]: MidiInput;
   [ModuleType.MidiOutput]: MidiOutput;
-  [ModuleType.MidiSelector]: MidiSelector; // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
   [ModuleType.LegacyEnvelope]: LegacyEnvelope; // BACKWARD_COMPAT: Legacy envelope for old patches
   [ModuleType.Envelope]: CustomEnvelope;
   [ModuleType.Filter]: Filter;
@@ -142,7 +135,6 @@ export const moduleSchemas = {
   [ModuleType.Master]: masterPropSchema,
   [ModuleType.MidiInput]: midiInputPropSchema,
   [ModuleType.MidiOutput]: midiOutputPropSchema,
-  [ModuleType.MidiSelector]: midiSelectorPropSchema, // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
   [ModuleType.LegacyEnvelope]: legacyEnvelopePropSchema, // BACKWARD_COMPAT: Legacy envelope for old patches
   [ModuleType.Envelope]: customEnvelopePropSchema,
   [ModuleType.Filter]: filterPropSchema,
@@ -168,7 +160,6 @@ export type { IGain } from "./Gain";
 export type { IMaster } from "./Master";
 export type { IMidiInput, IMidiInputProps } from "./MidiInput";
 export type { IMidiOutput, IMidiOutputProps } from "./MidiOutput";
-export type { IMidiSelector } from "./MidiSelector"; // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
 export type { IStereoPanner } from "./StereoPanner";
 export type {
   IStepSequencer,
@@ -234,13 +225,6 @@ export function createModule(
       return new MidiInput(engineId, params);
     case ModuleType.MidiOutput:
       return new MidiOutput(engineId, params);
-    // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
-    case ModuleType.MidiSelector:
-      // Convert old MidiSelector to MidiInput
-      return new MidiInput(engineId, {
-        ...params,
-        moduleType: ModuleType.MidiInput,
-      } as ICreateModule<ModuleType.MidiInput>);
     // BACKWARD_COMPAT: Legacy envelope for old patches
     case ModuleType.LegacyEnvelope:
       return new LegacyEnvelope(engineId, params);

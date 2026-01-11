@@ -11,7 +11,7 @@ import { useAppSelector, useAppDispatch } from "@/hooks";
 import { ModuleComponent } from ".";
 import { Button, Input, Label } from "../ui";
 import Container from "./Container";
-import { initialize } from "./MidiDeviceSelector/midiDevicesSlice";
+import { initialize } from "./MidiInput/midiDevicesSlice";
 import { modulesSelector } from "./modulesSlice";
 
 const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {

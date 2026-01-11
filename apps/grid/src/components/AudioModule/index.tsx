@@ -57,9 +57,6 @@ const COMPONENT_MAPPING: {
   [ModuleType.Envelope]: Envelope,
   [ModuleType.MidiInput]: MidiInput,
   [ModuleType.MidiOutput]: MidiOutput,
-  // BACKWARD_COMPAT_MIDI_SELECTOR: Remove after migration
-  [ModuleType.MidiSelector]:
-    MidiInput as unknown as ModuleComponent<ModuleType.MidiSelector>,
   [ModuleType.MidiMapper]: MidiMapper,
   [ModuleType.VirtualMidi]: Keyboard,
   [ModuleType.Chorus]: Chorus,

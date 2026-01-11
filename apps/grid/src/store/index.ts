@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import midiDevicesReducer from "@/components/AudioModule/MidiDeviceSelector/midiDevicesSlice";
+import midiDevicesReducer from "@/components/AudioModule/MidiInput/midiDevicesSlice";
 import midiOutputDevicesReducer from "@/components/AudioModule/MidiOutput/midiDevicesSlice";
 import modulesReducer from "@/components/AudioModule/modulesSlice";
 import gridNodesReducer from "@/components/Grid/gridNodesSlice";
