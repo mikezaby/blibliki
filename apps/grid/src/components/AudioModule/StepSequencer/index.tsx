@@ -95,6 +95,10 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
     resolution,
     playbackMode,
     _currentStep,
+    patternSequence,
+    enableSequence,
+    _sequencePosition,
+    _sequenceError,
   } = sequencerProps;
 
   const currentPattern = patterns[activePatternNo];
@@ -246,6 +250,18 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
         }}
         onAddPattern={addPattern}
         onDeletePattern={deletePattern}
+        isRunning={isRunning}
+        enableSequence={enableSequence}
+        patternSequence={patternSequence}
+        sequencePosition={_sequencePosition}
+        sequenceError={_sequenceError}
+        updateProp={updateProp}
+        onPatternSequenceChange={(value) => {
+          updateProp("patternSequence")(value);
+        }}
+        onEnableSequenceChange={(value) => {
+          updateProp("enableSequence")(value);
+        }}
       />
 
       <PageNavigator

@@ -21,6 +21,12 @@ import { ICreateModule, ModuleType } from ".";
 
 export type IStepSequencer = IModule<ModuleType.StepSequencer>;
 
+// Sequence entry for pattern sequencing
+export type SequenceEntry = {
+  pattern: string; // Pattern name (A, B, C, etc.)
+  count: number; // Number of repetitions
+};
+
 // Per-note data within a step
 export type IStepNote = {
   note: string; // "C4", "E4", "G4"
@@ -76,6 +82,10 @@ export type IStepSequencerProps = {
   resolution: Resolution; // Step resolution (16th, 8th, etc.)
   playbackMode: PlaybackMode; // loop or oneShot
   _currentStep?: number; // For UI indicator (not serialized in schema)
+  patternSequence: string; // Pattern sequence notation (e.g., "2A4B2AC")
+  enableSequence: boolean; // Toggle to enable/disable sequence mode
+  _sequencePosition?: string; // UI display: "A (2/2)"
+  _sequenceError?: string | null; // Validation errors
 };
 
 const MICROTIMING_STEP = TPB / 4 / 10;
@@ -88,6 +98,8 @@ export const stepSequencerPropSchema: ModulePropSchema<
     | "stepsPerPage"
     | "resolution"
     | "playbackMode"
+    | "patternSequence"
+    | "enableSequence"
   >,
   {
     resolution: EnumProp<Resolution>;
@@ -124,6 +136,14 @@ export const stepSequencerPropSchema: ModulePropSchema<
     kind: "enum",
     options: Object.values(PlaybackMode),
     label: "Playback Mode",
+  },
+  patternSequence: {
+    kind: "string",
+    label: "Pattern Sequence",
+  },
+  enableSequence: {
+    kind: "boolean",
+    label: "Enable Sequence",
   },
 };
 
@@ -211,6 +231,10 @@ const DEFAULT_PROPS: IStepSequencerProps = {
   resolution: Resolution.sixteenth,
   playbackMode: PlaybackMode.loop,
   _currentStep: 0,
+  patternSequence: "",
+  enableSequence: false,
+  _sequencePosition: undefined,
+  _sequenceError: null,
 };
 
 // Timing constants
@@ -238,6 +262,13 @@ export default class StepSequencer
   private isSequencerRunning = false;
   private startTick: Ticks = 0;
 
+  // Sequence state tracking
+  private sequenceEntries: SequenceEntry[] = [];
+  private sequenceIndex = 0;
+  private patternPlayCount = 0;
+  private lastValidatedSequence = "";
+  private sequenceError: string | null = null;
+
   constructor(
     engineId: string,
     params: ICreateModule<ModuleType.StepSequencer>,
@@ -256,6 +287,12 @@ export default class StepSequencer
   onSetActivePatternNo: StepSequencerSetterHooks["onSetActivePatternNo"] = (
     value,
   ) => {
+    // Prevent manual pattern changes during sequence playback
+    if (this.isSequencerRunning && this.props.enableSequence) {
+      // Reject change, keep current pattern
+      return this.props.activePatternNo;
+    }
+
     return Math.max(Math.min(value, this.props.patterns.length - 1), 0);
   };
 
@@ -335,6 +372,17 @@ export default class StepSequencer
   // Public methods to control sequencer independently
   startSequencer() {
     if (this.isSequencerRunning) return;
+
+    // Initialize sequence if enabled
+    if (this.props.enableSequence) {
+      const valid = this.initializeSequence();
+      if (!valid) {
+        // Don't start if sequence is invalid
+        this.triggerPropsUpdate(); // Notify UI of error
+        return;
+      }
+    }
+
     this.isSequencerRunning = true;
     this.startTick = this.engine.transport.position.ticks;
     this.previousStepNo = -1;
@@ -361,6 +409,230 @@ export default class StepSequencer
 
   get isRunning(): boolean {
     return this.isSequencerRunning;
+  }
+
+  // Parse pattern sequence string into structured entries
+  private parseSequenceString(sequence: string): SequenceEntry[] | Error {
+    const result: SequenceEntry[] = [];
+    let currentNumber = "";
+    const normalized = sequence.toUpperCase().trim();
+
+    // Empty is valid (optional field)
+    if (normalized === "") return [];
+
+    for (const char of normalized) {
+      if (!char) continue; // Skip if char is undefined (shouldn't happen but TS check)
+
+      if (/[0-9]/.test(char)) {
+        currentNumber += char;
+      } else if (/[A-Z]/.test(char)) {
+        const count = currentNumber ? parseInt(currentNumber, 10) : 1;
+        if (count === 0) {
+          return new Error("Pattern count cannot be zero");
+        }
+        result.push({ pattern: char, count });
+        currentNumber = "";
+      } else {
+        return new Error(`Invalid character: '${char}'`);
+      }
+    }
+
+    if (currentNumber !== "") {
+      return new Error("Sequence cannot end with a number");
+    }
+
+    return result;
+  }
+
+  // Find pattern index by name (case insensitive)
+  private findPatternIndexByName(name: string): number {
+    return this.props.patterns.findIndex(
+      (p) => p.name.toUpperCase() === name.toUpperCase(),
+    );
+  }
+
+  // Validate that all patterns in sequence exist
+  private validateSequence(entries: SequenceEntry[]): Error | null {
+    for (const entry of entries) {
+      const patternIndex = this.findPatternIndexByName(entry.pattern);
+      if (patternIndex === -1) {
+        return new Error(`Pattern '${entry.pattern}' does not exist`);
+      }
+    }
+    return null;
+  }
+
+  // Initialize sequence parsing and validation
+  private initializeSequence(): boolean {
+    // If sequence mode is disabled, clear state and continue
+    if (!this.props.enableSequence) {
+      this.sequenceEntries = [];
+      this.sequenceIndex = 0;
+      this.patternPlayCount = 0;
+      this.sequenceError = null;
+      this.props = {
+        ...this.props,
+        _sequenceError: null,
+        _sequencePosition: undefined,
+      };
+      return true;
+    }
+
+    // Get sequence string with default
+    const sequenceString = this.props.patternSequence || "";
+
+    // If sequence is empty or whitespace, treat as disabled
+    if (sequenceString.trim() === "") {
+      this.sequenceEntries = [];
+      this.sequenceIndex = 0;
+      this.patternPlayCount = 0;
+      this.sequenceError = null;
+      this.props = {
+        ...this.props,
+        _sequenceError: null,
+        _sequencePosition: undefined,
+      };
+      return true;
+    }
+
+    // Use cached parse if sequence hasn't changed
+    if (sequenceString === this.lastValidatedSequence) {
+      return true;
+    }
+
+    // Parse sequence
+    const parseResult = this.parseSequenceString(sequenceString);
+    if (parseResult instanceof Error) {
+      this.sequenceError = parseResult.message;
+      this.props = { ...this.props, _sequenceError: parseResult.message };
+      this.triggerPropsUpdate();
+      return false;
+    }
+
+    this.sequenceEntries = parseResult;
+
+    // If parse returned empty array, just return success
+    if (this.sequenceEntries.length === 0) {
+      this.sequenceIndex = 0;
+      this.patternPlayCount = 0;
+      this.sequenceError = null;
+      this.lastValidatedSequence = this.props.patternSequence;
+      this.props = {
+        ...this.props,
+        _sequenceError: null,
+        _sequencePosition: undefined,
+      };
+      return true;
+    }
+
+    // Validate that all patterns exist
+    const validationError = this.validateSequence(this.sequenceEntries);
+    if (validationError) {
+      this.sequenceError = validationError.message;
+      this.props = { ...this.props, _sequenceError: validationError.message };
+      this.triggerPropsUpdate();
+      return false;
+    }
+
+    // Success - cache the validated sequence
+    this.lastValidatedSequence = sequenceString;
+    this.sequenceError = null;
+    this.sequenceIndex = 0;
+    this.patternPlayCount = 0;
+
+    // Set initial pattern - bypass setter hooks to avoid blocking during sequence
+    const firstEntry = this.sequenceEntries[0];
+    if (!firstEntry) {
+      // This shouldn't happen but handle it for TS
+      return true;
+    }
+
+    const firstPatternIndex = this.findPatternIndexByName(firstEntry.pattern);
+    this._props = {
+      ...this._props,
+      activePatternNo: firstPatternIndex,
+      _sequenceError: null,
+      _sequencePosition: `${firstEntry.pattern} (1/${firstEntry.count})`,
+    };
+
+    return true;
+  }
+
+  // Check and handle pattern completion during sequence playback
+  private checkPatternCompletion(contextTime: ContextTime): boolean {
+    // Only run if sequence mode is enabled and we have entries
+    if (!this.props.enableSequence || this.sequenceEntries.length === 0) {
+      return false;
+    }
+
+    // Pattern just completed one full cycle
+    this.patternPlayCount++;
+
+    const currentEntry = this.sequenceEntries[this.sequenceIndex];
+    if (!currentEntry) {
+      // This shouldn't happen but handle it for TS
+      return false;
+    }
+
+    // Check if we've played this pattern enough times
+    if (this.patternPlayCount >= currentEntry.count) {
+      // Move to next pattern
+      this.sequenceIndex++;
+      this.patternPlayCount = 0;
+
+      // Check if sequence is complete
+      if (this.sequenceIndex >= this.sequenceEntries.length) {
+        if (this.props.playbackMode === PlaybackMode.oneShot) {
+          this.stopSequencer(contextTime);
+          return true;
+        } else {
+          // Loop: restart sequence
+          this.sequenceIndex = 0;
+        }
+      }
+
+      // Switch to next pattern
+      const nextEntry = this.sequenceEntries[this.sequenceIndex];
+      if (!nextEntry) {
+        // This shouldn't happen but handle it for TS
+        this.stopSequencer(contextTime);
+        return true;
+      }
+
+      const nextPatternIndex = this.findPatternIndexByName(nextEntry.pattern);
+
+      if (nextPatternIndex === -1) {
+        // Pattern not found (validation should prevent this)
+        this.sequenceError = `Pattern '${nextEntry.pattern}' not found`;
+        this.props = { ...this.props, _sequenceError: this.sequenceError };
+        this.stopSequencer(contextTime);
+        return true;
+      }
+
+      // Update active pattern and UI - bypass setter hooks by updating _props directly
+      // We need to bypass the onSetActivePatternNo hook which blocks manual changes during sequence
+      this._props = {
+        ...this._props,
+        activePatternNo: nextPatternIndex,
+        activePageNo: 0, // Reset to first page of new pattern
+        _sequencePosition: `${nextEntry.pattern} (1/${nextEntry.count})`,
+      };
+
+      // Reset the start tick so the new pattern starts from step 0
+      this.startTick = this.engine.transport.position.ticks;
+      this.previousStepNo = -1; // Force step boundary detection on next tick
+
+      this.triggerPropsUpdate();
+    } else {
+      // Still repeating current pattern, update position display
+      this._props = {
+        ...this._props,
+        _sequencePosition: `${currentEntry.pattern} (${this.patternPlayCount + 1}/${currentEntry.count})`,
+      };
+      this.triggerPropsUpdate();
+    }
+
+    return false;
   }
 
   private registerOutputs() {
@@ -390,13 +662,20 @@ export default class StepSequencer
     // Detect step boundary (when step number changes)
     if (activeStepNo === this.previousStepNo) return;
 
-    if (
-      this.globalStepNo === 0 &&
-      this.previousStepNo !== -1 &&
-      this.props.playbackMode === PlaybackMode.oneShot
-    ) {
-      this.stop(contextTime); // TODO just StepSequencer stop
-      return;
+    // Pattern completion detection
+    if (this.globalStepNo === 0 && this.previousStepNo !== -1) {
+      // Check if we should stop (oneShot with no sequence) or switch patterns (sequence mode)
+      const sequenceStopped = this.checkPatternCompletion(contextTime);
+      if (sequenceStopped) return;
+
+      // Legacy oneShot behavior (when sequence is disabled)
+      if (
+        !this.props.enableSequence &&
+        this.props.playbackMode === PlaybackMode.oneShot
+      ) {
+        this.stopSequencer(contextTime);
+        return;
+      }
     }
 
     this.props = {
@@ -480,6 +759,17 @@ export default class StepSequencer
   // Called when transport starts
   start(time: ContextTime): void {
     super.start(time);
+
+    // Initialize sequence if enabled
+    if (this.props.enableSequence) {
+      const valid = this.initializeSequence();
+      if (!valid) {
+        // Don't start if sequence is invalid
+        this.triggerPropsUpdate(); // Notify UI of error
+        return;
+      }
+    }
+
     this.isSequencerRunning = true;
     this.startTick = this.engine.transport.position.ticks;
     this.previousStepNo = -1;
