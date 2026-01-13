@@ -256,12 +256,6 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
         sequencePosition={_sequencePosition}
         sequenceError={_sequenceError}
         updateProp={updateProp}
-        onPatternSequenceChange={(value) => {
-          updateProp("patternSequence")(value);
-        }}
-        onEnableSequenceChange={(value) => {
-          updateProp("enableSequence")(value);
-        }}
       />
 
       <PageNavigator
