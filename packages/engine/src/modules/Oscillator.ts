@@ -183,7 +183,7 @@ export class MonoOscillator
   triggerAttack = (note: Note, triggeredAt: ContextTime) => {
     super.triggerAttack(note, triggeredAt);
 
-    this.props = { frequency: note.frequency };
+    this._props.frequency = note.frequency;
     this.updateFrequency(triggeredAt);
     this.start(triggeredAt);
   };
@@ -196,7 +196,7 @@ export class MonoOscillator
       : null;
     if (!lastNote) return;
 
-    this.props = { frequency: lastNote.frequency };
+    this._props.frequency = lastNote.frequency;
     this.updateFrequency(triggeredAt);
   }
 
