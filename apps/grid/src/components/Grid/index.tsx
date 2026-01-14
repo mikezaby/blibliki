@@ -7,7 +7,7 @@ import {
   Viewport,
   useReactFlow,
 } from "@xyflow/react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAppDispatch, useGridNodes, usePatch } from "@/hooks";
 import AudioModules from "./AudioModules";
 import { NodeTypes } from "./AudioNode";
@@ -59,6 +59,7 @@ export default function Grid() {
 
 function OnViewportChange({ viewport }: { viewport: Viewport }) {
   const dispatch = useAppDispatch();
+  const lastPatchIdRef = useRef<string | null>(null);
   const { patch } = usePatch();
   const { setViewport: setInitialViewport } = useReactFlow();
 
@@ -70,7 +71,10 @@ function OnViewportChange({ viewport }: { viewport: Viewport }) {
   useEffect(() => {
     if (!patch.id) return;
 
-    void setInitialViewport(viewport);
+    if (lastPatchIdRef.current !== patch.id) {
+      lastPatchIdRef.current = patch.id;
+      void setInitialViewport(viewport);
+    }
   }, [viewport, setInitialViewport, patch.id]);
 
   return null;
