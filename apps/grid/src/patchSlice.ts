@@ -87,7 +87,9 @@ export const save =
     const { asNew } = props;
     const state = getState();
     const { patch: originalPatch } = state.patch;
-    const modules = modulesSelector.selectAll(state);
+    const modules = modulesSelector
+      .selectAll(state)
+      .map(({ state: _, ...module }) => module);
     const gridNodes = state.gridNodes;
     const bpm = state.global.bpm;
     const config = { bpm, modules, gridNodes };
