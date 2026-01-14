@@ -38,7 +38,12 @@ const createDefaultPattern = (name: string): IPattern => ({
 });
 
 const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
-  const { id, updateProp, props: sequencerProps, state: sequencerState } = props;
+  const {
+    id,
+    updateProp,
+    props: sequencerProps,
+    state: sequencerState,
+  } = props;
   const [selectedStep, setSelectedStep] = useState<number>(0);
   const [lastConfiguredStep, setLastConfiguredStep] = useState<IStep | null>(
     null,
