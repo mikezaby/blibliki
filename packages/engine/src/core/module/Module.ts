@@ -7,7 +7,12 @@ import {
   requestAnimationFrame,
 } from "@blibliki/utils";
 import { Engine } from "@/Engine";
-import { AnyModule, ModuleType, ModuleTypeToPropsMapping } from "@/modules";
+import {
+  AnyModule,
+  ModuleType,
+  ModuleTypeToPropsMapping,
+  ModuleTypeToStateMapping,
+} from "@/modules";
 import {
   AudioInputProps,
   AudioOutputProps,
@@ -49,6 +54,16 @@ export type SetterHooks<P> = {
   ) => void;
 };
 
+export type StateSetterHooks<S> = {
+  [K in keyof S as `onSetState${Capitalize<string & K>}`]: (
+    value: S[K],
+  ) => S[K];
+} & {
+  [K in keyof S as `onAfterSetState${Capitalize<string & K>}`]: (
+    value: S[K],
+  ) => void;
+};
+
 export abstract class Module<T extends ModuleType> implements IModule<T> {
   id: string;
   engineId: string;
@@ -59,6 +74,7 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   inputs: InputCollection;
   outputs: OutputCollection;
   protected _props!: ModuleTypeToPropsMapping[T];
+  protected _state!: ModuleTypeToStateMapping[T];
   protected activeNotes: Note[];
   private pendingUIUpdates = false;
 
@@ -128,6 +144,56 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
         hook as (
           value: ModuleTypeToPropsMapping[T][K],
         ) => ModuleTypeToPropsMapping[T][K] | undefined
+      ).call(this, value);
+      return result;
+    }
+    return undefined;
+  }
+
+  get state(): ModuleTypeToStateMapping[T] {
+    return this._state;
+  }
+
+  set state(value: Partial<ModuleTypeToStateMapping[T]>) {
+    const updatedValue = { ...value };
+
+    (Object.keys(value) as (keyof ModuleTypeToStateMapping[T])[]).forEach(
+      (key) => {
+        const stateValue = value[key];
+        if (stateValue !== undefined) {
+          const result = this.callStateHook("onSetState", key, stateValue);
+          if (result !== undefined) {
+            updatedValue[key] = result;
+          }
+        }
+      },
+    );
+
+    this._state = { ...this._state, ...updatedValue };
+
+    (
+      Object.keys(updatedValue) as (keyof ModuleTypeToStateMapping[T])[]
+    ).forEach((key) => {
+      const stateValue = updatedValue[key];
+      if (stateValue !== undefined) {
+        this.callStateHook("onAfterSetState", key, stateValue);
+      }
+    });
+  }
+
+  private callStateHook<K extends keyof ModuleTypeToStateMapping[T]>(
+    hookType: "onSetState" | "onAfterSetState",
+    key: K,
+    value: ModuleTypeToStateMapping[T][K],
+  ): ModuleTypeToStateMapping[T][K] | undefined {
+    const hookName = `${hookType}${upperFirst(key as string)}`;
+    const hook = this[hookName as keyof this];
+
+    if (typeof hook === "function") {
+      const result = (
+        hook as (
+          value: ModuleTypeToStateMapping[T][K],
+        ) => ModuleTypeToStateMapping[T][K] | undefined
       ).call(this, value);
       return result;
     }
@@ -223,13 +289,18 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
 
   private sheduleTriggerUpdate() {
     requestAnimationFrame(() => {
-      this.engine._triggerPropsUpdate({
+      const updateParams: IModule<T> & {
+        state?: ModuleTypeToStateMapping[T];
+      } = {
         id: this.id,
         moduleType: this.moduleType,
         voiceNo: this.voiceNo,
         name: this.name,
         props: this.props,
-      });
+        state: this._state,
+      };
+
+      this.engine._triggerPropsUpdate(updateParams);
       this.pendingUIUpdates = false;
     });
   }

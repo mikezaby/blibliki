@@ -38,7 +38,7 @@ const createDefaultPattern = (name: string): IPattern => ({
 });
 
 const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
-  const { id, updateProp, props: sequencerProps } = props;
+  const { id, updateProp, props: sequencerProps, state: sequencerState } = props;
   const [selectedStep, setSelectedStep] = useState<number>(0);
   const [lastConfiguredStep, setLastConfiguredStep] = useState<IStep | null>(
     null,
@@ -94,12 +94,14 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
     stepsPerPage,
     resolution,
     playbackMode,
-    _currentStep,
     patternSequence,
     enableSequence,
-    _sequencePosition,
-    _sequenceError,
   } = sequencerProps;
+
+  // Extract state values (temporal/runtime data)
+  const currentStep = sequencerState?.currentStep ?? 0;
+  const sequencePosition = sequencerState?.sequencePosition;
+  const sequenceError = sequencerState?.sequenceError;
 
   const currentPattern = patterns[activePatternNo];
   const currentPage = currentPattern?.pages[activePageNo];
@@ -253,8 +255,8 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
         isRunning={isRunning}
         enableSequence={enableSequence}
         patternSequence={patternSequence}
-        sequencePosition={_sequencePosition}
-        sequenceError={_sequenceError}
+        sequencePosition={sequencePosition}
+        sequenceError={sequenceError}
         updateProp={updateProp}
       />
 
@@ -288,7 +290,7 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
 
       <StepGrid
         steps={steps}
-        currentStep={_currentStep ?? 0}
+        currentStep={currentStep}
         selectedStep={selectedStep}
         onSelectStep={setSelectedStep}
         onToggleActive={(stepIndex) => {

@@ -4,6 +4,7 @@ import {
   IModule,
   IUpdateModule,
   ModuleType,
+  ModuleTypeToStateMapping,
 } from "@blibliki/engine";
 import { Optional } from "@blibliki/utils";
 import {
@@ -25,7 +26,10 @@ type ModuleInterface = {
   voices?: number;
 } & Omit<IModule<AvailableModuleType>, "id" | "voiceNo">;
 
-export type ModuleProps = IAnyModuleSerialize<AvailableModuleType>;
+// Runtime module type that includes optional state
+export type ModuleProps = IAnyModuleSerialize<AvailableModuleType> & {
+  state?: ModuleTypeToStateMapping[AvailableModuleType];
+};
 
 export const AvailableModules: Record<
   AvailableModuleType,

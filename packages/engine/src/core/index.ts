@@ -5,6 +5,7 @@ export type {
   IPolyModuleSerialize,
   IAnyModuleSerialize,
   SetterHooks,
+  StateSetterHooks,
 } from "./module";
 
 export type IAnyAudioContext = AudioContext | OfflineAudioContext;

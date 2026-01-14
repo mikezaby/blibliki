@@ -81,11 +81,15 @@ export type IStepSequencerProps = {
   stepsPerPage: number; // 1-16 steps per page
   resolution: Resolution; // Step resolution (16th, 8th, etc.)
   playbackMode: PlaybackMode; // loop or oneShot
-  _currentStep?: number; // For UI indicator (not serialized in schema)
   patternSequence: string; // Pattern sequence notation (e.g., "2A4B2AC")
   enableSequence: boolean; // Toggle to enable/disable sequence mode
-  _sequencePosition?: string; // UI display: "A (2/2)"
-  _sequenceError?: string | null; // Validation errors
+};
+
+// Module state (temporal/runtime only, not serialized)
+export type IStepSequencerState = {
+  currentStep: number; // For UI indicator
+  sequencePosition?: string; // UI display: "A (2/2)"
+  sequenceError: string | null; // Validation errors
 };
 
 const MICROTIMING_STEP = TPB / 4 / 10;
@@ -230,11 +234,14 @@ const DEFAULT_PROPS: IStepSequencerProps = {
   stepsPerPage: 16,
   resolution: Resolution.sixteenth,
   playbackMode: PlaybackMode.loop,
-  _currentStep: 0,
   patternSequence: "",
   enableSequence: false,
-  _sequencePosition: undefined,
-  _sequenceError: null,
+};
+
+const DEFAULT_STATE: IStepSequencerState = {
+  currentStep: 0,
+  sequencePosition: undefined,
+  sequenceError: null,
 };
 
 // Timing constants
@@ -279,6 +286,9 @@ export default class StepSequencer
       ...params,
       props,
     });
+
+    // Initialize state
+    this._state = { ...DEFAULT_STATE };
 
     this.registerOutputs();
     this.registerTransportListener();
@@ -403,7 +413,7 @@ export default class StepSequencer
     this.previousStepNo = -1;
 
     // Reset UI indicator
-    this.props = { ...this.props, _currentStep: 0 };
+    this.state = { currentStep: 0 };
     this.triggerPropsUpdate();
   }
 
@@ -470,10 +480,10 @@ export default class StepSequencer
       this.sequenceIndex = 0;
       this.patternPlayCount = 0;
       this.sequenceError = null;
-      this.props = {
-        ...this.props,
-        _sequenceError: null,
-        _sequencePosition: undefined,
+      this.state = {
+        ...this.state,
+        sequenceError: null,
+        sequencePosition: undefined,
       };
       return true;
     }
@@ -487,10 +497,10 @@ export default class StepSequencer
       this.sequenceIndex = 0;
       this.patternPlayCount = 0;
       this.sequenceError = null;
-      this.props = {
-        ...this.props,
-        _sequenceError: null,
-        _sequencePosition: undefined,
+      this.state = {
+        ...this.state,
+        sequenceError: null,
+        sequencePosition: undefined,
       };
       return true;
     }
@@ -504,7 +514,7 @@ export default class StepSequencer
     const parseResult = this.parseSequenceString(sequenceString);
     if (parseResult instanceof Error) {
       this.sequenceError = parseResult.message;
-      this.props = { ...this.props, _sequenceError: parseResult.message };
+      this.state = { ...this.state, sequenceError: parseResult.message };
       this.triggerPropsUpdate();
       return false;
     }
@@ -517,10 +527,10 @@ export default class StepSequencer
       this.patternPlayCount = 0;
       this.sequenceError = null;
       this.lastValidatedSequence = this.props.patternSequence;
-      this.props = {
-        ...this.props,
-        _sequenceError: null,
-        _sequencePosition: undefined,
+      this.state = {
+        ...this.state,
+        sequenceError: null,
+        sequencePosition: undefined,
       };
       return true;
     }
@@ -529,7 +539,7 @@ export default class StepSequencer
     const validationError = this.validateSequence(this.sequenceEntries);
     if (validationError) {
       this.sequenceError = validationError.message;
-      this.props = { ...this.props, _sequenceError: validationError.message };
+      this.state = { ...this.state, sequenceError: validationError.message };
       this.triggerPropsUpdate();
       return false;
     }
@@ -551,8 +561,11 @@ export default class StepSequencer
     this._props = {
       ...this._props,
       activePatternNo: firstPatternIndex,
-      _sequenceError: null,
-      _sequencePosition: `${firstEntry.pattern} (1/${firstEntry.count})`,
+    };
+    this._state = {
+      ...this._state,
+      sequenceError: null,
+      sequencePosition: `${firstEntry.pattern} (1/${firstEntry.count})`,
     };
 
     return true;
@@ -604,7 +617,7 @@ export default class StepSequencer
       if (nextPatternIndex === -1) {
         // Pattern not found (validation should prevent this)
         this.sequenceError = `Pattern '${nextEntry.pattern}' not found`;
-        this.props = { ...this.props, _sequenceError: this.sequenceError };
+        this.state = { ...this.state, sequenceError: this.sequenceError };
         this.stopSequencer(contextTime);
         return true;
       }
@@ -615,7 +628,10 @@ export default class StepSequencer
         ...this._props,
         activePatternNo: nextPatternIndex,
         activePageNo: 0, // Reset to first page of new pattern
-        _sequencePosition: `${nextEntry.pattern} (1/${nextEntry.count})`,
+      };
+      this._state = {
+        ...this._state,
+        sequencePosition: `${nextEntry.pattern} (1/${nextEntry.count})`,
       };
 
       // Reset the start tick so the new pattern starts from step 0
@@ -625,9 +641,9 @@ export default class StepSequencer
       this.triggerPropsUpdate();
     } else {
       // Still repeating current pattern, update position display
-      this._props = {
-        ...this._props,
-        _sequencePosition: `${currentEntry.pattern} (${this.patternPlayCount + 1}/${currentEntry.count})`,
+      this._state = {
+        ...this._state,
+        sequencePosition: `${currentEntry.pattern} (${this.patternPlayCount + 1}/${currentEntry.count})`,
       };
       this.triggerPropsUpdate();
     }
@@ -681,7 +697,10 @@ export default class StepSequencer
     this.props = {
       ...this.props,
       activePageNo: calculatedPageNo,
-      _currentStep: activeStepNo,
+    };
+    this.state = {
+      ...this.state,
+      currentStep: activeStepNo,
     };
 
     if (activeStep.microtimeOffset >= 0) {
@@ -792,7 +811,7 @@ export default class StepSequencer
     this.previousStepNo = -1;
 
     // Reset UI indicator
-    this.props = { ...this.props, _currentStep: 0 };
+    this.state = { currentStep: 0 };
     this.triggerPropsUpdate();
   }
 }

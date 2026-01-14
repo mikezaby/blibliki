@@ -67,14 +67,17 @@ export const initialize =
     }
 
     engine.onPropsUpdate((update) => {
-      const { id, props } = update;
+      const { id, props, state } = update;
 
       if ("voices" in update) {
         dispatch(
-          updatePlainModule({ id, changes: { voices: update.voices, props } }),
+          updatePlainModule({
+            id,
+            changes: { voices: update.voices, props, state },
+          }),
         );
       } else {
-        dispatch(updatePlainModule({ id, changes: { props } }));
+        dispatch(updatePlainModule({ id, changes: { props, state } }));
       }
     });
 

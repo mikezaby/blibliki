@@ -43,6 +43,7 @@ import Reverb, { IReverbProps, reverbPropSchema } from "./Reverb";
 import Scale, { IScaleProps, scalePropSchema } from "./Scale";
 import StepSequencer, {
   IStepSequencerProps,
+  IStepSequencerState,
   stepSequencerPropSchema,
 } from "./StepSequencer";
 import StereoPanner, {
@@ -102,6 +103,31 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.LFO]: ILFOProps;
   [ModuleType.Noise]: INoiseProps;
   [ModuleType.Reverb]: IReverbProps;
+};
+
+export type ModuleTypeToStateMapping = {
+  [ModuleType.Oscillator]: never;
+  [ModuleType.Gain]: never;
+  [ModuleType.Master]: never;
+  [ModuleType.MidiInput]: never;
+  [ModuleType.MidiOutput]: never;
+  [ModuleType.LegacyEnvelope]: never;
+  [ModuleType.Envelope]: never;
+  [ModuleType.Filter]: never;
+  [ModuleType.Scale]: never;
+  [ModuleType.StereoPanner]: never;
+  [ModuleType.Inspector]: never;
+  [ModuleType.Chorus]: never;
+  [ModuleType.Constant]: never;
+  [ModuleType.Delay]: never;
+  [ModuleType.Distortion]: never;
+  [ModuleType.MidiMapper]: never;
+  [ModuleType.VirtualMidi]: never;
+  [ModuleType.StepSequencer]: IStepSequencerState;
+  [ModuleType.VoiceScheduler]: never;
+  [ModuleType.LFO]: never;
+  [ModuleType.Noise]: never;
+  [ModuleType.Reverb]: never;
 };
 
 export type ModuleTypeToModuleMapping = {
@@ -164,6 +190,7 @@ export type { IStereoPanner } from "./StereoPanner";
 export type {
   IStepSequencer,
   IStepSequencerProps,
+  IStepSequencerState,
   IStep,
   IPage,
   IPattern,

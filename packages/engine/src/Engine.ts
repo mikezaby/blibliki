@@ -26,6 +26,7 @@ import {
   ModuleParams,
   ModuleType,
   ModuleTypeToModuleMapping,
+  ModuleTypeToStateMapping,
   createModule,
 } from "@/modules";
 import {
@@ -299,14 +300,18 @@ export class Engine {
 
   onPropsUpdate(
     callback: <T extends ModuleType>(
-      params: IModule<T> | IPolyModule<T>,
+      params: (IModule<T> | IPolyModule<T>) & {
+        state?: ModuleTypeToStateMapping[T];
+      },
     ) => void,
   ) {
     this.propsUpdateCallbacks.push(callback);
   }
 
   _triggerPropsUpdate<T extends ModuleType>(
-    params: IModule<T> | IPolyModule<T>,
+    params: (IModule<T> | IPolyModule<T>) & {
+      state?: ModuleTypeToStateMapping[T];
+    },
   ) {
     this.propsUpdateCallbacks.forEach((callback) => {
       callback(params);
