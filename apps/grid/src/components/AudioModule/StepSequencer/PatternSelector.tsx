@@ -12,7 +12,6 @@ type PatternSelectorProps = {
   patternSequence: string;
   enableSequence: boolean;
   sequencePosition?: string;
-  sequenceError?: string | null;
   updateProp: TUpdateProp<ModuleType.StepSequencer>;
 };
 
@@ -27,7 +26,6 @@ export default function PatternSelector({
   patternSequence,
   enableSequence,
   sequencePosition,
-  sequenceError,
   updateProp,
   isRunning = false,
 }: PatternSelectorProps) {
@@ -118,11 +116,6 @@ export default function PatternSelector({
             </span>
           )}
         </div>
-        {sequenceError && (
-          <div className="text-xs text-red-600 dark:text-red-400">
-            {sequenceError}
-          </div>
-        )}
       </div>
     </div>
   );

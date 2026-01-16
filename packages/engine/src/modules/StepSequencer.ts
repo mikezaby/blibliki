@@ -17,6 +17,7 @@ import {
   SetterHooks,
 } from "@/core";
 import MidiEvent from "@/core/midi/MidiEvent";
+import { expandPatternSequence } from "@/utils";
 import { ICreateModule, ModuleType } from ".";
 
 export type IStepSequencer = IModule<ModuleType.StepSequencer>;
@@ -87,9 +88,9 @@ export type IStepSequencerProps = {
 
 // Module state (temporal/runtime only, not serialized)
 export type IStepSequencerState = {
+  isRunning: boolean;
   currentStep: number; // For UI indicator
   sequencePosition?: string; // UI display: "A (2/2)"
-  sequenceError: string | null; // Validation errors
 };
 
 const MICROTIMING_STEP = TPB / 4 / 10;
@@ -239,9 +240,9 @@ const DEFAULT_PROPS: IStepSequencerProps = {
 };
 
 const DEFAULT_STATE: IStepSequencerState = {
+  isRunning: false,
   currentStep: 0,
   sequencePosition: undefined,
-  sequenceError: null,
 };
 
 // Timing constants
@@ -254,7 +255,7 @@ const RESOLUTION_TO_TICKS: Record<Resolution, number> = {
 
 type StepSequencerSetterHooks = Pick<
   SetterHooks<IStepSequencerProps>,
-  "onSetActivePatternNo"
+  "onSetActivePatternNo" | "onSetPatternSequence"
 >;
 
 export default class StepSequencer
@@ -265,9 +266,11 @@ export default class StepSequencer
   midiOutput!: MidiOutput;
 
   private previousStepNo = -1;
+  private previousGlobalStepNo = -1;
   private scheduledNotes = new Map<string, ContextTime>(); // Track scheduled note-offs
-  private isSequencerRunning = false;
   private startTick: Ticks = 0;
+  private patternCount = -1;
+  private expandedSequence: string[] = [];
 
   constructor(
     engineId: string,
@@ -292,6 +295,26 @@ export default class StepSequencer
   ) => {
     return Math.max(Math.min(value, this.props.patterns.length - 1), 0);
   };
+
+  onSetPatternSequence: StepSequencerSetterHooks["onSetPatternSequence"] = (
+    value,
+  ) => {
+    this.expandedSequence = expandPatternSequence(value);
+
+    return value;
+  };
+
+  // We use this when we have pattern sequence enabled to get the active pattern
+  get activePatternNoSequnce() {
+    const current = this.patternCount % this.expandedSequence.length;
+    const patternName = this.expandedSequence[current];
+    const patternNo = this.props.patterns.findIndex(
+      (p) => p.name === patternName,
+    );
+    if (patternNo === -1) throw Error("Pattern not found");
+
+    return patternNo;
+  }
 
   get activePattern(): IPattern {
     const pattern = this.props.patterns[this.props.activePatternNo];
@@ -366,61 +389,40 @@ export default class StepSequencer
     return step;
   }
 
-  // Public methods to control sequencer independently
-  startSequencer() {
-    if (this.isSequencerRunning) return;
-
-    this.isSequencerRunning = true;
-    this.startTick = this.engine.transport.position.ticks;
-    this.previousStepNo = -1;
-    this.scheduledNotes.clear();
-  }
-
-  stopSequencer(time: ContextTime) {
-    if (!this.isSequencerRunning) return;
-    this.isSequencerRunning = false;
-
-    // Send all note-offs immediately
-    this.scheduledNotes.forEach((_offTime, noteName) => {
-      const midiEvent = MidiEvent.fromNote(noteName, false, time);
-      this.midiOutput.onMidiEvent(midiEvent);
-    });
-
-    this.scheduledNotes.clear();
-    this.previousStepNo = -1;
-
-    // Reset UI indicator
-    this.state = { currentStep: 0 };
-    this.triggerPropsUpdate();
-  }
-
-  get isRunning(): boolean {
-    return this.isSequencerRunning;
-  }
-
   private registerOutputs() {
     this.midiOutput = this.registerMidiOutput({ name: "midi" });
   }
 
   private registerTransportListener() {
     this.engine.transport.addClockCallback(
-      (_: ClockTime, contextTime: ContextTime) => {
+      (_: ClockTime, contextTime: ContextTime, ticks: Ticks) => {
         if (
           this.engine.state !== TransportState.playing ||
-          !this.isSequencerRunning
+          !this.state.isRunning
         )
           return;
 
-        this.checkStepBoundary(contextTime);
+        this.checkStepBoundary(contextTime, ticks);
       },
     );
   }
 
-  private checkStepBoundary(contextTime: ContextTime) {
-    const calculatedPageNo = this.calculatedPageNo;
+  private checkStepBoundary(contextTime: ContextTime, ticks: Ticks) {
     const activeStepNo = this.activeStepNo;
-    const activeStep = this.activeStep;
-    const nextStep = this.nextStep;
+    const globalStepNo = this.globalStepNo;
+
+    // Increment pattern count when completing the entire pattern (all pages)
+    if (
+      this.props.enableSequence &&
+      globalStepNo === 0 &&
+      this.previousGlobalStepNo !== 0
+    ) {
+      this.patternCount = this.patternCount + 1;
+      this.startTick = ticks;
+      this.props = {
+        activePatternNo: this.activePatternNoSequnce,
+      };
+    }
 
     // Detect step boundary (when step number changes)
     if (activeStepNo === this.previousStepNo) return;
@@ -431,18 +433,21 @@ export default class StepSequencer
       this.previousStepNo !== -1 &&
       this.props.playbackMode === PlaybackMode.oneShot
     ) {
-      this.stopSequencer(contextTime);
+      this.stop(contextTime);
       return;
     }
 
     this.props = {
       ...this.props,
-      activePageNo: calculatedPageNo,
+      activePageNo: this.calculatedPageNo,
     };
     this.state = {
       ...this.state,
       currentStep: activeStepNo,
     };
+
+    const activeStep = this.activeStep;
+    const nextStep = this.nextStep;
 
     if (activeStep.microtimeOffset >= 0) {
       this.triggerStep(activeStep, contextTime);
@@ -455,6 +460,7 @@ export default class StepSequencer
     }
 
     this.previousStepNo = activeStepNo;
+    this.previousGlobalStepNo = globalStepNo;
 
     // Update UI indicator
     this.triggerPropsUpdate();
@@ -520,17 +526,19 @@ export default class StepSequencer
   start(time: ContextTime): void {
     super.start(time);
 
-    this.isSequencerRunning = true;
+    this.state = { isRunning: true };
     this.startTick = this.engine.transport.position.ticks;
     this.previousStepNo = -1;
+    this.previousGlobalStepNo = -1;
     this.scheduledNotes.clear();
+    this.triggerPropsUpdate();
   }
 
   // Called when transport stops
   stop(time: ContextTime): void {
     super.stop(time);
 
-    this.isSequencerRunning = false;
+    this.state = { isRunning: false };
 
     // Send all note-offs immediately
     this.scheduledNotes.forEach((_offTime, noteName) => {
@@ -540,9 +548,11 @@ export default class StepSequencer
 
     this.scheduledNotes.clear();
     this.previousStepNo = -1;
+    this.previousGlobalStepNo = -1;
 
     // Reset UI indicator
     this.state = { currentStep: 0 };
+    this.patternCount = -1;
     this.triggerPropsUpdate();
   }
 }

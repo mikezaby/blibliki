@@ -6,7 +6,7 @@ import {
   Engine,
   StepSequencer as StepSequencerModule,
 } from "@blibliki/engine";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { ModuleComponent } from "..";
 import Container from "../Container";
 import Controls from "./Controls";
@@ -48,7 +48,6 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
   const [lastConfiguredStep, setLastConfiguredStep] = useState<IStep | null>(
     null,
   );
-  const [isRunning, setIsRunning] = useState<boolean>(false);
 
   // Get the module instance
   const getModuleInstance = useCallback((): StepSequencerModule | undefined => {
@@ -56,29 +55,12 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
     return module as StepSequencerModule | undefined;
   }, [id]);
 
-  // Check running state on mount and set up interval to poll
-  useEffect(() => {
-    const checkRunningState = () => {
-      const module = getModuleInstance();
-      if (module) {
-        setIsRunning(module.isRunning);
-      }
-    };
-
-    checkRunningState();
-    const interval = setInterval(checkRunningState, 100);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [id, getModuleInstance]);
-
   // Start sequencer handler
   const handleStart = () => {
     const module = getModuleInstance();
     if (module) {
-      module.startSequencer();
-      setIsRunning(true);
+      const audioContext = Engine.current.context.audioContext;
+      module.start(audioContext.currentTime);
     }
   };
 
@@ -87,8 +69,7 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
     const module = getModuleInstance();
     if (module) {
       const audioContext = Engine.current.context.audioContext;
-      module.stopSequencer(audioContext.currentTime);
-      setIsRunning(false);
+      module.stop(audioContext.currentTime);
     }
   };
 
@@ -106,7 +87,7 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
   // Extract state values (temporal/runtime data)
   const currentStep = sequencerState?.currentStep ?? 0;
   const sequencePosition = sequencerState?.sequencePosition;
-  const sequenceError = sequencerState?.sequenceError;
+  const isRunning = !!sequencerState?.isRunning;
 
   const currentPattern = patterns[activePatternNo];
   const currentPage = currentPattern?.pages[activePageNo];
@@ -261,7 +242,6 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
         enableSequence={enableSequence}
         patternSequence={patternSequence}
         sequencePosition={sequencePosition}
-        sequenceError={sequenceError}
         updateProp={updateProp}
       />
 

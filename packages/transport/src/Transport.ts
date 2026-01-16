@@ -62,6 +62,7 @@ export type TransportListener<T extends TransportEvent> = {
 export type TransportClockCallback = (
   time: ClockTime,
   contextTime: ContextTime,
+  ticks: Ticks,
 ) => void;
 
 /**
@@ -129,12 +130,13 @@ export class Transport<T extends TransportEvent> {
     this.timer = new Timer(() => {
       const time = this.clock.time();
       const contextTime = this.clock.clockTimeToContextTime(time);
+      const ticks = this.tempo.getTicks(time);
       if (time <= this.clockTime) return;
 
       this.clockTime = time;
       this.scheduler.runUntil(time);
       this._clockCallbacks.forEach((callback) => {
-        callback(this.clockTime, contextTime);
+        callback(this.clockTime, contextTime, ticks);
       });
     }, SCHEDULE_INTERVAL_MS / 1000);
 
@@ -295,11 +297,10 @@ export class Transport<T extends TransportEvent> {
     this.scheduler.jumpTo(clockTime);
     this.clockTime = clockTime;
     this.listener.onJump(ticks);
+
+    const contextTime = this.clock.clockTimeToContextTime(this.clockTime);
     this._clockCallbacks.forEach((callback) => {
-      callback(
-        this.clockTime,
-        this.clock.clockTimeToContextTime(this.clockTime),
-      );
+      callback(this.clockTime, contextTime, ticks);
     });
   }
 
