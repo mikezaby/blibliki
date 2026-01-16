@@ -32,4 +32,4 @@ dist-ssr
 .env.production.local
 
 # AI tools
-.claude
+.claude/settings.local.json
