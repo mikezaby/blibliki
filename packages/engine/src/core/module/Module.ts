@@ -77,6 +77,7 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   protected _state!: ModuleTypeToStateMapping[T];
   protected activeNotes: Note[];
   private pendingUIUpdates = false;
+  private _propsInitialized = false;
 
   constructor(engineId: string, params: IModuleConstructor<T>) {
     const { id, name, moduleType, voiceNo, audioNodeConstructor, props } =
@@ -105,21 +106,27 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   }
 
   set props(value: Partial<ModuleTypeToPropsMapping[T]>) {
-    const updatedValue = { ...value };
+    const updatedValue: Partial<ModuleTypeToPropsMapping[T]> = {};
+    const isFirstSet = !this._propsInitialized;
 
     (Object.keys(value) as (keyof ModuleTypeToPropsMapping[T])[]).forEach(
       (key) => {
         const propValue = value[key];
-        if (propValue !== undefined) {
+        // On first set, always include the value. On subsequent sets, only if it changed.
+        if (
+          propValue !== undefined &&
+          (isFirstSet || this._props[key] !== propValue)
+        ) {
           const result = this.callPropHook("onSet", key, propValue);
-          if (result !== undefined) {
-            updatedValue[key] = result;
-          }
+          updatedValue[key] = result ?? propValue;
         }
       },
     );
 
+    if (Object.keys(updatedValue).length === 0) return;
+
     this._props = { ...this._props, ...updatedValue };
+    this._propsInitialized = true;
 
     (
       Object.keys(updatedValue) as (keyof ModuleTypeToPropsMapping[T])[]
@@ -155,19 +162,19 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   }
 
   set state(value: Partial<ModuleTypeToStateMapping[T]>) {
-    const updatedValue = { ...value };
+    const updatedValue: Partial<ModuleTypeToStateMapping[T]> = {};
 
     (Object.keys(value) as (keyof ModuleTypeToStateMapping[T])[]).forEach(
       (key) => {
         const stateValue = value[key];
-        if (stateValue !== undefined) {
+        if (stateValue !== undefined && this._state[key] !== stateValue) {
           const result = this.callStateHook("onSetState", key, stateValue);
-          if (result !== undefined) {
-            updatedValue[key] = result;
-          }
+          updatedValue[key] = result ?? stateValue;
         }
       },
     );
+
+    if (Object.keys(updatedValue).length === 0) return;
 
     this._state = { ...this._state, ...updatedValue };
 
