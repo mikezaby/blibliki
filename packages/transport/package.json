@@ -21,11 +21,14 @@
     "tsc": "tsc --noEmit",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
+    "test": "vitest",
     "bump": "npm version patch",
     "release": "pnpm run build && pnpm publish --access public"
   },
   "devDependencies": {
-    "@types/audioworklet": "catalog:web-audio"
+    "@types/audioworklet": "catalog:web-audio",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "catalog:test"
   },
   "dependencies": {
     "@blibliki/utils": "workspace:^"
