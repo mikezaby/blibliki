@@ -72,7 +72,7 @@ export default class Constant
     this.start(triggeredAt);
   };
 
-  triggerRelease = () => {
-    // Do nothing
+  triggerRelease = (_: Note, triggeredAt: ContextTime) => {
+    this.stop(triggeredAt);
   };
 }
