@@ -347,6 +347,11 @@ export class StepSequencer {
     // Detect pattern completion (wrapped back to step 0)
     // This happens when stepIndex is 0 and we were previously on a higher step
     if (event.stepIndex === 0 && this.previousStepNo > event.stepIndex) {
+      // INCREMENT SEQUENCE COUNTER WHEN PATTERN COMPLETES
+      if (this.config.enableSequence && this.expandedSequence.length > 0) {
+        this.sequencePatternCount++;
+      }
+
       if (this.config.playbackMode !== "oneShot") {
         // Only call onComplete for loop mode (oneShot calls it before stopping)
         this.config.onComplete?.();
