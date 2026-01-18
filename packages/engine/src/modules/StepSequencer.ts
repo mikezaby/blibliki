@@ -306,7 +306,11 @@ export default class StepSequencer
 
   private registerTransportListener() {
     this.engine.transport.addClockCallback(
-      (_clockTime: import("@blibliki/transport").ClockTime, contextTime: ContextTime, ticks: Ticks) => {
+      (
+        _clockTime: import("@blibliki/transport").ClockTime,
+        contextTime: ContextTime,
+        ticks: Ticks,
+      ) => {
         if (
           this.engine.state !== TransportState.playing ||
           !this.state.isRunning
