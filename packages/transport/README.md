@@ -2,6 +2,29 @@
 
 > Musical transport and scheduler on top of the WebAudio API.
 
+A precision timing engine for music applications. Converts musical time (bars, beats, ticks) into sample-accurate Web Audio scheduling using a sliding-window scheduler.
+
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Key Concepts](#key-concepts)
+- [API Overview](#api-overview)
+- [Documentation](#documentation)
+- [Development](#development)
+
+## Features
+
+- **Precision Scheduling** - Sample-accurate event timing via 200ms lookahead scheduler
+- **Musical Time** - 15,360 ticks per beat with support for any time signature
+- **Tempo Control** - Change BPM mid-playback without losing position
+- **Swing** - Built-in swing/shuffle timing (0.5 to 0.75)
+- **Position Management** - Jump to any bar:beat:sixteenth position
+- **UI Callbacks** - Clock and bar callbacks for visual synchronization
+- **TypeScript** - Fully typed with generic event support
+- **Minimal** - Zero dependencies except `@blibliki/utils`
+
 ## Installation
 
 ```sh
@@ -85,41 +108,96 @@ async function main() {
 main();
 ```
 
-Stop the transport with `transport.stop()`, pause with `transport.stop()` (without resetting) and reset the playhead to the beginning with `transport.reset()`.
+## Key Concepts
 
-## Listener Responsibilities
+### Listener Callbacks
 
-The listener that you pass into the constructor bridges musical intent and actual audio nodes:
+The listener object bridges musical intent and actual audio:
 
-- `generator(startTicks, endTicks)` **must** return every event that occurs in the half-open window `[startTicks, endTicks)`. The transport may call this with overlapping windows when rescheduling, so keep your generator idempotent and avoid emitting duplicate events.
-- `consumer(event)` receives the events produced by the generator with `time` (transport clock) and `contextTime` (AudioContext time) populated. This is where you schedule audio nodes, MIDI messages, etc.
-- `onStart(contextTime)` / `onStop(contextTime)` happen just before the transport starts or stops advancing.
-- `onJump(ticks)` is emitted whenever `transport.position` changes abruptly (for example through manual assignment or `reset()`).
-- `silence(contextTime)` is called whenever playback should be made quiet immediately—useful for clearing envelopes on stop/reset.
+- **`generator(startTicks, endTicks)`** - Returns events in the time window (in ticks)
+- **`consumer(event)`** - Schedules audio nodes using `event.contextTime`
+- **`onStart/onStop/onJump/silence`** - Lifecycle hooks
 
-## Working with Musical Time
+**Important:** Keep your generator idempotent—the transport may call it with overlapping windows.
 
-- The transport runs at `15360` ticks per quarter note. Use the `Position` helper to convert between ticks, strings (`"bars:beats:sixteenths"`), and object notation, as in `new Position("2:1:1", [4, 4]).ticks`.
-- Control tempo via the `bpm` getter/setter. Updating the tempo while playing keeps the current transport position intact.
-- Change the time signature with the `timeSignature` setter. The default is `4/4`.
-- Apply swing by setting `transport.swingAmount` to a value between `0.5` (straight) and `0.75`.
-- Reach the current musical position with the `position` getter. Assigning to `transport.position` jumps the playhead and invokes `onJump`.
+### Musical Time
 
-## UI-Friendly Clocking
+- Transport runs at **15,360 ticks per quarter note**
+- Use `Position` helper for conversions: `new Position("2:1:1", [4, 4])`
+- Control via properties: `bpm`, `timeSignature`, `swingAmount`, `position`
 
-To keep visual components in sync you can register clock callbacks:
+### UI Callbacks
+
+Register callbacks for UI updates:
+
+- `transport.addClockCallback()` - Fires every ~20ms
+- `transport.addBarCallback()` - Fires on bar boundaries
+
+## API Overview
+
+### Transport Control
 
 ```ts
-transport.addClockCallback((clockTime) => {
-  console.log("transport clock is at", clockTime, "seconds of audio time");
-});
-
-transport.addBarCallback((bar) => {
-  // e.g. update the UI playhead when a new bar begins
-});
+transport.start(); // Start playback
+transport.stop(); // Stop (pause) playback
+transport.reset(); // Reset to position 0
+transport.state; // "playing" | "stopped" | "paused"
 ```
 
-Clock callbacks fire at roughly 16th-note resolution, intended for UI feedback rather than sample-accurate DSP.
+### Properties
+
+```ts
+transport.bpm = 120; // Tempo (beats per minute)
+transport.timeSignature = [4, 4]; // Time signature
+transport.swingAmount = 0.6; // Swing (0.5 = none, 0.75 = max)
+transport.position; // Current position (get/set)
+```
+
+### Position
+
+```ts
+import { Position } from "@blibliki/transport";
+
+const pos = new Position("2:1:3", [4, 4]); // Bar 2, beat 1, sixteenth 3
+console.log(pos.ticks); // Get ticks
+console.log(pos.toString()); // "2:1:3"
+```
+
+### Utilities
+
+```ts
+import { TPB, divisionToTicks } from "@blibliki/transport";
+
+const sixteenthTicks = TPB / 4; // 3840 ticks
+const eighthTicks = divisionToTicks("1/8"); // 7680 ticks
+```
+
+## Documentation
+
+For comprehensive guides and examples:
+
+- **[DOCUMENTATION.md](./DOCUMENTATION.md)** - Complete architecture guide, API reference, and detailed examples
+- **[SCHEDULER_EXAMPLES.md](./SCHEDULER_EXAMPLES.md)** - Advanced scheduler patterns and use cases
+
+### What's Covered
+
+**DOCUMENTATION.md includes:**
+
+- Three time systems (ticks, clock time, context time)
+- Scheduler deep dive with timing diagrams
+- Complete architecture breakdown
+- Position and tempo management
+- Full API reference
+- Troubleshooting guide
+
+**SCHEDULER_EXAMPLES.md includes:**
+
+- Minimal scheduler implementation
+- Visual scheduler simulation
+- Step sequencer patterns
+- Dynamic event generation
+- Multi-track scheduling
+- Advanced patterns (tempo automation, event modification, MIDI recording)
 
 ## Development
 
