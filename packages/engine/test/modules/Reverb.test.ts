@@ -108,7 +108,7 @@ describe("Reverb", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const buffer1 = (reverb as any).convolverNode.buffer;
 
-      reverb.props = { type: ReverbType.room };
+      reverb.props = { type: ReverbType.hall };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const buffer2 = (reverb as any).convolverNode.buffer;
