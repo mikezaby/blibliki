@@ -8,8 +8,8 @@ import {
   type IStepCC,
   type IPage,
   type IPattern,
-  type Resolution,
-  type PlaybackMode,
+  type Resolution as TransportResolution,
+  type PlaybackMode as TransportPlaybackMode,
   type SequencerState,
   divisionToMilliseconds,
   TPB,
@@ -25,7 +25,6 @@ import {
   type SetterHooks,
 } from "@/core";
 import MidiEvent from "@/core/midi/MidiEvent";
-import { expandPatternSequence } from "@/utils";
 import type { ICreateModule, ModuleType } from ".";
 
 // Re-export types from transport for compatibility
@@ -256,9 +255,9 @@ export default class StepSequencer
     // Create transport sequencer instance
     this.sequencer = new TransportSequencer({
       patterns: props.patterns,
-      resolution: props.resolution as Resolution,
+      resolution: props.resolution as TransportResolution,
       stepsPerPage: props.stepsPerPage,
-      playbackMode: props.playbackMode as PlaybackMode,
+      playbackMode: props.playbackMode as TransportPlaybackMode,
       patternSequence: props.patternSequence,
       enableSequence: props.enableSequence,
       onStepTrigger: this.handleStepTrigger.bind(this),
@@ -319,7 +318,7 @@ export default class StepSequencer
     );
   }
 
-  private processTransportTick(contextTime: ContextTime, currentTicks: Ticks) {
+  private processTransportTick(_contextTime: ContextTime, currentTicks: Ticks) {
     // Use lookahead window similar to Transport's scheduler
     // 200ms lookahead at 120 BPM = 0.2s * 120 BPM / 60 = 0.4 beats = 0.4 * TPB ticks
     const LOOKAHEAD_SECONDS = 0.2;
@@ -481,12 +480,12 @@ export default class StepSequencer
   }
 
   setResolution(resolution: Resolution): void {
-    this.sequencer.setResolution(resolution as Resolution);
+    this.sequencer.setResolution(resolution as TransportResolution);
     this.props = { ...this.props, resolution };
   }
 
   setPlaybackMode(mode: PlaybackMode): void {
-    this.sequencer.setPlaybackMode(mode as PlaybackMode);
+    this.sequencer.setPlaybackMode(mode as TransportPlaybackMode);
     this.props = { ...this.props, playbackMode: mode };
   }
 
@@ -523,9 +522,12 @@ export default class StepSequencer
   addPage(patternIndex: number, page: IPage): void {
     this.sequencer.addPage(patternIndex, page);
     const newPatterns = [...this.props.patterns];
+    const pattern = newPatterns[patternIndex];
+    if (!pattern) throw new Error(`Pattern ${patternIndex} not found`);
+
     newPatterns[patternIndex] = {
-      ...newPatterns[patternIndex],
-      pages: [...newPatterns[patternIndex].pages, page],
+      ...pattern,
+      pages: [...pattern.pages, page],
     };
     this.props = { ...this.props, patterns: newPatterns };
   }
@@ -533,10 +535,13 @@ export default class StepSequencer
   removePage(patternIndex: number, pageIndex: number): void {
     this.sequencer.removePage(patternIndex, pageIndex);
     const newPatterns = [...this.props.patterns];
-    const newPages = [...newPatterns[patternIndex].pages];
+    const pattern = newPatterns[patternIndex];
+    if (!pattern) throw new Error(`Pattern ${patternIndex} not found`);
+
+    const newPages = [...pattern.pages];
     newPages.splice(pageIndex, 1);
     newPatterns[patternIndex] = {
-      ...newPatterns[patternIndex],
+      ...pattern,
       pages: newPages,
     };
     this.props = { ...this.props, patterns: newPatterns };
