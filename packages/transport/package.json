@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@types/audioworklet": "catalog:web-audio",
+    "@vitest/coverage-v8": "^4.0.17",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "catalog:test"
   },
