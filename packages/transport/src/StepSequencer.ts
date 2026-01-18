@@ -7,7 +7,7 @@ import type {
   SequencerState,
   StepSequencerConfig,
 } from "./StepSequencer.types";
-import type { Ticks } from "./types";
+import type { ContextTime, Ticks } from "./types";
 import { TPB } from "./utils";
 import { calculateMicrotimingOffset } from "./utils/microtiming";
 import { expandPatternSequence } from "./utils/patternSequence";
@@ -148,6 +148,65 @@ export class StepSequencer {
       throw new Error(`Page index ${pageIndex} out of bounds`);
     }
     pattern.pages.splice(pageIndex, 1);
+  }
+
+  // Lifecycle control
+  start(_contextTime: ContextTime): void {
+    if (this.state.isRunning) return;
+
+    this.state = {
+      ...this.state,
+      isRunning: true,
+    };
+
+    // Will be set by first generator call
+    this.startTicks = 0;
+    this.resetInternalTracking();
+
+    this.config.onStateChange?.(this.state);
+  }
+
+  stop(_contextTime: ContextTime): void {
+    if (!this.state.isRunning) return;
+
+    this.state = {
+      ...this.state,
+      isRunning: false,
+    };
+
+    this.resetInternalTracking();
+
+    this.config.onStateChange?.(this.state);
+  }
+
+  reset(): void {
+    this.state = {
+      isRunning: false,
+      currentPattern: 0,
+      currentPage: 0,
+      currentStep: 0,
+      sequencePosition: undefined,
+    };
+
+    this.sequencePatternCount = 0;
+    this.startTicks = 0;
+    this.resetInternalTracking();
+
+    this.config.onStateChange?.(this.state);
+  }
+
+  // TransportListener hooks (no-ops for independent control)
+  onStart(_contextTime: ContextTime): void {
+    // Intentionally empty - sequencer has independent lifecycle control
+  }
+  onStop(_contextTime: ContextTime): void {
+    // Intentionally empty - sequencer has independent lifecycle control
+  }
+  onJump(_ticks: Ticks): void {
+    // Intentionally empty - sequencer maintains its own position tracking
+  }
+  silence(_contextTime: ContextTime): void {
+    // Intentionally empty - no active voices to silence
   }
 
   // Helper methods
