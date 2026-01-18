@@ -5,6 +5,7 @@ export type {
   TransportPropertyChangeCallback,
 } from "./Transport";
 export { Position } from "./Position";
+export { StepSequencer } from "./StepSequencer";
 export {
   TPB,
   divisionToTicks,
