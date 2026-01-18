@@ -6,6 +6,7 @@ import type {
   PlaybackMode,
   SequencerState,
   StepSequencerConfig,
+  StepEvent,
 } from "./StepSequencer.types";
 import type { ContextTime, Ticks } from "./types";
 import { TPB } from "./utils";
@@ -207,6 +208,68 @@ export class StepSequencer {
   }
   silence(_contextTime: ContextTime): void {
     // Intentionally empty - no active voices to silence
+  }
+
+  // TransportListener implementation
+  generator(startTicks: Ticks, endTicks: Ticks): readonly StepEvent[] {
+    if (!this.state.isRunning) return [];
+
+    const events: StepEvent[] = [];
+    const stepTicks = this.getStepTicksForResolution();
+
+    // Window is [startTicks, endTicks) - includes startTicks, excludes endTicks
+    // Calculate which steps fall in this tick window [startTicks, endTicks)
+    const firstStepNo = Math.floor(startTicks / stepTicks);
+    const lastStepNo = Math.floor((endTicks - 1) / stepTicks);
+
+    for (
+      let globalStepNo = firstStepNo;
+      globalStepNo <= lastStepNo;
+      globalStepNo++
+    ) {
+      // Determine pattern/page/step indices
+      const { patternIndex, pageIndex, stepIndex } = resolveStepPosition(
+        globalStepNo,
+        this.config.patterns,
+        this.state.currentPattern,
+        this.config.stepsPerPage,
+        this.config.enableSequence,
+        this.expandedSequence,
+        this.sequencePatternCount,
+      );
+
+      const step = this.getStep(patternIndex, pageIndex, stepIndex);
+      if (!step.active) continue;
+
+      // Deterministic probability check based on step number
+      // Uses LCG-based hash to generate consistent pseudo-random value
+      const probabilityRandom = (globalStepNo * 2654435761) % 100;
+      if (probabilityRandom > step.probability) continue;
+
+      // Calculate tick position with microtiming offset applied
+      const baseTicks = globalStepNo * stepTicks;
+      const offsetTicks = calculateMicrotimingOffset(step.microtimeOffset);
+      const eventTicks = baseTicks + offsetTicks;
+
+      // Create triggered step (only notes/CCs that will fire)
+      const triggeredStep = {
+        notes: [...step.notes],
+        ccMessages: [...step.ccMessages],
+        duration: step.duration,
+      };
+
+      events.push({
+        ticks: eventTicks,
+        time: 0, // Filled by Transport
+        contextTime: 0, // Filled by Transport
+        step: triggeredStep,
+        stepIndex,
+        patternIndex,
+        pageIndex,
+      });
+    }
+
+    return events;
   }
 
   // Helper methods
