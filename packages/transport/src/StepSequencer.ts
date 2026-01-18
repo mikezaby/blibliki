@@ -272,6 +272,101 @@ export class StepSequencer {
     return events;
   }
 
+  consumer(event: StepEvent): void {
+    // Check if we should stop (oneShot completed)
+    if (this.shouldStopAfterCurrentEvent) {
+      this.config.onComplete?.();
+      this.stop(event.contextTime);
+      this.shouldStopAfterCurrentEvent = false;
+      return;
+    }
+
+    // Update current position for state tracking
+    this.updateCurrentPosition(event);
+
+    // Check for pattern completion
+    this.checkPatternCompletion(event);
+
+    // Trigger user callback with processed step
+    this.config.onStepTrigger(event.step, {
+      contextTime: event.contextTime,
+      ticks: event.ticks,
+    });
+  }
+
+  private updateCurrentPosition(event: StepEvent): void {
+    const prevState = { ...this.state };
+
+    this.state = {
+      ...this.state,
+      currentPattern: event.patternIndex,
+      currentPage: event.pageIndex,
+      currentStep: event.stepIndex,
+      sequencePosition: this.formatSequencePosition(),
+    };
+
+    // Trigger state change callback if state changed
+    if (this.hasStateChanged(prevState, this.state)) {
+      this.config.onStateChange?.(this.state);
+    }
+  }
+
+  private hasStateChanged(
+    prev: SequencerState,
+    current: SequencerState,
+  ): boolean {
+    return (
+      prev.isRunning !== current.isRunning ||
+      prev.currentPattern !== current.currentPattern ||
+      prev.currentPage !== current.currentPage ||
+      prev.currentStep !== current.currentStep ||
+      prev.sequencePosition !== current.sequencePosition
+    );
+  }
+
+  private formatSequencePosition(): string | undefined {
+    if (!this.config.enableSequence || this.expandedSequence.length === 0) {
+      return undefined;
+    }
+
+    const pattern = this.config.patterns[this.state.currentPattern];
+    if (!pattern) return undefined;
+
+    const patternName = pattern.name;
+    const position =
+      (this.sequencePatternCount % this.expandedSequence.length) + 1;
+    const total = this.expandedSequence.length;
+
+    return `${patternName} (${position}/${total})`;
+  }
+
+  private checkPatternCompletion(event: StepEvent): void {
+    const currentPattern = this.config.patterns[this.state.currentPattern];
+    if (!currentPattern) return;
+
+    // Detect pattern completion (wrapped back to step 0)
+    // This happens when stepIndex is 0 and we were previously on a higher step
+    if (event.stepIndex === 0 && this.previousStepNo > event.stepIndex) {
+      if (this.config.playbackMode !== "oneShot") {
+        // Only call onComplete for loop mode (oneShot calls it before stopping)
+        this.config.onComplete?.();
+      }
+    }
+
+    // For oneShot mode, set flag when we reach the last step
+    if (this.config.playbackMode === "oneShot") {
+      // Check if this is the last step of the pattern (will wrap next)
+      if (
+        event.stepIndex === this.config.stepsPerPage - 1 &&
+        event.pageIndex === currentPattern.pages.length - 1
+      ) {
+        this.shouldStopAfterCurrentEvent = true;
+      }
+    }
+
+    this.previousStepNo = event.stepIndex;
+  }
+
   // Helper methods
   private getStepTicksForResolution(): number {
     return RESOLUTION_TO_TICKS[this.config.resolution];
