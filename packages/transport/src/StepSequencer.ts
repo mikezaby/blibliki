@@ -3,14 +3,15 @@ import type {
   IPage,
   IStep,
   Resolution,
+  PlaybackMode,
   SequencerState,
   StepSequencerConfig,
 } from "./StepSequencer.types";
 import type { Ticks } from "./types";
 import { TPB } from "./utils";
+import { calculateMicrotimingOffset } from "./utils/microtiming";
 import { expandPatternSequence } from "./utils/patternSequence";
 import { resolveStepPosition } from "./utils/positionResolution";
-import { calculateMicrotimingOffset } from "./utils/microtiming";
 
 const RESOLUTION_TO_TICKS: Record<Resolution, number> = {
   "1/32": TPB / 8,
@@ -88,6 +89,65 @@ export class StepSequencer {
     if (!page)
       throw new Error(`Page ${pageIndex} not found in pattern ${patternIndex}`);
     return page;
+  }
+
+  // Update API
+  updateStep(
+    patternIndex: number,
+    pageIndex: number,
+    stepIndex: number,
+    changes: Partial<IStep>,
+  ): void {
+    const step = this.getStep(patternIndex, pageIndex, stepIndex);
+    Object.assign(step, changes);
+  }
+
+  setResolution(resolution: Resolution): void {
+    this.config.resolution = resolution;
+  }
+
+  setPlaybackMode(mode: PlaybackMode): void {
+    this.config.playbackMode = mode;
+  }
+
+  setStepsPerPage(count: number): void {
+    if (count < 1 || count > 16) {
+      throw new Error("stepsPerPage must be between 1 and 16");
+    }
+    this.config.stepsPerPage = count;
+  }
+
+  setPatternSequence(sequence: string): void {
+    this.config.patternSequence = sequence;
+    this.expandedSequence = expandPatternSequence(sequence);
+  }
+
+  setEnableSequence(enabled: boolean): void {
+    this.config.enableSequence = enabled;
+  }
+
+  addPattern(pattern: IPattern): void {
+    this.config.patterns.push(pattern);
+  }
+
+  removePattern(index: number): void {
+    if (index < 0 || index >= this.config.patterns.length) {
+      throw new Error(`Pattern index ${index} out of bounds`);
+    }
+    this.config.patterns.splice(index, 1);
+  }
+
+  addPage(patternIndex: number, page: IPage): void {
+    const pattern = this.getPattern(patternIndex);
+    pattern.pages.push(page);
+  }
+
+  removePage(patternIndex: number, pageIndex: number): void {
+    const pattern = this.getPattern(patternIndex);
+    if (pageIndex < 0 || pageIndex >= pattern.pages.length) {
+      throw new Error(`Page index ${pageIndex} out of bounds`);
+    }
+    pattern.pages.splice(pageIndex, 1);
   }
 
   // Helper methods
