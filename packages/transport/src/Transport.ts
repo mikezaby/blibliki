@@ -147,18 +147,6 @@ export class Transport<T extends TransportEvent> {
     this._clockCallbacks.push(callback);
   }
 
-  // ??? Make this more efficient (no need to compute full position, for example)
-  addBarCallback(callback: (bar: number) => void) {
-    let currentBar = Infinity;
-    this.addClockCallback(() => {
-      const pos = this.position;
-      if (pos.bars !== currentBar) {
-        callback(pos.bars);
-        currentBar = pos.bars;
-      }
-    });
-  }
-
   addPropertyChangeCallback(
     property: TransportProperty,
     callback: TransportPropertyChangeCallback,
