@@ -184,16 +184,19 @@ export class Engine {
 
   async start() {
     await this.resume();
-    this.transport.start();
+    const actionAt = this.context.currentTime;
+    this.transport.start(actionAt);
   }
 
   stop() {
-    this.transport.stop();
-    this.transport.reset();
+    const actionAt = this.context.currentTime;
+    this.transport.stop(actionAt);
+    this.transport.reset(actionAt);
   }
 
   pause() {
-    this.transport.stop();
+    const actionAt = this.context.currentTime;
+    this.transport.stop(actionAt);
   }
 
   get bpm() {

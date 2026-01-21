@@ -173,11 +173,9 @@ export class Transport {
   /**
    * Start the Transport.
    */
-  start() {
+  start(actionAt: ContextTime) {
     if (!this._initialized) throw new Error("Not initialized");
     if (this.clock.isRunning) return;
-
-    const actionAt = this.context.currentTime;
 
     this.sourceManager.onStart(actionAt);
     this.clock.start(actionAt);
@@ -188,10 +186,8 @@ export class Transport {
   /**
    * Stop the Transport.
    */
-  stop() {
+  stop(actionAt: ContextTime) {
     if (!this._initialized) throw new Error("Not initialized");
-
-    const actionAt = this.context.currentTime;
 
     this.sourceManager.onSilence(actionAt);
     this.sourceManager.onStop(actionAt);
@@ -203,10 +199,9 @@ export class Transport {
   /**
    * Reset the Transport to zero.
    */
-  reset() {
+  reset(actionAt: ContextTime) {
     if (!this._initialized) throw new Error("Not initialized");
 
-    const actionAt = this.context.currentTime;
     this.sourceManager.onSilence(actionAt);
     this.jumpTo(0);
   }
