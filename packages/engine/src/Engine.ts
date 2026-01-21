@@ -1,10 +1,8 @@
 import {
   BPM,
   ContextTime,
-  Ticks,
   TimeSignature,
   Transport,
-  TransportEvent,
 } from "@blibliki/transport";
 import {
   assertDefined,
@@ -64,7 +62,7 @@ export class Engine {
   context: Context;
   isInitialized = false;
   routes: Routes;
-  transport: Transport<TransportEvent>;
+  transport: Transport;
   modules: Map<
     string,
     ModuleTypeToModuleMapping[keyof ModuleTypeToModuleMapping]
@@ -108,20 +106,8 @@ export class Engine {
 
     this.context = context;
     this.transport = new Transport(this.context, {
-      generator: (_start: Ticks, _end: Ticks) => {
-        return [] as TransportEvent[];
-      },
-      consumer: (_event: TransportEvent) => {
-        return;
-      },
-      onJump: (_ticks: Ticks) => {
-        return;
-      },
       onStart: this.onStart,
       onStop: this.onStop,
-      silence: (_actionAt: ContextTime) => {
-        return;
-      },
     });
     this.routes = new Routes(this);
     this.modules = new Map();
