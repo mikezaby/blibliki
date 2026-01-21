@@ -93,57 +93,80 @@ function expandPatternSequence(input: string): string[] {
 
 export class StepSequencerSource extends BaseSource<StepSequencerSourceEvent> {
   props: StepSequencerSourceProps;
-  private patternCount = 0;
   private expandedSequence: string[] = [];
-  private currentPatternNo = 0;
+  private pageMapping: { patternNo: number; pageNo: number }[] = [];
 
   constructor(transport: Transport, props: StepSequencerSourceProps) {
     super(transport);
 
     this.props = props;
     this.expandedSequence = expandPatternSequence(props.patternSequence);
+    this.pageMapping = this.buildPageMapping();
   }
 
-  get stepTicks(): Ticks {
+  /**
+   * Build a mapping of absolute pages to (patternNo, pageNo) for one full sequence cycle
+   * Example: sequence "2A1B" with A having 2 pages, B having 1 page produces:
+   * [A0, A1, A0, A1, B0]
+   */
+  private buildPageMapping(): { patternNo: number; pageNo: number }[] {
+    const mapping: { patternNo: number; pageNo: number }[] = [];
+
+    if (this.props.enableSequence && this.expandedSequence.length > 0) {
+      // For each pattern letter in the expanded sequence
+      for (const patternLetter of this.expandedSequence) {
+        // Find the pattern by name
+        const patternNo = this.props.patterns.findIndex(
+          (p) => p.name.toUpperCase() === patternLetter,
+        );
+
+        if (patternNo === -1) continue;
+
+        const pattern = this.props.patterns[patternNo];
+        if (!pattern) continue;
+
+        // Add all pages of this pattern to the mapping
+        for (let pageNo = 0; pageNo < pattern.pages.length; pageNo++) {
+          mapping.push({ patternNo, pageNo });
+        }
+      }
+    } else {
+      // No sequence mode - build mapping for all patterns sequentially
+      for (
+        let patternNo = 0;
+        patternNo < this.props.patterns.length;
+        patternNo++
+      ) {
+        const pattern = this.props.patterns[patternNo];
+        if (!pattern) continue;
+
+        for (let pageNo = 0; pageNo < pattern.pages.length; pageNo++) {
+          mapping.push({ patternNo, pageNo });
+        }
+      }
+    }
+
+    return mapping;
+  }
+
+  get stepResolution(): Ticks {
     return RESOLUTION_TO_TICKS[this.props.resolution];
   }
 
-  get activePattern(): IPattern {
-    const patternNo = this.props.enableSequence ? this.currentPatternNo : 0;
-    const pattern = this.props.patterns[patternNo];
-    if (!pattern) throw Error("Pattern not found");
-    return pattern;
-  }
+  extractStepsTicks(start: Ticks, end: Ticks): Ticks[] {
+    const result: number[] = [];
+    const stepResolution = this.stepResolution;
 
-  get totalPages(): number {
-    return this.activePattern.pages.length;
-  }
+    const globalStepNo = Math.ceil((start - this.startedAt!) / stepResolution);
+    const actualStart = globalStepNo * stepResolution;
 
-  get totalSteps(): number {
-    return this.totalPages * this.props.stepsPerPage;
-  }
+    for (let value = actualStart; value <= end; value += stepResolution) {
+      if (!this.shouldGenerate(value)) continue;
 
-  private getPatternNoFromSequence(patternCount: number): number {
-    if (!this.props.enableSequence || this.expandedSequence.length === 0) {
-      return 0;
+      result.push(value);
     }
 
-    const current = patternCount % this.expandedSequence.length;
-    const patternName = this.expandedSequence[current];
-    const patternNo = this.props.patterns.findIndex(
-      (p) => p.name === patternName,
-    );
-    if (patternNo === -1) return 0;
-
-    return patternNo;
-  }
-
-  private getPageNo(globalStepNo: number): number {
-    return Math.floor(globalStepNo / this.props.stepsPerPage);
-  }
-
-  private getStepNo(globalStepNo: number): number {
-    return globalStepNo % this.props.stepsPerPage;
+    return result;
   }
 
   private getStep(patternNo: number, pageNo: number, stepNo: number): IStep {
@@ -159,75 +182,82 @@ export class StepSequencerSource extends BaseSource<StepSequencerSourceEvent> {
     return step;
   }
 
-  onStart(ticks: Ticks) {
-    super.onStart(ticks);
-    this.patternCount = 0;
-    this.currentPatternNo = this.getPatternNoFromSequence(0);
+  /**
+   * Calculate ticks per page based on step resolution and steps per page
+   */
+  get ticksPerPage(): Ticks {
+    return this.stepResolution * this.props.stepsPerPage;
+  }
+
+  /**
+   * Calculate absolute page number from tick position
+   */
+  private getAbsolutePageFromTicks(ticks: Ticks): number {
+    if (this.startedAt === undefined) return 0;
+
+    const ticksSinceStart = ticks - this.startedAt;
+    return Math.floor(ticksSinceStart / this.ticksPerPage);
+  }
+
+  /**
+   * Calculate step number within the current page from tick position
+   */
+  private getStepNoInPage(ticks: Ticks): number {
+    if (this.startedAt === undefined) return 0;
+
+    const ticksSinceStart = ticks - this.startedAt;
+    const ticksIntoPage = ticksSinceStart % this.ticksPerPage;
+    return Math.floor(ticksIntoPage / this.stepResolution);
+  }
+
+  /**
+   * Map absolute page number to actual pattern and page indices
+   * Takes into account sequence mode and playback mode (loop vs oneShot)
+   */
+  private getPatternAndPageFromAbsolutePage(absolutePage: number): {
+    patternNo: number;
+    pageNo: number;
+  } {
+    if (this.pageMapping.length === 0) {
+      return { patternNo: 0, pageNo: 0 };
+    }
+
+    let index: number;
+    if (this.props.playbackMode === PlaybackMode.loop) {
+      index = absolutePage % this.pageMapping.length;
+    } else {
+      // oneShot mode - stop at the last page
+      index = Math.min(absolutePage, this.pageMapping.length - 1);
+    }
+
+    return this.pageMapping[index] ?? { patternNo: 0, pageNo: 0 };
   }
 
   generator(
     start: Ticks,
     end: Ticks,
   ): readonly Readonly<StepSequencerSourceEvent>[] {
-    if (!this.startedAt) return [];
+    if (!this.isPlaying(start, end) || this.startedAt === undefined) return [];
 
-    const events: StepSequencerSourceEvent[] = [];
-    const relativeTicks = start - this.startedAt;
+    return this.extractStepsTicks(start, end).map((ticks) => {
+      const absolutePage = this.getAbsolutePageFromTicks(ticks);
+      const { patternNo, pageNo } =
+        this.getPatternAndPageFromAbsolutePage(absolutePage);
+      const stepNo = this.getStepNoInPage(ticks);
 
-    // Calculate which steps fall in the [start, end) range
-    const startGlobalStep = Math.floor(relativeTicks / this.stepTicks);
-    const endGlobalStep = Math.ceil((end - this.startedAt) / this.stepTicks);
+      const step = this.getStep(patternNo, pageNo, stepNo);
 
-    for (
-      let globalStep = startGlobalStep;
-      globalStep < endGlobalStep;
-      globalStep++
-    ) {
-      // Check for pattern completion and sequence change
-      const patternStepCount = this.totalSteps;
-      const currentPatternIteration = Math.floor(globalStep / patternStepCount);
-
-      if (currentPatternIteration > this.patternCount) {
-        // Pattern completed, move to next in sequence
-        this.patternCount = currentPatternIteration;
-        this.currentPatternNo = this.getPatternNoFromSequence(
-          this.patternCount,
-        );
-      }
-
-      const globalStepInPattern = globalStep % patternStepCount;
-      const stepTick = this.startedAt + globalStep * this.stepTicks;
-
-      // Skip if step is outside the requested range
-      if (stepTick < start || stepTick >= end) continue;
-
-      // Check oneShot mode - stop at pattern boundary
-      if (
-        this.props.playbackMode === PlaybackMode.oneShot &&
-        globalStep > 0 &&
-        globalStepInPattern === 0
-      ) {
-        break;
-      }
-
-      const pageNo = this.getPageNo(globalStepInPattern);
-      const stepNo = this.getStepNo(globalStepInPattern);
-      const step = this.getStep(this.currentPatternNo, pageNo, stepNo);
-
-      // Note: time and contextTime will be recalculated by Transport
-      events.push({
-        ticks: stepTick,
+      return {
+        ticks,
         time: 0,
         contextTime: 0,
         eventSourceId: this.id,
         stepNo,
         pageNo,
-        patternNo: this.currentPatternNo,
+        patternNo,
         step,
-      });
-    }
-
-    return events;
+      };
+    });
   }
 
   consumer(event: Readonly<StepSequencerSourceEvent>) {

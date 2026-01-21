@@ -5,7 +5,7 @@ import { Scheduler } from "./Scheduler";
 import { Tempo } from "./Tempo";
 import { TimelineEvent } from "./Timeline";
 import { Timer } from "./Timer";
-import { SourceEvent } from "./sources/BaseSource";
+import { SourceEvent, IBaseSource } from "./sources/BaseSource";
 import { SourceManager } from "./sources/SourceManager";
 import {
   BPM,
@@ -204,6 +204,20 @@ export class Transport {
 
     this.sourceManager.onSilence(actionAt);
     this.jumpTo(0);
+  }
+
+  /**
+   * Add a source to the transport
+   */
+  addSource<T extends SourceEvent>(source: IBaseSource<T>) {
+    this.sourceManager.addSource(source);
+  }
+
+  /**
+   * Remove a source from the transport
+   */
+  removeSource(id: string) {
+    this.sourceManager.removeSource(id);
   }
 
   get bpm(): BPM {

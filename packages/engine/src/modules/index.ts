@@ -196,7 +196,6 @@ export type {
   IPattern,
   IStepNote,
   IStepCC,
-  SequenceEntry,
 } from "./StepSequencer";
 export { Resolution, PlaybackMode, stepPropSchema } from "./StepSequencer";
 export type { IMidiMapper, IMidiMapperProps, MidiMapping } from "./MidiMapper";

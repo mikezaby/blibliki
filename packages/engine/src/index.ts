@@ -58,7 +58,6 @@ export type {
   IPattern,
   IStepNote,
   IStepCC,
-  SequenceEntry,
   ModuleTypeToPropsMapping,
   ModuleTypeToStateMapping,
   ICreateModule,
