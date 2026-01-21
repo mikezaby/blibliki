@@ -56,7 +56,7 @@ export enum PlaybackMode {
 }
 
 interface StepSequencerSourceProps {
-  onEvent: () => void;
+  onEvent: (event: StepSequencerSourceEvent) => void;
   patterns: IPattern[];
   stepsPerPage: number; // 1-16 steps per page
   resolution: Resolution;
@@ -230,7 +230,7 @@ export class StepSequencerSource extends BaseSource<StepSequencerSourceEvent> {
     return events;
   }
 
-  consumer(_event: Readonly<StepSequencerSourceEvent>) {
-    // Not implemented yet
+  consumer(event: Readonly<StepSequencerSourceEvent>) {
+    this.props.onEvent(event);
   }
 }
