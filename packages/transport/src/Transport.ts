@@ -90,9 +90,8 @@ export class Transport {
   private onStopCallback: TransportParams["onStop"];
 
   constructor(context: Readonly<Context>, params: TransportParams) {
-    // ### Make these adapt to performance of app? Or let user set them?
     const SCHEDULE_INTERVAL_MS = 20;
-    const SCHEDULE_WINDOW_SIZE_MS = 200;
+    const SCHEDULE_WINDOW_SIZE_MS = 100;
 
     this.context = context;
     this.sourceManager = new SourceManager();
@@ -150,6 +149,16 @@ export class Transport {
     return this.clock.time();
   }
 
+  getContextTimeAtTicks(ticks: Ticks): ContextTime {
+    const clockTime = this.tempo.getClockTime(ticks);
+    return this.clock.clockTimeToContextTime(clockTime);
+  }
+
+  getTicksAtContextTime(contextTime: ContextTime): Ticks {
+    const clockTime = this.clock.contextTimeToClockTime(contextTime);
+    return this.tempo.getTicks(clockTime);
+  }
+
   /**
    * Return the (approximate) current Transport time, in ticks.
    */
@@ -177,10 +186,12 @@ export class Transport {
     if (!this._initialized) throw new Error("Not initialized");
     if (this.clock.isRunning) return;
 
-    this.sourceManager.onStart(actionAt);
-    this.clock.start(actionAt);
+    const clockTime = this.clock.start(actionAt);
     this.timer.start();
-    this.onStartCallback(actionAt);
+
+    const ticks = this.tempo.getTicks(clockTime);
+    this.sourceManager.onStart(ticks);
+    this.onStartCallback(ticks);
   }
 
   /**
@@ -189,11 +200,13 @@ export class Transport {
   stop(actionAt: ContextTime) {
     if (!this._initialized) throw new Error("Not initialized");
 
-    this.sourceManager.onSilence(actionAt);
-    this.sourceManager.onStop(actionAt);
-    this.clock.stop(actionAt);
+    const clockTime = this.clock.stop(actionAt);
     this.timer.stop();
-    this.onStopCallback(actionAt);
+
+    const ticks = this.tempo.getTicks(clockTime);
+    this.sourceManager.onSilence(ticks);
+    this.sourceManager.onStop(ticks);
+    this.onStopCallback(ticks);
   }
 
   /**

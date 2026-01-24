@@ -32,6 +32,8 @@ export class Clock {
     this.contextTimeAt.start = actionAt;
     this.clockTimeAt.start = this.clockTimeAt.stop;
     this._isRunning = true;
+
+    return this.clockTimeAt.start;
   }
 
   stop(actionAt: ContextTime) {
@@ -39,6 +41,8 @@ export class Clock {
     this.clockTimeAt.stop =
       this.clockTimeAt.start + (actionAt - this.contextTimeAt.start);
     this.contextTimeAt.stop = actionAt;
+
+    return this.clockTimeAt.stop;
   }
 
   jumpTo(time: ClockTime) {
@@ -52,6 +56,17 @@ export class Clock {
       this.audioClockOffset +
       this.contextTimeAt[type] +
       clockTime -
+      this.clockTimeAt[type]
+    );
+  }
+
+  contextTimeToClockTime(contextTime: ContextTime): ClockTime {
+    const type = this.isRunning ? "start" : "stop";
+
+    return (
+      contextTime -
+      this.audioClockOffset -
+      this.contextTimeAt[type] +
       this.clockTimeAt[type]
     );
   }

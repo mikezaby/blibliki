@@ -359,36 +359,36 @@ export default class StepSequencer
   }
 
   // Called when transport starts
-  start(time: ContextTime): void {
-    super.start(time);
+  start(contextTime: ContextTime): void {
+    super.start(contextTime);
 
     this.state = { isRunning: true };
     this.scheduledNotes.clear();
 
-    // Start the source
-    const ticks = this.engine.transport.position.ticks;
+    const ticks = this.engine.transport.getTicksAtContextTime(contextTime);
     this.source!.onStart(ticks);
 
     this.triggerPropsUpdate();
   }
 
   // Called when transport stops
-  stop(time: ContextTime): void {
-    super.stop(time);
+  stop(contextTime: ContextTime): void {
+    super.stop(contextTime);
 
     this.state = { isRunning: false };
 
     // Send all note-offs immediately
     this.scheduledNotes.forEach((_offTime, noteName) => {
-      const midiEvent = MidiEvent.fromNote(noteName, false, time);
+      const midiEvent = MidiEvent.fromNote(noteName, false, contextTime);
       this.midiOutput.onMidiEvent(midiEvent);
     });
 
     this.scheduledNotes.clear();
 
     // Stop the source
-    const ticks = this.engine.transport.position.ticks;
+    const ticks = this.engine.transport.getTicksAtContextTime(contextTime);
     this.source!.onStop(ticks);
+    this.source!.onJump(0);
 
     // Reset UI indicator
     this.state = { currentStep: 0 };

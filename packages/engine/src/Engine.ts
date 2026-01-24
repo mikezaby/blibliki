@@ -1,9 +1,4 @@
-import {
-  BPM,
-  ContextTime,
-  TimeSignature,
-  Transport,
-} from "@blibliki/transport";
+import { BPM, Ticks, TimeSignature, Transport } from "@blibliki/transport";
 import {
   assertDefined,
   Context,
@@ -319,14 +314,18 @@ export class Engine {
   }
 
   // actionAt is context time
-  private onStart = (actionAt: ContextTime) => {
+  private onStart = (ticks: Ticks) => {
+    const actionAt = this.transport.getContextTimeAtTicks(ticks);
+
     this.modules.forEach((module) => {
       module.start(actionAt);
     });
   };
 
   // actionAt is context time
-  private onStop = (actionAt: ContextTime) => {
+  private onStop = (ticks: Ticks) => {
+    const actionAt = this.transport.getContextTimeAtTicks(ticks);
+
     this.modules.forEach((module) => {
       module.stop(actionAt);
     });

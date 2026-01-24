@@ -153,12 +153,32 @@ export class StepSequencerSource extends BaseSource<StepSequencerSourceEvent> {
     return RESOLUTION_TO_TICKS[this.props.resolution];
   }
 
+  onStart(ticks: Ticks) {
+    // Quantize to the start of the next bar
+    const timeSignature = this.transport.timeSignature;
+    const ticksPerBar = TPB * timeSignature[0];
+
+    if (ticks % ticksPerBar === 0) {
+      super.onStart(ticks);
+      return;
+    }
+
+    // Calculate which bar we're in and round up to the next bar
+    const currentBar = Math.floor(ticks / ticksPerBar);
+    const nextBarTicks = (currentBar + 1) * ticksPerBar;
+
+    super.onStart(nextBarTicks);
+  }
+
   extractStepsTicks(start: Ticks, end: Ticks): Ticks[] {
     const result: number[] = [];
     const stepResolution = this.stepResolution;
 
-    const globalStepNo = Math.ceil((start - this.startedAt!) / stepResolution);
-    const actualStart = globalStepNo * stepResolution;
+    // Calculate which step we should be at, then convert back to absolute ticks
+    const stepsSinceStart = Math.floor(
+      (start - this.startedAt!) / stepResolution,
+    );
+    const actualStart = this.startedAt! + stepsSinceStart * stepResolution;
 
     for (let value = actualStart; value <= end; value += stepResolution) {
       if (!this.shouldGenerate(value)) continue;
