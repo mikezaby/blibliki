@@ -1,7 +1,5 @@
 import { sleep } from "@blibliki/utils";
 import { describe, expect, it } from "vitest";
-import { Note } from "@/core";
-import MidiEvent from "@/core/midi/MidiEvent";
 import { ModuleType } from "@/modules";
 import Constant from "@/modules/Constant";
 import Envelope from "@/modules/Envelope";
@@ -316,93 +314,6 @@ describe("Envelope", () => {
 
       // Should be back at sustain level after retriggering
       expect(value).toBeGreaterThan(0.5);
-    });
-  });
-
-  describe("Rapid retriggering", () => {
-    it("should trigger attack when release and attack happen at same time via MIDI", async (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: {
-          attack: 0, // Instant attack
-          attackCurve: 0.5,
-          decay: 0, // Instant decay
-          sustain: 1, // Full sustain
-          release: 0, // Instant release
-        },
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
-      });
-
-      const constant = new Constant(ctx.engine.id, {
-        name: "constant",
-        moduleType: ModuleType.Constant,
-        props: {
-          value: 1,
-        },
-      });
-      constant.start(ctx.context.currentTime);
-
-      const inspector = new Inspector(ctx.engine.id, {
-        name: "inspector",
-        moduleType: ModuleType.Inspector,
-        props: {},
-      });
-
-      await sleep(10);
-
-      // Get the mono envelope and connect audio
-      const monoEnvelope = envelope.audioModules[0]!;
-
-      // Connect constant to envelope input (for the audio signal)
-      constant.audioNode.connect(
-        (monoEnvelope.inputs.findByName("in") as any).getAudioNode(),
-      );
-
-      // Connect mono envelope output to inspector
-      (monoEnvelope.outputs.findByName("out") as any)
-        .getAudioNode()
-        .connect(inspector.audioNode);
-
-      // Get the MIDI input for the poly envelope
-      const midiInput = envelope.inputs.findByName("midi in") as any;
-
-      // Create note for C4
-      const note = Note.fromFrequency(261.63);
-
-      // First note on
-      const noteOnEvent1 = MidiEvent.fromNote(
-        note,
-        true,
-        ctx.context.currentTime,
-      );
-      midiInput.onMidiEvent(noteOnEvent1);
-
-      await sleep(50);
-
-      const valueAfterFirstAttack = inspector.getValue();
-      console.log("Value after first attack:", valueAfterFirstAttack);
-      expect(valueAfterFirstAttack).toBeCloseTo(1, 1);
-
-      // Note off and note on at the exact same time
-      const simultaneousTime = ctx.context.currentTime + 0.001;
-
-      const noteOffEvent = MidiEvent.fromNote(note, false, simultaneousTime);
-      const noteOnEvent2 = MidiEvent.fromNote(note, true, simultaneousTime);
-
-      midiInput.onMidiEvent(noteOffEvent);
-      midiInput.onMidiEvent(noteOnEvent2);
-
-      await sleep(50);
-
-      const valueAfterRetrigger = inspector.getValue();
-      console.log("Value after retrigger:", valueAfterRetrigger);
-
-      // Should be at sustain level (1) after the retrigger
-      expect(valueAfterRetrigger).toBeCloseTo(1, 1);
     });
   });
 

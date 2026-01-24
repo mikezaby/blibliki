@@ -80,9 +80,11 @@ export const customEnvelopeProcessorURL = URL.createObjectURL(
             for (let i = 0; i < output[0].length; ++i) {
               if (trigs && trigs.length > 1) this._trig = trigs[i]!;
 
-              // Trigger detection - only detect rising edge
-              if (this._trig >= 0.5 && this._lasttrig < 0.5) {
-                this._phase = 1; // Start attack on rising edge
+              // Trigger detection
+              if (this._trig >= 0.5) {
+                if (this._lasttrig < 0.5) this._phase = 1;
+              } else {
+                this._phase = 0;
               }
 
               // Attack phase
@@ -90,10 +92,10 @@ export const customEnvelopeProcessorURL = URL.createObjectURL(
                 this._value += (atkmax - this._value) * atkRatio;
                 if (this._value >= 1.0) {
                   this._value = 1.0;
-                  this._phase = 2; // Move to sustain/decay phase
+                  this._phase = 0;
                 }
               }
-              // Decay phase (only while trigger is held and not in attack)
+              // Decay phase (only while trigger is held)
               else if (this._trig >= 0.5 && this._value > sus) {
                 this._value += (sus - this._value) * decRatio;
               }
@@ -101,11 +103,6 @@ export const customEnvelopeProcessorURL = URL.createObjectURL(
               // Release phase
               if (this._trig < 0.5) {
                 this._value += -this._value * relRatio;
-                // Reset phase when envelope completes
-                if (this._value < 0.001) {
-                  this._value = 0;
-                  this._phase = 0;
-                }
               }
 
               for (const channel of output) {
