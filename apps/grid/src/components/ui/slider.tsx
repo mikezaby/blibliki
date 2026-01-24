@@ -67,8 +67,9 @@ export default function Slider(props: SliderProps) {
     onChange(Number(event.target.value));
   };
 
-  const displayedValue =
-    marks && value !== undefined ? marks[value] : (displayValue ?? value);
+  const showMarkValue =
+    value && marks && marks.length > 1 && marks.some((m) => !!m.label);
+  const displayedValue = showMarkValue ? marks[value] : (displayValue ?? value);
 
   return (
     <div className={wrapperClassName}>
