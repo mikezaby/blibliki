@@ -1,11 +1,17 @@
 import {
-  ClockTime,
   ContextTime,
   Division,
   divisionToMilliseconds,
-  Ticks,
   TPB,
-  TransportState,
+  StepSequencerSource,
+  StepSequencerSourceEvent,
+  Resolution,
+  PlaybackMode,
+  IStep,
+  IStepNote,
+  IStepCC,
+  IPage,
+  IPattern,
 } from "@blibliki/transport";
 import {
   Module,
@@ -17,62 +23,13 @@ import {
   SetterHooks,
 } from "@/core";
 import MidiEvent from "@/core/midi/MidiEvent";
-import { expandPatternSequence } from "@/utils";
 import { ICreateModule, ModuleType } from ".";
 
 export type IStepSequencer = IModule<ModuleType.StepSequencer>;
 
-// Sequence entry for pattern sequencing
-export type SequenceEntry = {
-  pattern: string; // Pattern name (A, B, C, etc.)
-  count: number; // Number of repetitions
-};
-
-// Per-note data within a step
-export type IStepNote = {
-  note: string; // "C4", "E4", "G4"
-  velocity: number; // 0-127
-};
-
-// Per-CC data within a step
-export type IStepCC = {
-  cc: number; // 0-127 MIDI CC number
-  value: number; // 0-127 CC value
-};
-
-// Individual step
-export type IStep = {
-  active: boolean; // Whether step is enabled/muted
-  notes: IStepNote[]; // Multiple notes for chords
-  ccMessages: IStepCC[]; // Multiple CC messages per step
-  probability: number; // 0-100% chance to trigger
-  microtimeOffset: number; // -50 to +50 ticks offset
-  duration: Division;
-};
-
-// Page contains multiple steps
-export type IPage = {
-  name: string;
-  steps: IStep[];
-};
-
-// Pattern contains multiple pages
-export type IPattern = {
-  name: string;
-  pages: IPage[];
-};
-
-export enum Resolution {
-  thirtysecond = "1/32",
-  sixteenth = "1/16",
-  eighth = "1/8",
-  quarter = "1/4",
-}
-
-export enum PlaybackMode {
-  loop = "loop",
-  oneShot = "oneShot",
-}
+// Re-export types from transport for backward compatibility
+export type { IStep, IStepNote, IStepCC, IPage, IPattern };
+export { Resolution, PlaybackMode };
 
 // Module props (serialized)
 export type IStepSequencerProps = {
@@ -245,14 +202,6 @@ const DEFAULT_STATE: IStepSequencerState = {
   sequencePosition: undefined,
 };
 
-// Timing constants
-const RESOLUTION_TO_TICKS: Record<Resolution, number> = {
-  [Resolution.thirtysecond]: TPB / 8, // 1920 ticks
-  [Resolution.sixteenth]: TPB / 4, // 3840 ticks
-  [Resolution.eighth]: TPB / 2, // 7680 ticks
-  [Resolution.quarter]: TPB, // 15360 ticks
-};
-
 type StepSequencerSetterHooks = Pick<
   SetterHooks<IStepSequencerProps>,
   "onSetActivePatternNo" | "onSetPatternSequence"
@@ -265,12 +214,8 @@ export default class StepSequencer
   declare audioNode: undefined;
   midiOutput!: MidiOutput;
 
-  private previousStepNo = -1;
-  private previousGlobalStepNo = -1;
   private scheduledNotes = new Map<string, ContextTime>(); // Track scheduled note-offs
-  private startTick: Ticks = 0;
-  private patternCount = -1;
-  private expandedSequence: string[] = [];
+  private source?: StepSequencerSource;
 
   constructor(
     engineId: string,
@@ -287,7 +232,7 @@ export default class StepSequencer
     this._state = { ...DEFAULT_STATE };
 
     this.registerOutputs();
-    this.registerTransportListener();
+    this.initializeSource();
   }
 
   onSetActivePatternNo: StepSequencerSetterHooks["onSetActivePatternNo"] = (
@@ -299,171 +244,62 @@ export default class StepSequencer
   onSetPatternSequence: StepSequencerSetterHooks["onSetPatternSequence"] = (
     value,
   ) => {
-    this.expandedSequence = expandPatternSequence(value);
+    if (this.source) {
+      this.source.props = {
+        ...this.source.props,
+        patternSequence: value,
+      };
+    }
 
     return value;
   };
 
-  // We use this when we have pattern sequence enabled to get the active pattern
-  get activePatternNoSequnce() {
-    const current = this.patternCount % this.expandedSequence.length;
-    const patternName = this.expandedSequence[current];
-    const patternNo = this.props.patterns.findIndex(
-      (p) => p.name === patternName,
-    );
-    if (patternNo === -1) throw Error("Pattern not found");
+  private initializeSource() {
+    this.source = new StepSequencerSource(this.engine.transport, {
+      onEvent: this.handleStepEvent,
+      patterns: this.props.patterns,
+      stepsPerPage: this.props.stepsPerPage,
+      resolution: this.props.resolution,
+      playbackMode: this.props.playbackMode,
+      patternSequence: this.props.patternSequence,
+      enableSequence: this.props.enableSequence,
+    });
 
-    return patternNo;
+    this.engine.transport.addSource(this.source);
   }
 
-  get activePattern(): IPattern {
-    const pattern = this.props.patterns[this.props.activePatternNo];
-    if (!pattern) throw Error("Pattern not found");
+  private handleStepEvent = (event: StepSequencerSourceEvent) => {
+    // Update state for UI
+    this.state = {
+      ...this.state,
+      currentStep: event.stepNo,
+    };
 
-    return pattern;
-  }
-
-  get totalPages(): number {
-    return this.activePattern.pages.length;
-  }
-
-  get activePage(): IPage {
-    const page = this.activePattern.pages[this.props.activePageNo];
-    if (!page) throw Error("Page not found");
-
-    return page;
-  }
-
-  get calculatedPageNo() {
-    return Math.floor(this.globalStepNo / this.props.stepsPerPage);
-  }
-
-  get totalSteps() {
-    return this.totalPages * this.props.stepsPerPage;
-  }
-
-  get stepTicks(): Ticks {
-    return RESOLUTION_TO_TICKS[this.props.resolution];
-  }
-
-  get globalStepNo() {
-    const currentTick = this.engine.transport.position.ticks;
-    const relativeTick = currentTick - this.startTick;
-    return Math.floor(relativeTick / this.stepTicks) % this.totalSteps;
-  }
-
-  get activeStepNo() {
-    return this.globalStepNo % this.props.stepsPerPage;
-  }
-
-  get activeStep(): IStep {
-    const step = this.activePage.steps[this.activeStepNo];
-    if (!step) throw Error("Step not found");
-
-    return step;
-  }
-
-  get nextGlobalStepNo() {
-    return (this.globalStepNo + 1) % this.totalSteps;
-  }
-
-  get nextStepPageNo() {
-    return Math.floor(this.nextGlobalStepNo / this.props.stepsPerPage);
-  }
-
-  get nextStepNo() {
-    return this.nextGlobalStepNo % this.props.stepsPerPage;
-  }
-
-  get nextStepPage(): IPage {
-    const page = this.activePattern.pages[this.nextStepPageNo];
-    if (!page) throw Error("Next step page not found");
-
-    return page;
-  }
-
-  get nextStep(): IStep {
-    const step = this.nextStepPage.steps[this.nextStepNo];
-    if (!step) throw Error("Next step not found");
-
-    return step;
-  }
-
-  private registerOutputs() {
-    this.midiOutput = this.registerMidiOutput({ name: "midi" });
-  }
-
-  private registerTransportListener() {
-    this.engine.transport.addClockCallback(
-      (_: ClockTime, contextTime: ContextTime, ticks: Ticks) => {
-        if (
-          this.engine.state !== TransportState.playing ||
-          !this.state.isRunning
-        )
-          return;
-
-        this.checkStepBoundary(contextTime, ticks);
-      },
-    );
-  }
-
-  private checkStepBoundary(contextTime: ContextTime, ticks: Ticks) {
-    const activeStepNo = this.activeStepNo;
-    const globalStepNo = this.globalStepNo;
-
-    // Increment pattern count when completing the entire pattern (all pages)
-    if (
-      this.props.enableSequence &&
-      globalStepNo === 0 &&
-      this.previousGlobalStepNo !== 0
-    ) {
-      this.patternCount = this.patternCount + 1;
-      this.startTick = ticks;
+    // Update active page if changed
+    if (event.pageNo !== this.props.activePageNo) {
       this.props = {
-        activePatternNo: this.activePatternNoSequnce,
+        ...this.props,
+        activePageNo: event.pageNo,
       };
     }
 
-    // Detect step boundary (when step number changes)
-    if (activeStepNo === this.previousStepNo) return;
-
-    // Pattern completion detection for oneShot mode
-    if (
-      this.globalStepNo === 0 &&
-      this.previousStepNo !== -1 &&
-      this.props.playbackMode === PlaybackMode.oneShot
-    ) {
-      this.stop(contextTime);
-      return;
+    // Update active pattern if changed (for sequence mode)
+    if (event.patternNo !== this.props.activePatternNo) {
+      this.props = {
+        ...this.props,
+        activePatternNo: event.patternNo,
+      };
     }
 
-    this.props = {
-      ...this.props,
-      activePageNo: this.calculatedPageNo,
-    };
-    this.state = {
-      ...this.state,
-      currentStep: activeStepNo,
-    };
+    // Trigger the step
+    this.triggerStep(event.step, event.contextTime);
 
-    const activeStep = this.activeStep;
-    const nextStep = this.nextStep;
-
-    if (activeStep.microtimeOffset >= 0) {
-      this.triggerStep(activeStep, contextTime);
-    }
-
-    if (nextStep.microtimeOffset < 0) {
-      const bpm = this.engine.bpm;
-      const stepDurationSeconds = (this.stepTicks / TPB) * (60 / bpm);
-      this.triggerStep(nextStep, contextTime + stepDurationSeconds);
-    }
-
-    this.previousStepNo = activeStepNo;
-    this.previousGlobalStepNo = globalStepNo;
-
-    // Update UI indicator
+    // Trigger UI update
     this.triggerPropsUpdate();
+  };
+
+  private registerOutputs() {
+    this.midiOutput = this.registerMidiOutput({ name: "midi" });
   }
 
   private triggerStep(step: IStep, contextTime: ContextTime) {
@@ -523,36 +359,45 @@ export default class StepSequencer
   }
 
   // Called when transport starts
-  start(time: ContextTime): void {
-    super.start(time);
+  start(contextTime: ContextTime): void {
+    super.start(contextTime);
 
     this.state = { isRunning: true };
-    this.startTick = this.engine.transport.position.ticks;
-    this.previousStepNo = -1;
-    this.previousGlobalStepNo = -1;
     this.scheduledNotes.clear();
+
+    const ticks = this.engine.transport.getTicksAtContextTime(contextTime);
+    this.source!.onStart(ticks);
+
     this.triggerPropsUpdate();
   }
 
   // Called when transport stops
-  stop(time: ContextTime): void {
-    super.stop(time);
+  stop(contextTime: ContextTime): void {
+    super.stop(contextTime);
 
     this.state = { isRunning: false };
 
     // Send all note-offs immediately
     this.scheduledNotes.forEach((_offTime, noteName) => {
-      const midiEvent = MidiEvent.fromNote(noteName, false, time);
+      const midiEvent = MidiEvent.fromNote(noteName, false, contextTime);
       this.midiOutput.onMidiEvent(midiEvent);
     });
 
     this.scheduledNotes.clear();
-    this.previousStepNo = -1;
-    this.previousGlobalStepNo = -1;
+
+    // Stop the source
+    const ticks = this.engine.transport.getTicksAtContextTime(contextTime);
+    this.source!.onStop(ticks);
+    this.source!.onJump(0);
 
     // Reset UI indicator
     this.state = { currentStep: 0 };
-    this.patternCount = -1;
     this.triggerPropsUpdate();
+  }
+
+  dispose() {
+    if (!this.source) return;
+
+    this.engine.transport.removeSource(this.source.id);
   }
 }

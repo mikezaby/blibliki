@@ -131,7 +131,6 @@ The listener object bridges musical intent and actual audio:
 Register callbacks for UI updates:
 
 - `transport.addClockCallback()` - Fires every ~20ms
-- `transport.addBarCallback()` - Fires on bar boundaries
 
 ## API Overview
 

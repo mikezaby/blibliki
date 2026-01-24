@@ -5,6 +5,8 @@ import { Scheduler } from "./Scheduler";
 import { Tempo } from "./Tempo";
 import { TimelineEvent } from "./Timeline";
 import { Timer } from "./Timer";
+import { SourceEvent, IBaseSource } from "./sources/BaseSource";
+import { SourceManager } from "./sources/SourceManager";
 import {
   BPM,
   ClockTime,
@@ -19,36 +21,6 @@ export interface TransportEvent extends TimelineEvent {
   ticks: Ticks;
   contextTime: ContextTime;
 }
-
-/**
- * Given a (future) transport time window (in ticks), return all events that should
- * occur within the window. This function is responsible for setting the ticks
- * value for the events returned.
- *
- * IMPORTANT: Subsequent calls to this function may have overlapping time windows.
- * Be careful to not return the same event more than once.
- */
-export type TransportEventGenerator<T extends TransportEvent> = (
-  start: Ticks,
-  end: Ticks,
-) => readonly Readonly<T>[];
-
-/**
- * Schedule the specified event with the audio system. The transport class is
- * responsible for setting the `contextTime` of the events.
- */
-export type TransportEventConsumer<T extends TransportEvent> = (
-  event: Readonly<T>,
-) => void;
-
-export type TransportListener<T extends TransportEvent> = {
-  generator: TransportEventGenerator<T>;
-  consumer: TransportEventConsumer<T>;
-  onJump: (ticks: Ticks) => void;
-  onStart: (contextTime: ContextTime) => void;
-  onStop: (contextTime: ContextTime) => void;
-  silence: (contextTime: ContextTime) => void;
-};
 
 /**
  * Transport callback that gets invoked at (roughly) sixteenth note intervals.
@@ -84,16 +56,21 @@ export enum TransportState {
   paused = "paused",
 }
 
+export type TransportParams = {
+  onStart: (ticks: ContextTime) => void;
+  onStop: (ticks: ContextTime) => void;
+};
+
 /**
  * This class converts (music) transport time into audio clock time.
  */
-export class Transport<T extends TransportEvent> {
+export class Transport {
   private _initialized = false;
 
   private context: Readonly<Context>;
   private clock: Readonly<Clock>;
   private timer: Readonly<Timer>;
-  private scheduler: Readonly<Scheduler<T>>;
+  private scheduler: Readonly<Scheduler<SourceEvent>>;
 
   private _timeSignature: TimeSignature = [4, 4];
 
@@ -101,7 +78,7 @@ export class Transport<T extends TransportEvent> {
   private clockTime = 0;
   private _swingAmount: NormalRange = 0.5;
 
-  private listener: Readonly<TransportListener<T>>;
+  private sourceManager: SourceManager;
 
   private _clockCallbacks: TransportClockCallback[] = [];
   private _propertyChangeCallbacks = new Map<
@@ -109,19 +86,20 @@ export class Transport<T extends TransportEvent> {
     TransportPropertyChangeCallback[]
   >();
 
-  constructor(
-    context: Readonly<Context>,
-    listener: Readonly<TransportListener<T>>,
-  ) {
-    // ### Make these adapt to performance of app? Or let user set them?
+  private onStartCallback: TransportParams["onStart"];
+  private onStopCallback: TransportParams["onStop"];
+
+  constructor(context: Readonly<Context>, params: TransportParams) {
     const SCHEDULE_INTERVAL_MS = 20;
-    const SCHEDULE_WINDOW_SIZE_MS = 200;
+    const SCHEDULE_WINDOW_SIZE_MS = 100;
 
     this.context = context;
-    this.listener = listener;
+    this.sourceManager = new SourceManager();
     this.clock = new Clock(this.context, SCHEDULE_WINDOW_SIZE_MS / 1000);
+    this.onStartCallback = params.onStart;
+    this.onStopCallback = params.onStop;
 
-    this.scheduler = new Scheduler<T>(
+    this.scheduler = new Scheduler<SourceEvent>(
       this.generateEvents,
       this.consumeEvents,
       SCHEDULE_WINDOW_SIZE_MS / 1000,
@@ -145,18 +123,6 @@ export class Transport<T extends TransportEvent> {
 
   addClockCallback(callback: TransportClockCallback) {
     this._clockCallbacks.push(callback);
-  }
-
-  // ??? Make this more efficient (no need to compute full position, for example)
-  addBarCallback(callback: (bar: number) => void) {
-    let currentBar = Infinity;
-    this.addClockCallback(() => {
-      const pos = this.position;
-      if (pos.bars !== currentBar) {
-        callback(pos.bars);
-        currentBar = pos.bars;
-      }
-    });
   }
 
   addPropertyChangeCallback(
@@ -183,6 +149,16 @@ export class Transport<T extends TransportEvent> {
     return this.clock.time();
   }
 
+  getContextTimeAtTicks(ticks: Ticks): ContextTime {
+    const clockTime = this.tempo.getClockTime(ticks);
+    return this.clock.clockTimeToContextTime(clockTime);
+  }
+
+  getTicksAtContextTime(contextTime: ContextTime): Ticks {
+    const clockTime = this.clock.contextTimeToClockTime(contextTime);
+    return this.tempo.getTicks(clockTime);
+  }
+
   /**
    * Return the (approximate) current Transport time, in ticks.
    */
@@ -206,40 +182,55 @@ export class Transport<T extends TransportEvent> {
   /**
    * Start the Transport.
    */
-  start() {
+  start(actionAt: ContextTime) {
     if (!this._initialized) throw new Error("Not initialized");
     if (this.clock.isRunning) return;
 
-    const actionAt = this.context.currentTime;
-
-    this.listener.onStart(actionAt);
-    this.clock.start(actionAt);
+    const clockTime = this.clock.start(actionAt);
     this.timer.start();
+
+    const ticks = this.tempo.getTicks(clockTime);
+    this.sourceManager.onStart(ticks);
+    this.onStartCallback(ticks);
   }
 
   /**
    * Stop the Transport.
    */
-  stop() {
+  stop(actionAt: ContextTime) {
     if (!this._initialized) throw new Error("Not initialized");
 
-    const actionAt = this.context.currentTime;
-
-    this.listener.silence(actionAt);
-    this.listener.onStop(actionAt);
-    this.clock.stop(actionAt);
+    const clockTime = this.clock.stop(actionAt);
     this.timer.stop();
+
+    const ticks = this.tempo.getTicks(clockTime);
+    this.sourceManager.onSilence(ticks);
+    this.sourceManager.onStop(ticks);
+    this.onStopCallback(ticks);
   }
 
   /**
    * Reset the Transport to zero.
    */
-  reset() {
+  reset(actionAt: ContextTime) {
     if (!this._initialized) throw new Error("Not initialized");
 
-    const actionAt = this.context.currentTime;
-    this.listener.silence(actionAt);
+    this.sourceManager.onSilence(actionAt);
     this.jumpTo(0);
+  }
+
+  /**
+   * Add a source to the transport
+   */
+  addSource<T extends SourceEvent>(source: IBaseSource<T>) {
+    this.sourceManager.addSource(source);
+  }
+
+  /**
+   * Remove a source from the transport
+   */
+  removeSource(id: string) {
+    this.sourceManager.removeSource(id);
   }
 
   get bpm(): BPM {
@@ -296,7 +287,7 @@ export class Transport<T extends TransportEvent> {
     this.clock.jumpTo(clockTime);
     this.scheduler.jumpTo(clockTime);
     this.clockTime = clockTime;
-    this.listener.onJump(ticks);
+    this.sourceManager.onJump(ticks);
 
     const contextTime = this.clock.clockTimeToContextTime(this.clockTime);
     this._clockCallbacks.forEach((callback) => {
@@ -307,11 +298,11 @@ export class Transport<T extends TransportEvent> {
   private generateEvents = (
     start: ClockTime,
     end: ClockTime,
-  ): readonly Readonly<T>[] => {
+  ): readonly SourceEvent[] => {
     // Get transport-time events and return them as clock-time events
     const transportStart = this.tempo.getTicks(start);
     const transportEnd = this.tempo.getTicks(end);
-    return this.listener
+    return this.sourceManager
       .generator(transportStart, transportEnd)
       .map((event) => {
         // Apply swing
@@ -331,9 +322,7 @@ export class Transport<T extends TransportEvent> {
       });
   };
 
-  private consumeEvents = (events: readonly Readonly<T>[]) => {
-    events.forEach((event) => {
-      this.listener.consumer(event);
-    });
+  private consumeEvents = (events: readonly SourceEvent[]) => {
+    this.sourceManager.consumer(events);
   };
 }

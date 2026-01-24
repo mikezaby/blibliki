@@ -81,14 +81,15 @@ describe("StepSequencer", () => {
 
       // Start the transport and step sequencer
       startTime = ctx.context.currentTime;
-      ctx.engine.transport.start();
+      ctx.engine.transport.start(startTime);
       stepSequencer.start(startTime);
     });
 
     afterEach(async (ctx) => {
       // Stop transport
-      ctx.engine.transport.stop();
-      stepSequencer.stop(ctx.context.currentTime);
+      const stopTime = ctx.context.currentTime;
+      ctx.engine.transport.stop(stopTime);
+      stepSequencer.stop(stopTime);
     });
 
     it("should emit MIDI events at precise times for steps 0 and 7", async () => {
@@ -298,14 +299,15 @@ describe("StepSequencer", () => {
 
       // Start the transport and step sequencer
       startTime = ctx.context.currentTime;
-      ctx.engine.transport.start();
+      ctx.engine.transport.start(startTime);
       stepSequencer.start(startTime);
     });
 
     afterEach(async (ctx) => {
       // Stop transport
-      ctx.engine.transport.stop();
-      stepSequencer.stop(ctx.context.currentTime);
+      const stopTime = ctx.context.currentTime;
+      ctx.engine.transport.stop(stopTime);
+      stepSequencer.stop(stopTime);
     });
 
     it("should emit correct note values (C4, E4, G4)", async () => {

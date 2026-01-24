@@ -1,11 +1,4 @@
-import {
-  BPM,
-  ContextTime,
-  Ticks,
-  TimeSignature,
-  Transport,
-  TransportEvent,
-} from "@blibliki/transport";
+import { BPM, Ticks, TimeSignature, Transport } from "@blibliki/transport";
 import {
   assertDefined,
   Context,
@@ -64,7 +57,7 @@ export class Engine {
   context: Context;
   isInitialized = false;
   routes: Routes;
-  transport: Transport<TransportEvent>;
+  transport: Transport;
   modules: Map<
     string,
     ModuleTypeToModuleMapping[keyof ModuleTypeToModuleMapping]
@@ -108,20 +101,8 @@ export class Engine {
 
     this.context = context;
     this.transport = new Transport(this.context, {
-      generator: (_start: Ticks, _end: Ticks) => {
-        return [] as TransportEvent[];
-      },
-      consumer: (_event: TransportEvent) => {
-        return;
-      },
-      onJump: (_ticks: Ticks) => {
-        return;
-      },
       onStart: this.onStart,
       onStop: this.onStop,
-      silence: (_actionAt: ContextTime) => {
-        return;
-      },
     });
     this.routes = new Routes(this);
     this.modules = new Map();
@@ -198,16 +179,19 @@ export class Engine {
 
   async start() {
     await this.resume();
-    this.transport.start();
+    const actionAt = this.context.currentTime;
+    this.transport.start(actionAt);
   }
 
   stop() {
-    this.transport.stop();
-    this.transport.reset();
+    const actionAt = this.context.currentTime;
+    this.transport.stop(actionAt);
+    this.transport.reset(actionAt);
   }
 
   pause() {
-    this.transport.stop();
+    const actionAt = this.context.currentTime;
+    this.transport.stop(actionAt);
   }
 
   get bpm() {
@@ -330,14 +314,18 @@ export class Engine {
   }
 
   // actionAt is context time
-  private onStart = (actionAt: ContextTime) => {
+  private onStart = (ticks: Ticks) => {
+    const actionAt = this.transport.getContextTimeAtTicks(ticks);
+
     this.modules.forEach((module) => {
       module.start(actionAt);
     });
   };
 
   // actionAt is context time
-  private onStop = (actionAt: ContextTime) => {
+  private onStop = (ticks: Ticks) => {
+    const actionAt = this.transport.getContextTimeAtTicks(ticks);
+
     this.modules.forEach((module) => {
       module.stop(actionAt);
     });

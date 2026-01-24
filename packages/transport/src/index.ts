@@ -20,3 +20,16 @@ export type {
   ClockTime,
   TimeSignature,
 } from "./types";
+export {
+  StepSequencerSource,
+  Resolution,
+  PlaybackMode,
+} from "./sources/StepSequencerSource";
+export type {
+  StepSequencerSourceEvent,
+  IStep,
+  IStepNote,
+  IStepCC,
+  IPage,
+  IPattern,
+} from "./sources/StepSequencerSource";

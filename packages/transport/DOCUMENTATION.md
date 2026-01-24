@@ -1074,8 +1074,6 @@ transport.addClockCallback(
   (clockTime: ClockTime, contextTime: ContextTime, ticks: Ticks) => void
 ): void
 
-transport.addBarCallback((bar: number) => void): void
-
 transport.addPropertyChangeCallback(
   property: TransportProperty,
   callback: (value: unknown, contextTime: ContextTime) => void
