@@ -184,6 +184,7 @@ export class StepSequencerSource extends BaseSource<StepSequencerSourceEvent> {
       if (!this.shouldGenerate(value)) continue;
 
       result.push(value);
+      this.lastGeneratedTick = value;
     }
 
     return result;
