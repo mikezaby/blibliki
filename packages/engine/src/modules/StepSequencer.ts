@@ -204,7 +204,12 @@ const DEFAULT_STATE: IStepSequencerState = {
 
 type StepSequencerSetterHooks = Pick<
   SetterHooks<IStepSequencerProps>,
-  "onSetActivePatternNo" | "onSetPatternSequence"
+  | "onSetActivePatternNo"
+  | "onAfterSetPatternSequence"
+  | "onAfterSetPatterns"
+  | "onAfterSetResolution"
+  | "onAfterSetPlaybackMode"
+  | "onAfterSetEnableSequence"
 >;
 
 export default class StepSequencer
@@ -241,18 +246,58 @@ export default class StepSequencer
     return Math.max(Math.min(value, this.props.patterns.length - 1), 0);
   };
 
-  onSetPatternSequence: StepSequencerSetterHooks["onSetPatternSequence"] = (
-    value,
-  ) => {
-    if (this.source) {
+  onAfterSetPatternSequence: StepSequencerSetterHooks["onAfterSetPatternSequence"] =
+    (value) => {
+      if (!this.source) return;
+
       this.source.props = {
         ...this.source.props,
         patternSequence: value,
       };
-    }
+    };
 
-    return value;
+  onAfterSetPatterns: StepSequencerSetterHooks["onAfterSetPatterns"] = (
+    value,
+  ) => {
+    if (!this.source) return;
+
+    this.source.props = {
+      ...this.source.props,
+      patterns: value,
+    };
   };
+
+  onAfterSetResolution: StepSequencerSetterHooks["onAfterSetResolution"] = (
+    value,
+  ) => {
+    if (!this.source) return;
+
+    this.source.props = {
+      ...this.source.props,
+      resolution: value,
+    };
+  };
+
+  onAfterSetPlaybackMode: StepSequencerSetterHooks["onAfterSetPlaybackMode"] = (
+    value,
+  ) => {
+    if (!this.source) return;
+
+    this.source.props = {
+      ...this.source.props,
+      playbackMode: value,
+    };
+  };
+
+  onAfterSetEnableSequence: StepSequencerSetterHooks["onAfterSetEnableSequence"] =
+    (value) => {
+      if (!this.source) return;
+
+      this.source.props = {
+        ...this.source.props,
+        enableSequence: value,
+      };
+    };
 
   private initializeSource() {
     this.source = new StepSequencerSource(this.engine.transport, {
