@@ -147,7 +147,103 @@ pnpm test              # Run all tests
 pnpm test Scale.test   # Run specific test file
 ```
 
-Tests are in `packages/engine/test/modules/` and use vitest.
+### Test Structure and Organization
+
+**IMPORTANT:** Maintain a simple, consistent test structure to avoid redundancy and confusion.
+
+**Test Directory Structure:**
+```
+packages/engine/test/
+├── core/              # Base class and infrastructure tests
+│   ├── Module.test.ts       # All Module base class tests
+│   ├── midi/                # MIDI infrastructure tests
+│   └── ...
+├── modules/           # Module-specific functionality tests
+│   ├── Scale.test.ts        # Scale module functionality
+│   ├── Filter.test.ts       # Filter module functionality
+│   └── ...
+└── utils/             # Utility function tests
+```
+
+**Test Organization Rules:**
+
+1. **One test file per class/module**
+   - ✅ CORRECT: All Module base class tests in `test/core/Module.test.ts`
+   - ❌ WRONG: Creating separate files like `ModulePropsInheritance.test.ts`, `HookEffectiveness.test.ts`
+
+2. **Use describe blocks to organize related tests within a file**
+   ```typescript
+   describe("Module", () => {
+     describe("props setter", () => { /* ... */ });
+     describe("AudioWorklet parameter initialization", () => { /* ... */ });
+     describe("Hook effectiveness", () => { /* ... */ });
+   });
+   ```
+
+3. **Where to put different types of tests:**
+   - **Base class behavior** → `test/core/ClassName.test.ts`
+     - Props setters, hooks, lifecycle
+     - Inheritance patterns
+     - AudioWorklet initialization timing
+
+   - **Module-specific functionality** → `test/modules/ModuleName.test.ts`
+     - Module's audio processing behavior
+     - Module's specific props and parameters
+     - Integration with other modules
+
+   - **Infrastructure** → `test/core/subdirectory/`
+     - MIDI device matching, routing
+     - IO system connections
+
+4. **Avoid these anti-patterns:**
+   - ❌ Creating test files named after problems (e.g., `InitializationBug.test.ts`)
+   - ❌ Creating test files named after patterns (e.g., `EnvelopePattern.test.ts`)
+   - ❌ Duplicating tests across multiple files
+   - ❌ Creating "systemic check" or "comprehensive" test files separate from the main test
+
+5. **When adding tests for a bug fix:**
+   - Add tests to the EXISTING test file for that class/module
+   - Use descriptive test names that explain the scenario
+   - Add comments explaining why the test exists if it's subtle
+
+### AudioWorklet Module Testing
+
+AudioWorklet modules have specific initialization requirements that should be tested:
+
+**Key scenarios to test:**
+1. **Immediate initialization** - Parameters set in `audioNodeConstructor` work immediately
+2. **Hook execution** - Hooks run after microtask and successfully modify parameters
+3. **Default value behavior** - Without initialization, processors start with default values
+
+**Example test structure** (from Module.test.ts):
+```typescript
+describe("AudioWorklet parameter initialization", () => {
+  it("should have correct param value immediately when initialized in audioNodeConstructor", () => {
+    // Test Envelope pattern works
+  });
+
+  it("should have wrong param value immediately when NOT initialized", () => {
+    // Demonstrate default value problem
+  });
+
+  it("should have correct value after microtask when hooks run", () => {
+    // Prove hooks work, but timing matters
+  });
+});
+```
+
+**Testing checklist for AudioWorklet modules:**
+- [ ] Immediate parameter values (before hooks)
+- [ ] Parameter values after hooks run
+- [ ] Hook execution timing
+- [ ] Audio output with correct vs default parameter values
+
+### Running Tests
+
+Tests use vitest with the following conventions:
+- All tests run in isolated engine instances (provided by test setup)
+- Async tests use `await new Promise<void>(resolve => queueMicrotask(() => resolve()))` for hook timing
+- Audio output tests use `Inspector` module to verify signal flow
 
 ## Package Dependencies
 
@@ -187,6 +283,67 @@ pnpm release # Builds and publishes to npm
 4. Implement Web Audio API nodes in the constructor
 5. Export schema in `packages/engine/src/modules/index.ts`
 6. Add corresponding UI component in `apps/grid/src/components/AudioModule/YourModule.tsx`
+
+### AudioWorklet Module Implementation Pattern
+
+**CRITICAL:** AudioWorklet processors start processing audio IMMEDIATELY upon creation. If you don't initialize parameters before returning the node, the processor will use default values and may produce incorrect audio output.
+
+**The Envelope Pattern** (CORRECT way to initialize AudioWorklet modules):
+
+```typescript
+class MonoScale extends Module<ModuleType.Scale> {
+  declare audioNode: AudioWorkletNode;
+
+  constructor(engineId: string, params: ICreateModule<ModuleType.Scale>) {
+    const props = { ...DEFAULT_PROPS, ...params.props };
+
+    const audioNodeConstructor = (context: Context) => {
+      const audioNode = newAudioWorklet(context, CustomWorklet.ScaleProcessor);
+
+      // ✅ CRITICAL: Set parameters BEFORE returning the node
+      // This ensures processor never sees default values
+      audioNode.parameters.get("min")!.value = props.min;
+      audioNode.parameters.get("max")!.value = props.max;
+      audioNode.parameters.get("current")!.value = props.current;
+      audioNode.parameters.get("mode")!.value = props.mode === "exponential" ? 0 : 1;
+
+      return audioNode;
+    };
+
+    super(engineId, {
+      ...params,
+      props,
+      audioNodeConstructor,
+    });
+
+    this.registerDefaultIOs();
+  }
+
+  // Hooks still needed for prop updates after construction
+  onAfterSetMin: SetterHooks<IScaleProps>["onAfterSetMin"] = (value) => {
+    this.audioNode.parameters.get("min")!.value = value;
+  };
+}
+```
+
+**Why this pattern is necessary:**
+
+1. Module base class defers hook execution to microtask (for ES6 inheritance)
+2. AudioWorklet processors start processing audio immediately when created
+3. First ~3ms of audio processed with processor's default parameter values
+4. Hooks run later and fix values, but initial audio buffers already processed with wrong values
+5. For modules like Scale/Filter, wrong initial values can completely block audio output
+
+**Pattern checklist for AudioWorklet modules:**
+- [ ] Initialize ALL AudioWorklet parameters in `audioNodeConstructor` before returning node
+- [ ] Use `props` from closure (not `this.props`) - accessible during super()
+- [ ] Still implement `onAfterSet*` hooks for runtime prop changes
+- [ ] Test immediate parameter values (see Testing section)
+
+**Examples in codebase:**
+- ✅ `packages/engine/src/modules/Envelope.ts` - Original correct implementation
+- ✅ `packages/engine/src/modules/Scale.ts` - Fixed to use this pattern
+- ✅ `packages/engine/src/modules/LFO.ts` - Fixed to use this pattern
 
 ## MIDI Architecture
 
