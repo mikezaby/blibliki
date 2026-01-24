@@ -1,11 +1,10 @@
 import { Ticks } from "@/types";
-import type { SourceEvent } from "./BaseSource";
-import { IBaseSource } from "./BaseSource";
+import type { BaseSource, SourceEvent } from "./BaseSource";
 
 export class SourceManager {
-  private activeSources = new Map<string, IBaseSource<any>>();
+  private activeSources = new Map<string, BaseSource<SourceEvent>>();
 
-  addSource<T extends SourceEvent>(source: IBaseSource<T>) {
+  addSource<T extends SourceEvent>(source: BaseSource<T>) {
     this.activeSources.set(source.id, source);
   }
 
