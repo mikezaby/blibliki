@@ -69,7 +69,7 @@ export default class StereoPanner extends PolyModule<ModuleType.StereoPanner> {
     const monoModuleConstructor = (
       engineId: string,
       params: IModuleConstructor<ModuleType.StereoPanner>,
-    ) => new MonoStereoPanner(engineId, params);
+    ) => Module.create(MonoStereoPanner, engineId, params);
 
     super(engineId, {
       ...params,

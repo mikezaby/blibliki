@@ -1,5 +1,6 @@
 import { sleep } from "@blibliki/utils";
 import { describe, it, expect, beforeEach } from "vitest";
+import { Module } from "@/core/module/Module";
 import { createModule, ModuleType } from "@/modules";
 import Constant from "@/modules/Constant";
 import { MonoGain } from "@/modules/Gain";
@@ -11,7 +12,7 @@ describe("Gain", () => {
   let inspector: Inspector;
 
   beforeEach((ctx) => {
-    gain = new MonoGain(ctx.engine.id, {
+    gain = Module.create(MonoGain, ctx.engine.id, {
       name: "gain",
       moduleType: ModuleType.Gain,
       props: { gain: 1 },

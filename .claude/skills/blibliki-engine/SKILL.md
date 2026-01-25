@@ -33,17 +33,20 @@ digraph build_workflow {
 ```
 
 **Why this matters:**
+
 - Apps import from `packages/engine/dist/` (built artifacts), not `src/`
 - `pnpm test` validates source but doesn't build
 - Without rebuild, apps use stale code
 
 **Commands:**
+
 - `pnpm dev` - Start dev servers with watch mode (RECOMMENDED - auto-rebuilds on save)
 - `pnpm build:packages` - Rebuild all packages (use when working without `pnpm dev`)
 - `pnpm test` - Run tests (validates source, doesn't build)
 - `pnpm tsc` - Type checking
 
 **When to rebuild:**
+
 - **Using `pnpm dev`**: No manual rebuild needed - changes auto-rebuild on save. Check terminal for build errors.
 - **Not using `pnpm dev`**: Must run `pnpm build:packages` manually after engine changes before testing in apps.
 
@@ -78,7 +81,7 @@ Use `register*` helper methods, NOT direct AudioIO construction.
 // ✅ CORRECT - AudioParam modulation input
 this.registerAudioInput({
   name: "gain",
-  getAudioNode: () => this.audioNode.gain,  // Returns AudioParam
+  getAudioNode: () => this.audioNode.gain, // Returns AudioParam
 });
 
 // ✅ CORRECT - MIDI input
@@ -89,11 +92,12 @@ this.registerMidiInput({
 
 // ❌ WRONG - Don't construct AudioIO directly
 this.inputs = {
-  gain: new AudioIO(this, 'gain', 'input', this.audioNode.gain)
+  gain: new AudioIO(this, "gain", "input", this.audioNode.gain),
 };
 ```
 
 **Quick reference:**
+
 - `registerAudioInput(props)` - Audio/AudioParam inputs
 - `registerAudioOutput(props)` - Audio outputs
 - `registerMidiInput(props)` - MIDI inputs with event handler
@@ -127,7 +131,8 @@ modulePropSchema({ gain: { type: 'number', ... }})
 Props don't automatically update Web Audio nodes. Use setter hooks.
 
 ```typescript
-class MonoGain extends Module<ModuleType.Gain>
+class MonoGain
+  extends Module<ModuleType.Gain>
   implements Pick<SetterHooks<IGainProps>, "onAfterSetGain">
 {
   // ✅ CORRECT - Hook called when props.gain changes
@@ -148,14 +153,17 @@ class MonoGain extends Module<ModuleType.Gain>
 ```typescript
 // ✅ CORRECT - Poly module
 export default class Gain extends PolyModule<ModuleType.Gain> {
-  constructor(engineId: string, params: IPolyModuleConstructor<ModuleType.Gain>) {
+  constructor(
+    engineId: string,
+    params: IPolyModuleConstructor<ModuleType.Gain>,
+  ) {
     const props = { ...DEFAULT_PROPS, ...params.props };
 
     // Pass constructor function for mono voices
     const monoModuleConstructor = (
       engineId: string,
-      params: IModuleConstructor<ModuleType.Gain>
-    ) => new MonoGain(engineId, params);
+      params: IModuleConstructor<ModuleType.Gain>,
+    ) => Module.create(MonoGain, engineId, params);
 
     super(engineId, { ...params, props, monoModuleConstructor });
     this.registerDefaultIOs();
@@ -183,6 +191,7 @@ When creating a new module, update FIVE locations:
 ### Debugging "Changes Don't Appear"
 
 If engine changes don't appear in grid app:
+
 1. Did you run `pnpm build:packages`? ← Most common cause
 2. Check `packages/engine/dist/` has updated files
 3. Check browser console for import errors
@@ -194,12 +203,14 @@ If engine changes don't appear in grid app:
 MIDI flow: `MidiDevice` → `MidiSelector` → `VirtualMidi` → `Module.onMidiEvent`
 
 **Files to check:**
+
 - `packages/engine/src/modules/MidiSelector.ts` - Routes MIDI from devices
 - `packages/engine/src/modules/VirtualMidi.ts` - Programmatic MIDI generation
 - `apps/grid/src/lib/MidiDevice*.ts` - Device management
 - Your module's `onMidiEvent` handler and registered MidiIO inputs
 
 **Common issues:**
+
 - MidiSelector not routing to correct module
 - PolyModule voices not created before IOs registered (constructor timing)
 - MIDI input not registered via `registerMidiInput()`
@@ -231,22 +242,23 @@ When completing engine work, verify ALL of these:
 
 ## Common Mistakes
 
-| Mistake | Fix |
-|---------|-----|
-| "Changes don't appear in app" | Run `pnpm build:packages` to rebuild engine |
-| "Tests pass but app breaks" | Tests validate source, apps use dist/. Rebuild packages. |
-| Wrong constructor signature | Use `(engineId: string, params: ICreateModule<T>)` |
-| `new AudioIO()` directly | Use `registerAudioInput/Output()` helpers |
-| Schema uses `type` property | Use `kind` property instead |
-| `modulePropSchema()` function call | Plain object with type `ModulePropSchema<T>` |
-| Props not updating Web Audio | Implement setter hooks: `onAfterSetPropName` |
-| Pre-allocating voices in PolyModule | Pass `monoModuleConstructor` function |
-| "Import errors in app" | Check module exported in index.ts and schema registered |
-| "PolyModule voices not created" | Ensure voices created before IOs registered (constructor timing) |
+| Mistake                             | Fix                                                              |
+| ----------------------------------- | ---------------------------------------------------------------- |
+| "Changes don't appear in app"       | Run `pnpm build:packages` to rebuild engine                      |
+| "Tests pass but app breaks"         | Tests validate source, apps use dist/. Rebuild packages.         |
+| Wrong constructor signature         | Use `(engineId: string, params: ICreateModule<T>)`               |
+| `new AudioIO()` directly            | Use `registerAudioInput/Output()` helpers                        |
+| Schema uses `type` property         | Use `kind` property instead                                      |
+| `modulePropSchema()` function call  | Plain object with type `ModulePropSchema<T>`                     |
+| Props not updating Web Audio        | Implement setter hooks: `onAfterSetPropName`                     |
+| Pre-allocating voices in PolyModule | Pass `monoModuleConstructor` function                            |
+| "Import errors in app"              | Check module exported in index.ts and schema registered          |
+| "PolyModule voices not created"     | Ensure voices created before IOs registered (constructor timing) |
 
 ## File Locations
 
 When implementing features, reference these files:
+
 - Example modules: `packages/engine/src/modules/Gain.ts`, `Oscillator.ts`
 - Module base: `packages/engine/src/core/module/Module.ts`
 - PolyModule base: `packages/engine/src/core/module/PolyModule.ts`

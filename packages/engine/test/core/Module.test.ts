@@ -14,7 +14,7 @@ describe("Module", () => {
   let gain: MonoGain;
 
   beforeEach(async (ctx) => {
-    gain = new MonoGain(ctx.engine.id, {
+    gain = Module.create(MonoGain, ctx.engine.id, {
       name: "gain",
       moduleType: ModuleType.Gain,
       props: { gain: 1 },
@@ -26,7 +26,11 @@ describe("Module", () => {
   describe("initialize", () => {
     describe("hooks", () => {
       it("should call afterSet hooks during initialization", (ctx) => {
-        const module = new TestGainModule(ctx.engine.id);
+        const module = Module.create(TestGainModule, ctx.engine.id, {
+          name: "test",
+          moduleType: ModuleType.Gain,
+          props: { gain: 0.5 },
+        });
 
         // EXPECTED: Hook should be called during initialization
         // so that AudioNode values are set immediately
@@ -35,7 +39,16 @@ describe("Module", () => {
       });
 
       it("should initialize AudioWorklet parameters immediately", (ctx) => {
-        const module = new TestAudioWorkletModule(ctx.engine.id);
+        const module = Module.create(TestAudioWorkletModule, ctx.engine.id, {
+          name: "test",
+          moduleType: ModuleType.Scale,
+          props: {
+            min: 100,
+            max: 20000,
+            current: 440,
+            mode: "exponential" as const,
+          },
+        });
 
         // EXPECTED: Hook should be called during initialization
         expect(module.hookCalled).toBe(true);
@@ -47,7 +60,15 @@ describe("Module", () => {
       });
 
       it("should ensure regular AudioNode params are set immediately", (ctx) => {
-        const module = new TestRegularAudioNodeModule(ctx.engine.id);
+        const module = Module.create(
+          TestRegularAudioNodeModule,
+          ctx.engine.id,
+          {
+            name: "test",
+            moduleType: ModuleType.Gain,
+            props: { gain: 0.75 },
+          },
+        );
 
         // EXPECTED: Gain should be set immediately, not left at default
         expect(module.audioNode.gain.value).toBe(0.75);

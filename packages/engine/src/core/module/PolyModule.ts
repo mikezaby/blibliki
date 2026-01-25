@@ -53,6 +53,35 @@ export abstract class PolyModule<
   private _name!: string;
   private pendingUIUpdates = false;
 
+  /**
+   * Factory method for creating modules with proper initialization timing.
+   *
+   * This method ensures hooks are called AFTER the child class constructor completes,
+   * solving the ES6 class field initialization problem where function properties like hooks
+   * aren't available during super() call.
+   *
+   * @example
+   * const gain = Module.create(Gain, engineId, {
+   *   name: "gain",
+   *   moduleType: ModuleType.Gain,
+   *   props: { gain: 0.5 }
+   * });
+   */
+  static create<T extends ModuleType, M extends PolyModule<T>>(
+    ModuleClass: new (engineId: string, params: IPolyModuleConstructor<T>) => M,
+    engineId: string,
+    params: IPolyModuleConstructor<T>,
+  ): M {
+    // Create instance with deferred prop initialization
+    const instance = new ModuleClass(engineId, {
+      ...params,
+    });
+
+    instance.props = { ...instance.props };
+
+    return instance;
+  }
+
   constructor(engineId: string, params: IPolyModuleConstructor<T>) {
     const { id, name, moduleType, voices, monoModuleConstructor, props } =
       params;

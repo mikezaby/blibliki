@@ -64,7 +64,7 @@ export default class Gain extends PolyModule<ModuleType.Gain> {
     const monoModuleConstructor = (
       engineId: string,
       params: IModuleConstructor<ModuleType.Gain>,
-    ) => new MonoGain(engineId, params);
+    ) => Module.create(MonoGain, engineId, params);
 
     super(engineId, {
       ...params,

@@ -256,7 +256,7 @@ export default class Oscillator extends PolyModule<ModuleType.Oscillator> {
     const monoModuleConstructor = (
       engineId: string,
       params: IModuleConstructor<ModuleType.Oscillator>,
-    ) => new MonoOscillator(engineId, params);
+    ) => Module.create(MonoOscillator, engineId, params);
 
     super(engineId, {
       ...params,

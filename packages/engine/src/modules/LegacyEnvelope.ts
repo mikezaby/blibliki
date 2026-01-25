@@ -133,7 +133,7 @@ export default class Envelope extends PolyModule<ModuleType.LegacyEnvelope> {
     const monoModuleConstructor = (
       engineId: string,
       params: IModuleConstructor<ModuleType.LegacyEnvelope>,
-    ) => new MonoEnvelope(engineId, params);
+    ) => Module.create(MonoEnvelope, engineId, params);
 
     super(engineId, {
       ...params,

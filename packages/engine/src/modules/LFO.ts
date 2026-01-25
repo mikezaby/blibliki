@@ -274,7 +274,7 @@ export default class LFO extends PolyModule<ModuleType.LFO> {
     const monoModuleConstructor = (
       engineId: string,
       params: IModuleConstructor<ModuleType.LFO>,
-    ) => new MonoLFO(engineId, params);
+    ) => Module.create(MonoLFO, engineId, params);
 
     super(engineId, {
       ...params,

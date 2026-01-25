@@ -9,6 +9,7 @@ import {
 import { Engine } from "@/Engine";
 import {
   AnyModule,
+  ICreateModule,
   ModuleType,
   ModuleTypeToPropsMapping,
   ModuleTypeToStateMapping,
@@ -76,8 +77,43 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   protected _props!: ModuleTypeToPropsMapping[T];
   protected _state!: ModuleTypeToStateMapping[T];
   protected activeNotes: Note[];
+  protected _propsInitialized = false;
   private pendingUIUpdates = false;
-  private _propsInitialized = false;
+
+  /**
+   * Factory method for creating modules with proper initialization timing.
+   *
+   * This method ensures hooks are called AFTER the child class constructor completes,
+   * solving the ES6 class field initialization problem where function properties like hooks
+   * aren't available during super() call.
+   *
+   * @example
+   * const gain = Module.create(MonoGain, engineId, {
+   *   name: "gain",
+   *   moduleType: ModuleType.Gain,
+   *   props: { gain: 0.5 }
+   * });
+   */
+  static create<T extends ModuleType, M extends Module<T>>(
+    ModuleClass: new (engineId: string, params: ICreateModule<T>) => M,
+    engineId: string,
+    params: Omit<IModuleConstructor<T>, "props"> & {
+      props: Partial<IModule<T>["props"]>;
+    },
+  ): M {
+    // Create instance with deferred prop initialization
+    const instance = new ModuleClass(engineId, {
+      ...params,
+    });
+
+    // Now trigger prop setters after child constructor has completed
+    // At this point, all child class properties (including arrow functions) exist
+    // TODO: We have to refactor all modules the remove the props assignment from constructor
+    instance.props = { ...instance.props };
+    instance._propsInitialized = true;
+
+    return instance;
+  }
 
   constructor(engineId: string, params: IModuleConstructor<T>) {
     const { id, name, moduleType, voiceNo, audioNodeConstructor, props } =
@@ -94,11 +130,6 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
 
     this.inputs = new InputCollection(this);
     this.outputs = new OutputCollection(this);
-
-    // Defer hook calls until after subclass is fully initialized
-    queueMicrotask(() => {
-      this.props = props;
-    });
   }
 
   get props(): ModuleTypeToPropsMapping[T] {
@@ -126,7 +157,6 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
     if (Object.keys(updatedValue).length === 0) return;
 
     this._props = { ...this._props, ...updatedValue };
-    this._propsInitialized = true;
 
     (
       Object.keys(updatedValue) as (keyof ModuleTypeToPropsMapping[T])[]

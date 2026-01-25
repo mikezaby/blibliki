@@ -1,5 +1,6 @@
 import { sleep } from "@blibliki/utils";
 import { describe, it, expect, beforeEach } from "vitest";
+import { Module } from "@/core";
 import { createModule, ModuleType } from "@/modules";
 import Constant from "@/modules/Constant";
 import Inspector from "@/modules/Inspector";
@@ -11,7 +12,7 @@ describe("Scale", () => {
   let inspector: Inspector;
 
   beforeEach((ctx) => {
-    scale = new MonoScale(ctx.engine.id, {
+    scale = Module.create(MonoScale, ctx.engine.id, {
       name: "filterScale",
       moduleType: ModuleType.Scale,
       props: { min: 20, max: 20000, current: 440, mode: "exponential" },

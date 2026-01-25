@@ -91,13 +91,13 @@ class MonoFilter
       audioNodeConstructor,
     });
 
-    this.amount = new MonoGain(engineId, {
+    this.amount = Module.create(MonoGain, engineId, {
       name: "amount",
       moduleType: ModuleType.Gain,
       props: { gain: props.envelopeAmount },
     });
 
-    this.scale = new MonoScale(engineId, {
+    this.scale = Module.create(MonoScale, engineId, {
       name: "scale",
       moduleType: ModuleType.Scale,
       props: { min: MIN_FREQ, max: MAX_FREQ, current: this.props.cutoff },
@@ -154,7 +154,7 @@ export default class Filter extends PolyModule<ModuleType.Filter> {
     const monoModuleConstructor = (
       engineId: string,
       params: IModuleConstructor<ModuleType.Filter>,
-    ) => new MonoFilter(engineId, params);
+    ) => Module.create(MonoFilter, engineId, params);
 
     super(engineId, {
       ...params,

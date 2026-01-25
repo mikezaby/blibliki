@@ -169,7 +169,7 @@ export default class PolyDistortion extends PolyModule<ModuleType.Distortion> {
     const monoModuleConstructor = (
       engineId: string,
       params: IModuleConstructor<ModuleType.Distortion>,
-    ) => new MonoDistortion(engineId, params);
+    ) => Module.create(MonoDistortion, engineId, params);
 
     super(engineId, {
       ...params,

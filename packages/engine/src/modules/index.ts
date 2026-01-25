@@ -243,50 +243,50 @@ export function createModule(
 ): ModuleTypeToModuleMapping[keyof ModuleTypeToModuleMapping] {
   switch (params.moduleType) {
     case ModuleType.Oscillator:
-      return new Oscillator(engineId, params);
+      return Oscillator.create(Oscillator, engineId, params);
     case ModuleType.Gain:
-      return new Gain(engineId, params);
+      return Gain.create(Gain, engineId, params);
     case ModuleType.Master:
-      return new Master(engineId, params);
+      return Master.create(Master, engineId, params);
     case ModuleType.MidiInput:
-      return new MidiInput(engineId, params);
+      return MidiInput.create(MidiInput, engineId, params);
     case ModuleType.MidiOutput:
-      return new MidiOutput(engineId, params);
+      return MidiOutput.create(MidiOutput, engineId, params);
     // BACKWARD_COMPAT: Legacy envelope for old patches
     case ModuleType.LegacyEnvelope:
-      return new LegacyEnvelope(engineId, params);
+      return LegacyEnvelope.create(LegacyEnvelope, engineId, params);
     case ModuleType.Envelope:
-      return new CustomEnvelope(engineId, params);
+      return CustomEnvelope.create(CustomEnvelope, engineId, params);
     case ModuleType.Filter:
-      return new Filter(engineId, params);
+      return Filter.create(Filter, engineId, params);
     case ModuleType.Scale:
-      return new Scale(engineId, params);
+      return Scale.create(Scale, engineId, params);
     case ModuleType.StereoPanner:
-      return new StereoPanner(engineId, params);
+      return StereoPanner.create(StereoPanner, engineId, params);
     case ModuleType.Inspector:
-      return new Inspector(engineId, params);
+      return Inspector.create(Inspector, engineId, params);
     case ModuleType.Chorus:
-      return new Chorus(engineId, params);
+      return Chorus.create(Chorus, engineId, params);
     case ModuleType.Constant:
-      return new Constant(engineId, params);
+      return Constant.create(Constant, engineId, params);
     case ModuleType.Delay:
-      return new Delay(engineId, params);
+      return Delay.create(Delay, engineId, params);
     case ModuleType.Distortion:
-      return new Distortion(engineId, params);
+      return Distortion.create(Distortion, engineId, params);
     case ModuleType.MidiMapper:
-      return new MidiMapper(engineId, params);
+      return MidiMapper.create(MidiMapper, engineId, params);
     case ModuleType.VirtualMidi:
-      return new VirtualMidi(engineId, params);
+      return VirtualMidi.create(VirtualMidi, engineId, params);
     case ModuleType.StepSequencer:
-      return new StepSequencer(engineId, params);
+      return StepSequencer.create(StepSequencer, engineId, params);
     case ModuleType.VoiceScheduler:
-      return new VoiceScheduler(engineId, params);
+      return VoiceScheduler.create(VoiceScheduler, engineId, params);
     case ModuleType.LFO:
-      return new LFO(engineId, params);
+      return LFO.create(LFO, engineId, params);
     case ModuleType.Noise:
-      return new Noise(engineId, params);
+      return Noise.create(Noise, engineId, params);
     case ModuleType.Reverb:
-      return new Reverb(engineId, params);
+      return Reverb.create(Reverb, engineId, params);
     default:
       assertNever(params);
   }

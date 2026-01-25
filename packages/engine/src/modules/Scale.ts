@@ -121,7 +121,7 @@ export default class Scale extends PolyModule<ModuleType.Scale> {
     const monoModuleConstructor = (
       engineId: string,
       params: IModuleConstructor<ModuleType.Scale>,
-    ) => new MonoScale(engineId, params);
+    ) => Module.create(MonoScale, engineId, params);
 
     super(engineId, {
       ...params,
