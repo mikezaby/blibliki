@@ -4,6 +4,11 @@ import { Module, SetterHooks } from "@/core/module/Module";
 import { ModuleType } from "@/modules";
 import { MonoGain } from "@/modules/Gain";
 import { CustomWorklet, newAudioWorklet } from "@/processors";
+import {
+  TestGainModule,
+  TestAudioWorkletModule,
+  TestRegularAudioNodeModule,
+} from "./helpers/TestModules";
 
 describe("Module", () => {
   let gain: MonoGain;
@@ -16,6 +21,38 @@ describe("Module", () => {
     });
     // Wait for queueMicrotask in constructor to complete
     await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  describe("initialize", () => {
+    describe("hooks", () => {
+      it("should call afterSet hooks during initialization", (ctx) => {
+        const module = new TestGainModule(ctx.engine.id);
+
+        // EXPECTED: Hook should be called during initialization
+        // so that AudioNode values are set immediately
+        expect(module.hookCalled).toBe(true);
+        expect(module.audioNode.gain.value).toBe(0.5);
+      });
+
+      it("should initialize AudioWorklet parameters immediately", (ctx) => {
+        const module = new TestAudioWorkletModule(ctx.engine.id);
+
+        // EXPECTED: Hook should be called during initialization
+        expect(module.hookCalled).toBe(true);
+
+        // EXPECTED: AudioWorklet parameter should have correct value immediately
+        // not default value, so audio processing starts with correct values
+        const minParam = module.audioNode.parameters.get("min")!;
+        expect(minParam.value).toBe(100);
+      });
+
+      it("should ensure regular AudioNode params are set immediately", (ctx) => {
+        const module = new TestRegularAudioNodeModule(ctx.engine.id);
+
+        // EXPECTED: Gain should be set immediately, not left at default
+        expect(module.audioNode.gain.value).toBe(0.75);
+      });
+    });
   });
 
   describe("props setter", () => {
