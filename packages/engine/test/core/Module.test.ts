@@ -228,7 +228,12 @@ describe("Module", () => {
     }
 
     it("should have correct param value immediately when initialized in audioNodeConstructor", (ctx) => {
-      const module = new TestAudioWorkletModule(ctx.engine.id, 100, true);
+      const module = TestAudioWorkletModule.create(
+        TestAudioWorkletModule,
+        ctx.engine.id,
+        100,
+        true,
+      );
 
       // Check immediately - should have correct value from audioNodeConstructor
       // This is the Envelope pattern: set params BEFORE returning the node
@@ -236,7 +241,12 @@ describe("Module", () => {
     });
 
     it("should have wrong param value immediately when NOT initialized in audioNodeConstructor", (ctx) => {
-      const module = new TestAudioWorkletModule(ctx.engine.id, 100, false);
+      const module = TestAudioWorkletModule.create(
+        TestAudioWorkletModule,
+        ctx.engine.id,
+        100,
+        false,
+      );
 
       // Check immediately - should have DEFAULT value (1e-10), not 100
       // This demonstrates the problem: without explicit initialization,
@@ -246,7 +256,12 @@ describe("Module", () => {
     });
 
     it("should have correct value after microtask when hooks run", async (ctx) => {
-      const module = new TestAudioWorkletModule(ctx.engine.id, 100, false);
+      const module = TestAudioWorkletModule.create(
+        TestAudioWorkletModule,
+        ctx.engine.id,
+        100,
+        false,
+      );
 
       // Initially wrong
       expect(module.minParam.value).toBeCloseTo(1e-10, 10);
@@ -291,7 +306,6 @@ describe("Module", () => {
               propsMin: props.min,
               paramValue: audioNode.parameters.get("min")!.value,
             });
-
             return audioNode;
           };
 
@@ -329,7 +343,9 @@ describe("Module", () => {
         };
       }
 
-      const module = new TimingTestModule(ctx.engine.id);
+      const module = TimingTestModule.create(TimingTestModule, ctx.engine.id, {
+        name: "TimingTestModule",
+      });
 
       // Check timeline before hooks run
       expect(module).toBeDefined();
@@ -392,7 +408,7 @@ describe("Module", () => {
     }
 
     it("should call hooks after microtask", async (ctx) => {
-      const module = new HookTestModule(ctx.engine.id, 777);
+      const module = HookTestModule.create(HookTestModule, ctx.engine.id, 777);
 
       // Before hooks
       expect(module.hookWasCalled).toBe(false);
@@ -406,7 +422,7 @@ describe("Module", () => {
     });
 
     it("should successfully modify AudioParam values in hooks", async (ctx) => {
-      const module = new HookTestModule(ctx.engine.id, 888);
+      const module = HookTestModule.create(HookTestModule, ctx.engine.id, 888);
 
       // Wait for hooks
       await new Promise<void>((resolve) => queueMicrotask(() => resolve()));
@@ -417,7 +433,7 @@ describe("Module", () => {
     });
 
     it("should have access to this.audioNode in hooks", async (ctx) => {
-      const module = new HookTestModule(ctx.engine.id, 999);
+      const module = HookTestModule.create(HookTestModule, ctx.engine.id, 999);
 
       // Wait for hooks
       await new Promise<void>((resolve) => queueMicrotask(() => resolve()));
@@ -429,7 +445,7 @@ describe("Module", () => {
     });
 
     it("should demonstrate hooks work correctly but timing matters", async (ctx) => {
-      const module = new HookTestModule(ctx.engine.id, 123);
+      const module = HookTestModule.create(HookTestModule, ctx.engine.id, 123);
 
       // Immediately check - wrong value
       const immediateValue = module.minParam.value;
