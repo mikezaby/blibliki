@@ -4,7 +4,6 @@ import {
   IPattern,
   Resolution,
   PlaybackMode,
-  StepSequencerSourceEvent,
 } from "../src/sources/StepSequencerSource";
 import { TPB } from "../src/utils";
 
