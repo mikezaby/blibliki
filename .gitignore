@@ -33,3 +33,5 @@ dist-ssr
 
 # AI tools
 .claude/settings.local.json
+
+.worktrees
