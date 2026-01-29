@@ -1,7 +1,15 @@
 import { Context } from "@blibliki/utils";
-import { IModuleConstructor, Module } from "@/core/module/Module";
-import { ModuleType } from "@/modules";
+import { Module } from "@/core/module/Module";
+import { ICreateModule, ModuleType } from "@/modules";
 import { CustomWorklet, newAudioWorklet } from "@/processors";
+
+const DEFAULT_GAIN_PROPS = { gain: 1 };
+const DEFAULT_SCALE_PROPS = {
+  min: 0,
+  max: 1,
+  current: 0.5,
+  mode: "exponential" as const,
+};
 
 /**
  * Test module for testing basic hook behavior with GainNode
@@ -10,9 +18,11 @@ export class TestGainModule extends Module<ModuleType.Gain> {
   declare audioNode: GainNode;
   hookCalled = false;
 
-  constructor(engineId: string, params: IModuleConstructor<ModuleType.Gain>) {
+  constructor(engineId: string, params: ICreateModule<ModuleType.Gain>) {
+    const props = { ...DEFAULT_GAIN_PROPS, ...params.props };
     super(engineId, {
       ...params,
+      props,
       audioNodeConstructor: (context: Context) => {
         return context.audioContext.createGain();
       },
@@ -32,9 +42,11 @@ export class TestAudioWorkletModule extends Module<ModuleType.Scale> {
   declare audioNode: AudioWorkletNode;
   hookCalled = false;
 
-  constructor(engineId: string, params: IModuleConstructor<ModuleType.Scale>) {
+  constructor(engineId: string, params: ICreateModule<ModuleType.Scale>) {
+    const props = { ...DEFAULT_SCALE_PROPS, ...params.props };
     super(engineId, {
       ...params,
+      props,
       audioNodeConstructor: (context: Context) => {
         return newAudioWorklet(context, CustomWorklet.ScaleProcessor);
       },
@@ -53,9 +65,11 @@ export class TestAudioWorkletModule extends Module<ModuleType.Scale> {
 export class TestRegularAudioNodeModule extends Module<ModuleType.Gain> {
   declare audioNode: GainNode;
 
-  constructor(engineId: string, params: IModuleConstructor<ModuleType.Gain>) {
+  constructor(engineId: string, params: ICreateModule<ModuleType.Gain>) {
+    const props = { ...DEFAULT_GAIN_PROPS, ...params.props };
     super(engineId, {
       ...params,
+      props,
       audioNodeConstructor: (context: Context) => {
         return context.audioContext.createGain();
       },

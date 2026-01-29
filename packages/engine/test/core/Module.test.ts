@@ -1,7 +1,7 @@
 import { Context } from "@blibliki/utils";
 import { describe, it, expect, beforeEach } from "vitest";
 import { Module, SetterHooks } from "@/core/module/Module";
-import { ModuleType } from "@/modules";
+import { ICreateModule, ModuleType } from "@/modules";
 import { MonoGain } from "@/modules/Gain";
 import { CustomWorklet, newAudioWorklet } from "@/processors";
 import {
@@ -9,6 +9,13 @@ import {
   TestAudioWorkletModule,
   TestRegularAudioNodeModule,
 } from "./helpers/TestModules";
+
+const DEFAULT_SCALE_PROPS = {
+  min: 0,
+  max: 1,
+  current: 0.5,
+  mode: "exponential" as const,
+};
 
 describe("Module", () => {
   let gain: MonoGain;
@@ -185,14 +192,11 @@ describe("Module", () => {
     class TestAudioWorkletModule extends Module<ModuleType.Scale> {
       declare audioNode: AudioWorkletNode;
       hookValue: number | null = null;
+      static initInConstructor = false;
 
-      constructor(engineId: string, value: number, initInConstructor: boolean) {
-        const props = {
-          min: value,
-          max: 20000,
-          current: 440,
-          mode: "exponential" as const,
-        };
+      constructor(engineId: string, params: ICreateModule<ModuleType.Scale>) {
+        const props = { ...DEFAULT_SCALE_PROPS, ...params.props };
+        const { initInConstructor } = TestAudioWorkletModule;
 
         const audioNodeConstructor = (context: Context) => {
           const audioNode = newAudioWorklet(
@@ -210,8 +214,7 @@ describe("Module", () => {
         };
 
         super(engineId, {
-          name: "test",
-          moduleType: ModuleType.Scale,
+          ...params,
           props,
           audioNodeConstructor,
         });
@@ -228,11 +231,15 @@ describe("Module", () => {
     }
 
     it("should have correct param value immediately when initialized in audioNodeConstructor", (ctx) => {
+      TestAudioWorkletModule.initInConstructor = true;
       const module = TestAudioWorkletModule.create(
         TestAudioWorkletModule,
         ctx.engine.id,
-        100,
-        true,
+        {
+          name: "test",
+          moduleType: ModuleType.Scale,
+          props: { min: 100 },
+        },
       );
 
       // Check immediately - should have correct value from audioNodeConstructor
@@ -241,11 +248,15 @@ describe("Module", () => {
     });
 
     it("should have wrong param value immediately when NOT initialized in audioNodeConstructor", (ctx) => {
+      TestAudioWorkletModule.initInConstructor = false;
       const module = TestAudioWorkletModule.create(
         TestAudioWorkletModule,
         ctx.engine.id,
-        100,
-        false,
+        {
+          name: "test",
+          moduleType: ModuleType.Scale,
+          props: { min: 100 },
+        },
       );
 
       // Check immediately - should have DEFAULT value (1e-10), not 100
@@ -256,11 +267,15 @@ describe("Module", () => {
     });
 
     it("should have correct value after microtask when hooks run", async (ctx) => {
+      TestAudioWorkletModule.initInConstructor = false;
       const module = TestAudioWorkletModule.create(
         TestAudioWorkletModule,
         ctx.engine.id,
-        100,
-        false,
+        {
+          name: "test",
+          moduleType: ModuleType.Scale,
+          props: { min: 100 },
+        },
       );
 
       // Initially wrong
@@ -286,7 +301,7 @@ describe("Module", () => {
       class TimingTestModule extends Module<ModuleType.Scale> {
         declare audioNode: AudioWorkletNode;
 
-        constructor(engineId: string) {
+        constructor(engineId: string, params: ICreateModule<ModuleType.Scale>) {
           const props = {
             min: 500,
             max: 20000,
@@ -310,8 +325,7 @@ describe("Module", () => {
           };
 
           super(engineId, {
-            name: "test",
-            moduleType: ModuleType.Scale,
+            ...params,
             props,
             audioNodeConstructor,
           });
@@ -345,6 +359,8 @@ describe("Module", () => {
 
       const module = TimingTestModule.create(TimingTestModule, ctx.engine.id, {
         name: "TimingTestModule",
+        moduleType: ModuleType.Scale,
+        props: {},
       });
 
       // Check timeline before hooks run
@@ -367,13 +383,8 @@ describe("Module", () => {
       hookReceivedValue: number | null = null;
       hookSuccessfullySet = false;
 
-      constructor(engineId: string, minValue: number) {
-        const props = {
-          min: minValue,
-          max: 20000,
-          current: 440,
-          mode: "exponential" as const,
-        };
+      constructor(engineId: string, params: ICreateModule<ModuleType.Scale>) {
+        const props = { ...DEFAULT_SCALE_PROPS, ...params.props };
 
         const audioNodeConstructor = (context: Context) => {
           // Do NOT initialize - let hooks do it
@@ -381,8 +392,7 @@ describe("Module", () => {
         };
 
         super(engineId, {
-          name: "hookTest",
-          moduleType: ModuleType.Scale,
+          ...params,
           props,
           audioNodeConstructor,
         });
@@ -408,7 +418,11 @@ describe("Module", () => {
     }
 
     it("should call hooks after microtask", async (ctx) => {
-      const module = HookTestModule.create(HookTestModule, ctx.engine.id, 777);
+      const module = HookTestModule.create(HookTestModule, ctx.engine.id, {
+        name: "hookTest",
+        moduleType: ModuleType.Scale,
+        props: { min: 777 },
+      });
 
       // Before hooks
       expect(module.hookWasCalled).toBe(false);
@@ -422,7 +436,11 @@ describe("Module", () => {
     });
 
     it("should successfully modify AudioParam values in hooks", async (ctx) => {
-      const module = HookTestModule.create(HookTestModule, ctx.engine.id, 888);
+      const module = HookTestModule.create(HookTestModule, ctx.engine.id, {
+        name: "hookTest",
+        moduleType: ModuleType.Scale,
+        props: { min: 888 },
+      });
 
       // Wait for hooks
       await new Promise<void>((resolve) => queueMicrotask(() => resolve()));
@@ -433,7 +451,11 @@ describe("Module", () => {
     });
 
     it("should have access to this.audioNode in hooks", async (ctx) => {
-      const module = HookTestModule.create(HookTestModule, ctx.engine.id, 999);
+      const module = HookTestModule.create(HookTestModule, ctx.engine.id, {
+        name: "hookTest",
+        moduleType: ModuleType.Scale,
+        props: { min: 999 },
+      });
 
       // Wait for hooks
       await new Promise<void>((resolve) => queueMicrotask(() => resolve()));
@@ -445,7 +467,11 @@ describe("Module", () => {
     });
 
     it("should demonstrate hooks work correctly but timing matters", async (ctx) => {
-      const module = HookTestModule.create(HookTestModule, ctx.engine.id, 123);
+      const module = HookTestModule.create(HookTestModule, ctx.engine.id, {
+        name: "hookTest",
+        moduleType: ModuleType.Scale,
+        props: { min: 123 },
+      });
 
       // Immediately check - wrong value
       const immediateValue = module.minParam.value;
