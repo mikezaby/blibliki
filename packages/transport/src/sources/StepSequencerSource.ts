@@ -263,15 +263,20 @@ export class StepSequencerSource extends BaseSource<StepSequencerSourceEvent> {
     const stepTicks = this.extractStepsTicks(start, end);
 
     // Check if we should stop in oneShot mode
-    if (this.props.playbackMode === PlaybackMode.oneShot && stepTicks.length > 0) {
+    if (
+      this.props.playbackMode === PlaybackMode.oneShot &&
+      stepTicks.length > 0
+    ) {
       const lastTick = stepTicks[stepTicks.length - 1];
       if (lastTick !== undefined) {
         const absolutePage = this.getAbsolutePageFromTicks(lastTick);
         const stepNo = this.getStepNoInPage(lastTick);
 
         // If we've reached or passed the last page and last step, stop the source
-        if (absolutePage >= this.pageMapping.length - 1 &&
-            stepNo >= this.props.stepsPerPage - 1) {
+        if (
+          absolutePage >= this.pageMapping.length - 1 &&
+          stepNo >= this.props.stepsPerPage - 1
+        ) {
           // Stop after this final step
           this.onStop(lastTick + this.stepResolution);
         }
