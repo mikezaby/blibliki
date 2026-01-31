@@ -44,7 +44,6 @@
     "vite-tsconfig-paths": "catalog:vite"
   },
   "devDependencies": {
-    "@netlify/vite-plugin": "2.8.0",
     "@tanstack/devtools-vite": "0.5.0",
     "@tanstack/react-devtools": "0.9.4",
     "@testing-library/dom": "^10.4.0",
