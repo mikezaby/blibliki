@@ -127,7 +127,7 @@ export default class Patch implements IPatch {
   }
 
   engineSerialize(): IEngineSerialize {
-    const { bpm = 120, modules, gridNodes } = this.props.config;
+    const { bpm, modules, gridNodes } = this.props.config;
 
     const routes: IRoute[] = gridNodes.edges.map((edge) => {
       return {

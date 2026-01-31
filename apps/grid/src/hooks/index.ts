@@ -56,7 +56,7 @@ export function usePatch() {
   const { isSignedIn, user } = useUser();
 
   const canCreate = !!(isSignedIn && !patch.id);
-  const canUpdate = !!(user && patch.userId === user.id);
+  const canUpdate = patch.userId === user?.id;
   const canDelete = canUpdate;
 
   return { patch, canCreate, canUpdate, canDelete };

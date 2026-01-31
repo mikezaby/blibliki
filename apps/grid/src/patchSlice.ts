@@ -71,7 +71,7 @@ export const loadById = (id: string) => async (dispatch: AppDispatch) => {
 
 export const load = (patch: Patch | IPatch) => (dispatch: AppDispatch) => {
   const { id, name, config, userId } = patch;
-  const { bpm = 120, modules, gridNodes } = config;
+  const { bpm, modules, gridNodes } = config;
 
   dispatch(clearEngine());
   dispatch(loadModules(modules as ModuleProps[]));

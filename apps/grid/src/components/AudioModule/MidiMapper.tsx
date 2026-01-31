@@ -17,7 +17,7 @@ import { modulesSelector } from "./modulesSlice";
 const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
   const {
     updateProp,
-    props: { pages, activePage, globalMappings = [] },
+    props: { pages, activePage, globalMappings },
   } = props;
 
   const dispatch = useAppDispatch();
