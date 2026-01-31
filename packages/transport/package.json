@@ -27,11 +27,11 @@
   },
   "devDependencies": {
     "@types/audioworklet": "catalog:web-audio",
-    "vite-tsconfig-paths": "^5.1.4",
+    "vite-tsconfig-paths": "catalog:vite",
     "vitest": "catalog:test"
   },
   "dependencies": {
     "@blibliki/utils": "workspace:^",
-    "es-toolkit": "^1.41.0"
+    "es-toolkit": "1.44.0"
   }
 }

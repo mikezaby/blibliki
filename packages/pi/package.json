@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@types/audioworklet": "catalog:web-audio",
-    "@types/node": "^22.10.2"
+    "@types/node": "25.1.0"
   },
   "dependencies": {
     "@blibliki/engine": "workspace:^",

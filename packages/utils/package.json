@@ -50,12 +50,12 @@
   },
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
-    "@types/node": "^22.10.2"
+    "@types/node": "25.1.0"
   },
   "dependencies": {
     "crypto-js": "^4.2.0",
     "deepmerge-ts": "^7.1.5",
-    "es-toolkit": "^1.41.0",
+    "es-toolkit": "1.44.0",
     "node-web-audio-api": "1.0.7"
   }
 }

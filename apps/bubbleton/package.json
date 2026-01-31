@@ -26,6 +26,6 @@
     "@blibliki/utils": "workspace:^",
     "react": "catalog:react-19",
     "react-dom": "catalog:react-19",
-    "zustand": "5.0.9"
+    "zustand": "5.0.10"
   }
 }
