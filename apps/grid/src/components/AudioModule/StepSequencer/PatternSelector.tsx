@@ -30,6 +30,30 @@ export default function PatternSelector({
   isRunning = false,
 }: PatternSelectorProps) {
   const isSequenceActive = isRunning && enableSequence;
+  const formatPatternSequence = (value: string) => {
+    const normalized = value.replace(/\s+/g, "");
+    const tokens = normalized.match(/\d+[A-Za-z]/g) ?? [];
+    const consumed = tokens.join("");
+    const remainder = normalized.slice(consumed.length);
+    const formattedTokens = tokens
+      .map((token, index) =>
+        index > 0 && index % 8 === 0 ? `\n${token}` : token,
+      )
+      .join("");
+
+    if (remainder.length === 0) {
+      return formattedTokens;
+    }
+
+    const needsNewLine = tokens.length > 0 && tokens.length % 8 === 0;
+    return `${formattedTokens}${needsNewLine ? "\n" : ""}${remainder}`;
+  };
+
+  const handleSequenceChange = (value: string) => {
+    const normalized = value.replace(/\s+/g, "");
+    updateProp("patternSequence")(normalized);
+  };
+
   return (
     <div className="flex justify-between items-center gap-2">
       <div>
@@ -100,15 +124,15 @@ export default function PatternSelector({
           <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
             Sequence:
           </label>
-          <input
-            type="text"
-            value={patternSequence}
+          <textarea
+            rows={3}
+            value={formatPatternSequence(patternSequence)}
             onChange={(e) => {
-              updateProp("patternSequence")(e.target.value);
+              handleSequenceChange(e.target.value);
             }}
             disabled={isRunning}
             placeholder="e.g., 2A4B2AC"
-            className="px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 w-32"
+            className="nodrag px-2 py-1 text-sm font-mono border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 w-48 resize-none leading-5"
           />
           {sequencePosition && (
             <span className="text-xs font-medium text-green-600 dark:text-green-400">
