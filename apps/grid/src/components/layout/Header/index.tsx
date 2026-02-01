@@ -29,11 +29,8 @@ export default function Header() {
     <header className="flex items-center h-12 px-4 bg-gradient-to-r from-slate-100 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-lg">
       {/* Logo in Transport Area */}
       <div className="flex items-center gap-2 mr-4">
-        <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-md flex items-center justify-center shadow-sm">
-          <SplinePointer className="w-3 h-3 text-white" />
-        </div>
         <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-          Grid
+          Blibliki
         </h1>
       </div>
 
