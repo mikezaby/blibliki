@@ -20,9 +20,6 @@ interface OccupationRange {
 
 class Voice extends Module<ModuleType.VoiceScheduler> {
   declare audioNode: undefined;
-  activeNote: string | null = null;
-  triggeredAt: ContextTime = 0;
-  // Track all current and future occupation ranges
   private occupationRanges: OccupationRange[] = [];
 
   constructor(
@@ -40,32 +37,31 @@ class Voice extends Module<ModuleType.VoiceScheduler> {
   /**
    * Check if this voice is occupied at a given time
    */
-  isOccupiedAt(time: ContextTime): boolean {
+  isOccupiedAt(time: ContextTime, noteName?: string): boolean {
     return this.occupationRanges.some(
-      (range) => time >= range.startTime && time < range.endTime,
+      (range) =>
+        time >= range.startTime &&
+        time < range.endTime &&
+        (!noteName || noteName === range.noteName),
     );
   }
 
-  /**
-   * Get the earliest end time of all occupation ranges at or after the given time
-   * Returns Infinity if the voice has infinite occupation
-   */
-  getEarliestEndTimeAfter(time: ContextTime): ContextTime {
-    const relevantRanges = this.occupationRanges.filter(
-      (range) => range.endTime > time,
+  findRange(time: ContextTime, noteName?: string) {
+    return this.occupationRanges.find(
+      (range) =>
+        time >= range.startTime &&
+        time < range.endTime &&
+        (!noteName || noteName === range.noteName),
     );
-
-    if (relevantRanges.length === 0) return -Infinity;
-
-    return Math.min(...relevantRanges.map((range) => range.endTime));
   }
 
   /**
    * Clean up past occupation ranges that are no longer needed
    */
   private cleanupPastRanges(currentTime: ContextTime) {
+    const time = currentTime + 0.2; // Cleanup with some time ahead
     this.occupationRanges = this.occupationRanges.filter(
-      (range) => range.endTime > currentTime || range.endTime === Infinity,
+      (range) => range.endTime > time,
     );
   }
 
@@ -85,38 +81,24 @@ class Voice extends Module<ModuleType.VoiceScheduler> {
 
     this.cleanupPastRanges(triggeredAt);
 
-    // Determine if this is a future event (more than 10ms ahead)
-    const currentTime = this.context.audioContext.currentTime;
-    const isFutureEvent = triggeredAt - currentTime > 0.01;
-
     switch (type) {
       case MidiEventType.noteOn: {
-        this.activeNote = noteName;
-        this.triggeredAt = triggeredAt;
-
-        // Only add occupation ranges for future events
-        // Real-time events use activeNote field only
-        if (isFutureEvent) {
-          this.occupationRanges.push({
-            noteName,
-            startTime: triggeredAt,
-            endTime: Infinity,
-          });
+        const activeRange = this.findRange(triggeredAt, noteName);
+        if (activeRange) {
+          // Retrigger: close current range so we don't leave overlapping Infinity ranges.
+          activeRange.endTime = triggeredAt;
         }
+        this.occupationRanges.push({
+          noteName,
+          startTime: triggeredAt,
+          endTime: Infinity,
+        });
 
         break;
       }
       case MidiEventType.noteOff: {
-        this.activeNote = null;
-
-        // Always try to close any open occupation range for this note
-        // This handles both scheduled future events and cleanup when stopping
-        const range = this.occupationRanges.find(
-          (r) => r.noteName === noteName && r.endTime === Infinity,
-        );
-        if (range) {
-          range.endTime = triggeredAt;
-        }
+        const range = this.findRange(triggeredAt, noteName);
+        if (range) range.endTime = triggeredAt;
         break;
       }
       default:
@@ -154,12 +136,15 @@ export default class VoiceScheduler extends PolyModule<ModuleType.VoiceScheduler
 
     switch (midiEvent.type) {
       case MidiEventType.noteOn:
-        voice = this.findFreeVoice(midiEvent.triggeredAt);
+        voice = this.findFreeVoice(
+          midiEvent.triggeredAt,
+          midiEvent.note!.fullName,
+        );
 
         break;
       case MidiEventType.noteOff:
-        voice = this.audioModules.find(
-          (v) => v.activeNote === midiEvent.note!.fullName,
+        voice = this.audioModules.find((voice) =>
+          voice.isOccupiedAt(midiEvent.triggeredAt, midiEvent.note?.fullName),
         );
         break;
       case MidiEventType.cc:
@@ -176,71 +161,51 @@ export default class VoiceScheduler extends PolyModule<ModuleType.VoiceScheduler
     this.midiOutput.onMidiEvent(midiEvent);
   };
 
-  private findFreeVoice(targetTime: ContextTime): Voice {
-    const currentTime = this.context.audioContext.currentTime;
-    // Consider it real-time if within 10ms of current time
-    const isRealTime = Math.abs(targetTime - currentTime) < 0.01;
-
+  private findFreeVoice(targetTime: ContextTime, noteName: string): Voice {
     let voice: Voice | undefined;
 
-    if (isRealTime) {
-      // For real-time events, use simple activeNote check (original behavior)
-      // This avoids issues with residual occupation ranges
-      voice = this.audioModules.find((v) => !v.activeNote);
-    } else {
-      // For future events, use occupation range system
-      voice = this.audioModules.find((v) => !v.isOccupiedAt(targetTime));
-    }
+    voice =
+      this.audioModules.find((v) => v.isOccupiedAt(targetTime, noteName)) ??
+      this.audioModules.find((v) => !v.isOccupiedAt(targetTime));
 
-    // If no available voice, steal one based on the strategy:
-    // Primary: voice with earliest end time at or after target time
-    // Secondary: among voices with similar end times, choose oldest (earliest triggeredAt)
+    if (voice) return voice;
+
+    const possibleVoices = this.audioModules
+      .map((voice) => {
+        const range = voice.findRange(targetTime);
+        return range ? ([voice, range] as const) : undefined;
+      })
+      .filter((voice) => voice !== undefined)
+      .sort((a, b) => {
+        const [_a, aRange] = a;
+        const [_b, bRange] = b;
+
+        return aRange.startTime > bRange.startTime ? 1 : -1;
+      });
+
+    voice = possibleVoices[0] ? possibleVoices[0][0] : undefined;
     if (!voice) {
-      if (isRealTime) {
-        // For real-time, use original voice stealing strategy
-        const sorted = this.audioModules.sort((a, b) => {
-          return a.triggeredAt - b.triggeredAt;
-        });
-        voice = sorted[0];
-      } else {
-        // For future events, use occupation-aware strategy
-        const sorted = this.audioModules.sort((a, b) => {
-          const aEndTime = a.getEarliestEndTimeAfter(targetTime);
-          const bEndTime = b.getEarliestEndTimeAfter(targetTime);
-
-          // Primary sort by end time
-          if (aEndTime !== bEndTime) {
-            return aEndTime - bEndTime;
-          }
-
-          // Secondary sort by triggered time (oldest first)
-          return a.triggeredAt - b.triggeredAt;
-        });
-        voice = sorted[0];
-      }
-
-      if (!voice) {
-        throw new Error("No voices available in voice scheduler");
-      }
-
-      // Important: Send a noteOff event for the stolen voice's current note
-      // This ensures the envelope releases properly before the new note starts
-      if (voice.activeNote) {
-        const stolenNoteName = voice.activeNote;
-        // Always release the stolen note at the current time for immediate audio release
-        const releaseTime = this.context.audioContext.currentTime;
-        const noteOffEvent = MidiEvent.fromNote(
-          stolenNoteName,
-          false, // noteOn = false means noteOff
-          releaseTime,
-        );
-        noteOffEvent.voiceNo = voice.voiceNo;
-
-        // Trigger the note off on this voice before reusing it
-        voice.midiTriggered(noteOffEvent);
-        this.midiOutput.onMidiEvent(noteOffEvent);
-      }
+      throw new Error("No voices available in voice scheduler");
     }
+
+    const activeRange = voice.findRange(targetTime);
+    if (!activeRange) {
+      throw new Error(`No range available in voice at ${targetTime}`);
+    }
+
+    const stolenNoteName = activeRange.noteName;
+    // Always release the stolen note at the current time for immediate audio release
+    const releaseTime = targetTime;
+    const noteOffEvent = MidiEvent.fromNote(
+      stolenNoteName,
+      false, // noteOn = false means noteOff
+      releaseTime,
+    );
+    noteOffEvent.voiceNo = voice.voiceNo;
+
+    // Trigger the note off on this voice before reusing it
+    voice.midiTriggered(noteOffEvent);
+    this.midiOutput.onMidiEvent(noteOffEvent);
 
     return voice;
   }
