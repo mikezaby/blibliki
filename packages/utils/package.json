@@ -1,6 +1,6 @@
 {
   "name": "@blibliki/utils",
-  "version": "0.5.2",
+  "version": "0.9.0",
   "type": "module",
   "exports": {
     ".": {
