@@ -1,6 +1,6 @@
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/clerk-react";
 import { Link } from "@tanstack/react-router";
-import { Cpu, LogIn, Play, Square, SplinePointer } from "lucide-react";
+import { Cpu, LogIn, Play, Square } from "lucide-react";
 import { ChangeEvent } from "react";
 import { Button, Input, buttonVariants } from "@/components/ui";
 import { start, stop, setBpm } from "@/globalSlice";
