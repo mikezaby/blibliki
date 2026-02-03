@@ -11,6 +11,8 @@ import type {
   MidiMessageCallback,
 } from "./types";
 
+const HOT_PLUG_POLL_INTERVAL_MS = 1000;
+
 // Dynamic import type for node-midi
 type NodeMidiInput = {
   getPortCount(): number;
@@ -43,9 +45,8 @@ type NodeMidiModule = {
 };
 
 class NodeMidiInputPort implements IMidiInputPort {
-  readonly id: string;
-  readonly name: string;
   private portIndex: number;
+  private nameValue: string;
   private input: NodeMidiInput;
   private callbacks = new Set<MidiMessageCallback>();
   private handler: ((deltaTime: number, message: number[]) => void) | null =
@@ -54,9 +55,16 @@ class NodeMidiInputPort implements IMidiInputPort {
 
   constructor(portIndex: number, name: string, input: NodeMidiInput) {
     this.portIndex = portIndex;
-    this.id = `node-midi-${portIndex}`;
-    this.name = name;
+    this.nameValue = name;
     this.input = input;
+  }
+
+  get id(): string {
+    return `${this.nameValue}:${this.portIndex}`;
+  }
+
+  get name(): string {
+    return this.nameValue;
   }
 
   get state(): "connected" | "disconnected" {
@@ -65,6 +73,55 @@ class NodeMidiInputPort implements IMidiInputPort {
 
   get type() {
     return "input" as const;
+  }
+
+  setConnected(): void {
+    this._state = "connected";
+  }
+
+  reconnect(portIndex: number, name: string, input: NodeMidiInput): void {
+    this.portIndex = portIndex;
+    this.nameValue = name;
+    this.input = input;
+    this._state = "connected";
+
+    if (this.callbacks.size > 0) {
+      if (!this.handler) {
+        this.handler = (_deltaTime: number, message: number[]) => {
+          const event = {
+            data: new Uint8Array(message),
+            timeStamp: performance.now(),
+          };
+
+          this.callbacks.forEach((cb) => {
+            cb(event);
+          });
+        };
+      }
+
+      try {
+        if (!this.input.isPortOpen()) {
+          this.input.openPort(this.portIndex);
+        }
+        this.input.on("message", this.handler);
+      } catch (err) {
+        console.error(`Error opening MIDI port ${this.portIndex}:`, err);
+      }
+    }
+  }
+
+  disconnect(): void {
+    try {
+      if (this.handler) {
+        this.input.off("message", this.handler);
+      }
+      if (this.input.isPortOpen()) {
+        this.input.closePort();
+      }
+    } catch (err) {
+      console.error(`Error closing MIDI port ${this.portIndex}:`, err);
+    }
+    this._state = "disconnected";
   }
 
   addEventListener(callback: MidiMessageCallback): void {
@@ -112,18 +169,24 @@ class NodeMidiInputPort implements IMidiInputPort {
 }
 
 class NodeMidiOutputPort implements IMidiOutputPort {
-  readonly id: string;
-  readonly name: string;
   private portIndex: number;
+  private nameValue: string;
   private output: NodeMidiOutput;
   private _state: "connected" | "disconnected" = "disconnected";
   private isOpen = false;
 
   constructor(portIndex: number, name: string, output: NodeMidiOutput) {
     this.portIndex = portIndex;
-    this.id = `node-midi-out-${portIndex}`;
-    this.name = name;
+    this.nameValue = name;
     this.output = output;
+  }
+
+  get id(): string {
+    return `${this.nameValue}:${this.portIndex}`;
+  }
+
+  get name(): string {
+    return this.nameValue;
   }
 
   get state(): "connected" | "disconnected" {
@@ -132,6 +195,30 @@ class NodeMidiOutputPort implements IMidiOutputPort {
 
   get type() {
     return "output" as const;
+  }
+
+  setConnected(): void {
+    this._state = "connected";
+  }
+
+  reconnect(portIndex: number, name: string, output: NodeMidiOutput): void {
+    this.portIndex = portIndex;
+    this.nameValue = name;
+    this.output = output;
+    this._state = "connected";
+    this.isOpen = false;
+  }
+
+  disconnect(): void {
+    try {
+      if (this.isOpen) {
+        this.output.closePort();
+      }
+    } catch (err) {
+      console.error(`Error closing MIDI output port ${this.portIndex}:`, err);
+    }
+    this.isOpen = false;
+    this._state = "disconnected";
   }
 
   private ensureOpen(): void {
@@ -161,13 +248,34 @@ class NodeMidiAccess implements IMidiAccess {
   private inputPorts = new Map<string, NodeMidiInputPort>();
   private outputPorts = new Map<string, NodeMidiOutputPort>();
   private MidiModule: NodeMidiModule;
+  private listeners = new Set<(port: IMidiPort) => void>();
+  private pollTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(MidiModule: NodeMidiModule) {
     this.MidiModule = MidiModule;
-    this.scanPorts();
+    this.scanPorts(false);
   }
 
-  private scanPorts(): void {
+  private emitStateChange(port: IMidiPort): void {
+    this.listeners.forEach((listener) => {
+      listener(port);
+    });
+  }
+
+  private startPolling(): void {
+    if (this.pollTimer) {
+      return;
+    }
+    this.pollTimer = setInterval(() => {
+      this.scanPorts(true);
+    }, HOT_PLUG_POLL_INTERVAL_MS);
+    this.pollTimer.unref();
+  }
+
+  private scanPorts(emitEvents: boolean): void {
+    const nextInputIds = new Set<string>();
+    const nextOutputIds = new Set<string>();
+
     // Scan input ports
     try {
       const input = new this.MidiModule.Input();
@@ -175,12 +283,40 @@ class NodeMidiAccess implements IMidiAccess {
 
       for (let i = 0; i < inputCount; i++) {
         const portName = input.getPortName(i);
-        const id = `node-midi-${i}`;
+        const id = `${portName}:${i}`;
+        nextInputIds.add(id);
 
-        if (!this.inputPorts.has(id)) {
-          const portInput = new this.MidiModule.Input();
-          const port = new NodeMidiInputPort(i, portName, portInput);
-          this.inputPorts.set(id, port);
+        const existing = this.inputPorts.get(id);
+        if (existing) {
+          if (existing.state === "disconnected") {
+            existing.reconnect(i, portName, new this.MidiModule.Input());
+            if (emitEvents) {
+              this.emitStateChange(existing);
+            }
+          }
+          continue;
+        }
+
+        const reuse = Array.from(this.inputPorts.values()).find(
+          (port) => port.name === portName && port.state === "disconnected",
+        );
+        if (reuse) {
+          const oldId = reuse.id;
+          reuse.reconnect(i, portName, new this.MidiModule.Input());
+          this.inputPorts.delete(oldId);
+          this.inputPorts.set(reuse.id, reuse);
+          if (emitEvents) {
+            this.emitStateChange(reuse);
+          }
+          continue;
+        }
+
+        const portInput = new this.MidiModule.Input();
+        const port = new NodeMidiInputPort(i, portName, portInput);
+        port.setConnected();
+        this.inputPorts.set(id, port);
+        if (emitEvents) {
+          this.emitStateChange(port);
         }
       }
 
@@ -198,12 +334,40 @@ class NodeMidiAccess implements IMidiAccess {
 
       for (let i = 0; i < outputCount; i++) {
         const portName = output.getPortName(i);
-        const id = `node-midi-out-${i}`;
+        const id = `${portName}:${i}`;
+        nextOutputIds.add(id);
 
-        if (!this.outputPorts.has(id)) {
-          const portOutput = new this.MidiModule.Output();
-          const port = new NodeMidiOutputPort(i, portName, portOutput);
-          this.outputPorts.set(id, port);
+        const existing = this.outputPorts.get(id);
+        if (existing) {
+          if (existing.state === "disconnected") {
+            existing.reconnect(i, portName, new this.MidiModule.Output());
+            if (emitEvents) {
+              this.emitStateChange(existing);
+            }
+          }
+          continue;
+        }
+
+        const reuse = Array.from(this.outputPorts.values()).find(
+          (port) => port.name === portName && port.state === "disconnected",
+        );
+        if (reuse) {
+          const oldId = reuse.id;
+          reuse.reconnect(i, portName, new this.MidiModule.Output());
+          this.outputPorts.delete(oldId);
+          this.outputPorts.set(reuse.id, reuse);
+          if (emitEvents) {
+            this.emitStateChange(reuse);
+          }
+          continue;
+        }
+
+        const portOutput = new this.MidiModule.Output();
+        const port = new NodeMidiOutputPort(i, portName, portOutput);
+        port.setConnected();
+        this.outputPorts.set(id, port);
+        if (emitEvents) {
+          this.emitStateChange(port);
         }
       }
 
@@ -212,6 +376,24 @@ class NodeMidiAccess implements IMidiAccess {
       }
     } catch (err) {
       console.error("Error scanning MIDI output ports:", err);
+    }
+
+    for (const [id, port] of this.inputPorts) {
+      if (!nextInputIds.has(id) && port.state === "connected") {
+        port.disconnect();
+        if (emitEvents) {
+          this.emitStateChange(port);
+        }
+      }
+    }
+
+    for (const [id, port] of this.outputPorts) {
+      if (!nextOutputIds.has(id) && port.state === "connected") {
+        port.disconnect();
+        if (emitEvents) {
+          this.emitStateChange(port);
+        }
+      }
     }
   }
 
@@ -229,12 +411,10 @@ class NodeMidiAccess implements IMidiAccess {
 
   addEventListener(
     _event: "statechange",
-    _callback: (port: IMidiPort) => void,
+    callback: (port: IMidiPort) => void,
   ): void {
-    // node-midi doesn't support hot-plugging detection
-    console.warn(
-      "Hot-plug detection not supported with node-midi adapter. Restart required for new devices.",
-    );
+    this.listeners.add(callback);
+    this.startPolling();
   }
 }
 
