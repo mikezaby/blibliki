@@ -85,28 +85,26 @@ class NodeMidiInputPort implements IMidiInputPort {
     this.input = input;
     this._state = "connected";
 
-    if (this.callbacks.size > 0) {
-      if (!this.handler) {
-        this.handler = (_deltaTime: number, message: number[]) => {
-          const event = {
-            data: new Uint8Array(message),
-            timeStamp: performance.now(),
-          };
+    if (this.callbacks.size === 0) return;
 
-          this.callbacks.forEach((cb) => {
-            cb(event);
-          });
-        };
-      }
+    this.handler ??= (_deltaTime: number, message: number[]) => {
+      const event = {
+        data: new Uint8Array(message),
+        timeStamp: performance.now(),
+      };
 
-      try {
-        if (!this.input.isPortOpen()) {
-          this.input.openPort(this.portIndex);
-        }
-        this.input.on("message", this.handler);
-      } catch (err) {
-        console.error(`Error opening MIDI port ${this.portIndex}:`, err);
+      this.callbacks.forEach((cb) => {
+        cb(event);
+      });
+    };
+
+    try {
+      if (!this.input.isPortOpen()) {
+        this.input.openPort(this.portIndex);
       }
+      this.input.on("message", this.handler);
+    } catch (err) {
+      console.error(`Error opening MIDI port ${this.portIndex}:`, err);
     }
   }
 

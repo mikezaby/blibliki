@@ -134,7 +134,9 @@ describe("NodeMidiAdapter hot-plug polling", () => {
     await new Promise<void>((resolve) => {
       setTimeout(resolve, 2100);
     });
-    const disconnectEvent = events.find((event) => event.state === "disconnected");
+    const disconnectEvent = events.find(
+      (event) => event.state === "disconnected",
+    );
     expect(disconnectEvent).toBe(port);
 
     inputPortNames = ["Komplete Kontrol"];
@@ -145,7 +147,9 @@ describe("NodeMidiAdapter hot-plug polling", () => {
     const portsAfter = Array.from(access!.inputs());
     expect(portsAfter).toHaveLength(1);
     expect(portsAfter[0]).toBe(port);
-    const reconnectEvent = events.filter((event) => event.state === "connected");
+    const reconnectEvent = events.filter(
+      (event) => event.state === "connected",
+    );
     expect(reconnectEvent[reconnectEvent.length - 1]).toBe(port);
   });
 });
