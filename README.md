@@ -48,6 +48,16 @@ A visual interface for the Blibliki Engine that allows users to create and conne
 
 [Learn more about Grid](/apps/grid)
 
+### [Pi](/packages/pi)
+
+Run Blibliki as a headless engine on Raspberry Pi (and other Node.js environments) via the `@blibliki/pi` package.
+
+- Device-side `blibliki-pi` CLI
+- Token-based device registration with Grid
+- Remote patch deployment and startup auto-load
+
+[Learn more about Pi](/packages/pi)
+
 ## Project Structure
 
 ```
@@ -57,6 +67,8 @@ blibliki/
 │   └── grid/            # Main visual interface
 ├── packages/            # Libraries and utilities
 │   ├── engine/          # Core audio engine
+│   ├── pi/              # Headless runtime for Raspberry Pi / Node.js
+│   ├── transport/       # Musical transport and scheduler
 │   ├── utils/           # Shared utilities
 │   └── [other]/         # Additional packages
 ├── pnpm-workspace.yaml  # Workspace configuration
