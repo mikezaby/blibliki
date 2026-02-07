@@ -171,6 +171,7 @@ class MonoCustomEnvelope
   triggerAttack(note: Note, triggeredAt: ContextTime) {
     super.triggerAttack(note, triggeredAt);
 
+    this.triggerParam.cancelScheduledValues(triggeredAt);
     this.triggerParam.setValueAtTime(1, triggeredAt);
   }
 
@@ -180,6 +181,7 @@ class MonoCustomEnvelope
     // Only release if this is the last active note
     if (this.activeNotes.length > 0) return;
 
+    this.triggerParam.cancelScheduledValues(triggeredAt);
     this.triggerParam.setValueAtTime(0, triggeredAt);
   }
 
