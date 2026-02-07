@@ -247,7 +247,7 @@ describe("Module", () => {
       expect(module.minParam.value).toBe(100);
     });
 
-    it("should have wrong param value immediately when NOT initialized in audioNodeConstructor", (ctx) => {
+    it("should still have correct param value immediately when relying on hooks", (ctx) => {
       TestAudioWorkletModule.initInConstructor = false;
       const module = TestAudioWorkletModule.create(
         TestAudioWorkletModule,
@@ -259,38 +259,35 @@ describe("Module", () => {
         },
       );
 
-      // Check immediately - should have DEFAULT value (1e-10), not 100
-      // This demonstrates the problem: without explicit initialization,
-      // AudioWorklet starts with processor's default values
-      expect(module.minParam.value).not.toBe(100);
-      expect(module.minParam.value).toBeCloseTo(1e-10, 10); // Default from ScaleProcessor
-    });
-
-    it("should have correct value after microtask when hooks run", async (ctx) => {
-      TestAudioWorkletModule.initInConstructor = false;
-      const module = TestAudioWorkletModule.create(
-        TestAudioWorkletModule,
-        ctx.engine.id,
-        {
-          name: "test",
-          moduleType: ModuleType.Scale,
-          props: { min: 100 },
-        },
-      );
-
-      // Initially wrong
-      expect(module.minParam.value).toBeCloseTo(1e-10, 10);
-      expect(module.hookValue).toBeNull();
-
-      // Wait for hooks
-      await new Promise<void>((resolve) => queueMicrotask(() => resolve()));
-
-      // After hooks - should be correct
+      // Hooks run during Module.create initialization.
       expect(module.hookValue).toBe(100);
       expect(module.minParam.value).toBe(100);
     });
 
-    it("should demonstrate the timing issue with props access during construction", (ctx) => {
+    it("should keep the same correct value after microtask", async (ctx) => {
+      TestAudioWorkletModule.initInConstructor = false;
+      const module = TestAudioWorkletModule.create(
+        TestAudioWorkletModule,
+        ctx.engine.id,
+        {
+          name: "test",
+          moduleType: ModuleType.Scale,
+          props: { min: 100 },
+        },
+      );
+
+      // Already correct immediately.
+      expect(module.hookValue).toBe(100);
+      expect(module.minParam.value).toBe(100);
+
+      // Should stay stable after microtask.
+      await new Promise<void>((resolve) => queueMicrotask(() => resolve()));
+
+      expect(module.hookValue).toBe(100);
+      expect(module.minParam.value).toBe(100);
+    });
+
+    it("should demonstrate hook execution within Module.create initialization", (ctx) => {
       // Track what values are seen at different stages
       const timeline: Array<{
         stage: string;
@@ -363,9 +360,9 @@ describe("Module", () => {
         props: {},
       });
 
-      // Check timeline before hooks run
+      // Hooks are triggered before Module.create returns.
       expect(module).toBeDefined();
-      expect(timeline.length).toBe(2);
+      expect(timeline.length).toBe(4);
       expect(timeline[0]!.stage).toBe("audioNodeConstructor");
       expect(timeline[0]!.propsMin).toBe(500);
       expect(timeline[0]!.paramValue).toBeCloseTo(1e-10, 10); // Default!
@@ -373,6 +370,14 @@ describe("Module", () => {
       expect(timeline[1]!.stage).toBe("constructor_after_super");
       expect(timeline[1]!.propsMin).toBe(500);
       expect(timeline[1]!.paramValue).toBeCloseTo(1e-10, 10); // Still default!
+
+      expect(timeline[2]!.stage).toBe("onAfterSetMin_hook");
+      expect(timeline[2]!.propsMin).toBe(500);
+      expect(timeline[2]!.paramValue).toBeCloseTo(1e-10, 10); // Before set
+
+      expect(timeline[3]!.stage).toBe("onAfterSetMin_after_set");
+      expect(timeline[3]!.propsMin).toBe(500);
+      expect(timeline[3]!.paramValue).toBe(500);
     });
   });
 
@@ -417,20 +422,20 @@ describe("Module", () => {
       };
     }
 
-    it("should call hooks after microtask", async (ctx) => {
+    it("should call hooks during initialization", async (ctx) => {
       const module = HookTestModule.create(HookTestModule, ctx.engine.id, {
         name: "hookTest",
         moduleType: ModuleType.Scale,
         props: { min: 777 },
       });
 
-      // Before hooks
-      expect(module.hookWasCalled).toBe(false);
+      // Hooks run during Module.create.
+      expect(module.hookWasCalled).toBe(true);
+      expect(module.hookReceivedValue).toBe(777);
 
-      // Wait for hooks
+      // Still true after microtask.
       await new Promise<void>((resolve) => queueMicrotask(() => resolve()));
 
-      // After hooks
       expect(module.hookWasCalled).toBe(true);
       expect(module.hookReceivedValue).toBe(777);
     });
@@ -466,27 +471,21 @@ describe("Module", () => {
       expect(module.audioNode.parameters.get("min")).toBeDefined();
     });
 
-    it("should demonstrate hooks work correctly but timing matters", async (ctx) => {
+    it("should demonstrate hooks set values immediately and remain stable", async (ctx) => {
       const module = HookTestModule.create(HookTestModule, ctx.engine.id, {
         name: "hookTest",
         moduleType: ModuleType.Scale,
         props: { min: 123 },
       });
 
-      // Immediately check - wrong value
       const immediateValue = module.minParam.value;
-      expect(immediateValue).toBeCloseTo(1e-10, 10); // Default
-
-      // Wait for hooks
-      await new Promise<void>((resolve) => queueMicrotask(() => resolve()));
-
-      // After hooks - correct value
-      expect(module.minParam.value).toBe(123);
+      expect(immediateValue).toBe(123);
       expect(module.hookSuccessfullySet).toBe(true);
 
-      // This proves: Hooks DO work and DO set values correctly.
-      // The problem is NOT that hooks fail - it's that AudioWorklet
-      // already processed audio with wrong defaults before hooks ran.
+      await new Promise<void>((resolve) => queueMicrotask(() => resolve()));
+
+      expect(module.minParam.value).toBe(123);
+      expect(module.hookSuccessfullySet).toBe(true);
     });
   });
 });
