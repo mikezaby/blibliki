@@ -58,6 +58,11 @@ describe("Delay", () => {
       expect((delay as any).delayNode).toBeDefined();
       expect((delay as any).delayNode.delayTime.value).toBeCloseTo(0.5, 3);
     });
+
+    it("should not over-allocate delay buffer capacity in manual mode", () => {
+      const delayCapacitySeconds = (delay as any).delayCapacitySeconds;
+      expect(delayCapacitySeconds).toBeLessThanOrEqual(5);
+    });
   });
 
   describe("mix parameter", () => {

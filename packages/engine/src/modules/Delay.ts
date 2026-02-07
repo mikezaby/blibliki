@@ -107,6 +107,12 @@ const DEFAULT_DELAY_PROPS: IDelayProps = {
   stereo: false,
 };
 
+const SHORT_MODE_MAX_DELAY_SECONDS = 2;
+const LONG_MODE_MAX_DELAY_SECONDS = 5;
+const ABSOLUTE_MAX_DELAY_SECONDS = 179; // Web Audio API limit: must be < 180s
+const DELAY_CAPACITY_HEADROOM_SECONDS = 0.05;
+const MIN_DELAY_CAPACITY_SECONDS = 0.1;
+
 // ============================================================================
 // Module Class
 // ============================================================================
@@ -133,6 +139,7 @@ export default class Delay
   // Mono delay nodes
   private delayNode: DelayNode;
   private feedbackGain: GainNode;
+  private delayCapacitySeconds: number;
 
   // Stereo ping-pong nodes (created when stereo=true)
   private delayLeft: DelayNode | null = null;
@@ -160,9 +167,14 @@ export default class Delay
     // Create WetDryMixer
     this.wetDryMixer = new WetDryMixer(this.context);
 
-    // Create mono delay graph (default)
-    // Max 179s (Web Audio API limit: must be < 180s / 3 minutes)
-    this.delayNode = this.context.audioContext.createDelay(179);
+    // Allocate only the delay capacity we currently need.
+    const initialDelayTime = this.getRequestedDelayTimeSeconds(props);
+    const initialCapacity = this.getDelayCapacitySeconds(
+      initialDelayTime,
+      props,
+    );
+    this.delayCapacitySeconds = initialCapacity;
+    this.delayNode = this.context.audioContext.createDelay(initialCapacity);
     this.feedbackGain = this.context.audioContext.createGain();
 
     // Connect mono graph initially
@@ -193,22 +205,94 @@ export default class Delay
     });
   }
 
-  private updateDelayTime() {
-    let timeInSeconds: number;
+  private getManualModeMaxDelaySeconds(props: IDelayProps = this.props) {
+    return props.timeMode === DelayTimeMode.short
+      ? SHORT_MODE_MAX_DELAY_SECONDS
+      : LONG_MODE_MAX_DELAY_SECONDS;
+  }
 
-    if (this.props.sync) {
-      // BPM-based timing
+  private getRequestedDelayTimeSeconds(props: IDelayProps = this.props) {
+    if (props.sync) {
       const bpm = this.engine.transport.bpm;
-      const timeMs = divisionToMilliseconds(this.props.division, bpm);
-      timeInSeconds = timeMs / 1000;
-    } else {
-      // Manual timing
-      timeInSeconds = this.props.time / 1000;
+      const timeMs = divisionToMilliseconds(props.division, bpm);
+      return Math.max(0, timeMs / 1000);
     }
 
-    this.delayNode.delayTime.value = timeInSeconds;
-    if (this.delayLeft) this.delayLeft.delayTime.value = timeInSeconds;
-    if (this.delayRight) this.delayRight.delayTime.value = timeInSeconds;
+    return Math.max(0, props.time / 1000);
+  }
+
+  private getDelayCapacitySeconds(
+    requestedDelaySeconds: number,
+    props: IDelayProps = this.props,
+  ) {
+    const manualModeMax = this.getManualModeMaxDelaySeconds(props);
+    const target = props.sync
+      ? requestedDelaySeconds
+      : Math.max(manualModeMax, requestedDelaySeconds);
+
+    return Math.min(
+      ABSOLUTE_MAX_DELAY_SECONDS,
+      Math.max(
+        MIN_DELAY_CAPACITY_SECONDS,
+        target + DELAY_CAPACITY_HEADROOM_SECONDS,
+      ),
+    );
+  }
+
+  private createStereoNodes(delayCapacitySeconds: number) {
+    this.delayLeft =
+      this.context.audioContext.createDelay(delayCapacitySeconds);
+    this.delayRight =
+      this.context.audioContext.createDelay(delayCapacitySeconds);
+    this.feedbackLeft = this.context.audioContext.createGain();
+    this.feedbackRight = this.context.audioContext.createGain();
+    this.merger ??= this.context.audioContext.createChannelMerger(2);
+  }
+
+  private rebuildDelayGraph(delayCapacitySeconds: number) {
+    this.disconnectAll();
+
+    this.delayCapacitySeconds = delayCapacitySeconds;
+    this.delayNode =
+      this.context.audioContext.createDelay(delayCapacitySeconds);
+    this.feedbackGain = this.context.audioContext.createGain();
+
+    if (this.props.stereo) {
+      this.createStereoNodes(delayCapacitySeconds);
+      this.connectStereoGraph();
+    } else {
+      this.delayLeft = null;
+      this.delayRight = null;
+      this.feedbackLeft = null;
+      this.feedbackRight = null;
+      this.connectMonoGraph();
+    }
+
+    this.onAfterSetFeedback(this.props.feedback);
+    this.wetDryMixer.setMix(this.props.mix);
+  }
+
+  private ensureDelayCapacity(requestedDelaySeconds: number) {
+    const requiredCapacity = this.getDelayCapacitySeconds(
+      requestedDelaySeconds,
+    );
+    if (requiredCapacity <= this.delayCapacitySeconds) return;
+    this.rebuildDelayGraph(requiredCapacity);
+  }
+
+  private applyDelayTime(seconds: number) {
+    this.delayNode.delayTime.value = seconds;
+    if (this.delayLeft) this.delayLeft.delayTime.value = seconds;
+    if (this.delayRight) this.delayRight.delayTime.value = seconds;
+  }
+
+  private updateDelayTime() {
+    const requestedTime = this.getRequestedDelayTimeSeconds();
+    this.ensureDelayCapacity(requestedTime);
+
+    const maxDelayTime = this.delayCapacitySeconds;
+    const clampedTime = Math.min(requestedTime, maxDelayTime);
+    this.applyDelayTime(clampedTime);
   }
 
   private connectMonoGraph() {
@@ -230,49 +314,56 @@ export default class Delay
     this.outputNode = this.wetDryMixer.getOutput();
   }
 
-  private switchToStereo() {
-    if (!this.delayLeft) {
-      // Create stereo nodes (max 179s - Web Audio API limit: < 180s)
-      this.delayLeft = this.context.audioContext.createDelay(179);
-      this.delayRight = this.context.audioContext.createDelay(179);
-      this.feedbackLeft = this.context.audioContext.createGain();
-      this.feedbackRight = this.context.audioContext.createGain();
-      this.merger = this.context.audioContext.createChannelMerger(2);
-    }
-
-    // Disconnect mono graph
+  private connectStereoGraph() {
     this.disconnectAll();
 
-    // Connect stereo ping-pong graph
+    if (
+      !this.delayLeft ||
+      !this.delayRight ||
+      !this.feedbackLeft ||
+      !this.feedbackRight ||
+      !this.merger
+    ) {
+      return;
+    }
+
     this.wetDryMixer.connectInput(this.audioNode);
 
-    // Input -> DelayLeft
     this.audioNode.connect(this.delayLeft);
 
-    // DelayLeft -> Output to left channel
-    this.delayLeft.connect(this.merger!, 0, 0); // Left to channel 0
+    this.delayLeft.connect(this.merger, 0, 0); // Left to channel 0
 
-    // DelayLeft -> FeedbackRight -> DelayRight (ping-pong to right)
-    this.delayLeft.connect(this.feedbackRight!);
-    this.feedbackRight!.connect(this.delayRight!);
+    this.delayLeft.connect(this.feedbackRight);
+    this.feedbackRight.connect(this.delayRight);
 
-    // DelayRight -> Output to right channel
-    this.delayRight!.connect(this.merger!, 0, 1); // Right to channel 1
+    this.delayRight.connect(this.merger, 0, 1); // Right to channel 1
 
-    // DelayRight -> FeedbackLeft -> DelayLeft (ping-pong back to left)
-    this.delayRight!.connect(this.feedbackLeft!);
-    this.feedbackLeft!.connect(this.delayLeft);
+    this.delayRight.connect(this.feedbackLeft);
+    this.feedbackLeft.connect(this.delayLeft);
 
-    // Merger -> WetDryMixer (wet)
-    this.merger!.connect(this.wetDryMixer.getWetInput());
+    this.merger.connect(this.wetDryMixer.getWetInput());
 
     this.outputNode = this.wetDryMixer.getOutput();
 
-    // Sync delay times and feedback gains
     this.delayLeft.delayTime.value = this.delayNode.delayTime.value;
-    this.delayRight!.delayTime.value = this.delayNode.delayTime.value;
-    this.feedbackLeft!.gain.value = this.feedbackGain.gain.value;
-    this.feedbackRight!.gain.value = this.feedbackGain.gain.value;
+    this.delayRight.delayTime.value = this.delayNode.delayTime.value;
+    this.feedbackLeft.gain.value = this.feedbackGain.gain.value;
+    this.feedbackRight.gain.value = this.feedbackGain.gain.value;
+  }
+
+  private switchToStereo() {
+    const delayCapacity = this.delayCapacitySeconds;
+    const needsStereoNodes =
+      !this.delayLeft ||
+      !this.delayRight ||
+      !this.feedbackLeft ||
+      !this.feedbackRight;
+
+    if (needsStereoNodes) {
+      this.createStereoNodes(delayCapacity);
+    }
+
+    this.connectStereoGraph();
   }
 
   private disconnectAll() {
