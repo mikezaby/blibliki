@@ -44,16 +44,6 @@ const Reverb: ModuleComponent<ModuleType.Reverb> = (props) => {
 
       <Container>
         <Fader
-          name="Mix"
-          marks={MIX_MARKS}
-          min={schema.mix.min}
-          max={schema.mix.max}
-          step={schema.mix.step}
-          value={mix}
-          onChange={updateProp("mix")}
-        />
-
-        <Fader
           name="Decay"
           marks={DECAY_MARKS}
           min={schema.decayTime.min}
@@ -61,7 +51,9 @@ const Reverb: ModuleComponent<ModuleType.Reverb> = (props) => {
           step={schema.decayTime.step}
           exp={schema.decayTime.exp}
           value={decayTime}
-          onChange={updateProp("decayTime")}
+          onChange={(_: number, calcValue: number) => {
+            updateProp("decayTime")(calcValue);
+          }}
         />
 
         <Fader
@@ -72,6 +64,16 @@ const Reverb: ModuleComponent<ModuleType.Reverb> = (props) => {
           step={schema.preDelay.step}
           value={preDelay}
           onChange={updateProp("preDelay")}
+        />
+
+        <Fader
+          name="Mix"
+          marks={MIX_MARKS}
+          min={schema.mix.min}
+          max={schema.mix.max}
+          step={schema.mix.step}
+          value={mix}
+          onChange={updateProp("mix")}
         />
       </Container>
     </div>
