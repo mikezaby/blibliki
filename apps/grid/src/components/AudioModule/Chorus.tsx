@@ -3,13 +3,6 @@ import Fader, { MarkProps } from "@/components/Fader";
 import { ModuleComponent } from ".";
 import Container from "./Container";
 
-const RATE_MARKS: MarkProps[] = [
-  { value: 0.1, label: "0.1Hz" },
-  { value: 1, label: "1Hz" },
-  { value: 5, label: "5Hz" },
-  { value: 10, label: "10Hz" },
-];
-
 const DEPTH_MARKS: MarkProps[] = [
   { value: 0, label: "0%" },
   { value: 0.5, label: "50%" },
@@ -41,13 +34,14 @@ const Chorus: ModuleComponent<ModuleType.Chorus> = (props) => {
     <Container>
       <Fader
         name="Rate"
-        marks={RATE_MARKS}
         min={schema.rate.min}
         max={schema.rate.max}
         step={schema.rate.step}
         exp={schema.rate.exp}
         value={rate}
-        onChange={updateProp("rate")}
+        onChange={(_: number, calcValue: number) => {
+          updateProp("rate")(calcValue);
+        }}
       />
 
       <Fader
