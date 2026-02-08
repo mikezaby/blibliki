@@ -105,11 +105,6 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
     return getPresetIdByTables(safeTables) ?? CUSTOM_PRESET_ID;
   }, [safeTables]);
 
-  const selectedPreset = useMemo(() => {
-    if (selectedPresetId === CUSTOM_PRESET_ID) return undefined;
-    return getPresetById(selectedPresetId);
-  }, [selectedPresetId]);
-
   const playbackLabel = useMemo(() => {
     if (interpolationState.fromIndex === interpolationState.toIndex) {
       return `Playing step ${interpolationState.fromIndex + 1}`;
@@ -481,11 +476,6 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                 ))}
               </SelectContent>
             </Select>
-            {selectedPreset?.description ? (
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {selectedPreset.description}
-              </p>
-            ) : null}
           </div>
 
           <div className="space-y-2">
