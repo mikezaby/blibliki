@@ -41,6 +41,25 @@ export const AvailableModules: Record<
     moduleType: ModuleType.Oscillator,
     props: { lowGain: true },
   },
+  [ModuleType.Wavetable]: {
+    name: "Wavetable",
+    moduleType: ModuleType.Wavetable,
+    props: {
+      lowGain: true,
+      tables: [
+        {
+          real: [0, 0],
+          imag: [0, 0],
+        },
+        {
+          real: [0, 0],
+          imag: [0, 1],
+        },
+      ],
+      position: 0,
+      disableNormalization: false,
+    },
+  },
   [ModuleType.Envelope]: {
     name: "Envelope",
     moduleType: ModuleType.Envelope,

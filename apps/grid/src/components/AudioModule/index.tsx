@@ -26,6 +26,7 @@ import Scale from "./Scale";
 import StepSequencer from "./StepSequencer";
 import StereoPanner from "./StereoPanner";
 import VoiceScheduler from "./VoiceScheduler";
+import Wavetable from "./Wavetable";
 import { updateModule } from "./modulesSlice";
 
 export type AudioModuleProps<T extends ModuleType> = {
@@ -56,6 +57,7 @@ const COMPONENT_MAPPING: {
   [K in ModuleType]?: ModuleComponent<K>;
 } = {
   [ModuleType.Oscillator]: Oscillator,
+  [ModuleType.Wavetable]: Wavetable,
   [ModuleType.Master]: Master,
   [ModuleType.Filter]: Filter,
   [ModuleType.Gain]: Gain,

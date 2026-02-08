@@ -32,6 +32,20 @@ export { TransportState } from "@blibliki/transport";
 export type { BPM, TimeSignature, Position } from "@blibliki/transport";
 
 export { Context } from "@blibliki/utils";
+export {
+  encodeWavPcm16,
+  exportWavetableScanToWavBytes,
+  extractEmbeddedWavetableTablesFromWavBytes,
+  extractWavetableTablesFromAudioBuffer,
+  extractWavetableTablesFromSamples,
+  renderWavetableFrameSequenceSamples,
+  renderWavetableScanSamples,
+} from "./utils";
+export type {
+  ExtractWavetableOptions,
+  RenderWavetableScanOptions,
+  WavetableTable,
+} from "./utils";
 
 export {
   ModuleType,
@@ -44,6 +58,10 @@ export {
   stepPropSchema,
   NoiseType,
   DelayTimeMode,
+  parseWavetableDefinition,
+  formatWavetableDefinition,
+  parseWavetableConfig,
+  formatWavetableConfig,
 } from "./modules";
 export { default as StepSequencer } from "./modules/StepSequencer";
 export type {
@@ -68,4 +86,9 @@ export type {
   ILFO,
   ILFOProps,
   INoise,
+  IWavetable,
+  IWavetableConfig,
+  IWavetableDefinition,
+  IWavetableProps,
+  IWavetableState,
 } from "./modules";

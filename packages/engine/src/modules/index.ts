@@ -54,10 +54,16 @@ import VirtualMidi, {
   IVirtualMidiProps,
   virtualMidiPropSchema,
 } from "./VirtualMidi";
+import Wavetable, {
+  IWavetableProps,
+  IWavetableState,
+  wavetablePropSchema,
+} from "./Wavetable";
 
 export enum ModuleType {
   Master = "Master",
   Oscillator = "Oscillator",
+  Wavetable = "Wavetable",
   Gain = "Gain",
   MidiInput = "MidiInput",
   MidiOutput = "MidiOutput",
@@ -82,6 +88,7 @@ export enum ModuleType {
 
 export type ModuleTypeToPropsMapping = {
   [ModuleType.Oscillator]: IOscillatorProps;
+  [ModuleType.Wavetable]: IWavetableProps;
   [ModuleType.Gain]: IGainProps;
   [ModuleType.Master]: IMasterProps;
   [ModuleType.MidiInput]: IMidiInputProps;
@@ -107,6 +114,7 @@ export type ModuleTypeToPropsMapping = {
 
 export type ModuleTypeToStateMapping = {
   [ModuleType.Oscillator]: never;
+  [ModuleType.Wavetable]: IWavetableState;
   [ModuleType.Gain]: never;
   [ModuleType.Master]: never;
   [ModuleType.MidiInput]: never;
@@ -132,6 +140,7 @@ export type ModuleTypeToStateMapping = {
 
 export type ModuleTypeToModuleMapping = {
   [ModuleType.Oscillator]: Oscillator;
+  [ModuleType.Wavetable]: Wavetable;
   [ModuleType.Gain]: Gain;
   [ModuleType.Master]: Master;
   [ModuleType.MidiInput]: MidiInput;
@@ -157,6 +166,7 @@ export type ModuleTypeToModuleMapping = {
 
 export const moduleSchemas = {
   [ModuleType.Oscillator]: oscillatorPropSchema,
+  [ModuleType.Wavetable]: wavetablePropSchema,
   [ModuleType.Gain]: gainPropSchema,
   [ModuleType.Master]: masterPropSchema,
   [ModuleType.MidiInput]: midiInputPropSchema,
@@ -182,6 +192,19 @@ export const moduleSchemas = {
 
 export type { IOscillator } from "./Oscillator";
 export { OscillatorWave } from "./Oscillator";
+export type {
+  IWavetable,
+  IWavetableProps,
+  IWavetableState,
+  IWavetableConfig,
+  IWavetableDefinition,
+} from "./Wavetable";
+export {
+  formatWavetableConfig,
+  parseWavetableDefinition,
+  parseWavetableConfig,
+  formatWavetableDefinition,
+} from "./Wavetable";
 export type { IGain } from "./Gain";
 export type { IMaster } from "./Master";
 export type { IMidiInput, IMidiInputProps } from "./MidiInput";
@@ -224,6 +247,7 @@ export type ICreateModule<T extends ModuleType> = {
 export type ModuleParams = {
   [K in ModuleType]: K extends
     | ModuleType.Oscillator
+    | ModuleType.Wavetable
     | ModuleType.Gain
     | ModuleType.LegacyEnvelope
     | ModuleType.Envelope
@@ -244,6 +268,8 @@ export function createModule(
   switch (params.moduleType) {
     case ModuleType.Oscillator:
       return Oscillator.create(Oscillator, engineId, params);
+    case ModuleType.Wavetable:
+      return Wavetable.create(Wavetable, engineId, params);
     case ModuleType.Gain:
       return Gain.create(Gain, engineId, params);
     case ModuleType.Master:
