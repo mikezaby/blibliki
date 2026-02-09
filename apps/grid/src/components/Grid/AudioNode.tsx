@@ -3,6 +3,7 @@ import { Handle, HandleType, NodeProps, Position } from "@xyflow/react";
 import { ReactNode, useMemo } from "react";
 import AudioModule from "@/components/AudioModule";
 import { useAudioModule } from "@/hooks";
+import { cn } from "@/lib/utils";
 import Name from "../AudioModule/attributes/Name";
 import Voices from "../AudioModule/attributes/Voices";
 import {
@@ -17,8 +18,17 @@ export const NodeTypes = {
   audioNode: AudioNode,
 };
 
+export const getNodeContainerClassName = (selected: boolean) =>
+  cn(
+    "flex cursor-grab items-stretch rounded-lg border min-w-[200px] transition-all duration-200",
+    "bg-white dark:bg-slate-800 shadow-lg hover:shadow-xl",
+    selected
+      ? "border-cyan-500 ring-4 ring-cyan-300/70 shadow-2xl scale-[1.015] dark:ring-cyan-700/50"
+      : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600",
+  );
+
 export default function AudioNode(props: NodeProps) {
-  const { id } = props;
+  const { id, selected } = props;
   const audioModule = useAudioModule(id);
   if (!audioModule) return null;
 
@@ -26,7 +36,7 @@ export default function AudioNode(props: NodeProps) {
 
   return (
     <ContextMenu>
-      <ContextMenuTrigger className="flex cursor-grab items-stretch shadow-lg hover:shadow-xl transition-shadow duration-200 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 min-w-[200px]">
+      <ContextMenuTrigger className={getNodeContainerClassName(selected)}>
         {inputs.length > 0 && (
           <IOContainer type="input">
             {inputs.map((io) => (
