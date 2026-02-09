@@ -1,5 +1,6 @@
 import { IIOSerialize } from "@blibliki/engine";
 import { Handle, HandleType, NodeProps, Position } from "@xyflow/react";
+import { Settings } from "lucide-react";
 import { ReactNode, useMemo } from "react";
 import AudioModule from "@/components/AudioModule";
 import { useAudioModule } from "@/hooks";
@@ -7,11 +8,12 @@ import { cn } from "@/lib/utils";
 import Name from "../AudioModule/attributes/Name";
 import Voices from "../AudioModule/attributes/Voices";
 import {
-  Card,
-  CardContent,
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "../ui";
 
 export const NodeTypes = {
@@ -35,8 +37,8 @@ export default function AudioNode(props: NodeProps) {
   const { inputs, outputs, ...audioModuleProps } = audioModule;
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger className={getNodeContainerClassName(selected)}>
+    <Dialog>
+      <div className={getNodeContainerClassName(selected)}>
         {inputs.length > 0 && (
           <IOContainer type="input">
             {inputs.map((io) => (
@@ -45,12 +47,16 @@ export default function AudioNode(props: NodeProps) {
           </IOContainer>
         )}
 
-        <div className={"flex flex-col justify-center p-3 gap-2"}>
-          <div className="flex items-center gap-2 ">
+        <div className={"relative flex flex-col justify-center p-3 gap-2"}>
+          <div className="flex items-center gap-2 pr-7">
             <div className="w-2 h-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
             <span className="text-sm font-medium text-slate-900 dark:text-white truncate">
               {audioModule.name || audioModule.moduleType}
             </span>
+
+            <DialogTrigger asChild>
+              <Settings className="h-3 w-3 cursor-pointer" />
+            </DialogTrigger>
           </div>
           <AudioModule audioModule={audioModuleProps} />
         </div>
@@ -62,27 +68,31 @@ export default function AudioNode(props: NodeProps) {
             ))}
           </IOContainer>
         )}
-      </ContextMenuTrigger>
+      </div>
 
-      <ContextMenuContent className="p-0 border-0">
-        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-          <CardContent className="p-4 space-y-3">
-            <Name
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Module Settings</DialogTitle>
+          <DialogDescription>
+            Configure name and voice settings for this module.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <Name
+            id={audioModule.id}
+            moduleType={audioModule.moduleType}
+            value={audioModule.name}
+          />
+          {"voices" in audioModule && (
+            <Voices
               id={audioModule.id}
               moduleType={audioModule.moduleType}
-              value={audioModule.name}
+              value={audioModule.voices}
             />
-            {"voices" in audioModule && (
-              <Voices
-                id={audioModule.id}
-                moduleType={audioModule.moduleType}
-                value={audioModule.voices}
-              />
-            )}
-          </CardContent>
-        </Card>
-      </ContextMenuContent>
-    </ContextMenu>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
