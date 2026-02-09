@@ -1,4 +1,5 @@
 import { Context } from "@blibliki/utils";
+import { isTextInputLikeTarget } from "@blibliki/utils";
 import Note from "../Note";
 import { MidiPortState } from "./BaseMidiDevice";
 import MidiEvent from "./MidiEvent";
@@ -64,7 +65,7 @@ export default class ComputerKeyboardInput implements IMidiInput {
   }
 
   onKeyTrigger = (noteOn: boolean) => (event: KeyboardEvent) => {
-    if (this.isTextInputTarget(event.target)) return;
+    if (isTextInputLikeTarget(event.target)) return;
 
     const note = this.extractNote(event);
     if (!note) return;
@@ -83,26 +84,5 @@ export default class ComputerKeyboardInput implements IMidiInput {
     if (event.repeat) return;
 
     return MAP_KEYS[event.key];
-  }
-
-  private isTextInputTarget(target: EventTarget | null): boolean {
-    if (!target || typeof target !== "object") return false;
-
-    const element = target as {
-      tagName?: unknown;
-      isContentEditable?: unknown;
-      closest?: (selector: string) => Element | null;
-    };
-
-    const tagName =
-      typeof element.tagName === "string" ? element.tagName.toLowerCase() : "";
-
-    if (tagName === "input" || tagName === "textarea") return true;
-    if (element.isContentEditable === true) return true;
-
-    return (
-      typeof element.closest === "function" &&
-      Boolean(element.closest("input, textarea, [contenteditable]"))
-    );
   }
 }

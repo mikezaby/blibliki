@@ -1,7 +1,7 @@
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/clerk-react";
 import { Link } from "@tanstack/react-router";
 import { Cpu, LogIn, Play, Square } from "lucide-react";
-import { ChangeEvent } from "react";
+import { ChangeEvent, useCallback, useEffect } from "react";
 import { Button, Input, buttonVariants } from "@/components/ui";
 import { start, stop, setBpm } from "@/globalSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
@@ -9,6 +9,7 @@ import { setName as setPatchName } from "@/patchSlice";
 import ColorSchemeToggle from "./ColorSchemeToggle";
 import FileMenu from "./FileMenu";
 import LoadModal from "./FileMenu/LoadModal";
+import { shouldToggleTransportOnSpace } from "./transportKeyboardShortcut";
 
 export default function Header() {
   const dispatch = useAppDispatch();
@@ -20,10 +21,24 @@ export default function Header() {
     patch: { name: patchName },
   } = useAppSelector((state) => state.patch);
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     const toggle = isStarted ? stop : start;
     dispatch(toggle());
-  };
+  }, [dispatch, isStarted]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!shouldToggleTransportOnSpace(event)) return;
+
+      event.preventDefault();
+      togglePlay();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [togglePlay]);
 
   return (
     <header className="flex items-center h-12 px-4 bg-gradient-to-r from-slate-100 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-lg">
