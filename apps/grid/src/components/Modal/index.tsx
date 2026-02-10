@@ -1,3 +1,4 @@
+import { VisuallyHidden } from "@chakra-ui/react";
 import type { ComponentProps, ReactNode } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAppDispatch, useAppSelector } from "@/hooks";
@@ -32,7 +33,9 @@ export default function Modal(props: ModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={close}>
       <DialogContent className={className} {...contentProps}>
-        <DialogTitle className="sr-only">{modalName}</DialogTitle>
+        <DialogTitle>
+          <VisuallyHidden>{modalName}</VisuallyHidden>
+        </DialogTitle>
         {children}
       </DialogContent>
     </Dialog>

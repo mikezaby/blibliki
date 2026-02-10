@@ -1,5 +1,6 @@
 import { ModuleType } from "@blibliki/engine";
 import { moduleSchemas } from "@blibliki/engine";
+import { Flex } from "@chakra-ui/react";
 import type { MarkProps } from "@/components/Fader";
 import Fader from "@/components/Fader";
 import type { ModuleComponent } from ".";
@@ -37,8 +38,8 @@ const LFO: ModuleComponent<ModuleType.LFO> = (props) => {
   };
 
   return (
-    <div className="flex flex-col gap-y-8">
-      <Container className="justify-start">
+    <Flex direction="column" gap="8">
+      <Container justify="flex-start">
         <SelectField
           name="Waveform"
           value={waveform}
@@ -97,7 +98,7 @@ const LFO: ModuleComponent<ModuleType.LFO> = (props) => {
           onChange={updateProp("amount")}
         />
       </Container>
-    </div>
+    </Flex>
   );
 };
 

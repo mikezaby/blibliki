@@ -1,4 +1,5 @@
 import { moduleSchemas, ModuleType, OscillatorWave } from "@blibliki/engine";
+import { Flex } from "@chakra-ui/react";
 import Fader, { MarkProps } from "@/components/Fader";
 import { ModuleComponent } from "..";
 import Container from "../Container";
@@ -39,8 +40,8 @@ const Oscillator: ModuleComponent<ModuleType.Oscillator> = (props) => {
   };
 
   return (
-    <div className="flex flex-col gap-y-8">
-      <Container className="justify-start">
+    <Flex direction="column" gap="8">
+      <Container justify="flex-start">
         <CheckboxField
           name="Low gain"
           value={lowGain}
@@ -86,7 +87,7 @@ const Oscillator: ModuleComponent<ModuleType.Oscillator> = (props) => {
           value={waveIndex}
         />
       </Container>
-    </div>
+    </Flex>
   );
 };
 

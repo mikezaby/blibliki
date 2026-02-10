@@ -29,7 +29,7 @@ export default function Key(props: KeyProps) {
 
   const className = useMemo(() => {
     const names = [Keys[note.name]];
-    names.push("nodrag cursor-pointer");
+    names.push("nodrag");
 
     if (active || mouseDown) names.push("active");
 
@@ -54,6 +54,7 @@ export default function Key(props: KeyProps) {
       onPointerDown={trigger("noteOn", true)}
       onPointerUp={trigger("noteOff", true)}
       className={className}
+      style={{ cursor: "pointer" }}
     />
   );
 }

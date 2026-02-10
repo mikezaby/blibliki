@@ -1,4 +1,5 @@
 import { moduleSchemas, ModuleType } from "@blibliki/engine";
+import { Flex } from "@chakra-ui/react";
 import { ModuleComponent } from ".";
 import Container from "./Container";
 import { InputField, SelectField } from "./attributes/Field";
@@ -10,8 +11,8 @@ const Scale: ModuleComponent<ModuleType.Scale> = (props) => {
   } = props;
 
   return (
-    <div className="flex flex-col gap-y-8">
-      <Container className="justify-start">
+    <Flex direction="column" gap="8">
+      <Container justify="flex-start">
         <SelectField
           name="mode"
           value={mode}
@@ -39,7 +40,7 @@ const Scale: ModuleComponent<ModuleType.Scale> = (props) => {
           onChange={updateProp("current")}
         />
       </Container>
-    </div>
+    </Flex>
   );
 };
 

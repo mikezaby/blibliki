@@ -1,4 +1,5 @@
 import { DelayTimeMode, ModuleType, moduleSchemas } from "@blibliki/engine";
+import { Box, Flex } from "@chakra-ui/react";
 import Fader, { MarkProps } from "@/components/Fader";
 import { ModuleComponent } from ".";
 import Container from "./Container";
@@ -40,8 +41,8 @@ const Delay: ModuleComponent<ModuleType.Delay> = (props) => {
   };
 
   return (
-    <div className="flex flex-col gap-y-8">
-      <Container className="justify-start">
+    <Flex direction="column" gap="8">
+      <Container justify="flex-start">
         <CheckboxField
           name="Sync"
           value={sync}
@@ -49,13 +50,14 @@ const Delay: ModuleComponent<ModuleType.Delay> = (props) => {
           onChange={updateProp("sync")}
         />
 
-        <SelectField
-          name="Time Mode"
-          value={timeMode}
-          schema={schema.timeMode}
-          onChange={updateProp("timeMode")}
-          className={sync ? "opacity-50 pointer-events-none" : ""}
-        />
+        <Box opacity={sync ? 0.5 : 1} pointerEvents={sync ? "none" : "auto"}>
+          <SelectField
+            name="Time Mode"
+            value={timeMode}
+            schema={schema.timeMode}
+            onChange={updateProp("timeMode")}
+          />
+        </Box>
 
         <CheckboxField
           name="Stereo"
@@ -108,7 +110,7 @@ const Delay: ModuleComponent<ModuleType.Delay> = (props) => {
           onChange={updateProp("mix")}
         />
       </Container>
-    </div>
+    </Flex>
   );
 };
 
