@@ -1,3 +1,4 @@
+import { Box, Flex, HStack, Text } from "@chakra-ui/react";
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/clerk-react";
 import { Link } from "@tanstack/react-router";
 import { Cpu, LogIn, Play, Square } from "lucide-react";
@@ -41,129 +42,137 @@ export default function Header() {
   }, [togglePlay]);
 
   return (
-    <header className="flex items-center h-12 px-4 bg-gradient-to-r from-slate-100 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-lg">
-      {/* Logo in Transport Area */}
-      <div className="flex items-center gap-2 mr-4">
-        <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-          Blibliki
-        </h1>
-      </div>
+    <Box
+      as="header"
+      h="12"
+      px="4"
+      bg="surfaceBg"
+      borderBottomWidth="1px"
+      borderColor="border"
+      boxShadow="sm"
+    >
+      <Flex align="center" h="full">
+        <HStack gap="2" mr="4">
+          <Text fontSize="lg" fontWeight="bold" letterSpacing="tight">
+            Blibliki
+          </Text>
+        </HStack>
 
-      <div className="flex items-center gap-2">
-        <FileMenu />
-        <SignedIn>
-          <Button
-            as={Link}
-            to="/devices"
-            variant="ghost"
-            size="sm"
-            className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 cursor-pointer"
-          >
-            <Cpu className="w-4 h-4" />
-            <span className="ml-2 text-sm">Devices</span>
-          </Button>
-        </SignedIn>
-      </div>
+        <HStack gap="2">
+          <FileMenu />
+          <SignedIn>
+            <Button as={Link} to="/devices" variant="ghost" size="sm">
+              <Cpu size={16} />
+              <Text fontSize="sm">Devices</Text>
+            </Button>
+          </SignedIn>
+        </HStack>
 
-      {/* Project Controls Section */}
-      <div className="flex items-center gap-3 min-w-[280px] ml-6">
-        <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
+        <HStack gap="3" minW="280px" ml="6">
+          <VerticalDivider />
 
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-slate-600 dark:text-slate-400 font-medium uppercase tracking-wide">
-            Project
-          </label>
-          <Input
-            className="h-7 w-40 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
-            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-              dispatch(setPatchName(event.target.value))
-            }
-            value={patchName}
-            placeholder="Untitled Patch"
-          />
-        </div>
-      </div>
-
-      {/* Transport Controls Section with Logo */}
-      <div className="flex items-center justify-center flex-1 gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-slate-600 dark:text-slate-400 font-medium uppercase tracking-wide">
-              BPM
-            </label>
+          <HStack gap="2">
+            <Text fontSize="xs" fontWeight="medium" textTransform="uppercase">
+              Project
+            </Text>
             <Input
-              className="h-7 w-18 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm font-mono text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
-              type="number"
-              min="10"
-              max="999"
-              onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                dispatch(setBpm(+event.target.value));
-              }}
-              value={bpm}
+              h="7"
+              w="10rem"
+              fontSize="sm"
+              fontWeight="medium"
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                dispatch(setPatchName(event.target.value))
+              }
+              value={patchName}
+              placeholder="Untitled Patch"
             />
-          </div>
+          </HStack>
+        </HStack>
 
-          <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
+        <Flex flex="1" justify="center">
+          <HStack gap="3">
+            <HStack gap="2">
+              <Text fontSize="xs" fontWeight="medium" textTransform="uppercase">
+                BPM
+              </Text>
+              <Input
+                h="7"
+                w="4.5rem"
+                textAlign="center"
+                fontSize="sm"
+                fontFamily="mono"
+                type="number"
+                min="10"
+                max="999"
+                onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                  dispatch(setBpm(+event.target.value));
+                }}
+                value={bpm}
+              />
+            </HStack>
 
+            <VerticalDivider />
+
+            <Button
+              onClick={togglePlay}
+              variant="secondary"
+              size="icon"
+              rounded="full"
+            >
+              {isStarted ? <Square size={16} /> : <Play size={16} />}
+            </Button>
+          </HStack>
+        </Flex>
+
+        <HStack gap="3" minW="200px" justify="flex-end">
+          <VerticalDivider />
+
+          <ColorSchemeToggle />
           <Button
-            onClick={togglePlay}
-            className="h-8 w-8 rounded-full shadow-lg transition-all duration-200 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 shadow-slate-400/25 dark:shadow-slate-800/50 cursor-pointer"
-          >
-            {isStarted ? (
-              <Square className="w-4 h-4" />
-            ) : (
-              <Play className="w-4 h-4 ml-0.5" />
-            )}
-          </Button>
-        </div>
-      </div>
-
-      {/* User & Settings Section */}
-      <div className="flex items-center gap-3 min-w-[200px] justify-end">
-        <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
-
-        <ColorSchemeToggle />
-        <Button
-          as="a"
-          href="https://github.com/mikezaby/blibliki"
-          target="_blank"
-          rel="noreferrer"
-          variant="ghost"
-          size="sm"
-          className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 cursor-pointer"
-        >
-          <Github />
-        </Button>
-
-        <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
-
-        <SignedIn>
-          <UserButton userProfileUrl="/user" />
-        </SignedIn>
-        <SignedOut>
-          <Button
+            as="a"
+            href="https://github.com/mikezaby/blibliki"
+            target="_blank"
+            rel="noreferrer"
             variant="ghost"
             size="sm"
-            onClick={() => {
-              openSignIn();
-            }}
-            className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 cursor-pointer"
           >
-            <LogIn className="w-4 h-4" />
-            <span className="ml-2 text-sm">Sign In</span>
+            <Github />
           </Button>
-        </SignedOut>
-      </div>
-      {modalName === "patch" && <LoadModal />}
-    </header>
+
+          <VerticalDivider />
+
+          <SignedIn>
+            <UserButton userProfileUrl="/user" />
+          </SignedIn>
+          <SignedOut>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                openSignIn();
+              }}
+            >
+              <LogIn size={16} />
+              <Text fontSize="sm">Sign In</Text>
+            </Button>
+          </SignedOut>
+        </HStack>
+        {modalName === "patch" && <LoadModal />}
+      </Flex>
+    </Box>
   );
+}
+
+function VerticalDivider() {
+  return <Box h="6" w="1px" bg="border" />;
 }
 
 function Github() {
   return (
     <svg
       viewBox="0 0 16 16"
-      className="w-5 h-5"
+      width="20"
+      height="20"
       fill="currentColor"
       aria-hidden="true"
     >
