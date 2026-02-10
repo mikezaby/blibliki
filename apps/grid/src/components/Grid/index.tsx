@@ -33,8 +33,8 @@ export default function Grid() {
 
   return (
     <Box
-      className="grid-container"
-      h="full"
+      w="100vw"
+      h="calc(100vh - 48px)"
       bg="gray.200"
       _dark={{ bg: "gray.600" }}
     >
