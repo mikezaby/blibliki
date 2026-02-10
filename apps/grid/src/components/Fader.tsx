@@ -1,4 +1,5 @@
 import { throttle } from "@blibliki/utils";
+import { Box, Flex, Text } from "@chakra-ui/react";
 import { Slider } from "./ui";
 import { TOrientation } from "./ui/slider";
 
@@ -81,7 +82,7 @@ export default function Fader(props: FaderProps) {
   const debouncedOnChange = throttle(internalOnChange, 500);
 
   return (
-    <div className="flex flex-col items-center gap-2 p-2">
+    <Flex direction="column" align="center" gap="2" p="2">
       <Slider
         orientation={orientation}
         onChange={debouncedOnChange}
@@ -95,12 +96,24 @@ export default function Fader(props: FaderProps) {
         hideMarks={hideMarks}
       />
 
-      <div className="flex items-center w-full gap-1.5 mt-1">
-        <div className="w-1.5 h-1.5 bg-linear-to-br from-blue-500 to-purple-600 rounded-full" />
-        <label className="text-xs font-medium text-slate-700 dark:text-slate-300 tracking-tight text-center">
+      <Flex align="center" w="full" gap="1.5" mt="1">
+        <Box
+          w="1.5"
+          h="1.5"
+          rounded="full"
+          bgGradient="linear(to-br, brand.500, brand.700)"
+        />
+        <Text
+          as="label"
+          fontSize="xs"
+          fontWeight="medium"
+          color="fg"
+          letterSpacing="tight"
+          textAlign="center"
+        >
           {name}
-        </label>
-      </div>
-    </div>
+        </Text>
+      </Flex>
+    </Flex>
   );
 }
