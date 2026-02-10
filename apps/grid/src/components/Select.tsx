@@ -67,7 +67,7 @@ export default function Select<T extends string | number | undefined>(
       onValueChange={onValueChange}
       disabled={disabled}
     >
-      <SelectTrigger className="w-[180px]">
+      <SelectTrigger style={{ width: "180px" }}>
         <SelectValue placeholder={label} />
       </SelectTrigger>
 
