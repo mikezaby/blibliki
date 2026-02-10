@@ -1,11 +1,12 @@
 import { Engine, TransportState } from "@blibliki/engine";
 import { initializeFirebase } from "@blibliki/models";
-import { Context } from "@blibliki/utils";
+import { Context, requestAnimationFrame } from "@blibliki/utils";
 import { AudioContext } from "@blibliki/utils/web-audio-api";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { initialize as patchInitialize, loadById } from "@/patchSlice";
 import { AppDispatch, RootState } from "@/store";
 import { updatePlainModule } from "./components/AudioModule/modulesSlice";
+import { createEnginePropsUpdateQueue } from "./global/enginePropsUpdateQueue";
 
 type IContext = {
   latencyHint: "interactive" | "playback";
@@ -66,19 +67,73 @@ export const initialize =
       dispatch(patchInitialize());
     }
 
-    engine.onPropsUpdate((update) => {
-      const { id, props, state } = update;
+    const queue = createEnginePropsUpdateQueue();
+    let scheduledFlush: number | null = null;
 
-      if ("voices" in update) {
+    const flushQueuedUpdates = () => {
+      scheduledFlush = null;
+      const modulesById = getState().modules.entities;
+      queue.sweep(Object.keys(modulesById));
+      const updates = queue.flush();
+
+      updates.forEach((queuedUpdate) => {
+        const currentModule = modulesById[queuedUpdate.id];
+        if (!currentModule) return;
+
+        const nextChanges = {
+          ...queuedUpdate.changes,
+        };
+
+        if (
+          nextChanges.name !== undefined &&
+          currentModule.name === nextChanges.name
+        ) {
+          delete nextChanges.name;
+        }
+
+        if (
+          nextChanges.props !== undefined &&
+          currentModule.props === nextChanges.props
+        ) {
+          delete nextChanges.props;
+        }
+
+        if (
+          nextChanges.state !== undefined &&
+          currentModule.state === nextChanges.state
+        ) {
+          delete nextChanges.state;
+        }
+
+        if (
+          nextChanges.voices !== undefined &&
+          "voices" in currentModule &&
+          currentModule.voices === nextChanges.voices
+        ) {
+          delete nextChanges.voices;
+        }
+
+        if (Object.keys(nextChanges).length === 0) return;
         dispatch(
           updatePlainModule({
-            id,
-            changes: { voices: update.voices, props, state },
+            id: queuedUpdate.id,
+            changes: nextChanges,
           }),
         );
-      } else {
-        dispatch(updatePlainModule({ id, changes: { props, state } }));
-      }
+      });
+    };
+
+    engine.onPropsUpdate((update) => {
+      const enqueued = queue.enqueue({
+        id: update.id,
+        name: update.name,
+        props: update.props,
+        state: update.state,
+        voices: "voices" in update ? update.voices : undefined,
+      });
+
+      if (!enqueued || scheduledFlush !== null) return;
+      scheduledFlush = requestAnimationFrame(flushQueuedUpdates);
     });
 
     return dispatch(
