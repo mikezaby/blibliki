@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { close as _close } from "./modalSlice";
@@ -9,11 +9,12 @@ type ModalProps = {
   children: ReactNode;
   modalName: string;
   className?: string;
+  contentProps?: Omit<ComponentProps<typeof DialogContent>, "children">;
   onClose?: () => void;
 };
 
 export default function Modal(props: ModalProps) {
-  const { children, modalName, className, onClose } = props;
+  const { children, modalName, className, contentProps, onClose } = props;
 
   const dispatch = useAppDispatch();
   const { isOpen, modalName: currentModalName } = useAppSelector(
@@ -30,7 +31,7 @@ export default function Modal(props: ModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={close}>
-      <DialogContent className={className}>
+      <DialogContent className={className} {...contentProps}>
         <DialogTitle className="sr-only">{modalName}</DialogTitle>
         {children}
       </DialogContent>
