@@ -1,4 +1,5 @@
 import { IStep, stepPropSchema } from "@blibliki/engine";
+import { Box, Button, Flex, Grid, Text } from "@chakra-ui/react";
 import Fader, { MarkProps } from "@/components/Fader";
 import CCEditor from "./CCEditor";
 import NoteEditor from "./NoteEditor";
@@ -22,9 +23,9 @@ export default function StepEditor({
 }: StepEditorProps) {
   if (!step) {
     return (
-      <div className="p-6 text-center text-slate-500">
+      <Flex p="6" justify="center" color="fg.muted">
         Select a step to edit
-      </div>
+      </Flex>
     );
   }
 
@@ -32,62 +33,90 @@ export default function StepEditor({
   const hasCC = step.ccMessages.length > 0;
 
   return (
-    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
-      {/* Header */}
-      <div className="px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Step {stepIndex + 1}
-            </span>
-            <div
-              className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                step.active
-                  ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300"
-                  : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400"
-              }`}
-            >
-              {step.active ? "Active" : "Muted"}
-            </div>
-            {hasNotes && (
-              <div className="text-xs text-slate-600 dark:text-slate-400">
-                {step.notes.length} note{step.notes.length !== 1 ? "s" : ""}
-              </div>
-            )}
-            {hasCC && (
-              <div className="text-xs text-slate-600 dark:text-slate-400">
-                {step.ccMessages.length} CC
-              </div>
-            )}
-          </div>
+    <Box
+      bg="surfaceBg"
+      borderWidth="1px"
+      borderColor="border"
+      rounded="lg"
+      overflow="hidden"
+    >
+      <Flex
+        px="4"
+        py="3"
+        bg="bg.muted"
+        borderBottomWidth="1px"
+        borderColor="border"
+        align="center"
+        justify="space-between"
+        gap="3"
+        wrap="wrap"
+      >
+        <Flex align="center" gap="3" wrap="wrap">
+          <Text fontSize="sm" fontWeight="semibold" color="fg">
+            Step {stepIndex + 1}
+          </Text>
+          <Box
+            px="2"
+            py="0.5"
+            fontSize="xs"
+            fontWeight="medium"
+            rounded="full"
+            bg={step.active ? "green.100" : "gray.200"}
+            color={step.active ? "green.700" : "gray.600"}
+            _dark={
+              step.active
+                ? { bg: "green.900", color: "green.300" }
+                : { bg: "gray.700", color: "gray.400" }
+            }
+          >
+            {step.active ? "Active" : "Muted"}
+          </Box>
+          {hasNotes && (
+            <Text fontSize="xs" color="fg.muted">
+              {step.notes.length} note{step.notes.length !== 1 ? "s" : ""}
+            </Text>
+          )}
+          {hasCC && (
+            <Text fontSize="xs" color="fg.muted">
+              {step.ccMessages.length} CC
+            </Text>
+          )}
+        </Flex>
 
-          {/* Quick Actions */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                onUpdate({ probability: 100 });
-              }}
-              className="px-2 py-1 text-xs bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded transition-colors"
-              title="Reset probability to 100%"
-            >
-              100%
-            </button>
-            <button
-              onClick={() => {
-                onUpdate({ notes: [], ccMessages: [] });
-              }}
-              className="px-2 py-1 text-xs bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/60 text-red-700 dark:text-red-300 rounded transition-colors"
-              title="Clear all notes and CC"
-            >
-              Clear
-            </button>
-          </div>
-        </div>
-      </div>
+        <Flex gap="2">
+          <Button
+            onClick={() => {
+              onUpdate({ probability: 100 });
+            }}
+            size="xs"
+            variant="subtle"
+            colorPalette="gray"
+            title="Reset probability to 100%"
+          >
+            100%
+          </Button>
+          <Button
+            onClick={() => {
+              onUpdate({ notes: [], ccMessages: [] });
+            }}
+            size="xs"
+            variant="subtle"
+            colorPalette="red"
+            title="Clear all notes and CC"
+          >
+            Clear
+          </Button>
+        </Flex>
+      </Flex>
 
-      {/* Main Parameters - Always Visible */}
-      <div className="px-4 py-3 bg-slate-50/50 dark:bg-slate-900/30 border-b border-slate-200 dark:border-slate-700">
-        <div className="grid grid-cols-3 gap-4">
+      <Box
+        px="4"
+        py="3"
+        bg="bg.canvas"
+        borderBottomWidth="1px"
+        borderColor="border"
+      >
+        <Grid templateColumns="repeat(3, minmax(0, 1fr))" gap="4">
           <Fader
             name={stepPropSchema.probability.label ?? "Probability"}
             value={step.probability}
@@ -125,13 +154,11 @@ export default function StepEditor({
             step={stepPropSchema.microtimeOffset.step}
             orientation="horizontal"
           />
-        </div>
-      </div>
+        </Grid>
+      </Box>
 
-      {/* Notes and CC Content */}
-      <div className="p-4 space-y-4">
-        {/* Input Section */}
-        <div className="flex gap-3 items-center">
+      <Flex p="4" direction="column" gap="4">
+        <Flex gap="3" align="center" wrap="wrap">
           <NoteEditor
             notes={step.notes}
             onChange={(notes) => {
@@ -139,8 +166,7 @@ export default function StepEditor({
             }}
           />
 
-          {/* Separator */}
-          <div className="h-10 w-px bg-slate-300 dark:bg-slate-600 mx-2" />
+          <Box h="10" w="1px" bg="border" mx="2" />
 
           <CCEditor
             ccMessages={step.ccMessages}
@@ -148,24 +174,33 @@ export default function StepEditor({
               onUpdate({ ccMessages });
             }}
           />
-        </div>
+        </Flex>
 
-        {/* Combined Notes and CC Grid */}
         {(step.notes.length > 0 || step.ccMessages.length > 0) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {/* Render all notes */}
+          <Grid
+            templateColumns={{ base: "1fr", md: "repeat(2, minmax(0, 1fr))" }}
+            gap="2"
+          >
             {step.notes.map((note, index) => (
-              <div
+              <Flex
                 key={`note-${index}`}
-                className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
+                align="flex-start"
+                gap="3"
+                p="3"
+                bg="bg.muted"
+                borderWidth="1px"
+                borderColor="border"
+                rounded="lg"
+                transition="border-color 0.15s ease"
+                _hover={{ borderColor: "gray.300" }}
               >
-                <div className="flex items-center gap-2 min-w-[60px] pt-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  <span className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <Flex align="center" gap="2" minW="60px" pt="2">
+                  <Box w="2" h="2" rounded="full" bg="blue.500" />
+                  <Text fontFamily="mono" fontSize="sm" fontWeight="semibold">
                     {note.note}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
+                  </Text>
+                </Flex>
+                <Box flex="1" minW="0">
                   <Fader
                     name="Velocity"
                     value={note.velocity}
@@ -179,33 +214,44 @@ export default function StepEditor({
                     step={1}
                     orientation="horizontal"
                   />
-                </div>
-                <button
+                </Box>
+                <Button
                   onClick={() => {
                     onUpdate({
                       notes: step.notes.filter((_, i) => i !== index),
                     });
                   }}
-                  className="px-2 py-1 text-xs bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/60 text-red-600 dark:text-red-300 rounded transition-colors shrink-0 mt-2"
+                  size="xs"
+                  variant="subtle"
+                  colorPalette="red"
+                  flexShrink={0}
+                  mt="2"
                 >
                   ✕
-                </button>
-              </div>
+                </Button>
+              </Flex>
             ))}
 
-            {/* Render all CC messages */}
             {step.ccMessages.map((ccMsg, index) => (
-              <div
+              <Flex
                 key={`cc-${index}`}
-                className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
+                align="flex-start"
+                gap="3"
+                p="3"
+                bg="bg.muted"
+                borderWidth="1px"
+                borderColor="border"
+                rounded="lg"
+                transition="border-color 0.15s ease"
+                _hover={{ borderColor: "gray.300" }}
               >
-                <div className="flex items-center gap-2 min-w-[60px] pt-2">
-                  <div className="w-2 h-2 rounded-full bg-purple-500" />
-                  <span className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <Flex align="center" gap="2" minW="60px" pt="2">
+                  <Box w="2" h="2" rounded="full" bg="purple.500" />
+                  <Text fontFamily="mono" fontSize="sm" fontWeight="semibold">
                     CC {ccMsg.cc}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
+                  </Text>
+                </Flex>
+                <Box flex="1" minW="0">
                   <Fader
                     name="Value"
                     value={ccMsg.value}
@@ -219,22 +265,26 @@ export default function StepEditor({
                     step={1}
                     orientation="horizontal"
                   />
-                </div>
-                <button
+                </Box>
+                <Button
                   onClick={() => {
                     onUpdate({
                       ccMessages: step.ccMessages.filter((_, i) => i !== index),
                     });
                   }}
-                  className="px-2 py-1 text-xs bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/60 text-red-600 dark:text-red-300 rounded transition-colors shrink-0 mt-2"
+                  size="xs"
+                  variant="subtle"
+                  colorPalette="red"
+                  flexShrink={0}
+                  mt="2"
                 >
                   ✕
-                </button>
-              </div>
+                </Button>
+              </Flex>
             ))}
-          </div>
+          </Grid>
         )}
-      </div>
-    </div>
+      </Flex>
+    </Box>
   );
 }
