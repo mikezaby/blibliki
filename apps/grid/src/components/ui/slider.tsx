@@ -1,4 +1,5 @@
-import { ChangeEvent, useMemo } from "react";
+import { Box, Flex, Text, chakra } from "@chakra-ui/react";
+import { ChangeEvent } from "react";
 
 type SliderProps = {
   min: number;
@@ -15,8 +16,9 @@ type SliderProps = {
 
 export type TOrientation = "vertical" | "horizontal";
 
-const InputClassName =
-  "bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg appearance-none cursor-pointer transition-all duration-200 border border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 focus:outline-none slider-custom";
+const BASE_SLIDER_CLASS_NAME = "slider-custom";
+const RangeInput = chakra("input");
+const MarkButton = chakra("button");
 
 type MarkProps = {
   value: number;
@@ -25,11 +27,38 @@ type MarkProps = {
 
 const Tooltip = ({ value }: { value: MarkProps | number | undefined }) => {
   return (
-    <div className="absolute right-full hidden group-hover:block rounded bg-primary px-2 py-1 mx-2 text-primary-foreground text-xs ">
-      <div className="rounded bg-primary px-2 py-1 text-primary-foreground text-xs">
+    <Box
+      position="absolute"
+      right="full"
+      top="0"
+      display="none"
+      _groupHover={{ display: "block" }}
+      mr="2"
+      rounded="md"
+      bg="brand.600"
+      px="2"
+      py="1"
+      color="white"
+      fontSize="xs"
+      whiteSpace="nowrap"
+      _before={{
+        content: '""',
+        position: "absolute",
+        right: "-6px",
+        top: "50%",
+        transform: "translateY(-50%)",
+        width: "0",
+        height: "0",
+        borderTop: "6px solid transparent",
+        borderBottom: "6px solid transparent",
+        borderLeft: "6px solid",
+        borderLeftColor: "brand.600",
+      }}
+    >
+      <Text as="span" fontSize="xs">
         {typeof value === "object" ? value.label : value?.toFixed(2)}
-      </div>
-    </div>
+      </Text>
+    </Box>
   );
 };
 
@@ -47,33 +76,35 @@ export default function Slider(props: SliderProps) {
     orientation = "horizontal",
   } = props;
 
-  const wrapperClassName = useMemo(() => {
-    const rules = ["flex", "gap-x-2", "nodrag", "relative", "group"];
-
-    if (orientation === "horizontal") rules.push("flex-col w-full");
-
-    return rules.join(" ");
-  }, [orientation]);
-
   const showTooltip = hideMarks || !marks?.some((m) => m.value);
 
-  const inputClassName = useMemo(() => {
-    return orientation === "horizontal"
-      ? InputClassName
-      : `${InputClassName} slider-vertical`;
-  }, [orientation]);
+  const inputClassName =
+    orientation === "horizontal"
+      ? BASE_SLIDER_CLASS_NAME
+      : `${BASE_SLIDER_CLASS_NAME} slider-vertical`;
 
   const _onChange = (event: ChangeEvent<HTMLInputElement>) => {
     onChange(Number(event.target.value));
   };
 
   const showMarkValue =
-    value && marks && marks.length > 1 && marks.some((m) => !!m.label);
+    value !== undefined &&
+    marks !== undefined &&
+    marks.length > 1 &&
+    marks.some((m) => !!m.label);
   const displayedValue = showMarkValue ? marks[value] : (displayValue ?? value);
 
   return (
-    <div className={wrapperClassName}>
-      <input
+    <Box
+      role="group"
+      className="nodrag"
+      display="flex"
+      gapX="2"
+      position="relative"
+      flexDirection={orientation === "horizontal" ? "column" : "row"}
+      w={orientation === "horizontal" ? "full" : undefined}
+    >
+      <RangeInput
         type="range"
         min={min}
         max={max}
@@ -82,6 +113,24 @@ export default function Slider(props: SliderProps) {
         step={step}
         className={inputClassName}
         onChange={_onChange}
+        appearance="none"
+        cursor="pointer"
+        transition="all 0.2s"
+        borderWidth="1px"
+        borderColor="border"
+        rounded="lg"
+        bg="gray.200"
+        _hover={{ bg: "gray.300" }}
+        _dark={{
+          bg: "gray.700",
+          borderColor: "gray.600",
+          _hover: { bg: "gray.600" },
+        }}
+        _focusVisible={{
+          outline: "none",
+          borderColor: "brand.500",
+          boxShadow: "0 0 0 1px var(--chakra-colors-brand-500)",
+        }}
       />
       {showTooltip && <Tooltip value={displayedValue} />}
 
@@ -90,7 +139,7 @@ export default function Slider(props: SliderProps) {
         orientation={orientation}
         onClick={onChange}
       />
-    </div>
+    </Box>
   );
 }
 
@@ -105,27 +154,42 @@ function Labels({
 }) {
   if (!marks) return null;
 
-  const labelDirection = orientation === "vertical" ? "flex-col-reverse" : "";
-  const justify = marks.length === 1 ? "justify-center" : "justify-between";
+  const direction = orientation === "vertical" ? "column-reverse" : "row";
+  const justify = marks.length === 1 ? "center" : "space-between";
 
   const _onClick = (value: number) => () => {
     onClick(value);
   };
 
   return (
-    <div
-      className={`flex ${labelDirection} ${justify} text-slate-700 dark:text-slate-300 gap-1`}
-    >
+    <Flex direction={direction} justify={justify} color="fg" gap="1">
       {marks.map((mark, index) => (
-        <button
+        <MarkButton
+          type="button"
           key={index}
-          className="flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors px-1.5 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+          display="flex"
+          alignItems="center"
+          gap="1"
+          fontSize="xs"
+          fontWeight="medium"
+          color="fg.muted"
+          transition="colors 0.2s"
+          px="1.5"
+          py="1"
+          rounded="sm"
+          cursor="pointer"
+          _hover={{ color: "fg", bg: "bg.muted" }}
           onClick={_onClick(mark.value)}
         >
-          <div className="w-1 h-1 bg-linear-to-br from-blue-500 to-purple-600 rounded-full" />
+          <Box
+            w="1"
+            h="1"
+            rounded="full"
+            bgGradient="linear(to-br, brand.500, brand.700)"
+          />
           {mark.label}
-        </button>
+        </MarkButton>
       ))}
-    </div>
+    </Flex>
   );
 }
