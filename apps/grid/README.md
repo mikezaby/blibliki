@@ -5,7 +5,7 @@ A modern modular synthesizer interface built with React and TypeScript, powered 
 <p>
   <img src="https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
   <img src="https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB" alt="React">
-  <img src="https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
+  <img src="https://img.shields.io/badge/chakra_ui-%23319795.svg?style=for-the-badge&logo=chakraui&logoColor=white" alt="Chakra UI">
 </p>
 
 ## Overview
@@ -25,15 +25,15 @@ Blibliki Grid serves as the visual counterpart to the [Blibliki Engine](https://
 - **MIDI Integration**: Connect and use external MIDI controllers
 - **User Authentication**: Powered by Clerk for secure account management
 - **Responsive Design**: Works on desktop and tablet devices
-- **Modern UI**: Built with Tailwind CSS and Radix UI components
+- **Modern UI**: Built with Chakra UI and Radix primitives where needed
 
 ## Technology Stack
 
 - **Framework**: React with TypeScript
 - **Routing**: Tanstack Router
 - **State Management**: Redux Toolkit
-- **UI Components**: Radix UI primitives with custom styling
-- **Styling**: Tailwind CSS
+- **UI Components**: Chakra UI + Radix UI primitives
+- **Styling**: Chakra design tokens with minimal scoped CSS
 - **Flow Visualization**: XY Flow for module connections
 - **Authentication**: Clerk
 - **Backend Storage**: Firebase
