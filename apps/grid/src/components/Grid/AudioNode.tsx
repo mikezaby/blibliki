@@ -1,10 +1,10 @@
 import { IIOSerialize } from "@blibliki/engine";
+import { Box, Flex, Text } from "@chakra-ui/react";
 import { Handle, HandleType, NodeProps, Position } from "@xyflow/react";
 import { Settings } from "lucide-react";
 import { ReactNode, useMemo } from "react";
 import AudioModule from "@/components/AudioModule";
 import { useAudioModule } from "@/hooks";
-import { cn } from "@/lib/utils";
 import Name from "../AudioModule/attributes/Name";
 import Voices from "../AudioModule/attributes/Voices";
 import {
@@ -20,14 +20,20 @@ export const NodeTypes = {
   audioNode: AudioNode,
 };
 
-export const getNodeContainerClassName = (selected: boolean) =>
-  cn(
-    "flex cursor-grab items-stretch rounded-lg border min-w-[200px] transition-all duration-200",
-    "bg-white dark:bg-slate-800 shadow-lg hover:shadow-xl",
-    selected
-      ? "border-cyan-500 ring-4 ring-cyan-300/70 shadow-2xl scale-[1.015] dark:ring-cyan-700/50"
-      : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600",
-  );
+export const getNodeContainerStyleProps = (selected: boolean) =>
+  selected
+    ? {
+        borderColor: "cyan.500",
+        ring: "4px",
+        ringColor: "cyan.300",
+        boxShadow: "2xl",
+        transform: "scale(1.015)",
+        _dark: { ringColor: "cyan.700" },
+      }
+    : {
+        borderColor: "border",
+        boxShadow: "lg",
+      };
 
 export default function AudioNode(props: NodeProps) {
   const { id, selected } = props;
@@ -35,10 +41,23 @@ export default function AudioNode(props: NodeProps) {
   if (!audioModule) return null;
 
   const { inputs, outputs, ...audioModuleProps } = audioModule;
+  const containerStyleProps = getNodeContainerStyleProps(selected);
 
   return (
     <Dialog>
-      <div className={getNodeContainerClassName(selected)}>
+      <Flex
+        cursor="grab"
+        align="stretch"
+        rounded="lg"
+        borderWidth="1px"
+        minW="200px"
+        transition="all 0.2s"
+        bg="surfaceBg"
+        _hover={
+          selected ? undefined : { borderColor: "gray.300", boxShadow: "xl" }
+        }
+        {...containerStyleProps}
+      >
         {inputs.length > 0 && (
           <IOContainer type="input">
             {inputs.map((io) => (
@@ -47,19 +66,37 @@ export default function AudioNode(props: NodeProps) {
           </IOContainer>
         )}
 
-        <div className={"relative flex flex-col justify-center p-3 gap-2"}>
-          <div className="flex items-center gap-2 pr-7">
-            <div className="w-2 h-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
-            <span className="text-sm font-medium text-slate-900 dark:text-white truncate">
+        <Flex
+          position="relative"
+          direction="column"
+          justify="center"
+          p="3"
+          gap="2"
+        >
+          <Flex align="center" gap="2" pe="7">
+            <Box
+              w="2"
+              h="2"
+              rounded="full"
+              bgGradient="linear(to-br, brand.500, brand.700)"
+            />
+            <Text
+              fontSize="sm"
+              fontWeight="medium"
+              overflow="hidden"
+              textOverflow="ellipsis"
+              whiteSpace="nowrap"
+            >
               {audioModule.name || audioModule.moduleType}
-            </span>
-
+            </Text>
             <DialogTrigger asChild>
-              <Settings className="h-3 w-3 cursor-pointer" />
+              <Box as="button" cursor="pointer" color="fg.muted">
+                <Settings size={12} />
+              </Box>
             </DialogTrigger>
-          </div>
+          </Flex>
           <AudioModule audioModule={audioModuleProps} />
-        </div>
+        </Flex>
 
         {outputs.length > 0 && (
           <IOContainer type="output">
@@ -68,16 +105,16 @@ export default function AudioNode(props: NodeProps) {
             ))}
           </IOContainer>
         )}
-      </div>
+      </Flex>
 
-      <DialogContent className="sm:max-w-md">
+      <DialogContent maxW={{ base: "calc(100vw - 2rem)", sm: "md" }}>
         <DialogHeader>
           <DialogTitle>Module Settings</DialogTitle>
           <DialogDescription>
             Configure name and voice settings for this module.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
+        <Flex direction="column" gap="3">
           <Name
             id={audioModule.id}
             moduleType={audioModule.moduleType}
@@ -90,7 +127,7 @@ export default function AudioNode(props: NodeProps) {
               value={audioModule.voices}
             />
           )}
-        </div>
+        </Flex>
       </DialogContent>
     </Dialog>
   );
@@ -101,38 +138,61 @@ function IO({ io }: { io: IIOSerialize }) {
     const isInput = io.ioType.includes("Input");
     const position = isInput ? Position.Left : Position.Right;
     const type: HandleType = isInput ? "target" : "source";
-    const className = isInput ? "-left-[8px]" : "-right-[8px]";
-
-    // Determine gradient class based on IOType
-    const getGradientClass = (ioType: string) =>
+    const getGradientBackground = (ioType: string) =>
       ioType.toLowerCase().includes("audio")
-        ? "bg-gradient-to-r from-blue-500 to-purple-500"
-        : "bg-gradient-to-r from-purple-500 to-pink-500";
+        ? "linear-gradient(90deg, #3a5fd6, #4d78f4)"
+        : "linear-gradient(90deg, #805ad5, #d53f8c)";
 
-    const gradientClass = getGradientClass(io.ioType);
+    const gradientBackground = getGradientBackground(io.ioType);
 
-    return { type, position, className, gradientClass, isInput };
+    return { type, position, gradientBackground, isInput };
   }, [io.ioType]);
 
   return (
-    <div className="group/io relative flex items-center">
-      <div
-        className={`px-3 py-2 w-full text-xs font-medium text-slate-700 dark:text-slate-200 truncate ${handleProps.isInput ? "text-left" : "text-right"}`}
+    <Flex position="relative" align="center">
+      <Text
+        px="3"
+        py="2"
+        w="full"
+        fontSize="xs"
+        fontWeight="medium"
+        color="fg"
+        textAlign={handleProps.isInput ? "left" : "right"}
+        overflow="hidden"
+        textOverflow="ellipsis"
+        whiteSpace="nowrap"
       >
         {io.name}
-      </div>
+      </Text>
       <Handle
         id={io.name}
         type={handleProps.type}
         position={handleProps.position}
-        className={`${handleProps.className} ${handleProps.gradientClass} w-4 h-4 rounded-full border-2 border-white dark:border-slate-700 shadow-lg hover:scale-110 transition-all duration-200 cursor-pointer`}
+        style={{
+          ...(handleProps.isInput ? { left: -8 } : { right: -8 }),
+          width: 16,
+          height: 16,
+          borderRadius: "9999px",
+          borderWidth: 2,
+          borderColor: "#ffffff",
+          boxShadow: "0 6px 12px rgba(15, 23, 42, 0.2)",
+          cursor: "pointer",
+          background: handleProps.gradientBackground,
+        }}
       />
 
-      {/* Connection indicator dot */}
-      <div
-        className={`absolute ${handleProps.isInput ? "-left-1" : "-right-1"} top-1/2 transform -translate-y-1/2 w-1 h-1 ${handleProps.gradientClass} rounded-full opacity-60 group-hover/io:opacity-100 transition-opacity duration-200`}
+      <Box
+        position="absolute"
+        top="50%"
+        transform="translateY(-50%)"
+        {...(handleProps.isInput ? { left: "-1" } : { right: "-1" })}
+        w="1"
+        h="1"
+        rounded="full"
+        opacity={0.7}
+        background={handleProps.gradientBackground}
       />
-    </div>
+    </Flex>
   );
 }
 
@@ -144,13 +204,18 @@ function IOContainer({
   type: "input" | "output";
 }) {
   const isInput = type === "input";
-  const bgColor = "bg-slate-50 dark:bg-slate-900/50";
 
   return (
-    <div
-      className={`flex flex-col justify-center min-w-[80px] ${bgColor} ${isInput ? "rounded-l-lg" : "rounded-r-lg"}`}
+    <Flex
+      direction="column"
+      justify="center"
+      minW="80px"
+      bg="bg.muted"
+      {...(isInput ? { roundedLeft: "lg" } : { roundedRight: "lg" })}
     >
-      <div className="flex flex-col py-2">{children}</div>
-    </div>
+      <Flex direction="column" py="2">
+        {children}
+      </Flex>
+    </Flex>
   );
 }
