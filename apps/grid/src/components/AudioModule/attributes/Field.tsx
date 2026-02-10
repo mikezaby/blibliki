@@ -5,10 +5,10 @@ import {
   PropSchema,
   StringProp,
 } from "@blibliki/engine";
-import { ChangeEvent } from "react";
+import { Box, HStack, chakra } from "@chakra-ui/react";
+import { ChangeEvent, ReactNode } from "react";
 import Select from "@/components/Select";
 import { Input, Label } from "@/components/ui";
-import { cn } from "@/lib/utils";
 
 type FieldProps<T extends string | number | boolean | string[] | number[]> = {
   name: string;
@@ -17,6 +17,45 @@ type FieldProps<T extends string | number | boolean | string[] | number[]> = {
   onChange: (value: T) => void;
   className?: string;
 };
+
+type FieldContainerProps = {
+  label: string;
+  className?: string;
+  children: ReactNode;
+};
+
+const SwitchButton = chakra("button");
+
+function FieldContainer({ label, className, children }: FieldContainerProps) {
+  return (
+    <Box
+      className={className}
+      p="3"
+      bg="bg.muted"
+      borderWidth="1px"
+      borderColor="border"
+      rounded="lg"
+    >
+      <HStack gap="2" mb="3">
+        <Box
+          w="2"
+          h="2"
+          rounded="full"
+          bgGradient="linear(to-br, brand.500, brand.700)"
+        />
+        <Label
+          fontSize="xs"
+          fontWeight="semibold"
+          color="fg"
+          letterSpacing="tight"
+        >
+          {label}
+        </Label>
+      </HStack>
+      {children}
+    </Box>
+  );
+}
 
 type InputProps<T extends string | number> = FieldProps<T> & {
   schema: NumberProp | StringProp;
@@ -42,27 +81,20 @@ export const InputField = <T extends string | number>({
   };
 
   return (
-    <div
-      className={cn(
-        "space-y-3 p-3 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700",
-        className,
-      )}
-    >
-      <div className="flex items-center gap-2">
-        <div className="w-2 h-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
-        <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-tight">
-          {label}
-        </Label>
-      </div>
+    <FieldContainer label={label} className={className}>
       <Input
         type={inputType}
         value={value}
         onChange={internalOnChange}
-        className={`text-sm bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors ${
-          inputType === "number" ? "w-20 text-center font-mono" : ""
-        }`}
+        fontSize="sm"
+        bg="surfaceBg"
+        borderColor="border"
+        transition="colors 0.2s"
+        w={inputType === "number" ? "20" : undefined}
+        textAlign={inputType === "number" ? "center" : undefined}
+        fontFamily={inputType === "number" ? "mono" : undefined}
       />
-    </div>
+    </FieldContainer>
   );
 };
 
@@ -80,26 +112,14 @@ export const SelectField = <T extends string | number>({
   const label = schema.label ?? name;
 
   return (
-    <div
-      className={cn(
-        "space-y-3 p-3 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700",
-        className,
-      )}
-    >
-      <div className="flex items-center gap-2">
-        <div className="w-2 h-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
-        <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-tight">
-          {label}
-        </Label>
-      </div>
+    <FieldContainer label={label} className={className}>
       <Select
         label={""}
         value={value!}
         options={schema.options}
         onChange={onChange}
-        className="text-sm"
       />
-    </div>
+    </FieldContainer>
   );
 };
 
@@ -117,39 +137,41 @@ export const CheckboxField = ({
   const label = schema.label ?? name;
 
   return (
-    <div
-      className={cn(
-        "space-y-3 p-3 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700",
-        className,
-      )}
-    >
-      <div className="flex items-center gap-2">
-        <div className="w-2 h-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
-        <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-tight">
-          {label}
-        </Label>
-      </div>
-      <button
+    <FieldContainer label={label} className={className}>
+      <SwitchButton
         type="button"
         role="switch"
         aria-checked={value}
         onClick={() => {
           onChange(!value);
         }}
-        className={cn(
-          "relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-2 cursor-pointer",
-          value
-            ? "bg-green-500 dark:bg-green-600"
-            : "bg-red-400 dark:bg-slate-600",
-        )}
+        position="relative"
+        display="inline-flex"
+        h="6"
+        w="11"
+        alignItems="center"
+        rounded="full"
+        transition="background-color 0.2s ease"
+        cursor="pointer"
+        bg={value ? "green.500" : "red.400"}
+        _dark={{ bg: value ? "green.600" : "gray.600" }}
+        _focusVisible={{
+          outline: "none",
+          boxShadow: "0 0 0 2px rgba(77, 120, 244, 0.25)",
+        }}
       >
-        <span
-          className={cn(
-            "inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out pointer-events-none",
-            value ? "translate-x-5" : "translate-x-1",
-          )}
+        <Box
+          display="inline-block"
+          h="5"
+          w="5"
+          rounded="full"
+          bg="white"
+          boxShadow="lg"
+          transition="transform 0.2s ease"
+          pointerEvents="none"
+          transform={value ? "translateX(1.25rem)" : "translateX(0.25rem)"}
         />
-      </button>
-    </div>
+      </SwitchButton>
+    </FieldContainer>
   );
 };
