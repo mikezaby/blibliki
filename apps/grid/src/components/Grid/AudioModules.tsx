@@ -1,3 +1,4 @@
+import { Box, Flex, Text } from "@chakra-ui/react";
 import { PanelLeftClose, PanelLeftOpen, Blocks } from "lucide-react";
 import { useState, DragEvent } from "react";
 import { AvailableModules } from "@/components/AudioModule/modulesSlice";
@@ -18,60 +19,123 @@ export default function AudioModules() {
   const left = visible ? "0px" : "-189px";
 
   return (
-    <div
-      className="absolute z-10 top-12 w-[189px] h-[calc(100vh-3rem)] bg-slate-50 dark:bg-slate-900 border-r border-b border-slate-200 dark:border-slate-700 shadow-xl transition-all duration-300 ease-in-out flex flex-col"
-      style={{ left }}
+    <Box
+      position="absolute"
+      zIndex="10"
+      top="12"
+      left={left}
+      w="189px"
+      h="calc(100vh - 3rem)"
+      bg="surfaceBg"
+      borderRightWidth="1px"
+      borderBottomWidth="1px"
+      borderColor="border"
+      boxShadow="xl"
+      transition="left 0.3s ease-in-out"
+      display="flex"
+      flexDirection="column"
     >
-      {/* Header Section */}
-      <div className="flex items-center gap-2 p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
-        <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-purple-600 rounded flex items-center justify-center shadow-sm">
-          <Blocks className="w-3 h-3 text-white" />
-        </div>
-        <h2 className="text-sm font-semibold text-slate-900 dark:text-white tracking-tight">
+      <Flex
+        align="center"
+        gap="2"
+        p="4"
+        borderBottomWidth="1px"
+        borderColor="border"
+        bg="surfaceBg"
+      >
+        <Flex
+          w="5"
+          h="5"
+          rounded="sm"
+          align="center"
+          justify="center"
+          bgGradient="linear(to-br, brand.500, brand.700)"
+          color="white"
+          boxShadow="sm"
+        >
+          <Blocks size={12} />
+        </Flex>
+        <Text fontSize="sm" fontWeight="semibold" letterSpacing="tight">
           Audio Modules
-        </h2>
-      </div>
+        </Text>
+      </Flex>
 
       <Button
         variant="ghost"
-        className="absolute left-[189px] top-0 h-13 rounded-none rounded-r-md border-r border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 shadow-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+        position="absolute"
+        left="189px"
+        top="0"
+        h="13"
+        roundedLeft="none"
+        roundedRight="md"
+        borderRightWidth="1px"
+        borderBottomWidth="1px"
+        borderColor="border"
+        bg="surfaceBg"
+        boxShadow="lg"
+        _hover={{ bg: "bg.muted" }}
+        aria-label={visible ? "Hide audio modules" : "Show audio modules"}
         onClick={onClick}
       >
-        {visible ? (
-          <PanelLeftClose className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-        ) : (
-          <PanelLeftOpen className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-        )}
+        {visible ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
       </Button>
 
-      <nav className="flex-1 overflow-y-auto py-2">
-        <ul className="px-3 space-y-1">
+      <Box as="nav" flex="1" overflowY="auto" py="2">
+        <Box
+          as="ul"
+          listStyle="none"
+          m="0"
+          px="3"
+          display="flex"
+          flexDirection="column"
+          gap="1"
+        >
           {SupportedModules.map((moduleName) => (
-            <li key={moduleName}>
+            <Box as="li" key={moduleName}>
               <Button
                 variant="ghost"
-                className="w-full justify-start cursor-move h-9 px-3 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/30 transition-colors group"
+                w="full"
+                justifyContent="flex-start"
+                cursor="move"
+                h="9"
+                px="3"
+                fontSize="sm"
+                fontWeight="medium"
+                borderWidth="1px"
+                borderColor="border"
+                bg="surfaceBg"
+                _hover={{ bg: "bg.muted" }}
                 onDragStart={(event: DragEvent) => {
                   onDragStart(event, moduleName);
                 }}
                 draggable
               >
-                <div className="flex items-center gap-2 w-full">
-                  <div className="w-2 h-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full group-hover:scale-110 transition-transform duration-200" />
-                  <span className="truncate">{moduleName}</span>
-                </div>
+                <Flex align="center" gap="2" w="full">
+                  <Box
+                    w="2"
+                    h="2"
+                    rounded="full"
+                    bgGradient="linear(to-br, brand.500, brand.700)"
+                  />
+                  <Text
+                    overflow="hidden"
+                    textOverflow="ellipsis"
+                    whiteSpace="nowrap"
+                  >
+                    {moduleName}
+                  </Text>
+                </Flex>
               </Button>
-            </li>
+            </Box>
           ))}
-        </ul>
+        </Box>
 
-        {/* Footer hint */}
-        <div className="px-3 pt-4 pb-2">
-          <p className="text-xs text-slate-400 dark:text-slate-500 italic">
+        <Box px="3" pt="4" pb="2">
+          <Text fontSize="xs" color="fg.muted" fontStyle="italic">
             Drag modules to the grid to add them
-          </p>
-        </div>
-      </nav>
-    </div>
+          </Text>
+        </Box>
+      </Box>
+    </Box>
   );
 }
