@@ -1,4 +1,5 @@
 import { ModuleType } from "@blibliki/engine";
+import { Box } from "@chakra-ui/react";
 import { ChangeEvent } from "react";
 import { Input, Label } from "@/components/ui";
 import { useAppDispatch } from "@/hooks";
@@ -25,18 +26,27 @@ export default function Voices(props: NameInterface) {
   };
 
   return (
-    <div className="space-y-3 p-3 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700">
-      <Label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+    <Box
+      p="3"
+      bg="bg.muted"
+      borderWidth="1px"
+      borderColor="border"
+      rounded="lg"
+    >
+      <Label fontSize="xs" fontWeight="medium" color="fg.muted" mb="3">
         Voices
       </Label>
       <Input
         type="number"
         value={value}
         onChange={onChange}
-        className="text-sm bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+        fontSize="sm"
+        bg="surfaceBg"
+        borderColor="border"
+        transition="colors 0.2s"
         min="1"
         max="64"
       />
-    </div>
+    </Box>
   );
 }
