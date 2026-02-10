@@ -40,6 +40,7 @@ import Oscillator, {
   oscillatorPropSchema,
 } from "./Oscillator";
 import Reverb, { IReverbProps, reverbPropSchema } from "./Reverb";
+import Sampler, { ISamplerProps, samplerPropSchema } from "./Sampler";
 import Scale, { IScaleProps, scalePropSchema } from "./Scale";
 import StepSequencer, {
   IStepSequencerProps,
@@ -50,7 +51,6 @@ import StereoPanner, {
   IStereoPannerProps,
   stereoPannerPropSchema,
 } from "./StereoPanner";
-import Stretch, { IStretchProps, stretchPropSchema } from "./Stretch";
 import VirtualMidi, {
   IVirtualMidiProps,
   virtualMidiPropSchema,
@@ -81,7 +81,7 @@ export enum ModuleType {
   MidiMapper = "MidiMapper",
   VirtualMidi = "VirtualMidi",
   StepSequencer = "StepSequencer",
-  Stretch = "Stretch",
+  Sampler = "Sampler",
   VoiceScheduler = "VoiceScheduler",
   LFO = "LFO",
   Noise = "Noise",
@@ -108,7 +108,7 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.MidiMapper]: IMidiMapperProps;
   [ModuleType.VirtualMidi]: IVirtualMidiProps;
   [ModuleType.StepSequencer]: IStepSequencerProps;
-  [ModuleType.Stretch]: IStretchProps;
+  [ModuleType.Sampler]: ISamplerProps;
   [ModuleType.VoiceScheduler]: IVoiceSchedulerProps;
   [ModuleType.LFO]: ILFOProps;
   [ModuleType.Noise]: INoiseProps;
@@ -135,6 +135,7 @@ export type ModuleTypeToStateMapping = {
   [ModuleType.MidiMapper]: never;
   [ModuleType.VirtualMidi]: never;
   [ModuleType.StepSequencer]: IStepSequencerState;
+  [ModuleType.Sampler]: never;
   [ModuleType.VoiceScheduler]: never;
   [ModuleType.LFO]: never;
   [ModuleType.Noise]: never;
@@ -161,7 +162,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.MidiMapper]: MidiMapper;
   [ModuleType.VirtualMidi]: VirtualMidi;
   [ModuleType.StepSequencer]: StepSequencer;
-  [ModuleType.Stretch]: Stretch;
+  [ModuleType.Sampler]: Sampler;
   [ModuleType.VoiceScheduler]: VoiceScheduler;
   [ModuleType.LFO]: LFO;
   [ModuleType.Noise]: Noise;
@@ -188,7 +189,7 @@ export const moduleSchemas = {
   [ModuleType.MidiMapper]: midiMapperPropSchema,
   [ModuleType.VirtualMidi]: virtualMidiPropSchema,
   [ModuleType.StepSequencer]: stepSequencerPropSchema,
-  [ModuleType.Stretch]: stretchPropSchema,
+  [ModuleType.Sampler]: samplerPropSchema,
   [ModuleType.VoiceScheduler]: voiceSchedulerPropSchema,
   [ModuleType.LFO]: lfoPropSchema,
   [ModuleType.Noise]: noisePropSchema,
@@ -215,7 +216,7 @@ export type { IMaster } from "./Master";
 export type { IMidiInput, IMidiInputProps } from "./MidiInput";
 export type { IMidiOutput, IMidiOutputProps } from "./MidiOutput";
 export type { IStereoPanner } from "./StereoPanner";
-export type { IStretch } from "./Stretch";
+export type { ISampler } from "./Sampler";
 export type {
   IStepSequencer,
   IStepSequencerProps,
@@ -259,7 +260,7 @@ export type ModuleParams = {
     | ModuleType.Envelope
     | ModuleType.Filter
     | ModuleType.StereoPanner
-    | ModuleType.Stretch
+    | ModuleType.Sampler
     | ModuleType.VoiceScheduler
     | ModuleType.Scale
     | ModuleType.LFO
@@ -312,8 +313,8 @@ export function createModule(
       return VirtualMidi.create(VirtualMidi, engineId, params);
     case ModuleType.StepSequencer:
       return StepSequencer.create(StepSequencer, engineId, params);
-    case ModuleType.Stretch:
-      return Stretch.create(Stretch, engineId, params);
+    case ModuleType.Sampler:
+      return Sampler.create(Sampler, engineId, params);
     case ModuleType.VoiceScheduler:
       return VoiceScheduler.create(VoiceScheduler, engineId, params);
     case ModuleType.LFO:

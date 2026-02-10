@@ -22,6 +22,7 @@ import MidiOutput from "./MidiOutput";
 import Noise from "./Noise";
 import Oscillator from "./Oscillator";
 import Reverb from "./Reverb";
+import Sampler from "./Sampler";
 import Scale from "./Scale";
 import StepSequencer from "./StepSequencer";
 import StereoPanner from "./StereoPanner";
@@ -78,6 +79,7 @@ const COMPONENT_MAPPING: {
   [ModuleType.LFO]: LFO,
   [ModuleType.Noise]: Noise,
   [ModuleType.Reverb]: Reverb,
+  [ModuleType.Sampler]: Sampler,
 };
 
 export default function AudioModule<T extends ModuleType>(audioModuleProps: {
