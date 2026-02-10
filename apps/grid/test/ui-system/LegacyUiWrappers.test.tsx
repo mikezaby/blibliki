@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Card, CardContent, Input, Label } from "../../src/components/ui";
+import {
+  Card,
+  CardContent,
+  Input,
+  Label,
+  Slider,
+} from "../../src/components/ui";
 import { UIProvider } from "../../src/ui-system/UIProvider";
 
 describe("legacy ui wrappers", () => {
@@ -41,5 +47,17 @@ describe("legacy ui wrappers", () => {
     const label = screen.getByText("Example");
     expect(label.className).not.toContain("text-sm");
     expect(label.className).not.toContain("font-medium");
+  });
+
+  it("does not hardcode tailwind utility classes in Slider", () => {
+    render(
+      <UIProvider>
+        <Slider min={0} max={1} value={0.5} onChange={() => {}} />
+      </UIProvider>,
+    );
+
+    const slider = screen.getByRole("slider");
+    expect(slider.className).not.toContain("bg-slate");
+    expect(slider.className).not.toContain("dark:");
   });
 });
