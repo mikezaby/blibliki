@@ -1,11 +1,12 @@
 import { Engine, TransportState } from "@blibliki/engine";
 import { initializeFirebase } from "@blibliki/models";
-import { Context } from "@blibliki/utils";
+import { Context, requestAnimationFrame } from "@blibliki/utils";
 import { AudioContext } from "@blibliki/utils/web-audio-api";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { initialize as patchInitialize, loadById } from "@/patchSlice";
 import { AppDispatch, RootState } from "@/store";
 import { updatePlainModule } from "./components/AudioModule/modulesSlice";
+import { createEnginePropsUpdateQueue } from "./global/enginePropsUpdateQueue";
 
 type IContext = {
   latencyHint: "interactive" | "playback";
@@ -66,19 +67,29 @@ export const initialize =
       dispatch(patchInitialize());
     }
 
-    engine.onPropsUpdate((update) => {
-      const { id, props, state } = update;
+    const queue = createEnginePropsUpdateQueue();
+    let scheduledFlush: number | null = null;
 
-      if ("voices" in update) {
-        dispatch(
-          updatePlainModule({
-            id,
-            changes: { voices: update.voices, props, state },
-          }),
-        );
-      } else {
-        dispatch(updatePlainModule({ id, changes: { props, state } }));
-      }
+    const flushQueuedUpdates = () => {
+      scheduledFlush = null;
+      const updates = queue.flush();
+
+      updates.forEach((queuedUpdate) => {
+        dispatch(updatePlainModule(queuedUpdate));
+      });
+    };
+
+    engine.onPropsUpdate((update) => {
+      const enqueued = queue.enqueue({
+        id: update.id,
+        name: update.name,
+        props: update.props,
+        state: update.state,
+        voices: "voices" in update ? update.voices : undefined,
+      });
+
+      if (!enqueued || scheduledFlush !== null) return;
+      scheduledFlush = requestAnimationFrame(flushQueuedUpdates);
     });
 
     return dispatch(
