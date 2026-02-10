@@ -1,4 +1,5 @@
 import { IStep } from "@blibliki/engine";
+import { Box } from "@chakra-ui/react";
 import StepButton from "./StepButton";
 
 type StepGridProps = {
@@ -22,9 +23,10 @@ export default function StepGrid({
   const visibleSteps = steps.slice(0, stepsPerPage);
 
   return (
-    <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded">
-      <div
-        className="grid gap-2"
+    <Box p="4" bg="bg.muted" rounded="md">
+      <Box
+        display="grid"
+        gap="2"
         style={{
           gridTemplateColumns: `repeat(${stepsPerPage}, minmax(0, 1fr))`,
         }}
@@ -44,7 +46,7 @@ export default function StepGrid({
             }}
           />
         ))}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }
