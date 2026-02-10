@@ -5,9 +5,9 @@ import { Cpu, Save } from "lucide-react";
 import { useState } from "react";
 import Modal, { close as closeModal } from "@/components/Modal";
 import Select from "@/components/Select";
-import { Button, Input, Label } from "@/components/ui";
 import { saveDevice } from "@/devicesSlice";
 import { useAppDispatch, useAppSelector, usePatches } from "@/hooks";
+import { Button, Input, Label } from "@/ui-system/components";
 
 type DeviceModalProps = {
   deviceId: string;

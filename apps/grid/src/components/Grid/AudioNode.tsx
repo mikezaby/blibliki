@@ -5,8 +5,6 @@ import { Settings } from "lucide-react";
 import { ReactNode, useMemo } from "react";
 import AudioModule from "@/components/AudioModule";
 import { useAudioModule } from "@/hooks";
-import Name from "../AudioModule/attributes/Name";
-import Voices from "../AudioModule/attributes/Voices";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +12,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../ui";
+} from "@/ui-system/components";
+import Name from "../AudioModule/attributes/Name";
+import Voices from "../AudioModule/attributes/Voices";
 
 export const NodeTypes = {
   audioNode: AudioNode,

@@ -1,7 +1,7 @@
 import { throttle } from "@blibliki/utils";
 import { Box, Flex, Text } from "@chakra-ui/react";
-import { Slider } from "./ui";
-import { TOrientation } from "./ui/slider";
+import { Slider } from "@/ui-system/components";
+import type { TOrientation } from "@/ui-system/components/slider";
 
 export type MarkProps = {
   value: number;

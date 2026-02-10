@@ -9,8 +9,8 @@ import { ChevronDown, ChevronUp, SquarePlus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Select from "@/components/Select";
 import { useAppSelector, useAppDispatch } from "@/hooks";
+import { Button, Input, Label } from "@/ui-system/components";
 import { ModuleComponent } from ".";
-import { Button, Input, Label } from "../ui";
 import { initialize } from "./MidiInput/midiDevicesSlice";
 import { modulesSelector } from "./modulesSlice";
 

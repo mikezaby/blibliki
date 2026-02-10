@@ -3,8 +3,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { ChevronRight, FolderOpen, Search, User } from "lucide-react";
 import { useState } from "react";
 import Modal, { close as closeModal } from "@/components/Modal";
-import { Button, Input } from "@/components/ui";
 import { useAppDispatch, usePatches } from "@/hooks";
+import { Button, Input } from "@/ui-system/components";
 
 export default function LoadPatchModal() {
   const dispatch = useAppDispatch();

@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Button } from "../../src/components/ui";
 import { UIProvider } from "../../src/ui-system/UIProvider";
+import { Button } from "../../src/ui-system/components";
 
 describe("Button wrapper", () => {
   it("does not hardcode legacy tailwind utility strings", () => {
