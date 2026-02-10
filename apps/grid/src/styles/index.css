@@ -1,4 +1,3 @@
-@import "./tailwind.css";
 @import "@xyflow/react/dist/base.css";
 @import "./app.css";
 @import "./ui";
