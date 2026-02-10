@@ -3,7 +3,6 @@ import { TanStackDevtools } from "@tanstack/react-devtools";
 import { Outlet, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import Providers from "@/Providers";
-import { ColorSchemeBlockingScript } from "@/components/ColorSchemeBlockingScript";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { NotificationContainer } from "@/components/Notification";
 import { RouterErrorComponent } from "@/components/RouterErrorComponent";
@@ -22,7 +21,6 @@ function RootComponent() {
         <Outlet />
       </ErrorBoundary>
       <NotificationContainer />
-      <ColorSchemeBlockingScript />
 
       <TanStackDevtools
         config={{

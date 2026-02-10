@@ -17,10 +17,14 @@ const OPTIONS = [
 ] as const;
 
 export default function ColorSchemeToggle() {
-  const { colorScheme, setColorScheme } = useColorScheme();
+  const { resolvedColorScheme, setColorScheme } = useColorScheme();
 
   const icon =
-    colorScheme === ColorScheme.Dark ? <Moon size={18} /> : <Sun size={18} />;
+    resolvedColorScheme === ColorScheme.Dark ? (
+      <Moon size={18} />
+    ) : (
+      <Sun size={18} />
+    );
 
   return (
     <MenuRoot positioning={{ placement: "bottom-end" }}>

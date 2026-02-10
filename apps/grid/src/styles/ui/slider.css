@@ -25,14 +25,14 @@
 }
 
 /* Dark mode for WebKit */
-.dark .slider-custom::-webkit-slider-thumb {
+.chakra-theme.dark .slider-custom::-webkit-slider-thumb {
   border-color: #1e293b;
   box-shadow:
     0 2px 8px rgba(59, 130, 246, 0.4),
     0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-.dark .slider-custom::-webkit-slider-thumb:hover {
+.chakra-theme.dark .slider-custom::-webkit-slider-thumb:hover {
   box-shadow:
     0 4px 12px rgba(59, 130, 246, 0.5),
     0 2px 6px rgba(0, 0, 0, 0.4);
@@ -64,14 +64,14 @@
 }
 
 /* Dark mode for Firefox */
-.dark .slider-custom::-moz-range-thumb {
+.chakra-theme.dark .slider-custom::-moz-range-thumb {
   border-color: #1e293b;
   box-shadow:
     0 2px 8px rgba(59, 130, 246, 0.4),
     0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-.dark .slider-custom::-moz-range-thumb:hover {
+.chakra-theme.dark .slider-custom::-moz-range-thumb:hover {
   box-shadow:
     0 4px 12px rgba(59, 130, 246, 0.5),
     0 2px 6px rgba(0, 0, 0, 0.4);
