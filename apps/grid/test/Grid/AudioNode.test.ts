@@ -1,20 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { getNodeContainerClassName } from "../../src/components/Grid/AudioNode";
+import { getNodeContainerStyleProps } from "../../src/components/Grid/AudioNode";
 
 describe("AudioNode selected visibility", () => {
-  it("applies prominent highlight classes when selected", () => {
-    const className = getNodeContainerClassName(true);
+  it("applies prominent highlight styles when selected", () => {
+    const styleProps = getNodeContainerStyleProps(true);
 
-    expect(className).toContain("ring-4");
-    expect(className).toContain("border-cyan-500");
-    expect(className).toContain("shadow-2xl");
+    expect(styleProps).toMatchObject({
+      borderColor: "cyan.500",
+      ring: "4px",
+      boxShadow: "2xl",
+    });
   });
 
   it("keeps neutral border styles when not selected", () => {
-    const className = getNodeContainerClassName(false);
+    const styleProps = getNodeContainerStyleProps(false);
 
-    expect(className).toContain("border-slate-200");
-    expect(className).not.toContain("border-cyan-500");
-    expect(className).not.toContain("ring-4");
+    expect(styleProps).toMatchObject({
+      borderColor: "border",
+      boxShadow: "lg",
+    });
+    expect(styleProps).not.toHaveProperty("ring");
   });
 });
