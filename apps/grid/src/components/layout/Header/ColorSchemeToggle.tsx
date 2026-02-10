@@ -1,58 +1,56 @@
-import { Moon, Sun } from "lucide-react";
 import {
-  Button,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui";
-import { ColorScheme, useColorScheme } from "@/hooks";
+  IconButton,
+  MenuContent,
+  MenuItem,
+  MenuPositioner,
+  MenuRoot,
+  MenuTrigger,
+  Portal,
+} from "@chakra-ui/react";
+import { Moon, Sun } from "lucide-react";
+import { ColorScheme, useColorScheme } from "@/hooks/useColorScheme";
 
-export default function ColorSchemToggle() {
-  const { setColorScheme } = useColorScheme();
+const OPTIONS = [
+  { label: "Light", value: ColorScheme.Light },
+  { label: "Dark", value: ColorScheme.Dark },
+  { label: "System", value: ColorScheme.System },
+] as const;
+
+export default function ColorSchemeToggle() {
+  const { colorScheme, setColorScheme } = useColorScheme();
+
+  const icon =
+    colorScheme === ColorScheme.Dark ? <Moon size={18} /> : <Sun size={18} />;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
+    <MenuRoot positioning={{ placement: "bottom-end" }}>
+      <MenuTrigger asChild>
+        <IconButton
+          aria-label="Toggle theme"
           size="sm"
-          className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 h-8 w-8 cursor-pointer"
+          variant="ghost"
+          colorPalette="gray"
         >
-          <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <span className="sr-only">Toggle theme</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="w-32 p-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg"
-      >
-        <DropdownMenuItem
-          className="flex items-center px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm cursor-pointer transition-colors"
-          onClick={() => {
-            setColorScheme(ColorScheme.Light);
-          }}
-        >
-          Light
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="flex items-center px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm cursor-pointer transition-colors"
-          onClick={() => {
-            setColorScheme(ColorScheme.Dark);
-          }}
-        >
-          Dark
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="flex items-center px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm cursor-pointer transition-colors"
-          onClick={() => {
-            setColorScheme(ColorScheme.System);
-          }}
-        >
-          System
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          {icon}
+        </IconButton>
+      </MenuTrigger>
+      <Portal>
+        <MenuPositioner>
+          <MenuContent minW="8rem">
+            {OPTIONS.map((option) => (
+              <MenuItem
+                key={option.value}
+                value={option.value}
+                onClick={() => {
+                  setColorScheme(option.value);
+                }}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
+          </MenuContent>
+        </MenuPositioner>
+      </Portal>
+    </MenuRoot>
   );
 }
