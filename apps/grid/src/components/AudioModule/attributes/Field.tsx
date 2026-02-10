@@ -5,10 +5,9 @@ import {
   PropSchema,
   StringProp,
 } from "@blibliki/engine";
-import { Label } from "@radix-ui/react-label";
 import { ChangeEvent } from "react";
 import Select from "@/components/Select";
-import { Input } from "@/components/ui";
+import { Input, Label } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 type FieldProps<T extends string | number | boolean | string[] | number[]> = {
