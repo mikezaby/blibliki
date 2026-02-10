@@ -1,15 +1,14 @@
-import { Flex } from "@chakra-ui/react";
+import { Flex, type FlexProps } from "@chakra-ui/react";
 import { ReactNode } from "react";
 
 export default function Container({
   children,
-  className = "",
+  ...props
 }: {
   children: ReactNode;
-  className?: string;
-}) {
+} & FlexProps) {
   return (
-    <Flex justify="space-around" gap="8" className={className}>
+    <Flex justify="space-around" gap="8" {...props}>
       {children}
     </Flex>
   );

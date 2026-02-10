@@ -1,4 +1,5 @@
 import { ModuleType, moduleSchemas } from "@blibliki/engine";
+import { Flex } from "@chakra-ui/react";
 import Fader, { MarkProps } from "@/components/Fader";
 import { ModuleComponent } from ".";
 import Container from "./Container";
@@ -32,8 +33,8 @@ const Reverb: ModuleComponent<ModuleType.Reverb> = (props) => {
   const schema = moduleSchemas[ModuleType.Reverb];
 
   return (
-    <div className="flex flex-col gap-y-8">
-      <Container className="justify-start">
+    <Flex direction="column" gap="8">
+      <Container justify="flex-start">
         <SelectField
           name="Type"
           value={type}
@@ -76,7 +77,7 @@ const Reverb: ModuleComponent<ModuleType.Reverb> = (props) => {
           onChange={updateProp("mix")}
         />
       </Container>
-    </div>
+    </Flex>
   );
 };
 

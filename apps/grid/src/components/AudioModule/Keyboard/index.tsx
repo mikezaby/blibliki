@@ -1,4 +1,5 @@
 import { ModuleType } from "@blibliki/engine";
+import { Flex } from "@chakra-ui/react";
 import { useState } from "react";
 import { ModuleComponent } from "..";
 import Octave from "./Octave";
@@ -16,8 +17,7 @@ const Keyboard: ModuleComponent<ModuleType.VirtualMidi> = (props) => {
   };
 
   return (
-    <div
-      className="flex"
+    <Flex
       onPointerDown={enableTriggering}
       onPointerUp={disableTriggering}
       onPointerLeave={disableTriggering}
@@ -40,7 +40,7 @@ const Keyboard: ModuleComponent<ModuleType.VirtualMidi> = (props) => {
         triggerable={triggerable}
         octave={4}
       />
-    </div>
+    </Flex>
   );
 };
 

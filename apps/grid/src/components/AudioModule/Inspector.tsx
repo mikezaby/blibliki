@@ -1,5 +1,6 @@
 import { Engine, moduleSchemas, ModuleType } from "@blibliki/engine";
 import { oscilloscope, requestAnimationFrame } from "@blibliki/utils";
+import { Box } from "@chakra-ui/react";
 import { useEffect, useRef } from "react";
 import { ModuleComponent } from ".";
 import Container from "./Container";
@@ -54,19 +55,24 @@ const Inspector: ModuleComponent<ModuleType.Inspector> = (props) => {
   }, [id, fftSize]);
 
   return (
-    <Container className="flex flex-col gap-4">
-      <SelectField
-        name="fftSize"
-        value={fftSize}
-        schema={fftSchema}
-        onChange={updateProp("fftSize")}
-        className="w-28"
-      />
-      <canvas
+    <Container direction="column" gap="4">
+      <Box w="28">
+        <SelectField
+          name="fftSize"
+          value={fftSize}
+          schema={fftSchema}
+          onChange={updateProp("fftSize")}
+        />
+      </Box>
+      <Box
+        as="canvas"
         ref={canvasRef}
         width={CANVAS_WIDTH}
         height={CANVAS_HEIGHT}
-        className="rounded bg-background border"
+        rounded="md"
+        bg="bg.canvas"
+        borderWidth="1px"
+        borderColor="border"
         style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT }}
       />
     </Container>
