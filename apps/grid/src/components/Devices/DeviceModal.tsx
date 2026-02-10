@@ -1,4 +1,5 @@
-import { IDevice } from "@blibliki/models";
+import type { IDevice } from "@blibliki/models";
+import { Box, Flex, Text } from "@chakra-ui/react";
 import { useUser } from "@clerk/clerk-react";
 import { Cpu, Save } from "lucide-react";
 import { useState } from "react";
@@ -67,107 +68,132 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
   };
 
   return (
-    <>
-      {/* Header */}
-      <div className="flex items-center gap-3 p-6 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-t-lg">
-        <div className="w-8 h-8 bg-linear-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
-          <Cpu className="w-4 h-4 text-white" />
-        </div>
-        <div className="flex-1">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white tracking-tight">
+    <Flex direction="column">
+      <Flex
+        align="center"
+        gap="3"
+        p="6"
+        borderBottomWidth="1px"
+        borderColor="border"
+        bg="bg.muted"
+      >
+        <Flex
+          w="8"
+          h="8"
+          rounded="md"
+          align="center"
+          justify="center"
+          bgGradient="linear(to-br, brand.500, brand.700)"
+          color="white"
+          boxShadow="sm"
+        >
+          <Cpu size={16} />
+        </Flex>
+        <Box flex="1" minW="0">
+          <Text fontSize="lg" fontWeight="semibold" letterSpacing="tight">
             {isNew ? "Add Device" : "Edit Device"}
-          </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          </Text>
+          <Text fontSize="sm" color="fg.muted">
             {isNew
               ? "Configure a new Blibliki Pi device"
               : "Update device settings"}
-          </p>
-        </div>
-      </div>
+          </Text>
+        </Box>
+      </Flex>
 
-      {/* Form */}
-      <div className="p-6 space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="token" className="text-slate-700 dark:text-slate-300">
-            Token *
-          </Label>
-          <Input
-            id="token"
-            placeholder="Enter the token from your Raspberry Pi"
-            value={formData.token}
-            onChange={(e) => {
-              setFormData({ ...formData, token: e.target.value });
-            }}
-            className={`font-mono bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 ${
-              errors.token ? "border-red-500" : ""
-            }`}
-          />
-          {errors.token && (
-            <p className="text-sm text-red-500">{errors.token}</p>
-          )}
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Copy this from the blibliki-pi output on your device
-          </p>
-        </div>
+      <Box p="6">
+        <Flex direction="column" gap="4">
+          <Box>
+            <Label htmlFor="token" color="fg">
+              Token *
+            </Label>
+            <Input
+              id="token"
+              mt="2"
+              placeholder="Enter the token from your Raspberry Pi"
+              value={formData.token}
+              onChange={(event) => {
+                setFormData({ ...formData, token: event.target.value });
+              }}
+              fontFamily="mono"
+              bg="surfaceBg"
+              borderColor={errors.token ? "red.500" : "border"}
+            />
+            {errors.token && (
+              <Text mt="2" fontSize="sm" color="red.500">
+                {errors.token}
+              </Text>
+            )}
+            <Text mt="2" fontSize="xs" color="fg.muted">
+              Copy this from the blibliki-pi output on your device
+            </Text>
+          </Box>
 
-        <div className="space-y-2">
-          <Label htmlFor="name" className="text-slate-700 dark:text-slate-300">
-            Device Name *
-          </Label>
-          <Input
-            id="name"
-            placeholder="e.g., Experimental Synth"
-            value={formData.name}
-            onChange={(e) => {
-              setFormData({ ...formData, name: e.target.value });
-            }}
-            className={`bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 ${
-              errors.name ? "border-red-500" : ""
-            }`}
-          />
-          {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
-        </div>
+          <Box>
+            <Label htmlFor="name" color="fg">
+              Device Name *
+            </Label>
+            <Input
+              id="name"
+              mt="2"
+              placeholder="e.g., Experimental Synth"
+              value={formData.name}
+              onChange={(event) => {
+                setFormData({ ...formData, name: event.target.value });
+              }}
+              bg="surfaceBg"
+              borderColor={errors.name ? "red.500" : "border"}
+            />
+            {errors.name && (
+              <Text mt="2" fontSize="sm" color="red.500">
+                {errors.name}
+              </Text>
+            )}
+          </Box>
 
-        <div className="space-y-2">
-          <Label
-            htmlFor="patchId"
-            className="text-slate-700 dark:text-slate-300"
-          >
-            Assigned Patch
-          </Label>
-          <Select
-            label="Select patch"
-            value={formData.patchId}
-            options={patches}
-            onChange={(value) => {
-              setFormData({ ...formData, patchId: value });
-            }}
-          />
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            This patch will be auto-loaded when the device starts
-          </p>
-        </div>
-      </div>
+          <Box>
+            <Label htmlFor="patchId" color="fg">
+              Assigned Patch
+            </Label>
+            <Box mt="2">
+              <Select
+                label="Select patch"
+                value={formData.patchId}
+                options={patches}
+                onChange={(value) => {
+                  setFormData({ ...formData, patchId: value });
+                }}
+              />
+            </Box>
+            <Text mt="2" fontSize="xs" color="fg.muted">
+              This patch will be auto-loaded when the device starts
+            </Text>
+          </Box>
+        </Flex>
+      </Box>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-b-lg">
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => {
-              void handleSave();
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Save className="w-4 h-4 mr-1" />
-            {isNew ? "Add Device" : "Save Changes"}
-          </Button>
-        </div>
-      </div>
-    </>
+      <Flex
+        p="4"
+        borderTopWidth="1px"
+        borderColor="border"
+        bg="bg.muted"
+        justify="flex-end"
+        gap="2"
+      >
+        <Button variant="ghost" size="sm" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          size="sm"
+          onClick={() => {
+            void handleSave();
+          }}
+        >
+          <Save size={16} />
+          {isNew ? "Add Device" : "Save Changes"}
+        </Button>
+      </Flex>
+    </Flex>
   );
 }
 
@@ -192,8 +218,13 @@ export default function DeviceModal({ deviceId }: DeviceModalProps) {
   return (
     <Modal
       modalName={modalName}
-      className="sm:max-w-lg max-w-[calc(100vw-2rem)] p-0 gap-0 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-      onClose={close}
+      contentProps={{
+        maxW: { base: "calc(100vw - 2rem)", sm: "lg" },
+        p: 0,
+        gap: 0,
+        bg: "surfaceBg",
+        borderColor: "border",
+      }}
     >
       {isThisModalOpen && (
         <DeviceForm
