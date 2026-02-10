@@ -1,4 +1,14 @@
-import { useEffect, useState } from "react";
+import {
+  createElement,
+  createContext,
+  Dispatch,
+  ReactNode,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 export enum ColorScheme {
   Light = "light",
@@ -6,7 +16,20 @@ export enum ColorScheme {
   System = "system",
 }
 
-const getSystemScheme = (): ColorScheme => {
+export type ResolvedColorScheme = Exclude<ColorScheme, ColorScheme.System>;
+
+type ColorSchemeContextValue = {
+  colorScheme: ColorScheme;
+  resolvedColorScheme: ResolvedColorScheme;
+  setColorScheme: Dispatch<SetStateAction<ColorScheme>>;
+};
+
+const ColorSchemeContext = createContext<ColorSchemeContextValue | null>(null);
+
+const getSystemScheme = (): ResolvedColorScheme => {
+  if (typeof window === "undefined") return ColorScheme.Light;
+  if (typeof window.matchMedia !== "function") return ColorScheme.Light;
+
   return window.matchMedia("(prefers-color-scheme: dark)").matches
     ? ColorScheme.Dark
     : ColorScheme.Light;
@@ -14,47 +37,62 @@ const getSystemScheme = (): ColorScheme => {
 
 const getInitialScheme = (): ColorScheme => {
   if (typeof window === "undefined") return ColorScheme.Light;
+  if (typeof localStorage === "undefined") return ColorScheme.System;
 
   const stored = localStorage.getItem("color-scheme") as ColorScheme | null;
   return stored ?? ColorScheme.System;
 };
 
-const setThemeToRootElement = (scheme: ColorScheme) => {
-  let applied: ColorScheme = scheme;
-
-  if (scheme === ColorScheme.System) {
-    applied = getSystemScheme();
-  }
-
-  const root = window.document.documentElement;
-  if (applied === ColorScheme.Dark) {
-    root.classList.add("dark");
-  } else {
-    root.classList.remove("dark");
-  }
+const getInitialResolvedScheme = (): ResolvedColorScheme => {
+  if (typeof window === "undefined") return ColorScheme.Light;
+  return getSystemScheme();
 };
 
-export function useColorScheme() {
-  const [scheme, setScheme] = useState<ColorScheme>(getInitialScheme);
+export function ColorSchemeProvider({ children }: { children: ReactNode }) {
+  const [colorScheme, setColorScheme] = useState<ColorScheme>(getInitialScheme);
+  const [systemScheme, setSystemScheme] = useState<ResolvedColorScheme>(
+    getInitialResolvedScheme,
+  );
 
   useEffect(() => {
-    setThemeToRootElement(scheme);
-    localStorage.setItem("color-scheme", scheme);
-  }, [scheme]);
+    if (typeof localStorage === "undefined") return;
+    localStorage.setItem("color-scheme", colorScheme);
+  }, [colorScheme]);
 
   useEffect(() => {
-    if (scheme !== ColorScheme.System) return;
+    if (typeof window === "undefined") return;
+    if (typeof window.matchMedia !== "function") return;
 
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = () => {
-      setThemeToRootElement(ColorScheme.System);
+      setSystemScheme(getSystemScheme());
     };
     media.addEventListener("change", onChange);
 
     return () => {
       media.removeEventListener("change", onChange);
     };
-  }, [scheme]);
+  }, []);
 
-  return { colorScheme: scheme, setColorScheme: setScheme };
+  const resolvedColorScheme =
+    colorScheme === ColorScheme.System ? systemScheme : colorScheme;
+
+  const value = useMemo<ColorSchemeContextValue>(
+    () => ({
+      colorScheme,
+      resolvedColorScheme,
+      setColorScheme,
+    }),
+    [colorScheme, resolvedColorScheme],
+  );
+
+  return createElement(ColorSchemeContext.Provider, { value }, children);
+}
+
+export function useColorScheme() {
+  const context = useContext(ColorSchemeContext);
+  if (!context) {
+    throw new Error("useColorScheme must be used within ColorSchemeProvider");
+  }
+  return context;
 }
