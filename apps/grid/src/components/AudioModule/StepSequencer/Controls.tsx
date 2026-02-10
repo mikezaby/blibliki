@@ -1,4 +1,12 @@
 import { Resolution, PlaybackMode } from "@blibliki/engine";
+import {
+  Box,
+  Button,
+  Flex,
+  HStack,
+  NativeSelect,
+  Text,
+} from "@chakra-ui/react";
 
 type ControlsProps = {
   stepsPerPage: number;
@@ -24,87 +32,88 @@ export default function Controls({
   onStop,
 }: ControlsProps) {
   return (
-    <div className="flex gap-4 items-center p-3 bg-slate-50 dark:bg-slate-800 rounded">
-      {/* Start/Stop Buttons */}
-      <div className="flex gap-2">
-        <button
+    <Flex gap="4" align="center" p="3" bg="bg.muted" rounded="md" wrap="wrap">
+      <HStack gap="2">
+        <Button
           onClick={onStart}
           disabled={isRunning}
-          className={`px-3 py-1 text-sm font-medium rounded ${
-            isRunning
-              ? "bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed"
-              : "bg-green-500 hover:bg-green-600 text-white"
-          }`}
+          size="xs"
+          colorPalette="green"
+          variant="solid"
         >
           Start
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={onStop}
           disabled={!isRunning}
-          className={`px-3 py-1 text-sm font-medium rounded ${
-            !isRunning
-              ? "bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed"
-              : "bg-red-500 hover:bg-red-600 text-white"
-          }`}
+          size="xs"
+          colorPalette="red"
+          variant="solid"
         >
           Stop
-        </button>
-      </div>
+        </Button>
+      </HStack>
 
-      <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
+      <Box h="6" w="1px" bg="border" />
 
-      <div className="flex items-center gap-2">
-        <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+      <HStack align="center" gap="2">
+        <Text fontSize="xs" fontWeight="medium" color="fg.muted">
           Steps:
-        </label>
-        <select
-          value={stepsPerPage}
-          onChange={(e) => {
-            onStepsChange(Number(e.target.value));
-          }}
-          className="px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-        >
-          {[4, 8, 12, 16].map((num) => (
-            <option key={num} value={num}>
-              {num}
-            </option>
-          ))}
-        </select>
-      </div>
+        </Text>
+        <NativeSelect.Root size="sm" width="16">
+          <NativeSelect.Field
+            value={stepsPerPage}
+            onChange={(e) => {
+              onStepsChange(Number(e.target.value));
+            }}
+          >
+            {[4, 8, 12, 16].map((num) => (
+              <option key={num} value={num}>
+                {num}
+              </option>
+            ))}
+          </NativeSelect.Field>
+          <NativeSelect.Indicator />
+        </NativeSelect.Root>
+      </HStack>
 
-      <div className="flex items-center gap-2">
-        <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+      <HStack align="center" gap="2">
+        <Text fontSize="xs" fontWeight="medium" color="fg.muted">
           Resolution:
-        </label>
-        <select
-          value={resolution}
-          onChange={(e) => {
-            onResolutionChange(e.target.value as Resolution);
-          }}
-          className="px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-        >
-          <option value={Resolution.thirtysecond}>1/32</option>
-          <option value={Resolution.sixteenth}>1/16</option>
-          <option value={Resolution.eighth}>1/8</option>
-          <option value={Resolution.quarter}>1/4</option>
-        </select>
-      </div>
+        </Text>
+        <NativeSelect.Root size="sm" width="24">
+          <NativeSelect.Field
+            value={resolution}
+            onChange={(e) => {
+              onResolutionChange(e.target.value as Resolution);
+            }}
+          >
+            <option value={Resolution.thirtysecond}>1/32</option>
+            <option value={Resolution.sixteenth}>1/16</option>
+            <option value={Resolution.eighth}>1/8</option>
+            <option value={Resolution.quarter}>1/4</option>
+          </NativeSelect.Field>
+          <NativeSelect.Indicator />
+        </NativeSelect.Root>
+      </HStack>
 
-      <div className="flex items-center gap-2">
-        <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+      <HStack align="center" gap="2">
+        <Text fontSize="xs" fontWeight="medium" color="fg.muted">
           Mode:
-        </label>
-        <select
-          value={playbackMode}
-          onChange={(e) => {
-            onPlaybackModeChange(e.target.value as PlaybackMode);
-          }}
-          className="px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-        >
-          <option value={PlaybackMode.loop}>Loop</option>
-          <option value={PlaybackMode.oneShot}>One-Shot</option>
-        </select>
-      </div>
-    </div>
+        </Text>
+        <NativeSelect.Root size="sm" width="24">
+          <NativeSelect.Field
+            value={playbackMode}
+            onChange={(e) => {
+              onPlaybackModeChange(e.target.value as PlaybackMode);
+            }}
+          >
+            <option value={PlaybackMode.loop}>Loop</option>
+            <option value={PlaybackMode.oneShot}>One-Shot</option>
+          </NativeSelect.Field>
+          <NativeSelect.Indicator />
+        </NativeSelect.Root>
+      </HStack>
+    </Flex>
   );
 }

@@ -1,4 +1,5 @@
 import { IPage } from "@blibliki/engine";
+import { Button, Flex, Text } from "@chakra-ui/react";
 
 type PageNavigatorProps = {
   pages: IPage[];
@@ -19,67 +20,60 @@ export default function PageNavigator({
   const canGoNext = activePageNo < pages.length - 1;
 
   return (
-    <div className="flex items-center gap-3">
-      <button
+    <Flex align="center" gap="3" wrap="wrap">
+      <Button
         onClick={() => {
           if (canGoPrev) onPageChange(activePageNo - 1);
         }}
         disabled={!canGoPrev}
-        className={`
-          px-2 py-1 text-sm rounded
-          ${
-            canGoPrev
-              ? "bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200"
-              : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed"
-          }
-        `}
+        size="xs"
+        variant="subtle"
       >
         ←
-      </button>
+      </Button>
 
-      <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+      <Text fontSize="sm" fontWeight="medium" color="fg">
         Page {activePageNo + 1} / {pages.length}
-      </div>
+      </Text>
 
-      <button
+      <Button
         onClick={() => {
           if (canGoNext) onPageChange(activePageNo + 1);
         }}
         disabled={!canGoNext}
-        className={`
-          px-2 py-1 text-sm rounded
-          ${
-            canGoNext
-              ? "bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200"
-              : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed"
-          }
-        `}
+        size="xs"
+        variant="subtle"
       >
         →
-      </button>
+      </Button>
 
-      <div className="text-xs text-slate-500 dark:text-slate-400">
+      <Text fontSize="xs" color="fg.muted">
         {pages[activePageNo]?.name ?? "Unnamed Page"}
-      </div>
+      </Text>
 
       {pages.length > 1 && (
-        <button
+        <Button
           onClick={() => {
             onDeletePage(activePageNo);
           }}
-          className="px-3 py-1 text-sm font-medium rounded bg-red-500 text-white hover:bg-red-600 transition-colors"
+          size="xs"
+          colorPalette="red"
+          variant="solid"
           title="Delete current page"
         >
           Delete Page
-        </button>
+        </Button>
       )}
 
-      <button
+      <Button
         onClick={onAddPage}
-        className="ml-auto px-3 py-1 text-sm font-medium rounded bg-green-500 text-white hover:bg-green-600 transition-colors"
+        size="xs"
+        colorPalette="green"
+        variant="solid"
+        marginInlineStart="auto"
       >
         + Page
-      </button>
-    </div>
+      </Button>
+    </Flex>
   );
 }
