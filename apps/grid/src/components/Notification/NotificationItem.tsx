@@ -1,4 +1,5 @@
 import { Box, Flex, Text, chakra } from "@chakra-ui/react";
+import { keyframes } from "@emotion/react";
 import {
   CheckCircle2,
   AlertCircle,
@@ -64,6 +65,18 @@ const colorMap = {
   },
 };
 
+const slideInRight = keyframes`
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+`;
+
 export default function NotificationItem({
   notification,
 }: NotificationItemProps) {
@@ -99,7 +112,7 @@ export default function NotificationItem({
       bg={colors.bg}
       borderColor={colors.border}
       _dark={{ bg: colors.bgDark, borderColor: colors.borderDark }}
-      className="animate-slideInRight"
+      animation={`${slideInRight} 0.18s ease-out`}
       minW="320px"
       maxW="md"
     >

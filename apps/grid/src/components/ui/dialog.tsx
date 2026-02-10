@@ -10,6 +10,7 @@ import {
   DialogTitle as ChakraDialogTitle,
   DialogTrigger as ChakraDialogTrigger,
   Portal,
+  VisuallyHidden,
 } from "@chakra-ui/react";
 import { XIcon } from "lucide-react";
 import * as React from "react";
@@ -73,7 +74,7 @@ function DialogContent({
           {children}
           <DialogClose top="4" insetEnd="4">
             <XIcon size={16} />
-            <span className="sr-only">Close</span>
+            <VisuallyHidden>Close</VisuallyHidden>
           </DialogClose>
         </ChakraDialogContent>
       </DialogPositioner>
