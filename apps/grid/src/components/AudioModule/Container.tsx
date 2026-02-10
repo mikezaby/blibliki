@@ -1,6 +1,5 @@
+import { Flex } from "@chakra-ui/react";
 import { ReactNode } from "react";
-
-const DEFAULT_CLASS_NAMES = "flex justify-around gap-x-8";
 
 export default function Container({
   children,
@@ -10,6 +9,8 @@ export default function Container({
   className?: string;
 }) {
   return (
-    <div className={`${DEFAULT_CLASS_NAMES} ${className}`}>{children}</div>
+    <Flex justify="space-around" gap="8" className={className}>
+      {children}
+    </Flex>
   );
 }
