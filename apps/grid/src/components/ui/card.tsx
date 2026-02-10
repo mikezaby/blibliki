@@ -1,80 +1,77 @@
+import {
+  Box,
+  CardBody as ChakraCardBody,
+  CardDescription as ChakraCardDescription,
+  CardFooter as ChakraCardFooter,
+  CardHeader as ChakraCardHeader,
+  CardRoot as ChakraCardRoot,
+  CardTitle as ChakraCardTitle,
+} from "@chakra-ui/react";
 import * as React from "react";
-import { cn } from "@/lib/utils";
 
-function Card({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="card"
-      className={cn(
-        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
-        className,
-      )}
-      {...props}
-    />
-  );
+function Card({
+  className,
+  ...props
+}: React.ComponentProps<typeof ChakraCardRoot>) {
+  return <ChakraCardRoot data-slot="card" className={className} {...props} />;
 }
 
-function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
+function CardHeader({
+  className,
+  ...props
+}: React.ComponentProps<typeof ChakraCardHeader>) {
   return (
-    <div
+    <ChakraCardHeader
       data-slot="card-header"
-      className={cn(
-        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6",
-        className,
-      )}
+      className={className}
       {...props}
     />
   );
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+function CardTitle({
+  className,
+  ...props
+}: React.ComponentProps<typeof ChakraCardTitle>) {
   return (
-    <div
-      data-slot="card-title"
-      className={cn("leading-none font-semibold", className)}
-      {...props}
-    />
+    <ChakraCardTitle data-slot="card-title" className={className} {...props} />
   );
 }
 
-function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
+function CardDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof ChakraCardDescription>) {
   return (
-    <div
+    <ChakraCardDescription
       data-slot="card-description"
-      className={cn("text-muted-foreground text-sm", className)}
+      className={className}
       {...props}
     />
   );
 }
 
 function CardAction({ className, ...props }: React.ComponentProps<"div">) {
+  return <Box data-slot="card-action" className={className} {...props} />;
+}
+
+function CardContent({
+  className,
+  ...props
+}: React.ComponentProps<typeof ChakraCardBody>) {
   return (
-    <div
-      data-slot="card-action"
-      className={cn(
-        "col-start-2 row-span-2 row-start-1 self-start justify-self-end",
-        className,
-      )}
-      {...props}
-    />
+    <ChakraCardBody data-slot="card-content" className={className} {...props} />
   );
 }
 
-function CardContent({ className, ...props }: React.ComponentProps<"div">) {
+function CardFooter({
+  className,
+  ...props
+}: React.ComponentProps<typeof ChakraCardFooter>) {
   return (
-    <div
-      data-slot="card-content"
-      className={cn("px-6", className)}
-      {...props}
-    />
-  );
-}
-
-function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
+    <ChakraCardFooter
       data-slot="card-footer"
-      className={cn("flex items-center px-6 [.border-t]:pt-6", className)}
+      className={className}
       {...props}
     />
   );
