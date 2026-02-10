@@ -4,13 +4,13 @@ import {
   ModuleType,
   moduleSchemas,
 } from "@blibliki/engine";
+import { Box, Flex, HStack, Text } from "@chakra-ui/react";
 import { ChevronDown, ChevronUp, SquarePlus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Select from "@/components/Select";
 import { useAppSelector, useAppDispatch } from "@/hooks";
 import { ModuleComponent } from ".";
 import { Button, Input, Label } from "../ui";
-import Container from "./Container";
 import { initialize } from "./MidiInput/midiDevicesSlice";
 import { modulesSelector } from "./modulesSlice";
 
@@ -211,71 +211,96 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
   };
 
   return (
-    <Container className="flex flex-col gap-6">
-      {/* Page Navigation */}
-      <div className="flex flex-col gap-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+    <Flex direction="column" gap="6">
+      <Flex
+        direction="column"
+        gap="3"
+        p="4"
+        rounded="lg"
+        bg="bg.muted"
+        borderWidth="1px"
+        borderColor="border"
+      >
+        <Flex align="center" justify="space-between">
+          <Text fontSize="sm" fontWeight="semibold">
             Page Navigation
-          </h3>
-          <span className="text-xs text-slate-500 dark:text-slate-400">
+          </Text>
+          <Text fontSize="xs" color="fg.muted">
             {activePage + 1} / {pages.length}
-          </span>
-        </div>
+          </Text>
+        </Flex>
 
-        <div className="flex gap-2">
+        <Flex gap="2">
           <Button
             variant="outline"
             size="sm"
+            flex="1"
             disabled={activePage === 0}
             onClick={() => {
               onSwitchPage(activePage - 1);
             }}
-            className="flex-1"
           >
             {"← Previous"}
           </Button>
           <Button
             variant="outline"
             size="sm"
+            flex="1"
             disabled={activePage === pages.length - 1}
             onClick={() => {
               onSwitchPage(activePage + 1);
             }}
-            className="flex-1"
           >
             {"Next →"}
           </Button>
           <Button
             size="sm"
+            color="white"
+            bgGradient="linear(to-r, cyan.500, blue.500)"
+            _hover={{ bgGradient: "linear(to-r, cyan.600, blue.600)" }}
+            boxShadow="md"
             onClick={onAddPage}
-            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 shadow-md"
           >
-            <SquarePlus className="w-4 h-4" />
+            <SquarePlus size={16} />
             New Page
           </Button>
-        </div>
-      </div>
+        </Flex>
+      </Flex>
 
-      {/* Page Settings */}
-      <div className="flex flex-col gap-3 p-4 rounded-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border border-slate-200 dark:border-slate-800 shadow-sm">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+      <Flex
+        direction="column"
+        gap="3"
+        p="4"
+        rounded="lg"
+        bgGradient="linear(to-br, gray.50, gray.100)"
+        _dark={{ bgGradient: "linear(to-br, gray.900, gray.800)" }}
+        borderWidth="1px"
+        borderColor="border"
+        boxShadow="sm"
+      >
+        <Text fontSize="sm" fontWeight="semibold">
           Page Settings
-        </h3>
+        </Text>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 flex-1">
-            <Label className="text-sm font-medium text-slate-600 dark:text-slate-400 min-w-fit">
+        <Flex align="center" gap="4">
+          <HStack gap="2" flex="1">
+            <Label
+              fontSize="sm"
+              fontWeight="medium"
+              color="fg.muted"
+              minW="fit-content"
+            >
               Page Name
             </Label>
             <Input
-              className="flex-1 bg-white dark:bg-slate-950/50"
+              flex="1"
+              bg="surfaceBg"
               value={page?.name ?? `Page ${activePage}`}
-              onChange={(e) => {
-                onUpdatePageName(activePage, e.currentTarget.value);
+              onChange={(event) => {
+                onUpdatePageName(activePage, event.currentTarget.value);
               }}
             />
-          </div>
+          </HStack>
           <Button
             variant="destructive"
             size="sm"
@@ -284,92 +309,117 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
               onRemovePage(activePage);
             }}
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 size={16} />
             Delete
           </Button>
-        </div>
-      </div>
+        </Flex>
+      </Flex>
 
-      {/* View Mode Toggle */}
-      <div className="flex flex-col gap-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+      <Flex
+        direction="column"
+        gap="3"
+        p="4"
+        rounded="lg"
+        bg="bg.muted"
+        borderWidth="1px"
+        borderColor="border"
+      >
+        <Text fontSize="sm" fontWeight="semibold">
           Mapping Scope
-        </h3>
-        <div className="flex gap-2">
+        </Text>
+        <Flex gap="2">
           <Button
             variant={viewMode === "page" ? "default" : "outline"}
             size="sm"
+            flex="1"
             onClick={() => {
               setViewMode("page");
             }}
-            className="flex-1"
           >
             Page Mappings
           </Button>
           <Button
             variant={viewMode === "global" ? "default" : "outline"}
             size="sm"
+            flex="1"
             onClick={() => {
               setViewMode("global");
             }}
-            className="flex-1"
           >
             Global Mappings
           </Button>
-        </div>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        </Flex>
+        <Text fontSize="xs" color="fg.muted">
           {viewMode === "page"
             ? "These mappings apply only to the current page"
             : "These mappings are available on all pages"}
-        </p>
-      </div>
+        </Text>
+      </Flex>
 
-      {/* MIDI Mappings */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between px-1">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+      <Flex direction="column" gap="4">
+        <Flex align="center" justify="space-between" px="1">
+          <Text fontSize="sm" fontWeight="semibold">
             {viewMode === "global" ? "Global " : "Page "}MIDI Mappings
-          </h3>
-          <span className="text-xs text-slate-500 dark:text-slate-400">
+          </Text>
+          <Text fontSize="xs" color="fg.muted">
             {mappings.length} {mappings.length === 1 ? "mapping" : "mappings"}
-          </span>
-        </div>
+          </Text>
+        </Flex>
 
-        <div className="flex flex-col gap-3">
+        <Flex direction="column" gap="3">
           {mappings.map((mapping, i) => {
             const isExpanded = expandedMappings.has(i);
             const mode = mapping.mode ?? "direct";
 
             return (
-              <div
+              <Flex
                 key={`${viewMode}-${activePage}-${i}`}
-                className="flex flex-col gap-3 p-3 rounded-lg bg-white dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors shadow-sm"
+                direction="column"
+                gap="3"
+                p="3"
+                rounded="lg"
+                bg="surfaceBg"
+                borderWidth="1px"
+                borderColor="border"
+                _hover={{ borderColor: "gray.300" }}
+                boxShadow="sm"
               >
-                {/* Main mapping row */}
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs font-medium text-slate-500 dark:text-slate-400 min-w-fit">
+                <Flex
+                  align="center"
+                  gap="3"
+                  wrap={{ base: "wrap", xl: "nowrap" }}
+                >
+                  <HStack gap="2">
+                    <Label
+                      fontSize="xs"
+                      fontWeight="medium"
+                      color="fg.muted"
+                      minW="fit-content"
+                    >
                       CC
                     </Label>
                     <Input
-                      className="w-24 text-center bg-slate-50 dark:bg-slate-950/50 font-mono"
-                      type="string"
+                      w="24"
+                      textAlign="center"
+                      bg="bg.muted"
+                      fontFamily="mono"
+                      type="text"
                       value={mapping.autoAssign ? "Mapping..." : mapping.cc}
                       placeholder="Unmapped"
                       readOnly
                       onClick={() => {
                         updateMappedAutoAssign({ index: i });
                       }}
-                      onChange={(e) => {
+                      onChange={(event) => {
                         updateMappedCC({
-                          cc: Number(e.currentTarget.value),
+                          cc: Number(event.currentTarget.value),
                           index: i,
                         });
                       }}
                     />
-                  </div>
+                  </HStack>
 
-                  <div className="flex items-center gap-2 flex-1">
+                  <Box flex="1">
                     <Select
                       label="Select module"
                       value={mapping.moduleId ?? ""}
@@ -378,9 +428,9 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                         updateMappedModuleId({ id: value, index: i });
                       }}
                     />
-                  </div>
+                  </Box>
 
-                  <div className="flex items-center gap-2 flex-1">
+                  <Box flex="1">
                     <Select
                       label="Select prop"
                       value={mapping.propName ?? ""}
@@ -394,40 +444,53 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                         updateMappedProp({ propName: value, index: i });
                       }}
                     />
-                  </div>
+                  </Box>
 
                   <Button
                     variant="ghost"
                     size="sm"
+                    color="fg.muted"
+                    _hover={{ color: "fg" }}
                     onClick={() => {
                       toggleExpanded(i);
                     }}
-                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                   >
                     {isExpanded ? (
-                      <ChevronUp className="w-4 h-4" />
+                      <ChevronUp size={16} />
                     ) : (
-                      <ChevronDown className="w-4 h-4" />
+                      <ChevronDown size={16} />
                     )}
                   </Button>
 
                   <Button
                     variant="ghost"
                     size="sm"
+                    color="fg.muted"
+                    _hover={{ color: "red.500", bg: "red.50" }}
+                    _dark={{ _hover: { bg: "red.950" } }}
                     onClick={() => {
                       onRemoveMapping(i);
                     }}
-                    className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 size={16} />
                   </Button>
-                </div>
+                </Flex>
 
-                {/* Advanced settings (expandable) */}
                 {isExpanded && (
-                  <div className="flex flex-col gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs font-medium text-slate-600 dark:text-slate-400 min-w-[80px]">
+                  <Flex
+                    direction="column"
+                    gap="3"
+                    pt="3"
+                    borderTopWidth="1px"
+                    borderColor="border"
+                  >
+                    <Flex align="center" gap="2" wrap="wrap">
+                      <Label
+                        fontSize="xs"
+                        fontWeight="medium"
+                        color="fg.muted"
+                        minW="80px"
+                      >
                         Mode
                       </Label>
                       <Select
@@ -454,7 +517,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                           });
                         }}
                       />
-                      <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
+                      <Text fontSize="xs" color="fg.muted" ml="2">
                         {mode === MidiMappingMode.direct &&
                           "Maps MIDI value directly to parameter"}
                         {mode === MidiMappingMode.directRev &&
@@ -467,49 +530,62 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                           "Increment/decrement based on threshold"}
                         {mode === MidiMappingMode.incDecRev &&
                           "Increment/decrement based on threshold reverse"}
-                      </span>
-                    </div>
+                      </Text>
+                    </Flex>
 
                     {(mode === MidiMappingMode.incDec ||
                       mode === MidiMappingMode.incDecRev) && (
                       <>
-                        <div className="flex items-center gap-2">
-                          <Label className="text-xs font-medium text-slate-600 dark:text-slate-400 min-w-[80px]">
+                        <Flex align="center" gap="2" wrap="wrap">
+                          <Label
+                            fontSize="xs"
+                            fontWeight="medium"
+                            color="fg.muted"
+                            minW="80px"
+                          >
                             Threshold
                           </Label>
                           <Input
-                            className="w-24 text-center bg-slate-50 dark:bg-slate-950/50"
+                            w="24"
+                            textAlign="center"
+                            bg="bg.muted"
                             type="number"
                             min={0}
                             max={127}
                             value={mapping.threshold ?? 64}
-                            onChange={(e) => {
+                            onChange={(event) => {
                               updateMappedThreshold({
-                                threshold: Number(e.currentTarget.value),
+                                threshold: Number(event.currentTarget.value),
                                 index: i,
                               });
                             }}
                           />
-                          <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
+                          <Text fontSize="xs" color="fg.muted" ml="2">
                             Value &gt; threshold increments, ≤ threshold
                             decrements
-                          </span>
-                        </div>
+                          </Text>
+                        </Flex>
 
-                        <div className="flex items-center gap-2">
-                          <Label className="text-xs font-medium text-slate-600 dark:text-slate-400 min-w-[80px]">
+                        <Flex align="center" gap="2" wrap="wrap">
+                          <Label
+                            fontSize="xs"
+                            fontWeight="medium"
+                            color="fg.muted"
+                            minW="80px"
+                          >
                             Step
                           </Label>
                           <Input
-                            className="w-24 text-center bg-slate-50 dark:bg-slate-950/50"
+                            w="24"
+                            textAlign="center"
+                            bg="bg.muted"
                             type="number"
                             step="any"
                             value={mapping.step ?? ""}
                             placeholder="Auto"
-                            onChange={(e) => {
-                              const value = e.currentTarget.value;
+                            onChange={(event) => {
+                              const value = event.currentTarget.value;
                               if (value === "") {
-                                // Remove custom step, will use propSchema.step
                                 const updatedMappings = [...mappings];
                                 const currentMapping = updatedMappings[i];
                                 if (
@@ -528,29 +604,32 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                               }
                             }}
                           />
-                          <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
+                          <Text fontSize="xs" color="fg.muted" ml="2">
                             Amount to increment/decrement (leave empty for auto)
-                          </span>
-                        </div>
+                          </Text>
+                        </Flex>
                       </>
                     )}
-                  </div>
+                  </Flex>
                 )}
-              </div>
+              </Flex>
             );
           })}
-        </div>
-      </div>
+        </Flex>
+      </Flex>
 
       <Button
         onClick={onAdd}
         variant="outline"
-        className="w-full border-dashed border-2 hover:border-solid hover:bg-slate-50 dark:hover:bg-slate-900/50"
+        w="full"
+        borderStyle="dashed"
+        borderWidth="2px"
+        _hover={{ borderStyle: "solid", bg: "bg.muted" }}
       >
-        <SquarePlus className="w-4 h-4" />
+        <SquarePlus size={16} />
         Add New Mapping
       </Button>
-    </Container>
+    </Flex>
   );
 };
 
