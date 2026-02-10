@@ -1,3 +1,4 @@
+import { Box, Flex, Text, chakra } from "@chakra-ui/react";
 import {
   CheckCircle2,
   AlertCircle,
@@ -22,28 +23,44 @@ const iconMap = {
 
 const colorMap = {
   success: {
-    bg: "bg-green-50 dark:bg-green-900/80",
-    border: "border-green-200 dark:border-green-800",
-    icon: "text-green-600 dark:text-green-400",
-    text: "text-green-900 dark:text-green-100",
+    bg: "green.50",
+    bgDark: "green.900",
+    border: "green.200",
+    borderDark: "green.800",
+    icon: "green.600",
+    iconDark: "green.400",
+    text: "green.900",
+    textDark: "green.100",
   },
   error: {
-    bg: "bg-red-50 dark:bg-red-900/80",
-    border: "border-red-200 dark:border-red-800",
-    icon: "text-red-600 dark:text-red-400",
-    text: "text-red-900 dark:text-red-100",
+    bg: "red.50",
+    bgDark: "red.900",
+    border: "red.200",
+    borderDark: "red.800",
+    icon: "red.600",
+    iconDark: "red.400",
+    text: "red.900",
+    textDark: "red.100",
   },
   warning: {
-    bg: "bg-yellow-50 dark:bg-yellow-900/80",
-    border: "border-yellow-200 dark:border-yellow-800",
-    icon: "text-yellow-600 dark:text-yellow-400",
-    text: "text-yellow-900 dark:text-yellow-100",
+    bg: "yellow.50",
+    bgDark: "yellow.900",
+    border: "yellow.200",
+    borderDark: "yellow.800",
+    icon: "yellow.600",
+    iconDark: "yellow.400",
+    text: "yellow.900",
+    textDark: "yellow.100",
   },
   info: {
-    bg: "bg-blue-50 dark:bg-blue-900/80",
-    border: "border-blue-200 dark:border-blue-800",
-    icon: "text-blue-600 dark:text-blue-400",
-    text: "text-blue-900 dark:text-blue-100",
+    bg: "blue.50",
+    bgDark: "blue.900",
+    border: "blue.200",
+    borderDark: "blue.800",
+    icon: "blue.600",
+    iconDark: "blue.400",
+    text: "blue.900",
+    textDark: "blue.100",
   },
 };
 
@@ -71,38 +88,63 @@ export default function NotificationItem({
   };
 
   return (
-    <div
-      className={`
-        flex items-start gap-3 p-4 rounded-lg border shadow-lg
-        ${colors.bg} ${colors.border}
-        animate-slideInRight
-        min-w-[320px] max-w-md
-      `}
+    <Flex
       role="alert"
+      align="flex-start"
+      gap="3"
+      p="4"
+      rounded="lg"
+      borderWidth="1px"
+      boxShadow="lg"
+      bg={colors.bg}
+      borderColor={colors.border}
+      _dark={{ bg: colors.bgDark, borderColor: colors.borderDark }}
+      className="animate-slideInRight"
+      minW="320px"
+      maxW="md"
     >
-      <Icon className={`w-5 h-5 shrink-0 mt-0.5 ${colors.icon}`} />
-      <div className="flex-1 min-w-0">
-        <h4 className={`font-semibold text-sm ${colors.text}`}>
-          {notification.title}
-        </h4>
-        {notification.message && (
-          <p className={`text-sm mt-1 ${colors.text} opacity-90`}>
-            {notification.message}
-          </p>
-        )}
-      </div>
-      <button
-        onClick={handleClose}
-        className={`
-          shrink-0 rounded-md p-1
-          hover:bg-black/5 dark:hover:bg-white/5
-          transition-colors
-          ${colors.text}
-        `}
-        aria-label="Close notification"
+      <Box
+        mt="0.5"
+        flexShrink={0}
+        color={colors.icon}
+        _dark={{ color: colors.iconDark }}
       >
-        <X className="w-4 h-4" />
-      </button>
-    </div>
+        <Icon size={20} />
+      </Box>
+      <Box flex="1" minW="0">
+        <Text
+          fontWeight="semibold"
+          fontSize="sm"
+          color={colors.text}
+          _dark={{ color: colors.textDark }}
+        >
+          {notification.title}
+        </Text>
+        {notification.message && (
+          <Text
+            fontSize="sm"
+            mt="1"
+            opacity={0.9}
+            color={colors.text}
+            _dark={{ color: colors.textDark }}
+          >
+            {notification.message}
+          </Text>
+        )}
+      </Box>
+      <chakra.button
+        onClick={handleClose}
+        aria-label="Close notification"
+        flexShrink={0}
+        rounded="md"
+        p="1"
+        transition="colors 0.2s"
+        color={colors.text}
+        _dark={{ color: colors.textDark }}
+        _hover={{ bg: "blackAlpha.100" }}
+      >
+        <X size={16} />
+      </chakra.button>
+    </Flex>
   );
 }

@@ -1,3 +1,4 @@
+import { Box, Flex } from "@chakra-ui/react";
 import { useAppSelector } from "@/hooks";
 import { RootState } from "@/store";
 import NotificationItem from "./NotificationItem";
@@ -10,16 +11,22 @@ export default function NotificationContainer() {
   if (notifications.length === 0) return null;
 
   return (
-    <div
-      className="fixed top-[54px] right-4 z-10 flex flex-col gap-3 pointer-events-none"
+    <Flex
+      position="fixed"
+      top="54px"
+      right="4"
+      zIndex="10"
+      direction="column"
+      gap="3"
+      pointerEvents="none"
       aria-live="polite"
       aria-atomic="true"
     >
       {notifications.map((notification) => (
-        <div key={notification.id} className="pointer-events-auto">
+        <Box key={notification.id} pointerEvents="auto">
           <NotificationItem notification={notification} />
-        </div>
+        </Box>
       ))}
-    </div>
+    </Flex>
   );
 }
