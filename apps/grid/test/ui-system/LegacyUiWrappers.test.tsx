@@ -1,14 +1,14 @@
 // @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { UIProvider } from "../../src/ui-system/UIProvider";
 import {
   Card,
   CardContent,
   Input,
   Label,
   Slider,
-} from "../../src/components/ui";
-import { UIProvider } from "../../src/ui-system/UIProvider";
+} from "../../src/ui-system/components";
 
 describe("legacy ui wrappers", () => {
   it("does not hardcode tailwind utility classes in Input", () => {

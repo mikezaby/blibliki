@@ -1,7 +1,11 @@
 import { VisuallyHidden } from "@chakra-ui/react";
 import type { ComponentProps, ReactNode } from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAppDispatch, useAppSelector } from "@/hooks";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/ui-system/components/dialog";
 import { close as _close } from "./modalSlice";
 
 export { open, close } from "./modalSlice";

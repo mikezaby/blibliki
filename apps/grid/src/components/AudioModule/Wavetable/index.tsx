@@ -27,14 +27,14 @@ import {
   DialogDescription,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui";
+} from "@/ui-system/components";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/ui-system/components/select";
 import { ModuleComponent } from "..";
 import Container from "../Container";
 import {

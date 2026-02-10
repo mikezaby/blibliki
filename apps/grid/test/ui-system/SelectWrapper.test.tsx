@@ -1,14 +1,14 @@
 // @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { UIProvider } from "../../src/ui-system/UIProvider";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../src/components/ui";
-import { UIProvider } from "../../src/ui-system/UIProvider";
+} from "../../src/ui-system/components";
 
 describe("Select wrapper", () => {
   it("does not hardcode tailwind utility classes in SelectTrigger", () => {

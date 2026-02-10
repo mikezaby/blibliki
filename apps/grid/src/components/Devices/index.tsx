@@ -12,15 +12,15 @@ import { useUser } from "@clerk/clerk-react";
 import { Plus, Trash2, Edit2, Cpu, Copy, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { open } from "@/components/Modal/modalSlice";
+import { loadDevices, deleteDevice } from "@/devicesSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks";
 import {
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/ui";
-import { loadDevices, deleteDevice } from "@/devicesSlice";
-import { useAppDispatch, useAppSelector } from "@/hooks";
+} from "@/ui-system/components";
 import DeviceModal from "./DeviceModal";
 
 export default function Devices() {

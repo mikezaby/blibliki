@@ -3,7 +3,7 @@ import { PanelLeftClose, PanelLeftOpen, Blocks } from "lucide-react";
 import { useState, DragEvent } from "react";
 import { AvailableModules } from "@/components/AudioModule/modulesSlice";
 import useDrag from "@/components/Grid/useDrag";
-import { Button } from "@/components/ui";
+import { Button } from "@/ui-system/components";
 
 const SupportedModules = Object.values(AvailableModules)
   .map(({ moduleType }) => moduleType)

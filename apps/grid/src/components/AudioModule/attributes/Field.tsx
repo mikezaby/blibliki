@@ -8,7 +8,7 @@ import {
 import { Box, HStack, chakra } from "@chakra-ui/react";
 import { ChangeEvent, ReactNode } from "react";
 import Select from "@/components/Select";
-import { Input, Label } from "@/components/ui";
+import { Input, Label } from "@/ui-system/components";
 
 type FieldProps<T extends string | number | boolean | string[] | number[]> = {
   name: string;

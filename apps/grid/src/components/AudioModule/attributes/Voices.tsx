@@ -1,8 +1,8 @@
 import { ModuleType } from "@blibliki/engine";
 import { Box } from "@chakra-ui/react";
 import { ChangeEvent } from "react";
-import { Input, Label } from "@/components/ui";
 import { useAppDispatch } from "@/hooks";
+import { Input, Label } from "@/ui-system/components";
 import { updateModule } from "../modulesSlice";
 
 type NameInterface = {

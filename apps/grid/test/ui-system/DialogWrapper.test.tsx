@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Dialog, DialogContent } from "../../src/components/ui";
 import { UIProvider } from "../../src/ui-system/UIProvider";
+import { Dialog, DialogContent } from "../../src/ui-system/components";
 
 describe("Dialog wrapper", () => {
   it("does not hardcode legacy tailwind utility classes in DialogContent", () => {
