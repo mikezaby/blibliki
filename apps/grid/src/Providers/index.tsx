@@ -3,6 +3,7 @@ import { ReactFlowProvider } from "@xyflow/react";
 import { ReactNode } from "react";
 import { Provider } from "react-redux";
 import { store } from "@/store";
+import { UIProvider } from "@/ui-system/UIProvider";
 import EngineInitializer from "./EngineInitializer";
 import FirebaseInitializer from "./FirebaseInitializer";
 
@@ -16,13 +17,15 @@ export default function Providers(props: { children: ReactNode }) {
 
   return (
     <Provider store={store}>
-      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-        <ReactFlowProvider>
-          <FirebaseInitializer />
-          <EngineInitializer />
-          {children}
-        </ReactFlowProvider>
-      </ClerkProvider>
+      <UIProvider>
+        <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+          <ReactFlowProvider>
+            <FirebaseInitializer />
+            <EngineInitializer />
+            {children}
+          </ReactFlowProvider>
+        </ClerkProvider>
+      </UIProvider>
     </Provider>
   );
 }
