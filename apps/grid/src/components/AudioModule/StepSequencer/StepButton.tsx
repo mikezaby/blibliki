@@ -1,4 +1,5 @@
 import { IStep } from "@blibliki/engine";
+import { Box, Flex } from "@chakra-ui/react";
 
 type StepButtonProps = {
   step: IStep;
@@ -26,89 +27,116 @@ export default function StepButton({
     : 0;
   const intensity = maxVelocity / 127; // 0-1 range
 
-  // Determine background color based on state
-  const getBackgroundColor = () => {
+  const getBackgroundProps = () => {
     if (!isActive || !hasNotes) {
-      return "bg-slate-100 dark:bg-slate-700"; // Inactive/empty
+      return { bg: "gray.100", _dark: { bg: "gray.700" } };
     }
 
-    // Active with notes - use intensity
-    if (intensity > 0.66) return "bg-blue-500 dark:bg-blue-600";
-    if (intensity > 0.33) return "bg-blue-400 dark:bg-blue-500";
-    return "bg-blue-300 dark:bg-blue-400";
+    if (intensity > 0.66) return { bg: "blue.500", _dark: { bg: "blue.600" } };
+    if (intensity > 0.33) return { bg: "blue.400", _dark: { bg: "blue.500" } };
+    return { bg: "blue.300", _dark: { bg: "blue.400" } };
   };
 
-  // Determine border style
-  const getBorderStyle = () => {
+  const getBorderProps = () => {
     if (isPlaying) {
-      return "border-2 border-orange-500 shadow-lg shadow-orange-200 dark:shadow-orange-900"; // Playing
+      return {
+        borderWidth: "2px",
+        borderColor: "orange.500",
+        boxShadow: "0 0 0 3px rgba(251, 146, 60, 0.35)",
+      };
     }
     if (isSelected) {
-      return "border-2 border-yellow-400 dark:border-yellow-500"; // Selected
+      return {
+        borderWidth: "2px",
+        borderColor: "yellow.400",
+        _dark: { borderColor: "yellow.500" },
+      };
     }
     if (isActive && hasNotes) {
-      return "border border-blue-600 dark:border-blue-400"; // Active with notes
+      return {
+        borderWidth: "1px",
+        borderColor: "blue.600",
+        _dark: { borderColor: "blue.400" },
+      };
     }
-    return "border border-slate-300 dark:border-slate-600"; // Default
+    return {
+      borderWidth: "1px",
+      borderColor: "gray.300",
+      _dark: { borderColor: "gray.600" },
+    };
   };
 
-  // Add pulsing animation for playing step
-  const getAnimation = () => {
-    return isPlaying ? "animate-pulse" : "";
-  };
-
-  // Text color
   const getTextColor = () => {
     if (!isActive || !hasNotes) {
-      return "text-slate-400 dark:text-slate-500";
+      return { color: "gray.400", _dark: { color: "gray.500" } };
     }
     return intensity > 0.5
-      ? "text-white"
-      : "text-slate-700 dark:text-slate-100";
+      ? { color: "white" }
+      : { color: "gray.700", _dark: { color: "gray.100" } };
   };
 
+  const activeDotProps = isActive
+    ? {
+        bg: "green.500",
+        borderColor: "green.600",
+        _dark: { bg: "green.400", borderColor: "green.500" },
+      }
+    : {
+        bg: "transparent",
+        borderColor: "gray.400",
+        _dark: { borderColor: "gray.500" },
+      };
+
   return (
-    <div className="flex flex-col items-center gap-1">
-      {/* Active/Inactive Indicator Dot */}
-      <button
+    <Flex direction="column" align="center" gap="1">
+      <Box
+        as="button"
         onClick={(e) => {
           e.stopPropagation();
           onToggleActive();
         }}
-        className={`
-          w-3 h-3 rounded-full border-2 transition-all
-          hover:scale-125 cursor-pointer
-          ${
-            isActive
-              ? "bg-green-500 border-green-600 dark:bg-green-400 dark:border-green-500"
-              : "bg-transparent border-slate-400 dark:border-slate-500"
-          }
-        `}
+        w="3"
+        h="3"
+        rounded="full"
+        borderWidth="2px"
+        cursor="pointer"
+        transition="transform 0.15s ease"
+        _hover={{ transform: "scale(1.2)" }}
+        {...activeDotProps}
         title={isActive ? "Click to mute step" : "Click to activate step"}
       />
 
-      {/* Step Button */}
-      <button
+      <Box
+        as="button"
         onClick={onSelect}
-        className={`
-          relative
-          h-12 w-full
-          rounded
-          flex items-center justify-center
-          text-xs font-medium
-          transition-all duration-150
-          hover:scale-105
-          ${getBackgroundColor()}
-          ${getBorderStyle()}
-          ${getAnimation()}
-          ${getTextColor()}
-        `}
+        position="relative"
+        h="12"
+        w="full"
+        rounded="md"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        fontSize="xs"
+        fontWeight="medium"
+        transition="all 0.15s ease"
+        _hover={{ transform: "scale(1.05)" }}
+        {...getBackgroundProps()}
+        {...getBorderProps()}
+        {...getTextColor()}
       >
         {stepIndex + 1}
         {hasNotes && (
-          <div className="absolute bottom-1 right-1 w-1 h-1 rounded-full bg-current" />
+          <Box
+            position="absolute"
+            bottom="1"
+            right="1"
+            w="1"
+            h="1"
+            rounded="full"
+            bg="currentColor"
+          />
         )}
-      </button>
-    </div>
+      </Box>
+    </Flex>
   );
 }

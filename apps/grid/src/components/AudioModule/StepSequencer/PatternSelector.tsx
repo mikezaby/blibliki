@@ -1,4 +1,5 @@
 import { IPattern, moduleSchemas, ModuleType } from "@blibliki/engine";
+import { Box, Button, Flex, HStack, Text, Textarea } from "@chakra-ui/react";
 import { TUpdateProp } from "..";
 import { CheckboxField } from "../attributes/Field";
 
@@ -55,29 +56,23 @@ export default function PatternSelector({
   };
 
   return (
-    <div className="flex justify-between items-center gap-2">
-      <div>
-        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+    <Flex justify="space-between" align="center" gap="2" wrap="wrap">
+      <Flex direction="column" gap="1">
+        <Text fontSize="sm" fontWeight="medium" color="fg">
           Pattern:
-        </span>
-        <div className="flex gap-1">
+        </Text>
+        <HStack gap="1" align="center" wrap="wrap">
           {patterns.map((pattern, index) => (
-            <div key={index} className="relative group">
-              <button
+            <Box key={index} position="relative" role="group">
+              <Button
                 onClick={() => {
                   onPatternChange(index);
                 }}
                 disabled={isSequenceActive}
-                className={`
-                px-3 py-1 text-sm font-medium rounded
-                transition-colors
-                ${
-                  index === activePatternNo
-                    ? "bg-blue-500 text-white"
-                    : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600"
-                }
-                ${isSequenceActive ? "opacity-50 cursor-not-allowed" : ""}
-              `}
+                size="xs"
+                variant={index === activePatternNo ? "solid" : "subtle"}
+                colorPalette={index === activePatternNo ? "blue" : "gray"}
+                opacity={isSequenceActive ? 0.5 : 1}
                 title={
                   isSequenceActive
                     ? "Pattern selection disabled during sequence playback"
@@ -85,46 +80,61 @@ export default function PatternSelector({
                 }
               >
                 {pattern.name}
-              </button>
+              </Button>
               {patterns.length > 1 && (
-                <button
+                <Box
+                  as="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDeletePattern(index);
                   }}
-                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600"
+                  position="absolute"
+                  top="-1"
+                  right="-1"
+                  w="4"
+                  h="4"
+                  rounded="full"
+                  fontSize="xs"
+                  lineHeight="1"
+                  bg="red.500"
+                  color="white"
+                  opacity={0}
+                  transition="opacity 0.15s ease"
+                  _groupHover={{ opacity: 1 }}
+                  _hover={{ bg: "red.600" }}
                   title="Delete pattern"
                 >
                   ×
-                </button>
+                </Box>
               )}
-            </div>
+            </Box>
           ))}
-          <button
+          <Button
             onClick={onAddPattern}
-            className="px-3 py-1 text-sm font-medium rounded bg-green-500 text-white hover:bg-green-600 transition-colors"
+            size="xs"
+            colorPalette="green"
+            variant="solid"
           >
             + New
-          </button>
-        </div>
-      </div>
+          </Button>
+        </HStack>
+      </Flex>
 
-      <div className="flex gap-2">
-        {/* Pattern Sequence Section */}
-        <div className="flex items-center gap-2">
+      <Flex gap="2" align="center" wrap="wrap">
+        <Flex align="center" gap="2">
           <CheckboxField
             name="Pattern sequence"
             value={enableSequence}
             schema={schema.enableSequence}
             onChange={updateProp("enableSequence")}
           />
-        </div>
+        </Flex>
 
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+        <Flex align="center" gap="2">
+          <Text fontSize="xs" fontWeight="medium" color="fg.muted">
             Sequence:
-          </label>
-          <textarea
+          </Text>
+          <Textarea
             rows={3}
             value={formatPatternSequence(patternSequence)}
             onChange={(e) => {
@@ -132,15 +142,22 @@ export default function PatternSelector({
             }}
             disabled={isRunning}
             placeholder="e.g., 2A4B2AC"
-            className="nodrag px-2 py-1 text-sm font-mono border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 w-48 resize-none leading-5"
+            size="sm"
+            fontFamily="mono"
+            borderColor="border"
+            bg="surfaceBg"
+            color="fg"
+            w="48"
+            resize="none"
+            lineHeight="5"
           />
           {sequencePosition && (
-            <span className="text-xs font-medium text-green-600 dark:text-green-400">
+            <Text fontSize="xs" fontWeight="medium" color="green.500">
               {sequencePosition}
-            </span>
+            </Text>
           )}
-        </div>
-      </div>
-    </div>
+        </Flex>
+      </Flex>
+    </Flex>
   );
 }
