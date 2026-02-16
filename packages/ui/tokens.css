@@ -1,0 +1,35 @@
+:root {
+  --ui-color-surface-0: oklch(0.985 0.004 260);
+  --ui-color-surface-1: oklch(0.96 0.006 260);
+  --ui-color-surface-2: oklch(0.92 0.008 260);
+  --ui-color-border-subtle: oklch(0.84 0.01 260);
+
+  --ui-color-text-primary: oklch(0.18 0.01 260);
+  --ui-color-text-secondary: oklch(0.33 0.01 260);
+  --ui-color-text-muted: oklch(0.48 0.01 260);
+
+  --ui-color-accent-500: oklch(0.67 0.16 244);
+  --ui-color-accent-400: oklch(0.75 0.13 244);
+  --ui-color-accent-600: oklch(0.59 0.19 244);
+  --ui-color-accent-contrast: oklch(0.98 0 0);
+
+  --ui-color-danger-500: oklch(0.63 0.24 28);
+  --ui-color-danger-contrast: oklch(0.98 0 0);
+
+  --ui-shadow-focus: 0 0 0 2px
+    color-mix(in oklab, var(--ui-color-accent-500), transparent 60%);
+  --ui-radius-sm: 4px;
+  --ui-radius-md: 8px;
+  --ui-radius-lg: 12px;
+}
+
+:where(.dark, [data-theme="dark"]) {
+  --ui-color-surface-0: oklch(0.12 0.01 260);
+  --ui-color-surface-1: oklch(0.16 0.01 260);
+  --ui-color-surface-2: oklch(0.21 0.01 260);
+  --ui-color-border-subtle: oklch(0.34 0.01 260);
+
+  --ui-color-text-primary: oklch(0.96 0.01 260);
+  --ui-color-text-secondary: oklch(0.76 0.01 260);
+  --ui-color-text-muted: oklch(0.62 0.01 260);
+}

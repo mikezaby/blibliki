@@ -1,0 +1,38 @@
+{
+  "name": "@blibliki/ui",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./tokens.css": "./tokens.css",
+    "./eslint": "./eslint/index.js",
+    "./eslint/ui-governance-plugin": "./eslint/ui-governance-plugin.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "README.md",
+    "src",
+    "dist",
+    "eslint",
+    "scripts",
+    "tokens.css"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint:palette": "node scripts/check-css-palette.mjs",
+    "lint": "pnpm run lint:palette && eslint src",
+    "tsc": "tsc --noEmit",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "bump": "npm version patch",
+    "release": "pnpm run build && pnpm publish --access public"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "tailwind-merge": "catalog:tailwindcss"
+  }
+}
