@@ -1,0 +1,141 @@
+@import "./tokens.css";
+
+:root {
+  --ui-background: var(--ui-color-surface-0);
+  --ui-foreground: var(--ui-color-text-primary);
+  --ui-primary: var(--ui-color-accent-500);
+  --ui-primary-foreground: var(--ui-color-accent-contrast);
+  --ui-secondary: var(--ui-color-surface-2);
+  --ui-secondary-foreground: var(--ui-color-text-primary);
+  --ui-accent: var(--ui-color-surface-1);
+  --ui-accent-foreground: var(--ui-color-text-primary);
+  --ui-destructive: var(--ui-color-danger-500);
+  --ui-destructive-foreground: var(--ui-color-danger-contrast);
+  --ui-input: var(--ui-color-surface-1);
+  --ui-border: var(--ui-color-border-subtle);
+}
+
+:where(.dark, [data-theme="dark"]) {
+  --ui-background: var(--ui-color-surface-0);
+  --ui-foreground: var(--ui-color-text-primary);
+  --ui-primary: var(--ui-color-accent-500);
+  --ui-primary-foreground: var(--ui-color-accent-contrast);
+  --ui-secondary: var(--ui-color-surface-2);
+  --ui-secondary-foreground: var(--ui-color-text-primary);
+  --ui-accent: var(--ui-color-surface-1);
+  --ui-accent-foreground: var(--ui-color-text-primary);
+  --ui-destructive: var(--ui-color-danger-500);
+  --ui-destructive-foreground: var(--ui-color-danger-contrast);
+  --ui-input: var(--ui-color-surface-1);
+  --ui-border: var(--ui-color-border-subtle);
+}
+
+.ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--ui-radius-md);
+  border: 1px solid transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease,
+    transform 120ms ease;
+}
+
+.ui-button:disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.ui-button:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--ui-shadow-focus);
+}
+
+.ui-button--variant-default {
+  background: var(--ui-primary);
+  color: var(--ui-primary-foreground);
+}
+
+.ui-button--variant-default:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--ui-primary), black 9%);
+}
+
+.ui-button--variant-secondary {
+  background: var(--ui-secondary);
+  color: var(--ui-secondary-foreground);
+}
+
+.ui-button--variant-secondary:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--ui-secondary), black 7%);
+}
+
+.ui-button--variant-outline {
+  background: var(--ui-background);
+  color: var(--ui-foreground);
+  border-color: var(--ui-input);
+}
+
+.ui-button--variant-outline:hover:not(:disabled) {
+  background: var(--ui-accent);
+  color: var(--ui-accent-foreground);
+}
+
+.ui-button--variant-ghost {
+  background: transparent;
+  color: var(--ui-foreground);
+}
+
+.ui-button--variant-ghost:hover:not(:disabled) {
+  background: var(--ui-accent);
+  color: var(--ui-accent-foreground);
+}
+
+.ui-button--variant-destructive {
+  background: var(--ui-destructive);
+  color: var(--ui-destructive-foreground);
+}
+
+.ui-button--variant-destructive:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--ui-destructive), black 9%);
+}
+
+.ui-button--variant-link {
+  background: transparent;
+  color: var(--ui-primary);
+  border-color: transparent;
+  text-underline-offset: 4px;
+}
+
+.ui-button--variant-link:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.ui-button--size-default {
+  height: 2.25rem;
+  padding: 0.5rem 1rem;
+}
+
+.ui-button--size-sm {
+  height: 2rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+}
+
+.ui-button--size-lg {
+  height: 2.5rem;
+  padding: 0.5rem 1.5rem;
+}
+
+.ui-button--size-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+}
