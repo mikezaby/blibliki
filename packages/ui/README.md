@@ -11,6 +11,7 @@ Foundational UI package for Blibliki applications.
 ## Included in bootstrap
 
 - `cn(...)` utility (`clsx` + `tailwind-merge`)
+- `Button` component (`variant`, `size`, `asChild`)
 - Shared UI governance ESLint plugin/config
 - Shared palette tokens (`tokens.css`)
 - CSS palette checker script
@@ -39,5 +40,17 @@ Then reference variables:
 .example {
   color: var(--ui-color-text-primary);
   background: var(--ui-color-surface-1);
+}
+```
+
+Dark mode is built in via token overrides on `.dark` and `[data-theme="dark"]`.
+
+## Button usage
+
+```tsx
+import { Button } from "@blibliki/ui";
+
+function Example() {
+  return <Button variant="secondary">Save</Button>;
 }
 ```

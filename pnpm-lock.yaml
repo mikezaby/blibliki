@@ -373,12 +373,25 @@ importers:
 
   packages/ui:
     dependencies:
+      '@radix-ui/react-slot':
+        specifier: 1.2.4
+        version: 1.2.4(@types/react@19.2.10)(react@19.2.4)
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      react:
+        specifier: '>=19'
+        version: 19.2.4
       tailwind-merge:
         specifier: catalog:tailwindcss
         version: 3.4.0
+    devDependencies:
+      '@types/react':
+        specifier: catalog:react-19
+        version: 19.2.10
 
   packages/utils:
     dependencies:
