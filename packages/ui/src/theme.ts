@@ -8,12 +8,24 @@ export interface UIColorTokens {
   textPrimary: string;
   textSecondary: string;
   textMuted: string;
-  accent500: string;
-  accent400: string;
-  accent600: string;
-  accentContrast: string;
-  danger500: string;
-  dangerContrast: string;
+  primary500: string;
+  primary600: string;
+  primaryContrast: string;
+  secondary500: string;
+  secondary600: string;
+  secondaryContrast: string;
+  error500: string;
+  error600: string;
+  errorContrast: string;
+  warning500: string;
+  warning600: string;
+  warningContrast: string;
+  info500: string;
+  info600: string;
+  infoContrast: string;
+  success500: string;
+  success600: string;
+  successContrast: string;
 }
 
 export interface UIRadiusTokens {
@@ -42,12 +54,24 @@ const defaultLight: UIColorTokens = {
   textPrimary: "oklch(0.18 0.01 260)",
   textSecondary: "oklch(0.33 0.01 260)",
   textMuted: "oklch(0.48 0.01 260)",
-  accent500: "oklch(0.67 0.16 244)",
-  accent400: "oklch(0.75 0.13 244)",
-  accent600: "oklch(0.59 0.19 244)",
-  accentContrast: "oklch(0.98 0 0)",
-  danger500: "oklch(0.63 0.24 28)",
-  dangerContrast: "oklch(0.98 0 0)",
+  primary500: "oklch(0.62 0.19 255)",
+  primary600: "oklch(0.55 0.2 255)",
+  primaryContrast: "oklch(0.98 0 0)",
+  secondary500: "oklch(0.62 0.2 300)",
+  secondary600: "oklch(0.55 0.21 300)",
+  secondaryContrast: "oklch(0.98 0 0)",
+  error500: "oklch(0.63 0.24 28)",
+  error600: "oklch(0.57 0.24 28)",
+  errorContrast: "oklch(0.98 0 0)",
+  warning500: "oklch(0.78 0.17 78)",
+  warning600: "oklch(0.72 0.17 78)",
+  warningContrast: "oklch(0.2 0.01 260)",
+  info500: "oklch(0.66 0.14 220)",
+  info600: "oklch(0.59 0.15 220)",
+  infoContrast: "oklch(0.98 0 0)",
+  success500: "oklch(0.66 0.17 150)",
+  success600: "oklch(0.59 0.18 150)",
+  successContrast: "oklch(0.98 0 0)",
 };
 
 const defaultDark: UIColorTokens = {
@@ -58,12 +82,24 @@ const defaultDark: UIColorTokens = {
   textPrimary: "oklch(0.96 0.01 260)",
   textSecondary: "oklch(0.76 0.01 260)",
   textMuted: "oklch(0.62 0.01 260)",
-  accent500: "oklch(0.67 0.16 244)",
-  accent400: "oklch(0.75 0.13 244)",
-  accent600: "oklch(0.59 0.19 244)",
-  accentContrast: "oklch(0.98 0 0)",
-  danger500: "oklch(0.63 0.24 28)",
-  dangerContrast: "oklch(0.98 0 0)",
+  primary500: "oklch(0.67 0.19 255)",
+  primary600: "oklch(0.6 0.2 255)",
+  primaryContrast: "oklch(0.98 0 0)",
+  secondary500: "oklch(0.67 0.2 300)",
+  secondary600: "oklch(0.6 0.21 300)",
+  secondaryContrast: "oklch(0.98 0 0)",
+  error500: "oklch(0.67 0.22 28)",
+  error600: "oklch(0.6 0.23 28)",
+  errorContrast: "oklch(0.98 0 0)",
+  warning500: "oklch(0.79 0.15 78)",
+  warning600: "oklch(0.73 0.16 78)",
+  warningContrast: "oklch(0.2 0.01 260)",
+  info500: "oklch(0.69 0.13 220)",
+  info600: "oklch(0.62 0.14 220)",
+  infoContrast: "oklch(0.98 0 0)",
+  success500: "oklch(0.69 0.16 150)",
+  success600: "oklch(0.62 0.17 150)",
+  successContrast: "oklch(0.98 0 0)",
 };
 
 const defaultRadius: UIRadiusTokens = {
@@ -92,12 +128,24 @@ export function themeToCssVariables(
     "--ui-color-text-primary": colors.textPrimary,
     "--ui-color-text-secondary": colors.textSecondary,
     "--ui-color-text-muted": colors.textMuted,
-    "--ui-color-accent-500": colors.accent500,
-    "--ui-color-accent-400": colors.accent400,
-    "--ui-color-accent-600": colors.accent600,
-    "--ui-color-accent-contrast": colors.accentContrast,
-    "--ui-color-danger-500": colors.danger500,
-    "--ui-color-danger-contrast": colors.dangerContrast,
+    "--ui-color-primary-500": colors.primary500,
+    "--ui-color-primary-600": colors.primary600,
+    "--ui-color-primary-contrast": colors.primaryContrast,
+    "--ui-color-secondary-500": colors.secondary500,
+    "--ui-color-secondary-600": colors.secondary600,
+    "--ui-color-secondary-contrast": colors.secondaryContrast,
+    "--ui-color-error-500": colors.error500,
+    "--ui-color-error-600": colors.error600,
+    "--ui-color-error-contrast": colors.errorContrast,
+    "--ui-color-warning-500": colors.warning500,
+    "--ui-color-warning-600": colors.warning600,
+    "--ui-color-warning-contrast": colors.warningContrast,
+    "--ui-color-info-500": colors.info500,
+    "--ui-color-info-600": colors.info600,
+    "--ui-color-info-contrast": colors.infoContrast,
+    "--ui-color-success-500": colors.success500,
+    "--ui-color-success-600": colors.success600,
+    "--ui-color-success-contrast": colors.successContrast,
     "--ui-radius-sm": theme.radius.sm,
     "--ui-radius-md": theme.radius.md,
     "--ui-radius-lg": theme.radius.lg,

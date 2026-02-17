@@ -11,7 +11,7 @@ Foundational UI package for Blibliki applications.
 ## Included in bootstrap
 
 - `cn(...)` utility (`clsx` + `tailwind-merge`)
-- `Button` component (`variant`, `size`, `asChild`)
+- `Button` component (`color`, `variant`, `size`, `asChild`)
 - `UIProvider` + `createTheme(...)` for runtime theme customization
 - Shared UI governance ESLint plugin/config
 - Shared palette tokens (`tokens.css`) and component styles (`styles.css`)
@@ -45,13 +45,21 @@ import { Button, UIProvider } from "@blibliki/ui";
 export function Example() {
   return (
     <UIProvider mode="dark">
-      <Button variant="secondary">Save</Button>
+      <Button color="secondary" variant="contained">
+        Save
+      </Button>
     </UIProvider>
   );
 }
 ```
 
 Dark mode is handled via `mode="light" | "dark"` and corresponding CSS variables.
+
+Button API:
+
+- `color`: `primary | secondary | error | warning | info | success`
+- `variant`: `contained | outlined | text`
+- `size`: `md | sm | lg | icon`
 
 ## Theme customization
 
@@ -60,8 +68,9 @@ import { UIProvider, createTheme } from "@blibliki/ui";
 
 const theme = createTheme({
   light: {
-    accent500: "oklch(0.72 0.18 185)",
-    accent400: "oklch(0.79 0.14 185)",
+    primary500: "oklch(0.72 0.18 185)",
+    primary600: "oklch(0.66 0.19 185)",
+    success500: "oklch(0.7 0.18 155)",
   },
   dark: {
     surface0: "oklch(0.09 0.01 260)",

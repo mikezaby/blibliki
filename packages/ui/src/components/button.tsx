@@ -6,23 +6,29 @@ import { cn } from "@/lib/cn";
 const buttonVariants = cva("ui-button", {
   variants: {
     variant: {
-      default: "ui-button--variant-default",
-      secondary: "ui-button--variant-secondary",
-      outline: "ui-button--variant-outline",
-      ghost: "ui-button--variant-ghost",
-      destructive: "ui-button--variant-destructive",
-      link: "ui-button--variant-link",
+      contained: "ui-button--variant-contained",
+      outlined: "ui-button--variant-outlined",
+      text: "ui-button--variant-text",
+    },
+    color: {
+      primary: "ui-button--color-primary",
+      secondary: "ui-button--color-secondary",
+      error: "ui-button--color-error",
+      warning: "ui-button--color-warning",
+      info: "ui-button--color-info",
+      success: "ui-button--color-success",
     },
     size: {
-      default: "ui-button--size-default",
+      md: "ui-button--size-md",
       sm: "ui-button--size-sm",
       lg: "ui-button--size-lg",
       icon: "ui-button--size-icon",
     },
   },
   defaultVariants: {
-    variant: "default",
-    size: "default",
+    variant: "contained",
+    color: "primary",
+    size: "md",
   },
 });
 
@@ -30,19 +36,22 @@ type ButtonElement = HTMLButtonElement;
 
 export interface ButtonProps
   extends
-    React.ButtonHTMLAttributes<ButtonElement>,
+    Omit<React.ButtonHTMLAttributes<ButtonElement>, "color">,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 
 const Button = React.forwardRef<ButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, type, ...props }, ref) => {
+  (
+    { className, variant, color, size, asChild = false, type, ...props },
+    ref,
+  ) => {
     const Comp = asChild ? Slot : "button";
 
     return (
       <Comp
         ref={ref}
-        className={cn(buttonVariants({ variant, size }), className)}
+        className={cn(buttonVariants({ variant, color, size }), className)}
         type={asChild ? undefined : (type ?? "button")}
         {...props}
       />

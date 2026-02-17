@@ -3,14 +3,6 @@
 :root {
   --ui-background: var(--ui-color-surface-0);
   --ui-foreground: var(--ui-color-text-primary);
-  --ui-primary: var(--ui-color-accent-500);
-  --ui-primary-foreground: var(--ui-color-accent-contrast);
-  --ui-secondary: var(--ui-color-surface-2);
-  --ui-secondary-foreground: var(--ui-color-text-primary);
-  --ui-accent: var(--ui-color-surface-1);
-  --ui-accent-foreground: var(--ui-color-text-primary);
-  --ui-destructive: var(--ui-color-danger-500);
-  --ui-destructive-foreground: var(--ui-color-danger-contrast);
   --ui-input: var(--ui-color-surface-1);
   --ui-border: var(--ui-color-border-subtle);
 }
@@ -18,19 +10,20 @@
 :where(.dark, [data-theme="dark"]) {
   --ui-background: var(--ui-color-surface-0);
   --ui-foreground: var(--ui-color-text-primary);
-  --ui-primary: var(--ui-color-accent-500);
-  --ui-primary-foreground: var(--ui-color-accent-contrast);
-  --ui-secondary: var(--ui-color-surface-2);
-  --ui-secondary-foreground: var(--ui-color-text-primary);
-  --ui-accent: var(--ui-color-surface-1);
-  --ui-accent-foreground: var(--ui-color-text-primary);
-  --ui-destructive: var(--ui-color-danger-500);
-  --ui-destructive-foreground: var(--ui-color-danger-contrast);
   --ui-input: var(--ui-color-surface-1);
   --ui-border: var(--ui-color-border-subtle);
 }
 
 .ui-button {
+  --ui-button-color: var(--ui-color-primary-500);
+  --ui-button-color-hover: var(--ui-color-primary-600);
+  --ui-button-color-contrast: var(--ui-color-primary-contrast);
+  --ui-button-focus: color-mix(
+    in oklab,
+    var(--ui-button-color),
+    transparent 65%
+  );
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -56,69 +49,75 @@
 
 .ui-button:focus-visible {
   outline: 2px solid transparent;
-  box-shadow: var(--ui-shadow-focus);
+  box-shadow: 0 0 0 2px var(--ui-button-focus);
 }
 
-.ui-button--variant-default {
-  background: var(--ui-primary);
-  color: var(--ui-primary-foreground);
+.ui-button--color-primary {
+  --ui-button-color: var(--ui-color-primary-500);
+  --ui-button-color-hover: var(--ui-color-primary-600);
+  --ui-button-color-contrast: var(--ui-color-primary-contrast);
 }
 
-.ui-button--variant-default:hover:not(:disabled) {
-  background: color-mix(in oklab, var(--ui-primary), black 9%);
+.ui-button--color-secondary {
+  --ui-button-color: var(--ui-color-secondary-500);
+  --ui-button-color-hover: var(--ui-color-secondary-600);
+  --ui-button-color-contrast: var(--ui-color-secondary-contrast);
 }
 
-.ui-button--variant-secondary {
-  background: var(--ui-secondary);
-  color: var(--ui-secondary-foreground);
+.ui-button--color-error {
+  --ui-button-color: var(--ui-color-error-500);
+  --ui-button-color-hover: var(--ui-color-error-600);
+  --ui-button-color-contrast: var(--ui-color-error-contrast);
 }
 
-.ui-button--variant-secondary:hover:not(:disabled) {
-  background: color-mix(in oklab, var(--ui-secondary), black 7%);
+.ui-button--color-warning {
+  --ui-button-color: var(--ui-color-warning-500);
+  --ui-button-color-hover: var(--ui-color-warning-600);
+  --ui-button-color-contrast: var(--ui-color-warning-contrast);
 }
 
-.ui-button--variant-outline {
-  background: var(--ui-background);
-  color: var(--ui-foreground);
-  border-color: var(--ui-input);
+.ui-button--color-info {
+  --ui-button-color: var(--ui-color-info-500);
+  --ui-button-color-hover: var(--ui-color-info-600);
+  --ui-button-color-contrast: var(--ui-color-info-contrast);
 }
 
-.ui-button--variant-outline:hover:not(:disabled) {
-  background: var(--ui-accent);
-  color: var(--ui-accent-foreground);
+.ui-button--color-success {
+  --ui-button-color: var(--ui-color-success-500);
+  --ui-button-color-hover: var(--ui-color-success-600);
+  --ui-button-color-contrast: var(--ui-color-success-contrast);
 }
 
-.ui-button--variant-ghost {
+.ui-button--variant-contained {
+  background: var(--ui-button-color);
+  color: var(--ui-button-color-contrast);
+}
+
+.ui-button--variant-contained:hover:not(:disabled) {
+  background: var(--ui-button-color-hover);
+}
+
+.ui-button--variant-outlined {
   background: transparent;
-  color: var(--ui-foreground);
+  color: var(--ui-button-color);
+  border-color: var(--ui-button-color);
 }
 
-.ui-button--variant-ghost:hover:not(:disabled) {
-  background: var(--ui-accent);
-  color: var(--ui-accent-foreground);
+.ui-button--variant-outlined:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--ui-button-color), transparent 90%);
 }
 
-.ui-button--variant-destructive {
-  background: var(--ui-destructive);
-  color: var(--ui-destructive-foreground);
-}
-
-.ui-button--variant-destructive:hover:not(:disabled) {
-  background: color-mix(in oklab, var(--ui-destructive), black 9%);
-}
-
-.ui-button--variant-link {
+.ui-button--variant-text {
   background: transparent;
-  color: var(--ui-primary);
+  color: var(--ui-button-color);
   border-color: transparent;
-  text-underline-offset: 4px;
 }
 
-.ui-button--variant-link:hover:not(:disabled) {
-  text-decoration: underline;
+.ui-button--variant-text:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--ui-button-color), transparent 92%);
 }
 
-.ui-button--size-default {
+.ui-button--size-md {
   height: 2.25rem;
   padding: 0.5rem 1rem;
 }

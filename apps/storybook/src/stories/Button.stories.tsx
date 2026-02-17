@@ -1,31 +1,38 @@
 import { Button } from "@blibliki/ui";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+const buttonColors = [
+  "primary",
+  "secondary",
+  "error",
+  "warning",
+  "info",
+  "success",
+] as const;
+
 const meta = {
   title: "Primitives/Button",
   component: Button,
   tags: ["autodocs"],
   args: {
     children: "Save patch",
-    variant: "default",
-    size: "default",
+    color: "primary",
+    variant: "contained",
+    size: "md",
     asChild: false,
   },
   argTypes: {
+    color: {
+      control: "select",
+      options: buttonColors,
+    },
     variant: {
       control: "select",
-      options: [
-        "default",
-        "secondary",
-        "outline",
-        "ghost",
-        "destructive",
-        "link",
-      ],
+      options: ["contained", "outlined", "text"],
     },
     size: {
       control: "select",
-      options: ["default", "sm", "lg", "icon"],
+      options: ["md", "sm", "lg", "icon"],
     },
   },
 } satisfies Meta<typeof Button>;
@@ -38,12 +45,21 @@ export const Playground: Story = {};
 export const Variants: Story = {
   render: () => (
     <div className="sb-row">
-      <Button variant="default">Default</Button>
-      <Button variant="secondary">Secondary</Button>
-      <Button variant="outline">Outline</Button>
-      <Button variant="ghost">Ghost</Button>
-      <Button variant="destructive">Destructive</Button>
-      <Button variant="link">Link</Button>
+      <Button variant="contained">Contained</Button>
+      <Button variant="outlined">Outlined</Button>
+      <Button variant="text">Text</Button>
+    </div>
+  ),
+};
+
+export const Colors: Story = {
+  render: () => (
+    <div className="sb-row">
+      {buttonColors.map((color) => (
+        <Button key={color} color={color}>
+          {color}
+        </Button>
+      ))}
     </div>
   ),
 };
@@ -52,7 +68,7 @@ export const Sizes: Story = {
   render: () => (
     <div className="sb-row">
       <Button size="sm">Small</Button>
-      <Button size="default">Default</Button>
+      <Button size="md">Medium</Button>
       <Button size="lg">Large</Button>
       <Button size="icon" aria-label="Icon button">
         <span aria-hidden>+</span>
@@ -70,7 +86,7 @@ export const Disabled: Story = {
 
 export const AsChildLink: Story = {
   render: () => (
-    <Button asChild>
+    <Button asChild variant="text" color="info">
       <a href="https://blibliki.com" target="_blank" rel="noreferrer">
         Open Blibliki
       </a>
