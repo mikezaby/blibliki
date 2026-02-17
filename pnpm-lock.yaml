@@ -170,6 +170,9 @@ importers:
       '@blibliki/models':
         specifier: workspace:^
         version: link:../../packages/models
+      '@blibliki/ui':
+        specifier: workspace:^
+        version: link:../../packages/ui
       '@blibliki/utils':
         specifier: workspace:^
         version: link:../../packages/utils
@@ -307,9 +310,6 @@ importers:
       '@storybook/react-vite':
         specifier: ^10.2.8
         version: 10.2.8(esbuild@0.27.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(rollup@4.52.4)(storybook@10.2.8(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(typescript@5.9.3)(vite@7.3.1(@types/node@25.1.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.2)(tsx@4.19.4)(yaml@2.8.2))
-      '@tailwindcss/vite':
-        specifier: catalog:tailwindcss
-        version: 4.1.18(vite@7.3.1(@types/node@25.1.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.2)(tsx@4.19.4)(yaml@2.8.2))
       '@types/node':
         specifier: 25.1.0
         version: 25.1.0
@@ -340,9 +340,6 @@ importers:
       storybook:
         specifier: ^10.2.8
         version: 10.2.8(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      tailwindcss:
-        specifier: catalog:tailwindcss
-        version: 4.1.18
       typescript:
         specifier: ^5.9.3
         version: 5.9.3

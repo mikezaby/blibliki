@@ -14,6 +14,7 @@
     "format:check": "prettier . --check"
   },
   "dependencies": {
+    "@blibliki/ui": "workspace:^",
     "@blibliki/engine": "workspace:^",
     "@blibliki/models": "workspace:^",
     "@blibliki/utils": "workspace:^",
