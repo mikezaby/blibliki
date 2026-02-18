@@ -1,4 +1,4 @@
-import { Button } from "@blibliki/ui";
+import { Button, Divider, IconButton, Stack } from "@blibliki/ui";
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/clerk-react";
 import { Link } from "@tanstack/react-router";
 import { Cpu, LogIn, Play, Square } from "lucide-react";
@@ -43,14 +43,13 @@ export default function Header() {
 
   return (
     <header className="flex items-center h-12 px-4 bg-gradient-to-r from-slate-100 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-lg">
-      {/* Logo in Transport Area */}
-      <div className="flex items-center gap-2 mr-4">
+      <Stack direction="row" align="center" gap={2} className="mr-4">
         <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
           Blibliki
         </h1>
-      </div>
+      </Stack>
 
-      <div className="flex items-center gap-2">
+      <Stack direction="row" align="center" gap={2}>
         <FileMenu />
         <SignedIn>
           <Button asChild variant="text" color="neutral" size="sm">
@@ -60,16 +59,18 @@ export default function Header() {
             </Link>
           </Button>
         </SignedIn>
-      </div>
+      </Stack>
 
-      {/* Project Controls Section */}
-      <div className="flex items-center gap-3 min-w-[280px] ml-6">
-        <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
+      <Stack
+        direction="row"
+        align="center"
+        gap={3}
+        className="ml-6 min-w-[280px]"
+      >
+        <Divider orientation="vertical" className="h-6" />
 
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-slate-600 dark:text-slate-400 font-medium uppercase tracking-wide">
-            Project
-          </label>
+        <Stack direction="row" align="center" gap={2}>
+          <label className={fieldLabelClassName}>Project</label>
           <Input
             className="h-7 w-40 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
             onChange={(event: ChangeEvent<HTMLInputElement>) =>
@@ -78,16 +79,19 @@ export default function Header() {
             value={patchName}
             placeholder="Untitled Patch"
           />
-        </div>
-      </div>
+        </Stack>
+      </Stack>
 
-      {/* Transport Controls Section with Logo */}
-      <div className="flex items-center justify-center flex-1 gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-slate-600 dark:text-slate-400 font-medium uppercase tracking-wide">
-              BPM
-            </label>
+      <Stack
+        direction="row"
+        align="center"
+        justify="center"
+        gap={4}
+        className="flex-1"
+      >
+        <Stack direction="row" align="center" gap={3}>
+          <Stack direction="row" align="center" gap={2}>
+            <label className={fieldLabelClassName}>BPM</label>
             <Input
               className="h-7 w-18 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm font-mono text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
               type="number"
@@ -98,28 +102,34 @@ export default function Header() {
               }}
               value={bpm}
             />
-          </div>
+          </Stack>
 
-          <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
+          <Divider orientation="vertical" className="h-6" />
 
-          <Button
+          <IconButton
+            aria-label={isStarted ? "Stop transport" : "Start transport"}
+            icon={
+              isStarted ? (
+                <Square className="w-4 h-4" />
+              ) : (
+                <Play className="w-4 h-4 ml-0.5" />
+              )
+            }
             onClick={togglePlay}
-            size="icon"
+            variant="contained"
             color="neutral"
-            className="rounded-full"
-          >
-            {isStarted ? (
-              <Square className="w-4 h-4" />
-            ) : (
-              <Play className="w-4 h-4 ml-0.5" />
-            )}
-          </Button>
-        </div>
-      </div>
+          />
+        </Stack>
+      </Stack>
 
-      {/* User & Settings Section */}
-      <div className="flex items-center gap-3 min-w-[200px] justify-end">
-        <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
+      <Stack
+        direction="row"
+        align="center"
+        gap={3}
+        justify="end"
+        className="min-w-[200px]"
+      >
+        <Divider orientation="vertical" className="h-6" />
 
         <ColorSchemeToggle />
         <Button asChild variant="text" color="neutral" size="sm">
@@ -132,7 +142,7 @@ export default function Header() {
           </a>
         </Button>
 
-        <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
+        <Divider orientation="vertical" className="h-6" />
 
         <SignedIn>
           <UserButton userProfileUrl="/user" />
@@ -150,11 +160,14 @@ export default function Header() {
             <span>Sign In</span>
           </Button>
         </SignedOut>
-      </div>
+      </Stack>
       {modalName === "patch" && <LoadModal />}
     </header>
   );
 }
+
+const fieldLabelClassName =
+  "text-xs text-slate-600 dark:text-slate-400 font-medium uppercase tracking-wide";
 
 function Github() {
   return (
