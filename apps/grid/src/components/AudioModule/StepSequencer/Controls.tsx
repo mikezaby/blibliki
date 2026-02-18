@@ -1,4 +1,5 @@
 import { Resolution, PlaybackMode } from "@blibliki/engine";
+import { Button } from "@blibliki/ui";
 
 type ControlsProps = {
   stepsPerPage: number;
@@ -25,30 +26,15 @@ export default function Controls({
 }: ControlsProps) {
   return (
     <div className="flex gap-4 items-center p-3 bg-slate-50 dark:bg-slate-800 rounded">
-      {/* Start/Stop Buttons */}
       <div className="flex gap-2">
-        <button
-          onClick={onStart}
-          disabled={isRunning}
-          className={`px-3 py-1 text-sm font-medium rounded ${
-            isRunning
-              ? "bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed"
-              : "bg-green-500 hover:bg-green-600 text-white"
-          }`}
+        <Button
+          color={isRunning ? "error" : "success"}
+          size="sm"
+          className="w-15"
+          onClick={isRunning ? onStop : onStart}
         >
-          Start
-        </button>
-        <button
-          onClick={onStop}
-          disabled={!isRunning}
-          className={`px-3 py-1 text-sm font-medium rounded ${
-            !isRunning
-              ? "bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed"
-              : "bg-red-500 hover:bg-red-600 text-white"
-          }`}
-        >
-          Stop
-        </button>
+          {isRunning ? "Stop" : "Start"}
+        </Button>
       </div>
 
       <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />

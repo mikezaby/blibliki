@@ -1,8 +1,9 @@
+import { Button } from "@blibliki/ui";
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/clerk-react";
 import { Link } from "@tanstack/react-router";
 import { Cpu, LogIn, Play, Square } from "lucide-react";
 import { ChangeEvent, useCallback, useEffect } from "react";
-import { Button, Input, buttonVariants } from "@/components/ui";
+import { Input } from "@/components/ui";
 import { start, stop, setBpm } from "@/globalSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { setName as setPatchName } from "@/patchSlice";
@@ -52,19 +53,12 @@ export default function Header() {
       <div className="flex items-center gap-2">
         <FileMenu />
         <SignedIn>
-          <Link
-            to="/devices"
-            className={
-              buttonVariants({
-                variant: "ghost",
-                size: "sm",
-              }) +
-              " text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 cursor-pointer"
-            }
-          >
-            <Cpu className="w-4 h-4" />
-            <span className="ml-2 text-sm">Devices</span>
-          </Link>
+          <Button asChild variant="text" color="neutral" size="sm">
+            <Link to="/devices">
+              <Cpu className="w-4 h-4" />
+              <span>Devices</span>
+            </Link>
+          </Button>
         </SignedIn>
       </div>
 
@@ -110,7 +104,9 @@ export default function Header() {
 
           <Button
             onClick={togglePlay}
-            className="h-8 w-8 rounded-full shadow-lg transition-all duration-200 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 shadow-slate-400/25 dark:shadow-slate-800/50 cursor-pointer"
+            size="icon"
+            color="neutral"
+            className="rounded-full"
           >
             {isStarted ? (
               <Square className="w-4 h-4" />
@@ -126,20 +122,15 @@ export default function Header() {
         <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
 
         <ColorSchemeToggle />
-        <a
-          href="https://github.com/mikezaby/blibliki"
-          target="_blank"
-          rel="noreferrer"
-          className={
-            buttonVariants({
-              variant: "ghost",
-              size: "sm",
-            }) +
-            " text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 cursor-pointer"
-          }
-        >
-          <Github />
-        </a>
+        <Button asChild variant="text" color="neutral" size="sm">
+          <a
+            href="https://github.com/mikezaby/blibliki"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <Github />
+          </a>
+        </Button>
 
         <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
 
@@ -148,15 +139,15 @@ export default function Header() {
         </SignedIn>
         <SignedOut>
           <Button
-            variant="ghost"
+            variant="text"
+            color="neutral"
             size="sm"
             onClick={() => {
               openSignIn();
             }}
-            className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 cursor-pointer"
           >
             <LogIn className="w-4 h-4" />
-            <span className="ml-2 text-sm">Sign In</span>
+            <span>Sign In</span>
           </Button>
         </SignedOut>
       </div>

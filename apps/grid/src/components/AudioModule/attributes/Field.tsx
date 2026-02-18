@@ -5,6 +5,7 @@ import {
   PropSchema,
   StringProp,
 } from "@blibliki/engine";
+import { Switch } from "@blibliki/ui";
 import { Label } from "@radix-ui/react-label";
 import { ChangeEvent } from "react";
 import Select from "@/components/Select";
@@ -130,27 +131,13 @@ export const CheckboxField = ({
           {label}
         </Label>
       </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={value}
-        onClick={() => {
-          onChange(!value);
+      <Switch
+        checked={Boolean(value)}
+        color="success"
+        onCheckedChange={(checked) => {
+          onChange(checked);
         }}
-        className={cn(
-          "relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-2 cursor-pointer",
-          value
-            ? "bg-green-500 dark:bg-green-600"
-            : "bg-red-400 dark:bg-slate-600",
-        )}
-      >
-        <span
-          className={cn(
-            "inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out pointer-events-none",
-            value ? "translate-x-5" : "translate-x-1",
-          )}
-        />
-      </button>
+      />
     </div>
   );
 };

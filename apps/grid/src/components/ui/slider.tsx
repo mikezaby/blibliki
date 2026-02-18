@@ -1,3 +1,4 @@
+import { Button } from "@blibliki/ui";
 import { ChangeEvent, useMemo } from "react";
 
 type SliderProps = {
@@ -117,14 +118,17 @@ function Labels({
       className={`flex ${labelDirection} ${justify} text-slate-700 dark:text-slate-300 gap-1`}
     >
       {marks.map((mark, index) => (
-        <button
+        <Button
           key={index}
-          className="flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors px-1.5 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+          size="sm"
+          variant="text"
+          color="secondary"
+          className="h-auto px-1.5 py-1"
           onClick={_onClick(mark.value)}
         >
           <div className="w-1 h-1 bg-linear-to-br from-blue-500 to-purple-600 rounded-full" />
           {mark.label}
-        </button>
+        </Button>
       ))}
     </div>
   );

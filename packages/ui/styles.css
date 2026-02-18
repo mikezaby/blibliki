@@ -129,32 +129,44 @@
 }
 
 .ui-button--color-neutral.ui-button--variant-contained {
+  background: var(--ui-color-surface-raised);
+  color: var(--ui-color-text-primary);
   border-color: color-mix(
     in oklab,
-    var(--ui-color-border-subtle),
-    var(--ui-color-text-muted) 20%
+    var(--ui-color-surface-raised-hover),
+    var(--ui-color-text-primary) 12%
   );
-  box-shadow: 0 1px 2px
-    color-mix(in oklab, var(--ui-color-text-primary), transparent 88%);
 }
 
 .ui-button--color-neutral.ui-button--variant-contained:hover:not(:disabled) {
+  background: var(--ui-color-surface-raised-hover);
   border-color: color-mix(
     in oklab,
-    var(--ui-color-border-subtle),
-    var(--ui-color-text-muted) 26%
+    var(--ui-color-surface-raised-hover),
+    var(--ui-color-text-primary) 20%
   );
-  box-shadow: 0 2px 4px
-    color-mix(in oklab, var(--ui-color-text-primary), transparent 84%);
 }
 
 .ui-button--color-neutral.ui-button--variant-outlined {
   color: var(--ui-color-text-primary);
-  border-color: var(--ui-color-border-subtle);
+  border-color: color-mix(
+    in oklab,
+    var(--ui-color-surface-raised-hover),
+    var(--ui-color-text-primary) 18%
+  );
 }
 
 .ui-button--color-neutral.ui-button--variant-outlined:hover:not(:disabled) {
-  background: var(--ui-color-surface-1);
+  background: color-mix(
+    in oklab,
+    var(--ui-color-surface-raised-hover),
+    var(--ui-color-text-primary) 8%
+  );
+  border-color: color-mix(
+    in oklab,
+    var(--ui-color-surface-raised-hover),
+    var(--ui-color-text-primary) 30%
+  );
 }
 
 .ui-button--color-neutral.ui-button--variant-text {
@@ -162,7 +174,11 @@
 }
 
 .ui-button--color-neutral.ui-button--variant-text:hover:not(:disabled) {
-  background: var(--ui-color-surface-1);
+  background: color-mix(
+    in oklab,
+    var(--ui-color-surface-raised-hover),
+    transparent 20%
+  );
 }
 
 .ui-button--size-md {

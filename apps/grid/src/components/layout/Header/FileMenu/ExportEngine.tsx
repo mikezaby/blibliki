@@ -1,7 +1,17 @@
 import { Engine } from "@blibliki/engine";
+import { Button } from "@blibliki/ui";
+import { ReactNode } from "react";
 import { useAppSelector } from "@/hooks";
 
-export default function ExportEngine() {
+type ExportEngineProps = {
+  className?: string;
+  children?: ReactNode;
+};
+
+export default function ExportEngine({
+  className,
+  children,
+}: ExportEngineProps) {
   const { patch } = useAppSelector((state) => state.patch);
 
   const exportJSON = () => {
@@ -17,5 +27,15 @@ export default function ExportEngine() {
     URL.revokeObjectURL(url);
   };
 
-  return <button onClick={exportJSON}>Export for engine</button>;
+  return (
+    <Button
+      onClick={exportJSON}
+      variant="text"
+      color="neutral"
+      size="sm"
+      className={className}
+    >
+      {children ?? "Export for engine"}
+    </Button>
+  );
 }

@@ -4,12 +4,13 @@ import {
   ModuleType,
   moduleSchemas,
 } from "@blibliki/engine";
+import { Button } from "@blibliki/ui";
 import { ChevronDown, ChevronUp, SquarePlus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Select from "@/components/Select";
 import { useAppSelector, useAppDispatch } from "@/hooks";
 import { ModuleComponent } from ".";
-import { Button, Input, Label } from "../ui";
+import { Input, Label } from "../ui";
 import Container from "./Container";
 import { initialize } from "./MidiInput/midiDevicesSlice";
 import { modulesSelector } from "./modulesSlice";
@@ -225,7 +226,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
 
         <div className="flex gap-2">
           <Button
-            variant="outline"
+            variant="outlined"
             size="sm"
             disabled={activePage === 0}
             onClick={() => {
@@ -236,7 +237,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
             {"← Previous"}
           </Button>
           <Button
-            variant="outline"
+            variant="outlined"
             size="sm"
             disabled={activePage === pages.length - 1}
             onClick={() => {
@@ -246,11 +247,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
           >
             {"Next →"}
           </Button>
-          <Button
-            size="sm"
-            onClick={onAddPage}
-            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 shadow-md"
-          >
+          <Button size="sm" onClick={onAddPage}>
             <SquarePlus className="w-4 h-4" />
             New Page
           </Button>
@@ -277,7 +274,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
             />
           </div>
           <Button
-            variant="destructive"
+            color="error"
             size="sm"
             disabled={pages.length <= 1}
             onClick={() => {
@@ -297,7 +294,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
         </h3>
         <div className="flex gap-2">
           <Button
-            variant={viewMode === "page" ? "default" : "outline"}
+            variant={viewMode === "page" ? "contained" : "outlined"}
             size="sm"
             onClick={() => {
               setViewMode("page");
@@ -307,7 +304,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
             Page Mappings
           </Button>
           <Button
-            variant={viewMode === "global" ? "default" : "outline"}
+            variant={viewMode === "global" ? "contained" : "outlined"}
             size="sm"
             onClick={() => {
               setViewMode("global");
@@ -397,12 +394,11 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                   </div>
 
                   <Button
-                    variant="ghost"
-                    size="sm"
+                    variant="text"
+                    size="icon"
                     onClick={() => {
                       toggleExpanded(i);
                     }}
-                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                   >
                     {isExpanded ? (
                       <ChevronUp className="w-4 h-4" />
@@ -412,12 +408,11 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                   </Button>
 
                   <Button
-                    variant="ghost"
-                    size="sm"
+                    variant="text"
+                    size="icon"
                     onClick={() => {
                       onRemoveMapping(i);
                     }}
-                    className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -542,11 +537,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
         </div>
       </div>
 
-      <Button
-        onClick={onAdd}
-        variant="outline"
-        className="w-full border-dashed border-2 hover:border-solid hover:bg-slate-50 dark:hover:bg-slate-900/50"
-      >
+      <Button onClick={onAdd} variant="outlined">
         <SquarePlus className="w-4 h-4" />
         Add New Mapping
       </Button>

@@ -1,14 +1,9 @@
+import { Button } from "@blibliki/ui";
 import { useUser } from "@clerk/clerk-react";
 import { Plus, Trash2, Edit2, Cpu, Copy, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { open } from "@/components/Modal/modalSlice";
-import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { loadDevices, deleteDevice } from "@/devicesSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import DeviceModal from "./DeviceModal";
@@ -71,10 +66,7 @@ export default function Devices() {
               Manage your Raspberry Pi and Node.js devices
             </p>
           </div>
-          <Button
-            onClick={handleAdd}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
+          <Button onClick={handleAdd} color="info">
             <Plus className="w-4 h-4 mr-2" />
             Add Device
           </Button>
@@ -101,9 +93,10 @@ export default function Devices() {
                   onClick={() => {
                     handleCopyUserId().catch(console.error);
                   }}
-                  variant="outline"
+                  variant="outlined"
+                  color="info"
                   size="sm"
-                  className="ml-4 border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/50"
+                  className="ml-4"
                 >
                   {copiedUserId ? (
                     <>
@@ -133,10 +126,7 @@ export default function Devices() {
                 Add your first Blibliki Pi device to start running patches on
                 Raspberry Pi or other Node.js environments.
               </p>
-              <Button
-                onClick={handleAdd}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
+              <Button onClick={handleAdd} color="info">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Your First Device
               </Button>
@@ -186,7 +176,8 @@ export default function Devices() {
                         onClick={() => {
                           handleEdit(device.id);
                         }}
-                        variant="outline"
+                        variant="outlined"
+                        color="neutral"
                         size="sm"
                         className="flex-1"
                       >
@@ -197,9 +188,9 @@ export default function Devices() {
                         onClick={() => {
                           handleDelete(device.id).catch(console.error);
                         }}
-                        variant="outline"
+                        variant="outlined"
+                        color="error"
                         size="sm"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

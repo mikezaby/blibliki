@@ -1,4 +1,6 @@
 import { IPattern, moduleSchemas, ModuleType } from "@blibliki/engine";
+import { Button, IconButton } from "@blibliki/ui";
+import { Plus, X } from "lucide-react";
 import { TUpdateProp } from "..";
 import { CheckboxField } from "../attributes/Field";
 
@@ -63,49 +65,37 @@ export default function PatternSelector({
         <div className="flex gap-1">
           {patterns.map((pattern, index) => (
             <div key={index} className="relative group">
-              <button
+              <Button
+                size="sm"
+                variant={index === activePatternNo ? "contained" : "outlined"}
                 onClick={() => {
                   onPatternChange(index);
                 }}
                 disabled={isSequenceActive}
-                className={`
-                px-3 py-1 text-sm font-medium rounded
-                transition-colors
-                ${
-                  index === activePatternNo
-                    ? "bg-blue-500 text-white"
-                    : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600"
-                }
-                ${isSequenceActive ? "opacity-50 cursor-not-allowed" : ""}
-              `}
-                title={
-                  isSequenceActive
-                    ? "Pattern selection disabled during sequence playback"
-                    : undefined
-                }
               >
                 {pattern.name}
-              </button>
+              </Button>
               {patterns.length > 1 && (
-                <button
+                <IconButton
+                  aria-label="Delete pattern"
+                  icon={<X />}
+                  size="xs"
+                  color="error"
+                  variant="contained"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDeletePattern(index);
                   }}
-                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600"
+                  className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity"
                   title="Delete pattern"
-                >
-                  ×
-                </button>
+                />
               )}
             </div>
           ))}
-          <button
-            onClick={onAddPattern}
-            className="px-3 py-1 text-sm font-medium rounded bg-green-500 text-white hover:bg-green-600 transition-colors"
-          >
-            + New
-          </button>
+          <Button size="sm" color="success" onClick={onAddPattern}>
+            <Plus className="w-4 h-4" />
+            New
+          </Button>
         </div>
       </div>
 

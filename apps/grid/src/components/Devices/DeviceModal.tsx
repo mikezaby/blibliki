@@ -1,10 +1,11 @@
 import { IDevice } from "@blibliki/models";
+import { Button } from "@blibliki/ui";
 import { useUser } from "@clerk/clerk-react";
 import { Cpu, Save } from "lucide-react";
 import { useState } from "react";
 import Modal, { close as closeModal } from "@/components/Modal";
 import Select from "@/components/Select";
-import { Button, Input, Label } from "@/components/ui";
+import { Input, Label } from "@/components/ui";
 import { saveDevice } from "@/devicesSlice";
 import { useAppDispatch, useAppSelector, usePatches } from "@/hooks";
 
@@ -152,15 +153,15 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
       {/* Footer */}
       <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-b-lg">
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="text" color="secondary" size="sm" onClick={onClose}>
             Cancel
           </Button>
           <Button
             size="sm"
+            color="info"
             onClick={() => {
               void handleSave();
             }}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             <Save className="w-4 h-4 mr-1" />
             {isNew ? "Add Device" : "Save Changes"}

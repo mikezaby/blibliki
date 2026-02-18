@@ -1,8 +1,9 @@
+import { Button } from "@blibliki/ui";
 import { Link } from "@tanstack/react-router";
 import { FolderOpen, Search, User, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import Modal, { close as closeModal } from "@/components/Modal";
-import { Button, Input } from "@/components/ui";
+import { Input } from "@/components/ui";
 import { useAppDispatch, usePatches } from "@/hooks";
 
 export default function LoadPatchModal() {
@@ -106,7 +107,7 @@ export default function LoadPatchModal() {
             {filteredPatches.length === 1 ? "patch" : "patches"} available
           </p>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={close}>
+            <Button variant="text" color="secondary" size="sm" onClick={close}>
               Cancel
             </Button>
           </div>

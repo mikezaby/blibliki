@@ -1,7 +1,7 @@
+import { Button } from "@blibliki/ui";
 import { assertNever } from "@blibliki/utils";
 import { ReactNode } from "react";
 import { useAppDispatch } from "@/hooks";
-import { cn } from "@/lib/utils";
 import { open, close } from "./modalSlice";
 
 type Props = {
@@ -29,8 +29,14 @@ export default function TriggerModal(props: Props) {
   };
 
   return (
-    <button className={cn("btn", className)} onClick={onClick}>
+    <Button
+      variant="text"
+      color="neutral"
+      size="sm"
+      className={className}
+      onClick={onClick}
+    >
       {children}
-    </button>
+    </Button>
   );
 }

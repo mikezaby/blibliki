@@ -1,8 +1,15 @@
 import type { IPatch } from "@blibliki/models";
+import { Button } from "@blibliki/ui";
+import { ReactNode } from "react";
 import { modulesSelector } from "@/components/AudioModule/modulesSlice";
 import { useAppSelector } from "@/hooks";
 
-export default function ExportGrid() {
+type ExportGridProps = {
+  className?: string;
+  children?: ReactNode;
+};
+
+export default function ExportGrid({ className, children }: ExportGridProps) {
   const { patch } = useAppSelector((state) => state.patch);
   const { bpm } = useAppSelector((state) => state.global);
   const gridNodes = useAppSelector((state) => state.gridNodes);
@@ -26,5 +33,15 @@ export default function ExportGrid() {
     URL.revokeObjectURL(url);
   };
 
-  return <button onClick={exportJSON}>Export for Grid</button>;
+  return (
+    <Button
+      onClick={exportJSON}
+      variant="text"
+      color="neutral"
+      size="sm"
+      className={className}
+    >
+      {children ?? "Export for Grid"}
+    </Button>
+  );
 }

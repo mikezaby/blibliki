@@ -1,3 +1,4 @@
+import { Button } from "@blibliki/ui";
 import {
   CheckCircle2,
   AlertCircle,
@@ -47,6 +48,13 @@ const colorMap = {
   },
 };
 
+const buttonColorMap = {
+  success: "success",
+  error: "error",
+  warning: "warning",
+  info: "info",
+} as const;
+
 export default function NotificationItem({
   notification,
 }: NotificationItemProps) {
@@ -91,18 +99,16 @@ export default function NotificationItem({
           </p>
         )}
       </div>
-      <button
+      <Button
         onClick={handleClose}
-        className={`
-          shrink-0 rounded-md p-1
-          hover:bg-black/5 dark:hover:bg-white/5
-          transition-colors
-          ${colors.text}
-        `}
+        size="icon"
+        variant="text"
+        color={buttonColorMap[notification.type]}
+        className="h-6 w-6 shrink-0 p-0"
         aria-label="Close notification"
       >
         <X className="w-4 h-4" />
-      </button>
+      </Button>
     </div>
   );
 }

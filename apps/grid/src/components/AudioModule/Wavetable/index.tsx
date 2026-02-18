@@ -7,12 +7,12 @@ import {
   extractEmbeddedWavetableTablesFromWavBytes,
   extractWavetableTablesFromAudioBuffer,
 } from "@blibliki/engine";
+import { Button } from "@blibliki/ui";
 import { AudioContext } from "@blibliki/utils/web-audio-api";
 import { Download, Edit2, Plus, Trash2, Upload, Waves } from "lucide-react";
 import { ChangeEvent, useMemo, useRef, useState } from "react";
 import Fader, { MarkProps } from "@/components/Fader";
 import {
-  Button,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -291,7 +291,7 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
               />
               <Dialog open={isModalOpen} onOpenChange={handleOpenChange}>
                 <DialogTrigger asChild>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="outlined">
                     Edit Wavetable Config
                   </Button>
                 </DialogTrigger>
@@ -324,7 +324,7 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                           </p>
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="outlined"
                             className="gap-1"
                             onClick={addTable}
                           >
@@ -353,7 +353,8 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                               <Button
                                 type="button"
                                 size="icon"
-                                variant="ghost"
+                                variant="text"
+                                color="secondary"
                                 className="h-8 w-8"
                                 onClick={() => {
                                   openEditTable(index);
@@ -364,8 +365,9 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                               <Button
                                 type="button"
                                 size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 text-red-500 hover:text-red-600"
+                                variant="text"
+                                color="error"
+                                className="h-8 w-8"
                                 onClick={() => {
                                   removeTable(index);
                                 }}
@@ -381,7 +383,8 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                       <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-b-lg">
                         <div className="flex items-center justify-end gap-2">
                           <Button
-                            variant="ghost"
+                            variant="text"
+                            color="secondary"
                             onClick={() => {
                               setIsModalOpen(false);
                             }}
@@ -422,7 +425,11 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
 
                       <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-b-lg">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" onClick={backToList}>
+                          <Button
+                            variant="text"
+                            color="secondary"
+                            onClick={backToList}
+                          >
                             Back
                           </Button>
                           <Button onClick={applyEditedTable}>Save</Button>
@@ -434,7 +441,7 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
               </Dialog>
               <Button
                 size="sm"
-                variant="outline"
+                variant="outlined"
                 className="gap-1"
                 onClick={triggerImportWav}
                 disabled={isImportingWav}
@@ -444,7 +451,7 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
               </Button>
               <Button
                 size="sm"
-                variant="outline"
+                variant="outlined"
                 className="gap-1"
                 onClick={exportWav}
                 disabled={isExportingWav}

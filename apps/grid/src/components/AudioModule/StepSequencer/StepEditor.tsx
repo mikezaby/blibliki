@@ -1,4 +1,5 @@
 import { IStep, stepPropSchema } from "@blibliki/engine";
+import { Button } from "@blibliki/ui";
 import Fader, { MarkProps } from "@/components/Fader";
 import CCEditor from "./CCEditor";
 import NoteEditor from "./NoteEditor";
@@ -63,24 +64,28 @@ export default function StepEditor({
 
           {/* Quick Actions */}
           <div className="flex gap-2">
-            <button
+            <Button
+              size="sm"
+              variant="text"
+              color="secondary"
               onClick={() => {
                 onUpdate({ probability: 100 });
               }}
-              className="px-2 py-1 text-xs bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded transition-colors"
               title="Reset probability to 100%"
             >
               100%
-            </button>
-            <button
+            </Button>
+            <Button
+              size="sm"
+              variant="text"
+              color="error"
               onClick={() => {
                 onUpdate({ notes: [], ccMessages: [] });
               }}
-              className="px-2 py-1 text-xs bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/60 text-red-700 dark:text-red-300 rounded transition-colors"
               title="Clear all notes and CC"
             >
               Clear
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -180,16 +185,19 @@ export default function StepEditor({
                     orientation="horizontal"
                   />
                 </div>
-                <button
+                <Button
+                  size="sm"
+                  variant="text"
+                  color="error"
                   onClick={() => {
                     onUpdate({
                       notes: step.notes.filter((_, i) => i !== index),
                     });
                   }}
-                  className="px-2 py-1 text-xs bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/60 text-red-600 dark:text-red-300 rounded transition-colors shrink-0 mt-2"
+                  className="mt-2 shrink-0"
                 >
                   ✕
-                </button>
+                </Button>
               </div>
             ))}
 
@@ -220,16 +228,19 @@ export default function StepEditor({
                     orientation="horizontal"
                   />
                 </div>
-                <button
+                <Button
+                  size="sm"
+                  variant="text"
+                  color="error"
                   onClick={() => {
                     onUpdate({
                       ccMessages: step.ccMessages.filter((_, i) => i !== index),
                     });
                   }}
-                  className="px-2 py-1 text-xs bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/60 text-red-600 dark:text-red-300 rounded transition-colors shrink-0 mt-2"
+                  className="mt-2 shrink-0"
                 >
                   ✕
-                </button>
+                </Button>
               </div>
             ))}
           </div>

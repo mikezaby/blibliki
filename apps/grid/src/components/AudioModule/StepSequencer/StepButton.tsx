@@ -57,7 +57,6 @@ export default function StepButton({
     return isPlaying ? "animate-pulse" : "";
   };
 
-  // Text color
   const getTextColor = () => {
     if (!isActive || !hasNotes) {
       return "text-slate-400 dark:text-slate-500";
@@ -69,7 +68,6 @@ export default function StepButton({
 
   return (
     <div className="flex flex-col items-center gap-1">
-      {/* Active/Inactive Indicator Dot */}
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -87,7 +85,6 @@ export default function StepButton({
         title={isActive ? "Click to mute step" : "Click to activate step"}
       />
 
-      {/* Step Button */}
       <button
         onClick={onSelect}
         className={`

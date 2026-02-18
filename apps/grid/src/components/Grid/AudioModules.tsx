@@ -1,8 +1,8 @@
+import { Button } from "@blibliki/ui";
 import { PanelLeftClose, PanelLeftOpen, Blocks } from "lucide-react";
 import { useState, DragEvent } from "react";
 import { AvailableModules } from "@/components/AudioModule/modulesSlice";
 import useDrag from "@/components/Grid/useDrag";
-import { Button } from "@/components/ui";
 
 const SupportedModules = Object.values(AvailableModules)
   .map(({ moduleType }) => moduleType)
@@ -33,8 +33,9 @@ export default function AudioModules() {
       </div>
 
       <Button
-        variant="ghost"
-        className="absolute left-[189px] top-0 h-13 rounded-none rounded-r-md border-r border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 shadow-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+        variant="contained"
+        color="neutral"
+        className="absolute left-47.25 top-0 h-13 rounded-none rounded-r-md"
         onClick={onClick}
       >
         {visible ? (
@@ -49,8 +50,9 @@ export default function AudioModules() {
           {SupportedModules.map((moduleName) => (
             <li key={moduleName}>
               <Button
-                variant="ghost"
-                className="w-full justify-start cursor-move h-9 px-3 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/30 transition-colors group"
+                color="neutral"
+                size="md"
+                className="w-full justify-start cursor-move group"
                 onDragStart={(event: DragEvent) => {
                   onDragStart(event, moduleName);
                 }}
