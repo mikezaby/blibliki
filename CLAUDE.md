@@ -361,6 +361,11 @@ class MonoScale extends Module<ModuleType.Scale> {
 - React 19 with experimental compiler enabled
 - Tailwind CSS for styling (Grid app uses Tailwind v4)
 
+## Scope Discipline
+
+- Only make changes directly related to the current user request.
+- Do not perform unrelated refactors, cleanups, or extra file changes unless explicitly requested.
+
 ## Before Finish
 
 Always run this tasks to check if everything is ok
