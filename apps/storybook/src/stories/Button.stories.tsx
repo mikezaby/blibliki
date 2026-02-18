@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const buttonColors = [
   "primary",
+  "neutral",
   "secondary",
   "error",
   "warning",

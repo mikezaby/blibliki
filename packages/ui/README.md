@@ -57,7 +57,7 @@ Dark mode is handled via `mode="light" | "dark"` and corresponding CSS variables
 
 Button API:
 
-- `color`: `primary | secondary | error | warning | info | success`
+- `color`: `primary | neutral | secondary | error | warning | info | success`
 - `variant`: `contained | outlined | text`
 - `size`: `md | sm | lg | icon`
 

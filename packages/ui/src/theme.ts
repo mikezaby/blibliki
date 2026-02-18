@@ -2,6 +2,8 @@ export type UIMode = "light" | "dark";
 
 export interface UIColorTokens {
   surface0: string;
+  surfaceRaised: string;
+  surfaceRaisedHover: string;
   surface1: string;
   surface2: string;
   borderSubtle: string;
@@ -48,6 +50,8 @@ export interface UIResolvedTheme {
 
 const defaultLight: UIColorTokens = {
   surface0: "oklch(0.985 0.004 260)",
+  surfaceRaised: "oklch(0.996 0.002 260)",
+  surfaceRaisedHover: "oklch(1 0 0)",
   surface1: "oklch(0.96 0.006 260)",
   surface2: "oklch(0.92 0.008 260)",
   borderSubtle: "oklch(0.84 0.01 260)",
@@ -76,6 +80,8 @@ const defaultLight: UIColorTokens = {
 
 const defaultDark: UIColorTokens = {
   surface0: "oklch(0.12 0.01 260)",
+  surfaceRaised: "oklch(0.2 0.01 260)",
+  surfaceRaisedHover: "oklch(0.24 0.01 260)",
   surface1: "oklch(0.16 0.01 260)",
   surface2: "oklch(0.21 0.01 260)",
   borderSubtle: "oklch(0.34 0.01 260)",
@@ -122,6 +128,8 @@ export function themeToCssVariables(
 
   return {
     "--ui-color-surface-0": colors.surface0,
+    "--ui-color-surface-raised": colors.surfaceRaised,
+    "--ui-color-surface-raised-hover": colors.surfaceRaisedHover,
     "--ui-color-surface-1": colors.surface1,
     "--ui-color-surface-2": colors.surface2,
     "--ui-color-border-subtle": colors.borderSubtle,

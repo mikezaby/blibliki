@@ -20,11 +20,24 @@ const config: StorybookConfig = {
   async viteFinal(baseConfig) {
     return mergeConfig(baseConfig, {
       resolve: {
-        alias: {
-          "@blibliki/ui": resolve(uiPackagePath, "src/index.ts"),
-          "@blibliki/ui/styles.css": resolve(uiPackagePath, "styles.css"),
-          "@blibliki/ui/tokens.css": resolve(uiPackagePath, "tokens.css"),
-        },
+        alias: [
+          {
+            find: "@blibliki/ui/styles.css",
+            replacement: resolve(uiPackagePath, "styles.css"),
+          },
+          {
+            find: "@blibliki/ui/tokens.css",
+            replacement: resolve(uiPackagePath, "tokens.css"),
+          },
+          {
+            find: /^@blibliki\/ui$/,
+            replacement: resolve(uiPackagePath, "src/index.ts"),
+          },
+          {
+            find: /^@\//,
+            replacement: `${resolve(uiPackagePath, "src")}/`,
+          },
+        ],
       },
     });
   },

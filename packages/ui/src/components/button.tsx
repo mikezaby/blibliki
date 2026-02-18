@@ -12,6 +12,7 @@ const buttonVariants = cva("ui-button", {
     },
     color: {
       primary: "ui-button--color-primary",
+      neutral: "ui-button--color-neutral",
       secondary: "ui-button--color-secondary",
       error: "ui-button--color-error",
       warning: "ui-button--color-warning",

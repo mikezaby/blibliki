@@ -1,4 +1,6 @@
 export { Button, buttonVariants, type ButtonProps } from "./components/button";
+export { IconButton, type IconButtonProps } from "./components/icon-button";
+export { Switch, type SwitchProps } from "./components/switch";
 export { UIProvider, type UIProviderProps } from "./UIProvider";
 export { cn } from "./lib/cn";
 export {
