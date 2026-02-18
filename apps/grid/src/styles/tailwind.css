@@ -1,34 +1,44 @@
-@import "tailwindcss" source("../");
+@import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* Expose @blibliki/ui tokens as Tailwind utilities. */
+  --radius-sm: var(--ui-radius-sm);
+  --radius-md: var(--ui-radius-md);
+  --radius-lg: var(--ui-radius-lg);
+  --radius-xl: calc(var(--ui-radius-lg) + 4px);
 
-  /* Semantic palette utilities: bg-surface-*, text-content-*, border-border-* */
-  --color-surface-canvas: var(--palette-surface-canvas);
-  --color-surface-panel: var(--palette-surface-panel);
-  --color-surface-raised: var(--palette-surface-raised);
-  --color-surface-subtle: var(--palette-surface-subtle);
-  --color-content-primary: var(--palette-text-primary);
-  --color-content-secondary: var(--palette-text-secondary);
-  --color-content-muted: var(--palette-text-muted);
-  --color-border-subtle: var(--palette-border-subtle);
-  --color-border-strong: var(--palette-border-strong);
-  --color-brand: var(--palette-brand-500);
-  --color-brand-hover: var(--palette-brand-600);
-  --color-brand-secondary: var(--palette-secondary-500);
-  --color-brand-secondary-hover: var(--palette-secondary-600);
-  --color-success: var(--palette-success-500);
-  --color-warning: var(--palette-warning-500);
-  --color-error: var(--palette-error-500);
-  --color-info: var(--palette-info-500);
+  --color-surface-canvas: var(--ui-color-surface-0);
+  --color-surface-panel: var(--ui-color-surface-1);
+  --color-surface-raised: var(--ui-color-surface-raised);
+  --color-surface-subtle: var(--ui-color-surface-2);
 
-  /* shadcn compatibility tokens used by existing components */
+  --color-content-primary: var(--ui-color-text-primary);
+  --color-content-secondary: var(--ui-color-text-secondary);
+  --color-content-muted: var(--ui-color-text-muted);
+
+  --color-border-subtle: var(--ui-color-border-subtle);
+  --color-border-strong: color-mix(
+    in oklab,
+    var(--ui-color-border-subtle),
+    var(--ui-color-text-primary) 18%
+  );
+
+  --color-brand: var(--ui-color-primary-500);
+  --color-brand-hover: var(--ui-color-primary-600);
+  --color-brand-contrast: var(--ui-color-primary-contrast);
+  --color-brand-secondary: var(--ui-color-secondary-500);
+  --color-brand-secondary-hover: var(--ui-color-secondary-600);
+  --color-brand-secondary-contrast: var(--ui-color-secondary-contrast);
+
+  --color-success: var(--ui-color-success-500);
+  --color-warning: var(--ui-color-warning-500);
+  --color-error: var(--ui-color-error-500);
+  --color-info: var(--ui-color-info-500);
+
+  /* shadcn compatibility tokens used by existing components. */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -63,112 +73,45 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  /* Grid palette foundation (light) */
-  --palette-surface-canvas: var(--color-slate-100);
-  --palette-surface-panel: var(--color-slate-50);
-  --palette-surface-raised: var(--color-white);
-  --palette-surface-subtle: var(--color-slate-200);
-  --palette-border-subtle: var(--color-slate-200);
-  --palette-border-strong: var(--color-slate-300);
-  --palette-text-primary: var(--color-slate-900);
-  --palette-text-secondary: var(--color-slate-600);
-  --palette-text-muted: var(--color-slate-500);
-
-  --palette-brand-500: var(--color-blue-500);
-  --palette-brand-600: var(--color-blue-600);
-  --palette-brand-contrast: var(--color-white);
-
-  --palette-secondary-500: var(--color-purple-500);
-  --palette-secondary-600: var(--color-purple-600);
-  --palette-secondary-contrast: var(--color-white);
-
-  --palette-error-500: var(--color-red-500);
-  --palette-error-600: var(--color-red-600);
-  --palette-error-contrast: var(--color-white);
-
-  --palette-warning-500: var(--color-amber-500);
-  --palette-warning-600: var(--color-amber-600);
-  --palette-warning-contrast: var(--color-slate-950);
-
-  --palette-info-500: var(--color-sky-500);
-  --palette-info-600: var(--color-sky-600);
-  --palette-info-contrast: var(--color-white);
-
-  --palette-success-500: var(--color-green-500);
-  --palette-success-600: var(--color-green-600);
-  --palette-success-contrast: var(--color-white);
-
-  /* shadcn compatibility aliases */
-  --background: var(--palette-surface-canvas);
-  --foreground: var(--palette-text-primary);
-  --card: var(--palette-surface-panel);
-  --card-foreground: var(--palette-text-primary);
-  --popover: var(--palette-surface-raised);
-  --popover-foreground: var(--palette-text-primary);
-  --primary: var(--palette-brand-500);
-  --primary-foreground: var(--palette-brand-contrast);
-  --secondary: var(--palette-secondary-500);
-  --secondary-foreground: var(--palette-secondary-contrast);
-  --muted: var(--palette-surface-subtle);
-  --muted-foreground: var(--palette-text-muted);
+  /* shadcn compatibility aliases derived from @blibliki/ui tokens. */
+  --radius: var(--ui-radius-md);
+  --background: var(--ui-color-surface-0);
+  --foreground: var(--ui-color-text-primary);
+  --card: var(--ui-color-surface-1);
+  --card-foreground: var(--ui-color-text-primary);
+  --popover: var(--ui-color-surface-raised);
+  --popover-foreground: var(--ui-color-text-primary);
+  --primary: var(--ui-color-primary-500);
+  --primary-foreground: var(--ui-color-primary-contrast);
+  --secondary: var(--ui-color-secondary-500);
+  --secondary-foreground: var(--ui-color-secondary-contrast);
+  --muted: var(--ui-color-surface-2);
+  --muted-foreground: var(--ui-color-text-muted);
   --accent: color-mix(
     in oklab,
-    var(--palette-brand-500),
-    var(--palette-surface-panel) 88%
+    var(--ui-color-primary-500),
+    var(--ui-color-surface-1) 88%
   );
-  --accent-foreground: var(--palette-text-primary);
-  --destructive: var(--palette-error-500);
-  --border: var(--palette-border-subtle);
-  --input: var(--palette-surface-raised);
-  --ring: color-mix(in oklab, var(--palette-brand-500), transparent 55%);
+  --accent-foreground: var(--ui-color-text-primary);
+  --destructive: var(--ui-color-error-500);
+  --border: var(--ui-color-border-subtle);
+  --input: var(--ui-color-surface-raised);
+  --ring: color-mix(in oklab, var(--ui-color-primary-500), transparent 55%);
 
-  --chart-1: var(--palette-brand-500);
-  --chart-2: var(--palette-secondary-500);
-  --chart-3: var(--palette-success-500);
-  --chart-4: var(--palette-warning-500);
-  --chart-5: var(--palette-error-500);
+  --chart-1: var(--ui-color-primary-500);
+  --chart-2: var(--ui-color-secondary-500);
+  --chart-3: var(--ui-color-success-500);
+  --chart-4: var(--ui-color-warning-500);
+  --chart-5: var(--ui-color-error-500);
 
-  --sidebar: var(--palette-surface-panel);
-  --sidebar-foreground: var(--palette-text-primary);
-  --sidebar-primary: var(--palette-brand-500);
-  --sidebar-primary-foreground: var(--palette-brand-contrast);
-  --sidebar-accent: var(--palette-surface-subtle);
-  --sidebar-accent-foreground: var(--palette-text-primary);
-  --sidebar-border: var(--palette-border-subtle);
+  --sidebar: var(--ui-color-surface-1);
+  --sidebar-foreground: var(--ui-color-text-primary);
+  --sidebar-primary: var(--ui-color-primary-500);
+  --sidebar-primary-foreground: var(--ui-color-primary-contrast);
+  --sidebar-accent: var(--ui-color-surface-2);
+  --sidebar-accent-foreground: var(--ui-color-text-primary);
+  --sidebar-border: var(--ui-color-border-subtle);
   --sidebar-ring: var(--ring);
-}
-
-.dark {
-  /* Grid palette foundation (dark) */
-  --palette-surface-canvas: var(--color-slate-950);
-  --palette-surface-panel: var(--color-slate-900);
-  --palette-surface-raised: var(--color-slate-800);
-  --palette-surface-subtle: var(--color-slate-700);
-  --palette-border-subtle: var(--color-slate-700);
-  --palette-border-strong: var(--color-slate-600);
-  --palette-text-primary: var(--color-slate-100);
-  --palette-text-secondary: var(--color-slate-300);
-  --palette-text-muted: var(--color-slate-400);
-
-  --palette-brand-500: var(--color-blue-400);
-  --palette-brand-600: var(--color-blue-500);
-
-  --palette-secondary-500: var(--color-purple-400);
-  --palette-secondary-600: var(--color-purple-500);
-
-  --palette-error-500: var(--color-red-400);
-  --palette-error-600: var(--color-red-500);
-
-  --palette-warning-500: var(--color-amber-400);
-  --palette-warning-600: var(--color-amber-500);
-  --palette-warning-contrast: var(--color-slate-950);
-
-  --palette-info-500: var(--color-sky-400);
-  --palette-info-600: var(--color-sky-500);
-
-  --palette-success-500: var(--color-green-400);
-  --palette-success-600: var(--color-green-500);
 }
 
 @layer base {

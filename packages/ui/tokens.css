@@ -1,4 +1,12 @@
+/*
+ * @blibliki/ui default design tokens.
+ *
+ * These values are package-level fallbacks only.
+ * Product-specific palettes belong in app themes (UIProvider + createTheme),
+ * not in this file.
+ */
 :root {
+  /* Surfaces and borders */
   --ui-color-surface-0: oklch(0.985 0.004 260);
   --ui-color-surface-raised: oklch(0.996 0.002 260);
   --ui-color-surface-raised-hover: oklch(1 0 0);
@@ -6,10 +14,12 @@
   --ui-color-surface-2: oklch(0.92 0.008 260);
   --ui-color-border-subtle: oklch(0.84 0.01 260);
 
+  /* Typography */
   --ui-color-text-primary: oklch(0.18 0.01 260);
   --ui-color-text-secondary: oklch(0.33 0.01 260);
   --ui-color-text-muted: oklch(0.48 0.01 260);
 
+  /* Semantic colors */
   --ui-color-primary-500: oklch(0.62 0.19 255);
   --ui-color-primary-600: oklch(0.55 0.2 255);
   --ui-color-primary-contrast: oklch(0.98 0 0);
@@ -40,6 +50,7 @@
 }
 
 :where(.dark, [data-theme="dark"]) {
+  /* Surfaces and borders */
   --ui-color-surface-0: oklch(0.12 0.01 260);
   --ui-color-surface-raised: oklch(0.2 0.01 260);
   --ui-color-surface-raised-hover: oklch(0.24 0.01 260);
@@ -47,10 +58,12 @@
   --ui-color-surface-2: oklch(0.21 0.01 260);
   --ui-color-border-subtle: oklch(0.34 0.01 260);
 
+  /* Typography */
   --ui-color-text-primary: oklch(0.96 0.01 260);
   --ui-color-text-secondary: oklch(0.76 0.01 260);
   --ui-color-text-muted: oklch(0.62 0.01 260);
 
+  /* Semantic colors */
   --ui-color-primary-500: oklch(0.67 0.19 255);
   --ui-color-primary-600: oklch(0.6 0.2 255);
   --ui-color-primary-contrast: oklch(0.98 0 0);
