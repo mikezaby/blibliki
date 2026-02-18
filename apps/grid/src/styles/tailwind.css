@@ -8,6 +8,27 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* Semantic palette utilities: bg-surface-*, text-content-*, border-border-* */
+  --color-surface-canvas: var(--palette-surface-canvas);
+  --color-surface-panel: var(--palette-surface-panel);
+  --color-surface-raised: var(--palette-surface-raised);
+  --color-surface-subtle: var(--palette-surface-subtle);
+  --color-content-primary: var(--palette-text-primary);
+  --color-content-secondary: var(--palette-text-secondary);
+  --color-content-muted: var(--palette-text-muted);
+  --color-border-subtle: var(--palette-border-subtle);
+  --color-border-strong: var(--palette-border-strong);
+  --color-brand: var(--palette-brand-500);
+  --color-brand-hover: var(--palette-brand-600);
+  --color-brand-secondary: var(--palette-secondary-500);
+  --color-brand-secondary-hover: var(--palette-secondary-600);
+  --color-success: var(--palette-success-500);
+  --color-warning: var(--palette-warning-500);
+  --color-error: var(--palette-error-500);
+  --color-info: var(--palette-info-500);
+
+  /* shadcn compatibility tokens used by existing components */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -43,71 +64,111 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: oklch(0.21 0.006 285.885);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.705 0.015 286.067);
+  /* Grid palette foundation (light) */
+  --palette-surface-canvas: var(--color-slate-100);
+  --palette-surface-panel: var(--color-slate-50);
+  --palette-surface-raised: var(--color-white);
+  --palette-surface-subtle: var(--color-slate-200);
+  --palette-border-subtle: var(--color-slate-200);
+  --palette-border-strong: var(--color-slate-300);
+  --palette-text-primary: var(--color-slate-900);
+  --palette-text-secondary: var(--color-slate-600);
+  --palette-text-muted: var(--color-slate-500);
+
+  --palette-brand-500: var(--color-blue-500);
+  --palette-brand-600: var(--color-blue-600);
+  --palette-brand-contrast: var(--color-white);
+
+  --palette-secondary-500: var(--color-purple-500);
+  --palette-secondary-600: var(--color-purple-600);
+  --palette-secondary-contrast: var(--color-white);
+
+  --palette-error-500: var(--color-red-500);
+  --palette-error-600: var(--color-red-600);
+  --palette-error-contrast: var(--color-white);
+
+  --palette-warning-500: var(--color-amber-500);
+  --palette-warning-600: var(--color-amber-600);
+  --palette-warning-contrast: var(--color-slate-950);
+
+  --palette-info-500: var(--color-sky-500);
+  --palette-info-600: var(--color-sky-600);
+  --palette-info-contrast: var(--color-white);
+
+  --palette-success-500: var(--color-green-500);
+  --palette-success-600: var(--color-green-600);
+  --palette-success-contrast: var(--color-white);
+
+  /* shadcn compatibility aliases */
+  --background: var(--palette-surface-canvas);
+  --foreground: var(--palette-text-primary);
+  --card: var(--palette-surface-panel);
+  --card-foreground: var(--palette-text-primary);
+  --popover: var(--palette-surface-raised);
+  --popover-foreground: var(--palette-text-primary);
+  --primary: var(--palette-brand-500);
+  --primary-foreground: var(--palette-brand-contrast);
+  --secondary: var(--palette-secondary-500);
+  --secondary-foreground: var(--palette-secondary-contrast);
+  --muted: var(--palette-surface-subtle);
+  --muted-foreground: var(--palette-text-muted);
+  --accent: color-mix(
+    in oklab,
+    var(--palette-brand-500),
+    var(--palette-surface-panel) 88%
+  );
+  --accent-foreground: var(--palette-text-primary);
+  --destructive: var(--palette-error-500);
+  --border: var(--palette-border-subtle);
+  --input: var(--palette-surface-raised);
+  --ring: color-mix(in oklab, var(--palette-brand-500), transparent 55%);
+
+  --chart-1: var(--palette-brand-500);
+  --chart-2: var(--palette-secondary-500);
+  --chart-3: var(--palette-success-500);
+  --chart-4: var(--palette-warning-500);
+  --chart-5: var(--palette-error-500);
+
+  --sidebar: var(--palette-surface-panel);
+  --sidebar-foreground: var(--palette-text-primary);
+  --sidebar-primary: var(--palette-brand-500);
+  --sidebar-primary-foreground: var(--palette-brand-contrast);
+  --sidebar-accent: var(--palette-surface-subtle);
+  --sidebar-accent-foreground: var(--palette-text-primary);
+  --sidebar-border: var(--palette-border-subtle);
+  --sidebar-ring: var(--ring);
 }
 
 .dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.004 286.32);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.552 0.016 285.938);
+  /* Grid palette foundation (dark) */
+  --palette-surface-canvas: var(--color-slate-950);
+  --palette-surface-panel: var(--color-slate-900);
+  --palette-surface-raised: var(--color-slate-800);
+  --palette-surface-subtle: var(--color-slate-700);
+  --palette-border-subtle: var(--color-slate-700);
+  --palette-border-strong: var(--color-slate-600);
+  --palette-text-primary: var(--color-slate-100);
+  --palette-text-secondary: var(--color-slate-300);
+  --palette-text-muted: var(--color-slate-400);
+
+  --palette-brand-500: var(--color-blue-400);
+  --palette-brand-600: var(--color-blue-500);
+
+  --palette-secondary-500: var(--color-purple-400);
+  --palette-secondary-600: var(--color-purple-500);
+
+  --palette-error-500: var(--color-red-400);
+  --palette-error-600: var(--color-red-500);
+
+  --palette-warning-500: var(--color-amber-400);
+  --palette-warning-600: var(--color-amber-500);
+  --palette-warning-contrast: var(--color-slate-950);
+
+  --palette-info-500: var(--color-sky-400);
+  --palette-info-600: var(--color-sky-500);
+
+  --palette-success-500: var(--color-green-400);
+  --palette-success-600: var(--color-green-500);
 }
 
 @layer base {

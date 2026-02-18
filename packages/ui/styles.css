@@ -268,9 +268,12 @@
     border-radius: var(--ui-radius-md);
   }
 
-  :where(.ui-surface--tone-canvas),
-  :where(.ui-surface--tone-panel) {
+  :where(.ui-surface--tone-canvas) {
     background: var(--ui-color-surface-0);
+  }
+
+  :where(.ui-surface--tone-panel) {
+    background: var(--ui-color-surface-1);
   }
 
   :where(.ui-surface--tone-raised) {
@@ -278,7 +281,7 @@
   }
 
   :where(.ui-surface--tone-subtle) {
-    background: var(--ui-color-surface-1);
+    background: var(--ui-color-surface-2);
   }
 
   :where(.ui-surface--border-subtle) {
