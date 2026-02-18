@@ -42,6 +42,27 @@
     transform 120ms ease;
 }
 
+/* Allow Tailwind alignment utilities to override default button centering. */
+.ui-button.justify-start {
+  justify-content: flex-start;
+}
+
+.ui-button.justify-end {
+  justify-content: flex-end;
+}
+
+.ui-button.justify-between {
+  justify-content: space-between;
+}
+
+.ui-button.justify-around {
+  justify-content: space-around;
+}
+
+.ui-button.justify-evenly {
+  justify-content: space-evenly;
+}
+
 .ui-button:disabled {
   pointer-events: none;
   opacity: 0.5;
