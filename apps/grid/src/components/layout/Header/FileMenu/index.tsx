@@ -1,7 +1,14 @@
 import { IPatch } from "@blibliki/models";
-import { Button } from "@blibliki/ui";
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@blibliki/ui";
 import { useUser } from "@clerk/clerk-react";
-import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Plus,
@@ -15,13 +22,6 @@ import {
 } from "lucide-react";
 import { ReactNode } from "react";
 import { TriggerModal } from "@/components/Modal";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuSeparator,
-} from "@/components/ui";
 import { useAppDispatch, usePatch } from "@/hooks";
 import useUpload from "@/hooks/useUpload";
 import { destroy, load, save } from "@/patchSlice";
@@ -52,12 +52,7 @@ export default function FileMenu() {
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent
-        className="w-72 p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-lg"
-        align="start"
-        sideOffset={4}
-        alignOffset={-4}
-      >
+      <DropdownMenuContent className="w-72 p-2" align="start" alignOffset={-4}>
         <DropdownMenuGroup className="space-y-1">
           <DropdownMenuItem asChild>
             <Button
@@ -113,7 +108,7 @@ export default function FileMenu() {
           )}
         </DropdownMenuGroup>
 
-        <DropdownMenuSeparator className="my-3 bg-slate-200 dark:bg-slate-700" />
+        <DropdownMenuSeparator className="my-2" />
 
         <DropdownMenuGroup className="space-y-1">
           <DropdownMenuItem asChild>

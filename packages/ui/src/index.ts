@@ -12,6 +12,23 @@ export {
 } from "./components/divider";
 export { IconButton, type IconButtonProps } from "./components/icon-button";
 export { Switch, type SwitchProps } from "./components/switch";
+export {
+  DropdownMenu,
+  DropdownMenuPortal,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuItem,
+  DropdownMenuCheckboxItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+} from "./components/dropdown-menu";
 export { UIProvider, type UIProviderProps } from "./UIProvider";
 export { cn } from "./lib/cn";
 export {
