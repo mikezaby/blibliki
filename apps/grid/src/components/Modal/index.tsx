@@ -32,7 +32,7 @@ export default function Modal(props: ModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={close}>
       <DialogContent className={className}>
-        <DialogTitle className="sr-only">{modalName}</DialogTitle>
+        <DialogTitle className="ui-visually-hidden">{modalName}</DialogTitle>
         {children}
       </DialogContent>
     </Dialog>

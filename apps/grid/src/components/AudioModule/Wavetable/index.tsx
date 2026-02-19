@@ -296,7 +296,7 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                   </Button>
                 </DialogTrigger>
 
-                <DialogContent className="sm:max-w-xl max-w-[calc(100vw-2rem)] p-0 gap-0 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                <DialogContent className="sm:max-w-xl max-w-[calc(100vw-2rem)] p-0 gap-0">
                   <div className="flex items-center gap-3 p-6 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-t-lg">
                     <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg flex items-center justify-center shadow-sm">
                       <Waves className="w-4 h-4 text-white" />
