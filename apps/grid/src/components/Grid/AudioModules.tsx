@@ -49,7 +49,7 @@ export default function AudioModules() {
           }
           variant="contained"
           color="neutral"
-          className="absolute left-47.25 top-0 h-13 w-13 rounded-none rounded-r-md border-r border-b"
+          className="absolute left-47.25 top-0 h-13 w-13 rounded-none rounded-br-md"
           onClick={onClick}
         />
 
@@ -77,7 +77,7 @@ export default function AudioModules() {
           </ul>
 
           <div className="px-3 pt-4 pb-2">
-            <p className="text-xs italic">
+            <p className="text-xs text-content-muted italic">
               Drag modules to the grid to add them
             </p>
           </div>

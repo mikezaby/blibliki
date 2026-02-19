@@ -1,4 +1,4 @@
-import { Button, Divider, IconButton, Stack } from "@blibliki/ui";
+import { Button, Divider, IconButton, Stack, Surface } from "@blibliki/ui";
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/clerk-react";
 import { Link } from "@tanstack/react-router";
 import { Cpu, LogIn, Play, Square } from "lucide-react";
@@ -42,11 +42,9 @@ export default function Header() {
   }, [togglePlay]);
 
   return (
-    <header className="flex items-center h-12 px-4 bg-gradient-to-r from-slate-100 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-lg">
+    <Surface tone="panel" className="flex items-center h-12 px-4">
       <Stack direction="row" align="center" gap={2} className="mr-4">
-        <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-          Blibliki
-        </h1>
+        <h1 className="text-lg font-bold tracking-tight">Blibliki</h1>
       </Stack>
 
       <Stack direction="row" align="center" gap={2}>
@@ -61,12 +59,7 @@ export default function Header() {
         </SignedIn>
       </Stack>
 
-      <Stack
-        direction="row"
-        align="center"
-        gap={3}
-        className="ml-6 min-w-[280px]"
-      >
+      <Stack direction="row" align="center" gap={3} className="ml-6 min-w-70">
         <Divider orientation="vertical" className="h-6" />
 
         <Stack direction="row" align="center" gap={2}>
@@ -127,7 +120,7 @@ export default function Header() {
         align="center"
         gap={3}
         justify="end"
-        className="min-w-[200px]"
+        className="min-w-50"
       >
         <Divider orientation="vertical" className="h-6" />
 
@@ -162,12 +155,11 @@ export default function Header() {
         </SignedOut>
       </Stack>
       {modalName === "patch" && <LoadModal />}
-    </header>
+    </Surface>
   );
 }
 
-const fieldLabelClassName =
-  "text-xs text-slate-600 dark:text-slate-400 font-medium uppercase tracking-wide";
+const fieldLabelClassName = "text-xs font-medium uppercase tracking-wide";
 
 function Github() {
   return (
