@@ -52,5 +52,4 @@ export {
   CardDescription,
   CardContent,
 } from "./card";
-export { Button, buttonVariants } from "./button";
 export { default as Slider } from "./slider";
