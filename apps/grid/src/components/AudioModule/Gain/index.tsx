@@ -1,5 +1,5 @@
 import { ModuleType } from "@blibliki/engine";
-import Fader from "@/components/Fader";
+import { Fader } from "@blibliki/ui";
 import { ModuleComponent } from "..";
 import Container from "../Container";
 

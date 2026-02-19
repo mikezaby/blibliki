@@ -573,6 +573,294 @@
     --ui-switch-color-hover: var(--ui-color-success-600);
   }
 
+  .ui-fader {
+    --ui-fader-track-size: 0.625rem;
+    --ui-fader-thumb-size: 1rem;
+    --ui-fader-vertical-size: 7.75rem;
+    --ui-fader-range-bg: color-mix(
+      in oklab,
+      var(--ui-color-surface-2),
+      var(--ui-color-surface-raised) 30%
+    );
+    --ui-fader-focus: color-mix(
+      in oklab,
+      var(--ui-color-primary-500),
+      transparent 65%
+    );
+
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.5rem 0.125rem;
+  }
+
+  .ui-fader--horizontal {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .ui-fader__control {
+    position: relative;
+    display: flex;
+    min-width: 0;
+  }
+
+  .ui-fader__control--vertical {
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .ui-fader__control--horizontal {
+    width: 100%;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  .ui-fader__range {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    display: block;
+    line-height: 0;
+    border: 1px solid var(--ui-color-border-subtle);
+    border-radius: 9999px;
+    background: var(--ui-fader-range-bg);
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease,
+      box-shadow 120ms ease;
+  }
+
+  .ui-fader__range:hover {
+    background: color-mix(
+      in oklab,
+      var(--ui-fader-range-bg),
+      var(--ui-color-text-primary) 8%
+    );
+    border-color: color-mix(
+      in oklab,
+      var(--ui-color-border-subtle),
+      var(--ui-color-text-primary) 20%
+    );
+  }
+
+  .ui-fader__range:focus-visible {
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 2px var(--ui-fader-focus);
+  }
+
+  .ui-fader__range--horizontal {
+    width: 100%;
+    height: var(--ui-fader-track-size);
+  }
+
+  .ui-fader__range--vertical {
+    width: var(--ui-fader-track-size);
+    height: calc(
+      var(--ui-fader-vertical-size) + var(--ui-fader-thumb-size) -
+        var(--ui-fader-track-size)
+    );
+    margin-block: calc(
+      (var(--ui-fader-track-size) - var(--ui-fader-thumb-size)) / 2
+    );
+    writing-mode: tb-rl;
+    transform: rotate(-180deg);
+  }
+
+  .ui-fader__range::-webkit-slider-runnable-track {
+    height: var(--ui-fader-track-size);
+    border-radius: 9999px;
+    background: transparent;
+  }
+
+  .ui-fader__range::-moz-range-track {
+    height: var(--ui-fader-track-size);
+    border-radius: 9999px;
+    border: 0;
+    background: transparent;
+  }
+
+  .ui-fader__range::-moz-range-progress {
+    height: var(--ui-fader-track-size);
+    border-radius: 9999px;
+    background: transparent;
+  }
+
+  .ui-fader__range::-webkit-slider-thumb {
+    width: var(--ui-fader-thumb-size);
+    height: var(--ui-fader-thumb-size);
+    border: 2px solid var(--ui-color-surface-raised);
+    border-radius: 9999px;
+    background: linear-gradient(
+      135deg,
+      var(--ui-color-primary-500),
+      var(--ui-color-secondary-500)
+    );
+    box-shadow: 0 2px 8px color-mix(in oklab, var(--ui-color-primary-500), transparent 65%);
+    transition:
+      transform 100ms ease,
+      box-shadow 100ms ease;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .ui-fader__range--horizontal::-webkit-slider-thumb {
+    margin-top: calc(
+      (var(--ui-fader-track-size) - var(--ui-fader-thumb-size)) / 2
+    );
+  }
+
+  .ui-fader__range--vertical::-webkit-slider-thumb {
+    margin-top: 0;
+  }
+
+  .ui-fader__range::-webkit-slider-thumb:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px color-mix(in oklab, var(--ui-color-primary-500), transparent 58%);
+  }
+
+  .ui-fader__range::-webkit-slider-thumb:active {
+    transform: scale(0.96);
+  }
+
+  .ui-fader__range::-moz-range-thumb {
+    width: var(--ui-fader-thumb-size);
+    height: var(--ui-fader-thumb-size);
+    border: 2px solid var(--ui-color-surface-raised);
+    border-radius: 9999px;
+    background: linear-gradient(
+      135deg,
+      var(--ui-color-primary-500),
+      var(--ui-color-secondary-500)
+    );
+    box-shadow: 0 2px 8px color-mix(in oklab, var(--ui-color-primary-500), transparent 65%);
+    transition:
+      transform 100ms ease,
+      box-shadow 100ms ease;
+    cursor: pointer;
+  }
+
+  .ui-fader__range::-moz-range-thumb:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px color-mix(in oklab, var(--ui-color-primary-500), transparent 58%);
+  }
+
+  .ui-fader__range::-moz-range-thumb:active {
+    transform: scale(0.96);
+  }
+
+  .ui-fader__tooltip {
+    position: absolute;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    border-radius: var(--ui-radius-sm);
+    border: 1px solid color-mix(
+      in oklab,
+      var(--ui-color-primary-500),
+      transparent 78%
+    );
+    background: var(--ui-color-primary-500);
+    color: var(--ui-color-primary-contrast);
+    padding: 0.25rem 0.375rem;
+    font-size: 0.6875rem;
+    line-height: 1;
+    white-space: nowrap;
+    transition: opacity 100ms ease;
+  }
+
+  .ui-fader__tooltip--vertical {
+    right: calc(100% + 0.5rem);
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .ui-fader__tooltip--horizontal {
+    left: 50%;
+    top: -0.375rem;
+    transform: translate(-50%, -100%);
+  }
+
+  .ui-fader:hover .ui-fader__tooltip,
+  .ui-fader:focus-within .ui-fader__tooltip {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .ui-fader__marks {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .ui-fader__marks--horizontal {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .ui-fader__marks--vertical {
+    min-height: var(--ui-fader-vertical-size);
+    flex-direction: column-reverse;
+    justify-content: space-between;
+  }
+
+  .ui-fader__marks--single {
+    justify-content: center;
+  }
+
+  .ui-fader__mark-button {
+    min-height: 0;
+    height: auto;
+    padding: 0.25rem 0.375rem;
+    font-size: 0.6875rem;
+    line-height: 1;
+    color: var(--ui-color-text-secondary);
+    gap: 0.3125rem;
+  }
+
+  .ui-fader__mark-dot {
+    width: 0.25rem;
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: linear-gradient(
+      135deg,
+      var(--ui-color-primary-500),
+      var(--ui-color-secondary-500)
+    );
+  }
+
+  .ui-fader__label-row {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.375rem;
+    margin-top: 0.125rem;
+  }
+
+  .ui-fader__label-dot {
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 9999px;
+    background: linear-gradient(
+      135deg,
+      var(--ui-color-primary-500),
+      var(--ui-color-secondary-500)
+    );
+    flex-shrink: 0;
+  }
+
+  .ui-fader__label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ui-color-text-secondary);
+  }
+
   :where(.ui-dropdown-content) {
     --ui-dropdown-item-bg-hover: color-mix(
       in oklab,

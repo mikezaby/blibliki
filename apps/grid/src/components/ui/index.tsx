@@ -40,4 +40,3 @@ export {
   CardDescription,
   CardContent,
 } from "./card";
-export { default as Slider } from "./slider";

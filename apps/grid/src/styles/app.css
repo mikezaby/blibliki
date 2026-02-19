@@ -3,11 +3,6 @@
   height: calc(100vh - 48px);
 }
 
-.slider-vertical {
-  writing-mode: tb-rl;
-  transform: rotate(-180deg);
-}
-
 g path.react-flow__edge-path {
   stroke-width: 4;
 }

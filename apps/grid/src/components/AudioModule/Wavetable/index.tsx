@@ -18,7 +18,7 @@ import {
 import { AudioContext } from "@blibliki/utils/web-audio-api";
 import { Download, Edit2, Plus, Trash2, Upload, Waves } from "lucide-react";
 import { ChangeEvent, useMemo, useRef, useState } from "react";
-import Fader, { MarkProps } from "@/components/Fader";
+import { Fader, type MarkProps } from "@blibliki/ui";
 import {
   Select,
   SelectContent,

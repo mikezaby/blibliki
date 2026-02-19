@@ -13,6 +13,12 @@ export {
 export { IconButton, type IconButtonProps } from "./components/icon-button";
 export { Switch, type SwitchProps } from "./components/switch";
 export {
+  Fader,
+  type FaderProps,
+  type MarkProps,
+  type TOrientation,
+} from "./components/fader";
+export {
   Dialog,
   DialogPortal,
   DialogOverlay,

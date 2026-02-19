@@ -1,5 +1,5 @@
 import { DelayTimeMode, ModuleType, moduleSchemas } from "@blibliki/engine";
-import Fader, { MarkProps } from "@/components/Fader";
+import { Fader, type MarkProps } from "@blibliki/ui";
 import { ModuleComponent } from ".";
 import Container from "./Container";
 import { CheckboxField, SelectField } from "./attributes/Field";

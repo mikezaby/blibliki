@@ -1,4 +1,4 @@
-import Fader from "@/components/Fader";
+import { Fader } from "@blibliki/ui";
 
 type FilterTypeProps = {
   value: BiquadFilterType;

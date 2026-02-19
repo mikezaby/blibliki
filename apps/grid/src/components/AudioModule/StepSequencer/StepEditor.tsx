@@ -1,6 +1,6 @@
 import { IStep, stepPropSchema } from "@blibliki/engine";
 import { Button } from "@blibliki/ui";
-import Fader, { MarkProps } from "@/components/Fader";
+import { Fader, type MarkProps } from "@blibliki/ui";
 import CCEditor from "./CCEditor";
 import NoteEditor from "./NoteEditor";
 

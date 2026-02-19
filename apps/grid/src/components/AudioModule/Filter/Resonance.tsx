@@ -1,5 +1,5 @@
 import { moduleSchemas, ModuleType } from "@blibliki/engine";
-import Fader from "@/components/Fader";
+import { Fader } from "@blibliki/ui";
 
 type ResonanceProps = {
   value: number;
