@@ -1,6 +1,5 @@
-import { DialogTitle } from "@radix-ui/react-dialog";
+import { Dialog, DialogContent, DialogTitle } from "@blibliki/ui";
 import { ReactNode } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { close as _close } from "./modalSlice";
 

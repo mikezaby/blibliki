@@ -13,6 +13,19 @@ export {
 export { IconButton, type IconButtonProps } from "./components/icon-button";
 export { Switch, type SwitchProps } from "./components/switch";
 export {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogClose,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+  type DialogContentProps,
+} from "./components/dialog";
+export {
   DropdownMenu,
   DropdownMenuPortal,
   DropdownMenuTrigger,

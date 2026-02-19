@@ -7,18 +7,18 @@ import {
   extractEmbeddedWavetableTablesFromWavBytes,
   extractWavetableTablesFromAudioBuffer,
 } from "@blibliki/engine";
-import { Button } from "@blibliki/ui";
-import { AudioContext } from "@blibliki/utils/web-audio-api";
-import { Download, Edit2, Plus, Trash2, Upload, Waves } from "lucide-react";
-import { ChangeEvent, useMemo, useRef, useState } from "react";
-import Fader, { MarkProps } from "@/components/Fader";
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui";
+} from "@blibliki/ui";
+import { AudioContext } from "@blibliki/utils/web-audio-api";
+import { Download, Edit2, Plus, Trash2, Upload, Waves } from "lucide-react";
+import { ChangeEvent, useMemo, useRef, useState } from "react";
+import Fader, { MarkProps } from "@/components/Fader";
 import {
   Select,
   SelectContent,

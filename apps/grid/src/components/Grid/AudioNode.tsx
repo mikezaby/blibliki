@@ -1,4 +1,12 @@
 import { IIOSerialize } from "@blibliki/engine";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@blibliki/ui";
 import { Handle, HandleType, NodeProps, Position } from "@xyflow/react";
 import { Settings } from "lucide-react";
 import { ReactNode, useMemo } from "react";
@@ -7,14 +15,6 @@ import { useAudioModule } from "@/hooks";
 import { cn } from "@/lib/utils";
 import Name from "../AudioModule/attributes/Name";
 import Voices from "../AudioModule/attributes/Voices";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../ui";
 
 export const NodeTypes = {
   audioNode: AudioNode,

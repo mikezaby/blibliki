@@ -15,6 +15,18 @@
 }
 
 @layer components {
+  :where(.ui-visually-hidden) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
   :where(.ui-button) {
     --ui-button-color: var(--ui-color-primary-500);
     --ui-button-color-hover: var(--ui-color-primary-600);
@@ -734,6 +746,120 @@
     color: var(--ui-color-text-muted);
   }
 
+  :where(.ui-dialog-overlay) {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: color-mix(
+      in oklab,
+      var(--ui-color-surface-0),
+      var(--ui-color-text-primary) 58%
+    );
+    opacity: 0.55;
+    animation: ui-dialog-overlay-in 120ms ease;
+  }
+
+  :where(.ui-dialog-overlay[data-state="closed"]) {
+    animation: ui-dialog-overlay-out 90ms ease;
+  }
+
+  :where(.ui-dialog-content) {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    z-index: 51;
+    display: grid;
+    width: calc(100% - 2rem);
+    max-width: 32rem;
+    gap: 1rem;
+    transform: translate(-50%, -50%);
+    border: 1px solid var(--ui-color-border-subtle);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-color-surface-raised);
+    color: var(--ui-color-text-primary);
+    padding: 1.5rem;
+    box-shadow: 0 18px 40px
+      color-mix(in oklab, var(--ui-color-text-primary), transparent 80%);
+    animation: ui-dialog-content-in 120ms ease;
+  }
+
+  :where(.ui-dialog-content[data-state="closed"]) {
+    animation: ui-dialog-content-out 90ms ease;
+  }
+
+  :where(.ui-dialog-close) {
+    position: absolute;
+    right: 0.75rem;
+    top: 0.75rem;
+    display: inline-flex;
+    width: 1.75rem;
+    height: 1.75rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: var(--ui-radius-sm);
+    color: var(--ui-color-text-muted);
+    background: transparent;
+    cursor: pointer;
+    transition:
+      background-color 100ms ease,
+      color 100ms ease,
+      border-color 100ms ease;
+  }
+
+  :where(.ui-dialog-close:hover) {
+    background: color-mix(
+      in oklab,
+      var(--ui-color-primary-500),
+      var(--ui-color-surface-raised) 90%
+    );
+    color: var(--ui-color-text-primary);
+    border-color: color-mix(
+      in oklab,
+      var(--ui-color-border-subtle),
+      var(--ui-color-primary-500) 16%
+    );
+  }
+
+  :where(.ui-dialog-close:focus-visible) {
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 2px
+      color-mix(in oklab, var(--ui-color-primary-500), transparent 70%);
+  }
+
+  :where(.ui-dialog-close-icon) {
+    width: 0.875rem;
+    height: 0.875rem;
+    pointer-events: none;
+  }
+
+  :where(.ui-dialog-header) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: left;
+  }
+
+  :where(.ui-dialog-footer) {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+
+  :where(.ui-dialog-title) {
+    font-size: 1.125rem;
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--ui-color-text-primary);
+  }
+
+  :where(.ui-dialog-description) {
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: var(--ui-color-text-muted);
+  }
+
   @keyframes ui-dropdown-in {
     from {
       opacity: 0;
@@ -753,6 +879,53 @@
     to {
       opacity: 0;
       transform: scale(0.98);
+    }
+  }
+
+  @keyframes ui-dialog-overlay-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 0.55;
+    }
+  }
+
+  @keyframes ui-dialog-overlay-out {
+    from {
+      opacity: 0.55;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes ui-dialog-content-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+
+  @keyframes ui-dialog-content-out {
+    from {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.98);
+    }
+  }
+
+  @media (min-width: 640px) {
+    :where(.ui-dialog-footer) {
+      flex-direction: row;
+      justify-content: flex-end;
     }
   }
 }

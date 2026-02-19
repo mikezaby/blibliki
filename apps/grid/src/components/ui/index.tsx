@@ -1,17 +1,5 @@
 export { Input } from "./input";
 export { Label } from "./label";
-export {
-  Dialog,
-  DialogPortal,
-  DialogOverlay,
-  DialogClose,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
-} from "./dialog";
 
 export {
   Select,
