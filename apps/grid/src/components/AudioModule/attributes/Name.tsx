@@ -1,5 +1,5 @@
 import { ModuleType } from "@blibliki/engine";
-import { Input, Label } from "@blibliki/ui";
+import { Input, Label, Stack, Surface } from "@blibliki/ui";
 import { ChangeEvent } from "react";
 import { useAppDispatch } from "@/hooks";
 import { updateModule } from "../modulesSlice";
@@ -21,18 +21,20 @@ export default function Name(props: NameInterface) {
   };
 
   return (
-    <div className="space-y-3 p-3 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700">
-      <div className="flex items-center gap-2">
-        <div className="w-2 h-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full" />
-        <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-tight">
-          Module Name
-        </Label>
-      </div>
-      <Input
-        value={value}
-        onChange={updateProp}
-        placeholder="Enter module name"
-      />
-    </div>
+    <Surface tone="subtle" border="subtle" radius="md" className="p-3">
+      <Stack gap={3}>
+        <Stack direction="row" align="center" gap={2}>
+          <div className="h-2 w-2 rounded-full bg-gradient-to-br from-green-500 to-emerald-600" />
+          <Label className="text-xs font-semibold tracking-tight">
+            Module Name
+          </Label>
+        </Stack>
+        <Input
+          value={value}
+          onChange={updateProp}
+          placeholder="Enter module name"
+        />
+      </Stack>
+    </Surface>
   );
 }
