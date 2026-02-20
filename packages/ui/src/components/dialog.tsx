@@ -12,11 +12,15 @@ function DialogTrigger(
   return <DialogPrimitive.Trigger {...props} />;
 }
 
-function DialogPortal(props: React.ComponentProps<typeof DialogPrimitive.Portal>) {
+function DialogPortal(
+  props: React.ComponentProps<typeof DialogPrimitive.Portal>,
+) {
   return <DialogPrimitive.Portal {...props} />;
 }
 
-function DialogClose(props: React.ComponentProps<typeof DialogPrimitive.Close>) {
+function DialogClose(
+  props: React.ComponentProps<typeof DialogPrimitive.Close>,
+) {
   return <DialogPrimitive.Close {...props} />;
 }
 
@@ -45,8 +49,9 @@ function DialogCloseIcon(props: React.ComponentProps<"svg">) {
   );
 }
 
-interface DialogContentProps
-  extends React.ComponentProps<typeof DialogPrimitive.Content> {
+interface DialogContentProps extends React.ComponentProps<
+  typeof DialogPrimitive.Content
+> {
   hideCloseButton?: boolean;
 }
 
@@ -59,7 +64,10 @@ function DialogContent({
   return (
     <DialogPortal>
       <DialogOverlay />
-      <DialogPrimitive.Content className={cn("ui-dialog-content", className)} {...props}>
+      <DialogPrimitive.Content
+        className={cn("ui-dialog-content", className)}
+        {...props}
+      >
         {children}
         {!hideCloseButton && (
           <DialogPrimitive.Close className="ui-dialog-close">
@@ -84,7 +92,12 @@ function DialogTitle({
   className,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Title>) {
-  return <DialogPrimitive.Title className={cn("ui-dialog-title", className)} {...props} />;
+  return (
+    <DialogPrimitive.Title
+      className={cn("ui-dialog-title", className)}
+      {...props}
+    />
+  );
 }
 
 function DialogDescription({

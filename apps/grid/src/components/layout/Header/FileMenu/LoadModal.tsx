@@ -23,7 +23,12 @@ export default function LoadPatchModal() {
       modalName="patch"
       className="sm:max-w-2xl max-w-[calc(100vw-2rem)] p-0 gap-0 border-0 bg-transparent shadow-none"
     >
-      <Surface tone="raised" border="subtle" radius="lg" className="overflow-hidden">
+      <Surface
+        tone="raised"
+        border="subtle"
+        radius="lg"
+        className="overflow-hidden"
+      >
         <Surface tone="panel" radius="none" asChild>
           <header className="p-6">
             <Stack direction="row" align="center" gap={3}>
@@ -31,7 +36,9 @@ export default function LoadPatchModal() {
                 <FolderOpen className="h-4 w-4 text-white" />
               </div>
               <div className="flex-1">
-                <h2 className="text-lg font-semibold tracking-tight">Load Patch</h2>
+                <h2 className="text-lg font-semibold tracking-tight">
+                  Load Patch
+                </h2>
                 <p
                   className="text-sm"
                   style={{ color: "var(--ui-color-text-muted)" }}
@@ -141,7 +148,12 @@ export default function LoadPatchModal() {
                 {filteredPatches.length}{" "}
                 {filteredPatches.length === 1 ? "patch" : "patches"} available
               </p>
-              <Button variant="text" color="secondary" size="sm" onClick={close}>
+              <Button
+                variant="text"
+                color="secondary"
+                size="sm"
+                onClick={close}
+              >
                 Cancel
               </Button>
             </Stack>

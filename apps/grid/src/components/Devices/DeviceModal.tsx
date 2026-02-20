@@ -74,7 +74,12 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
   };
 
   return (
-    <Surface tone="raised" border="subtle" radius="lg" className="overflow-hidden">
+    <Surface
+      tone="raised"
+      border="subtle"
+      radius="lg"
+      className="overflow-hidden"
+    >
       <Surface tone="panel" radius="none" asChild>
         <header className="p-6">
           <Stack direction="row" align="center" gap={3}>
@@ -162,7 +167,12 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
       <Surface tone="panel" radius="none" asChild>
         <footer className="p-4">
           <Stack direction="row" justify="end" gap={2}>
-            <Button variant="text" color="secondary" size="sm" onClick={onClose}>
+            <Button
+              variant="text"
+              color="secondary"
+              size="sm"
+              onClick={onClose}
+            >
               Cancel
             </Button>
             <Button

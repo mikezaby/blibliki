@@ -7,10 +7,7 @@ function Label({
   ...props
 }: ComponentProps<typeof LabelPrimitive.Root>) {
   return (
-    <LabelPrimitive.Root
-      className={cn("ui-label", className)}
-      {...props}
-    />
+    <LabelPrimitive.Root className={cn("ui-label", className)} {...props} />
   );
 }
 

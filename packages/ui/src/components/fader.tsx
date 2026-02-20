@@ -193,7 +193,8 @@ function Fader(props: FaderProps) {
                 color="secondary"
                 className={cn(
                   "ui-fader__mark-button",
-                  orientation === "horizontal" && "ui-fader__mark-button--horizontal",
+                  orientation === "horizontal" &&
+                    "ui-fader__mark-button--horizontal",
                   orientation === "horizontal" &&
                     mark.value <= min &&
                     "ui-fader__mark-button--horizontal-start",

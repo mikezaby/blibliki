@@ -92,3 +92,19 @@ export const SidebarExample: Story = {
     </Surface>
   ),
 };
+
+export const SubtleSurfaceUsage: Story = {
+  render: () => (
+    <Surface tone="canvas" border="subtle" radius="md" style={{ padding: 16 }}>
+      <Stack gap={3}>
+        <strong>Subtle Surfaces</strong>
+        <Surface tone="subtle" border="subtle" radius="md" style={{ padding: 12 }}>
+          Section background (low emphasis)
+        </Surface>
+        <Surface tone="panel" border="subtle" radius="md" style={{ padding: 12 }}>
+          Panel background (higher emphasis)
+        </Surface>
+      </Stack>
+    </Surface>
+  ),
+};

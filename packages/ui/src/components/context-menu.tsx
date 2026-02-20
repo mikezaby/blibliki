@@ -48,7 +48,9 @@ function ContextMenuTrigger(
   return <ContextMenuPrimitive.Trigger {...props} />;
 }
 
-function ContextMenuGroup(props: ComponentProps<typeof ContextMenuPrimitive.Group>) {
+function ContextMenuGroup(
+  props: ComponentProps<typeof ContextMenuPrimitive.Group>,
+) {
   return <ContextMenuPrimitive.Group {...props} />;
 }
 
@@ -58,7 +60,9 @@ function ContextMenuPortal(
   return <ContextMenuPrimitive.Portal {...props} />;
 }
 
-function ContextMenuSub(props: ComponentProps<typeof ContextMenuPrimitive.Sub>) {
+function ContextMenuSub(
+  props: ComponentProps<typeof ContextMenuPrimitive.Sub>,
+) {
   return <ContextMenuPrimitive.Sub {...props} />;
 }
 
@@ -145,7 +149,10 @@ function ContextMenuCheckboxItem({
   return (
     <ContextMenuPrimitive.CheckboxItem
       checked={checked}
-      className={cn("ui-dropdown-item ui-dropdown-item--with-indicator", className)}
+      className={cn(
+        "ui-dropdown-item ui-dropdown-item--with-indicator",
+        className,
+      )}
       {...props}
     >
       <span className="ui-dropdown-indicator" aria-hidden>
@@ -165,7 +172,10 @@ function ContextMenuRadioItem({
 }: ComponentProps<typeof ContextMenuPrimitive.RadioItem>) {
   return (
     <ContextMenuPrimitive.RadioItem
-      className={cn("ui-dropdown-item ui-dropdown-item--with-indicator", className)}
+      className={cn(
+        "ui-dropdown-item ui-dropdown-item--with-indicator",
+        className,
+      )}
       {...props}
     >
       <span className="ui-dropdown-indicator" aria-hidden>
@@ -206,10 +216,7 @@ function ContextMenuSeparator({
   );
 }
 
-function ContextMenuShortcut({
-  className,
-  ...props
-}: ComponentProps<"span">) {
+function ContextMenuShortcut({ className, ...props }: ComponentProps<"span">) {
   return <span className={cn("ui-dropdown-shortcut", className)} {...props} />;
 }
 

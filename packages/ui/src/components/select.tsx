@@ -57,7 +57,12 @@ function SelectValue({
   className,
   ...props
 }: ComponentProps<typeof SelectPrimitive.Value>) {
-  return <SelectPrimitive.Value className={cn("ui-select-value", className)} {...props} />;
+  return (
+    <SelectPrimitive.Value
+      className={cn("ui-select-value", className)}
+      {...props}
+    />
+  );
 }
 
 function SelectTrigger({
@@ -132,7 +137,10 @@ function SelectItem({
   ...props
 }: ComponentProps<typeof SelectPrimitive.Item>) {
   return (
-    <SelectPrimitive.Item className={cn("ui-select-item", className)} {...props}>
+    <SelectPrimitive.Item
+      className={cn("ui-select-item", className)}
+      {...props}
+    >
       <span className="ui-select-indicator" aria-hidden>
         <SelectPrimitive.ItemIndicator>
           <SelectCheckIcon className="ui-select-indicator-icon" />
@@ -207,21 +215,21 @@ export interface OptionSelectProps<T extends OptionSelectValue | undefined> {
 function isValueOption(value: unknown): value is OptionSelectValueOption {
   return Boolean(
     value &&
-      typeof value === "object" &&
-      "name" in value &&
-      "value" in value &&
-      (typeof (value as { value: unknown }).value === "string" ||
-        typeof (value as { value: unknown }).value === "number"),
+    typeof value === "object" &&
+    "name" in value &&
+    "value" in value &&
+    (typeof (value as { value: unknown }).value === "string" ||
+      typeof (value as { value: unknown }).value === "number"),
   );
 }
 
 function isIdOption(value: unknown): value is OptionSelectIdOption {
   return Boolean(
     value &&
-      typeof value === "object" &&
-      "id" in value &&
-      "name" in value &&
-      typeof (value as { id: unknown }).id === "string",
+    typeof value === "object" &&
+    "id" in value &&
+    "name" in value &&
+    typeof (value as { id: unknown }).id === "string",
   );
 }
 
@@ -263,7 +271,9 @@ function OptionSelect<T extends OptionSelectValue | undefined>({
     if (!normalizedOptions.length) {
       return typeof value === "number" ? "number" : "string";
     }
-    return typeof normalizedOptions[0]?.value === "number" ? "number" : "string";
+    return typeof normalizedOptions[0]?.value === "number"
+      ? "number"
+      : "string";
   }, [normalizedOptions, value]);
 
   const onValueChange = (newValue: string) => {
@@ -276,8 +286,7 @@ function OptionSelect<T extends OptionSelectValue | undefined>({
 
   const selectedValue =
     value !== undefined && value !== "" ? value.toString() : undefined;
-  const placeholder =
-    label && label.length > 0 ? label : "Select...";
+  const placeholder = label && label.length > 0 ? label : "Select...";
   const longestDisplayLength = useMemo(() => {
     const longestOption = normalizedOptions.reduce((maxLength, option) => {
       const length = option.name.length;

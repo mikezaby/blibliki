@@ -106,7 +106,10 @@ function DropdownMenuCheckboxItem({
   return (
     <DropdownMenuPrimitive.CheckboxItem
       checked={checked}
-      className={cn("ui-dropdown-item ui-dropdown-item--with-indicator", className)}
+      className={cn(
+        "ui-dropdown-item ui-dropdown-item--with-indicator",
+        className,
+      )}
       {...props}
     >
       <span className="ui-dropdown-indicator" aria-hidden>
@@ -132,7 +135,10 @@ function DropdownMenuRadioItem({
 }: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem>) {
   return (
     <DropdownMenuPrimitive.RadioItem
-      className={cn("ui-dropdown-item ui-dropdown-item--with-indicator", className)}
+      className={cn(
+        "ui-dropdown-item ui-dropdown-item--with-indicator",
+        className,
+      )}
       {...props}
     >
       <span className="ui-dropdown-indicator" aria-hidden>

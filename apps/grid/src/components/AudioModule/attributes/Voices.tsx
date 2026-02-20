@@ -29,13 +29,7 @@ export default function Voices(props: NameInterface) {
       <Label className="text-xs font-medium text-slate-600 dark:text-slate-400">
         Voices
       </Label>
-      <Input
-        type="number"
-        value={value}
-        onChange={onChange}
-        min="1"
-        max="64"
-      />
+      <Input type="number" value={value} onChange={onChange} min="1" max="64" />
     </div>
   );
 }

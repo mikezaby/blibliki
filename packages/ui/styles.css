@@ -793,10 +793,7 @@
     position: relative;
     z-index: 60;
     min-width: 8rem;
-    max-height: min(
-      24rem,
-      var(--radix-select-content-available-height, 24rem)
-    );
+    max-height: min(24rem, var(--radix-select-content-available-height, 24rem));
     overflow: hidden;
     border: 1px solid var(--ui-color-border-subtle);
     border-radius: var(--ui-radius-md);
@@ -1059,7 +1056,8 @@
       var(--ui-color-primary-500),
       var(--ui-color-secondary-500)
     );
-    box-shadow: 0 2px 8px color-mix(in oklab, var(--ui-color-primary-500), transparent 65%);
+    box-shadow: 0 2px 8px
+      color-mix(in oklab, var(--ui-color-primary-500), transparent 65%);
     transition:
       transform 100ms ease,
       box-shadow 100ms ease;
@@ -1079,7 +1077,8 @@
 
   .ui-fader__range::-webkit-slider-thumb:hover {
     transform: scale(1.08);
-    box-shadow: 0 4px 12px color-mix(in oklab, var(--ui-color-primary-500), transparent 58%);
+    box-shadow: 0 4px 12px
+      color-mix(in oklab, var(--ui-color-primary-500), transparent 58%);
   }
 
   .ui-fader__range::-webkit-slider-thumb:active {
@@ -1096,7 +1095,8 @@
       var(--ui-color-primary-500),
       var(--ui-color-secondary-500)
     );
-    box-shadow: 0 2px 8px color-mix(in oklab, var(--ui-color-primary-500), transparent 65%);
+    box-shadow: 0 2px 8px
+      color-mix(in oklab, var(--ui-color-primary-500), transparent 65%);
     transition:
       transform 100ms ease,
       box-shadow 100ms ease;
@@ -1105,7 +1105,8 @@
 
   .ui-fader__range::-moz-range-thumb:hover {
     transform: scale(1.08);
-    box-shadow: 0 4px 12px color-mix(in oklab, var(--ui-color-primary-500), transparent 58%);
+    box-shadow: 0 4px 12px
+      color-mix(in oklab, var(--ui-color-primary-500), transparent 58%);
   }
 
   .ui-fader__range::-moz-range-thumb:active {
@@ -1119,11 +1120,8 @@
     opacity: 0;
     visibility: hidden;
     border-radius: var(--ui-radius-sm);
-    border: 1px solid color-mix(
-      in oklab,
-      var(--ui-color-primary-500),
-      transparent 78%
-    );
+    border: 1px solid
+      color-mix(in oklab, var(--ui-color-primary-500), transparent 78%);
     background: var(--ui-color-primary-500);
     color: var(--ui-color-primary-contrast);
     padding: 0.25rem 0.375rem;
