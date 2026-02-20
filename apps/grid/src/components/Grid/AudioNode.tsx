@@ -157,7 +157,7 @@ function IOContainer({
 
   return (
     <Surface
-      tone="subtle"
+      tone="panel"
       radius="none"
       className={`flex min-w-[80px] flex-col justify-center ${isInput ? "rounded-l-lg" : "rounded-r-lg"}`}
     >
