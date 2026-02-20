@@ -21,8 +21,8 @@ import {
   Download,
   TableOfContents,
 } from "lucide-react";
-import { open as openModal } from "@/components/Modal/modalSlice";
 import { modulesSelector } from "@/components/AudioModule/modulesSlice";
+import { open as openModal } from "@/components/Modal/modalSlice";
 import { useAppDispatch, useAppSelector, usePatch } from "@/hooks";
 import useUpload from "@/hooks/useUpload";
 import { destroy, load, save } from "@/patchSlice";

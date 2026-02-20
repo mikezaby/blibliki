@@ -665,6 +665,58 @@
     background: var(--ui-color-surface-2);
   }
 
+  :where(.ui-surface--intent-success) {
+    background: color-mix(
+      in oklab,
+      var(--ui-color-success-500),
+      var(--ui-color-surface-raised) 90%
+    );
+    border-color: color-mix(
+      in oklab,
+      var(--ui-color-success-500),
+      transparent 72%
+    );
+  }
+
+  :where(.ui-surface--intent-warning) {
+    background: color-mix(
+      in oklab,
+      var(--ui-color-warning-500),
+      var(--ui-color-surface-raised) 90%
+    );
+    border-color: color-mix(
+      in oklab,
+      var(--ui-color-warning-500),
+      transparent 72%
+    );
+  }
+
+  :where(.ui-surface--intent-error) {
+    background: color-mix(
+      in oklab,
+      var(--ui-color-error-500),
+      var(--ui-color-surface-raised) 90%
+    );
+    border-color: color-mix(
+      in oklab,
+      var(--ui-color-error-500),
+      transparent 72%
+    );
+  }
+
+  :where(.ui-surface--intent-info) {
+    background: color-mix(
+      in oklab,
+      var(--ui-color-info-500),
+      var(--ui-color-surface-raised) 90%
+    );
+    border-color: color-mix(
+      in oklab,
+      var(--ui-color-info-500),
+      transparent 72%
+    );
+  }
+
   :where(.ui-surface--border-subtle) {
     border-color: var(--ui-color-border-subtle);
   }

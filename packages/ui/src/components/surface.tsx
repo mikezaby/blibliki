@@ -28,12 +28,20 @@ const surfaceVariants = cva("ui-surface", {
       lg: "ui-surface--shadow-lg",
       xl: "ui-surface--shadow-xl",
     },
+    intent: {
+      neutral: "",
+      success: "ui-surface--intent-success",
+      warning: "ui-surface--intent-warning",
+      error: "ui-surface--intent-error",
+      info: "ui-surface--intent-info",
+    },
   },
   defaultVariants: {
     tone: "raised",
     border: "none",
     radius: "md",
     shadow: "none",
+    intent: "neutral",
   },
 });
 
@@ -48,7 +56,16 @@ export interface SurfaceProps
 
 const Surface = React.forwardRef<SurfaceElement, SurfaceProps>(
   (
-    { className, tone, border, radius, shadow, asChild = false, ...props },
+    {
+      className,
+      tone,
+      border,
+      radius,
+      shadow,
+      intent,
+      asChild = false,
+      ...props
+    },
     ref,
   ) => {
     const Comp = asChild ? Slot : "div";
@@ -57,7 +74,7 @@ const Surface = React.forwardRef<SurfaceElement, SurfaceProps>(
       <Comp
         ref={ref}
         className={cn(
-          surfaceVariants({ tone, border, radius, shadow }),
+          surfaceVariants({ tone, border, radius, shadow, intent }),
           className,
         )}
         {...props}

@@ -28,18 +28,18 @@ const buttonColorMap = {
   info: "info",
 } as const;
 
+const surfaceIntentMap = {
+  success: "success",
+  error: "error",
+  warning: "warning",
+  info: "info",
+} as const;
+
 const iconColorClassMap = {
   success: "text-success",
   error: "text-error",
   warning: "text-warning",
   info: "text-info",
-} as const;
-
-const surfaceTintClassMap = {
-  success: "bg-success/10 border-success/35",
-  error: "bg-error/10 border-error/35",
-  warning: "bg-warning/10 border-warning/35",
-  info: "bg-info/10 border-info/35",
 } as const;
 
 export default function NotificationItem({
@@ -69,7 +69,8 @@ export default function NotificationItem({
       tone="raised"
       border="subtle"
       radius="lg"
-      className={`min-w-[320px] max-w-md animate-slideInRight p-4 ${surfaceTintClassMap[notification.type]}`}
+      intent={surfaceIntentMap[notification.type]}
+      className="min-w-[320px] max-w-md animate-slideInRight p-4"
       role="alert"
     >
       <Stack direction="row" align="start" gap={3}>
