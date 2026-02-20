@@ -5,8 +5,8 @@ import {
   Label,
   Stack,
   Surface,
+  Textarea,
   uiTone,
-  uiVars,
 } from "@blibliki/ui";
 import { Plus, X } from "lucide-react";
 import { TUpdateProp } from "..";
@@ -125,7 +125,8 @@ export default function PatternSelector({
         <Surface tone="subtle" border="subtle" radius="md" className="p-2">
           <Stack direction="row" align="center" gap={2}>
             <Label className="text-xs font-medium">Sequence:</Label>
-            <textarea
+            <Textarea
+              resize="none"
               rows={3}
               value={formatPatternSequence(patternSequence)}
               onChange={(e) => {
@@ -133,12 +134,7 @@ export default function PatternSelector({
               }}
               disabled={isRunning}
               placeholder="e.g., 2A4B2AC"
-              className="nodrag w-48 resize-none rounded border px-2 py-1 font-mono text-sm leading-5"
-              style={{
-                background: uiVars.surface.raised,
-                borderColor: uiVars.border.subtle,
-                color: uiVars.text.primary,
-              }}
+              className="nodrag w-48 font-mono text-sm leading-5"
             />
             {sequencePosition && (
               <span

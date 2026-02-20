@@ -18,6 +18,7 @@ import {
   Input,
   Stack,
   Surface,
+  Textarea,
   Select,
   SelectContent,
   SelectItem,
@@ -414,14 +415,16 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                       </div>
 
                       <div className="p-4 bg-slate-50 dark:bg-slate-800">
-                        <textarea
+                        <Textarea
+                          size="sm"
+                          resize="vertical"
                           rows={20}
                           value={editorValue}
                           onChange={(event) => {
                             setEditorValue(event.target.value);
                             if (editorError) setEditorError(null);
                           }}
-                          className="w-full min-h-[20rem] resize-y rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-3 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+                          className="w-full min-h-[20rem] p-3 font-mono text-xs"
                           spellCheck={false}
                         />
 

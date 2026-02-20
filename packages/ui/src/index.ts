@@ -21,7 +21,14 @@ export {
 } from "./components/divider";
 export { IconButton, type IconButtonProps } from "./components/icon-button";
 export { Input, inputVariants, type InputProps } from "./components/input";
+export {
+  Textarea,
+  textareaVariants,
+  type TextareaProps,
+} from "./components/textarea";
 export { Label } from "./components/label";
+export { Text, textVariants, type TextProps } from "./components/text";
+export { Badge, badgeVariants, type BadgeProps } from "./components/badge";
 export { Switch, type SwitchProps } from "./components/switch";
 export {
   OptionSelect,
