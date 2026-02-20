@@ -49,7 +49,11 @@ export default function Header() {
   }, [togglePlay]);
 
   return (
-    <Surface tone="panel" className="flex items-center h-12 px-4">
+    <Surface
+      tone="panel"
+      border="subtle"
+      className="flex h-12 items-center border-x-0 border-t-0 px-4"
+    >
       <Stack direction="row" align="center" gap={2} className="mr-4">
         <h1 className="text-lg font-bold tracking-tight">Blibliki</h1>
       </Stack>

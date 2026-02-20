@@ -75,9 +75,7 @@ export default function Devices() {
           className="flex-wrap"
         >
           <Stack gap={1}>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-              Blibliki Pi Devices
-            </h1>
+            <h1 className="mb-2 text-3xl font-bold">Blibliki Pi Devices</h1>
             <p style={{ color: "var(--ui-color-text-muted)" }}>
               Manage your Raspberry Pi and Node.js devices
             </p>
@@ -102,7 +100,13 @@ export default function Devices() {
                 <p className="text-sm font-medium">
                   Your User ID (for Pi setup)
                 </p>
-                <code className="inline-block max-w-full break-all rounded-md border border-slate-300 bg-slate-100 px-3 py-2 font-mono text-sm dark:border-slate-700 dark:bg-slate-900">
+                <code
+                  className="inline-block max-w-full break-all rounded-md border px-3 py-2 font-mono text-sm"
+                  style={{
+                    background: "var(--ui-color-surface-panel)",
+                    borderColor: "var(--ui-color-border-subtle)",
+                  }}
+                >
                   {user.id}
                 </code>
                 <p
@@ -139,15 +143,22 @@ export default function Devices() {
         )}
 
         {devices.length === 0 ? (
-          <Card className="border-2 border-dashed border-slate-300 dark:border-slate-700">
+          <Card
+            className="border-2 border-dashed"
+            style={{ borderColor: "var(--ui-color-border-subtle)" }}
+          >
             <CardContent className="py-16">
               <Stack align="center" justify="center" gap={4}>
-                <Cpu className="w-16 h-16 text-slate-400 dark:text-slate-600 mb-4" />
+                <Cpu
+                  className="mb-4 h-16 w-16"
+                  style={{ color: "var(--ui-color-text-muted)" }}
+                />
                 <Stack align="center" gap={1}>
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
-                    No devices yet
-                  </h3>
-                  <p className="text-center text-slate-600 dark:text-slate-400 max-w-md">
+                  <h3 className="text-xl font-semibold">No devices yet</h3>
+                  <p
+                    className="max-w-md text-center"
+                    style={{ color: "var(--ui-color-text-muted)" }}
+                  >
                     Add your first Blibliki Pi device to start running patches
                     on Raspberry Pi or other Node.js environments.
                   </p>
@@ -164,10 +175,10 @@ export default function Devices() {
             {devices.map((device) => (
               <Card
                 key={device.id}
-                className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:shadow-lg transition-shadow"
+                className="transition-shadow hover:shadow-lg"
               >
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
+                  <CardTitle className="flex items-center gap-2">
                     <Cpu className="w-5 h-5 text-blue-600" />
                     {device.name}
                   </CardTitle>
@@ -178,7 +189,10 @@ export default function Devices() {
                       <CardDescription className="text-xs uppercase tracking-wide">
                         Token
                       </CardDescription>
-                      <div className="font-mono text-sm text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 p-2 rounded break-all">
+                      <div
+                        className="break-all rounded p-2 font-mono text-sm"
+                        style={{ background: "var(--ui-color-surface-panel)" }}
+                      >
                         {device.token.substring(0, 20)}...
                       </div>
                     </Stack>
@@ -186,13 +200,20 @@ export default function Devices() {
                       <CardDescription className="text-xs uppercase tracking-wide">
                         Assigned Patch
                       </CardDescription>
-                      <div className="text-sm text-slate-700 dark:text-slate-300">
+                      <div className="text-sm">
                         {device.patchId ? (
-                          <span className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 px-2 py-1 rounded">
+                          <span
+                            className="rounded px-2 py-1"
+                            style={{
+                              background:
+                                "color-mix(in oklab, var(--ui-color-success-500), transparent 82%)",
+                              color: "var(--ui-color-success-600)",
+                            }}
+                          >
                             Patch assigned
                           </span>
                         ) : (
-                          <span className="text-slate-500 dark:text-slate-400">
+                          <span style={{ color: "var(--ui-color-text-muted)" }}>
                             No patch assigned
                           </span>
                         )}

@@ -1,4 +1,4 @@
-import { Button } from "@blibliki/ui";
+import { Button, Stack, Surface } from "@blibliki/ui";
 import {
   CheckCircle2,
   AlertCircle,
@@ -21,32 +21,12 @@ const iconMap = {
   info: Info,
 };
 
-const colorMap = {
-  success: {
-    bg: "bg-green-50 dark:bg-green-900/80",
-    border: "border-green-200 dark:border-green-800",
-    icon: "text-green-600 dark:text-green-400",
-    text: "text-green-900 dark:text-green-100",
-  },
-  error: {
-    bg: "bg-red-50 dark:bg-red-900/80",
-    border: "border-red-200 dark:border-red-800",
-    icon: "text-red-600 dark:text-red-400",
-    text: "text-red-900 dark:text-red-100",
-  },
-  warning: {
-    bg: "bg-yellow-50 dark:bg-yellow-900/80",
-    border: "border-yellow-200 dark:border-yellow-800",
-    icon: "text-yellow-600 dark:text-yellow-400",
-    text: "text-yellow-900 dark:text-yellow-100",
-  },
-  info: {
-    bg: "bg-blue-50 dark:bg-blue-900/80",
-    border: "border-blue-200 dark:border-blue-800",
-    icon: "text-blue-600 dark:text-blue-400",
-    text: "text-blue-900 dark:text-blue-100",
-  },
-};
+const toneMap = {
+  success: "var(--ui-color-success-500)",
+  error: "var(--ui-color-error-500)",
+  warning: "var(--ui-color-warning-500)",
+  info: "var(--ui-color-info-500)",
+} as const;
 
 const buttonColorMap = {
   success: "success",
@@ -60,7 +40,7 @@ export default function NotificationItem({
 }: NotificationItemProps) {
   const dispatch = useAppDispatch();
   const Icon = iconMap[notification.type];
-  const colors = colorMap[notification.type];
+  const tone = toneMap[notification.type];
 
   useEffect(() => {
     if (notification.duration && notification.duration > 0) {
@@ -79,36 +59,41 @@ export default function NotificationItem({
   };
 
   return (
-    <div
-      className={`
-        flex items-start gap-3 p-4 rounded-lg border shadow-lg
-        ${colors.bg} ${colors.border}
-        animate-slideInRight
-        min-w-[320px] max-w-md
-      `}
+    <Surface
+      tone="raised"
+      border="subtle"
+      radius="lg"
+      className="min-w-[320px] max-w-md animate-slideInRight p-4"
       role="alert"
+      style={{
+        background: `color-mix(in oklab, ${tone}, var(--ui-color-surface-raised) 88%)`,
+        borderColor: `color-mix(in oklab, ${tone}, var(--ui-color-border-subtle) 65%)`,
+      }}
     >
-      <Icon className={`w-5 h-5 shrink-0 mt-0.5 ${colors.icon}`} />
-      <div className="flex-1 min-w-0">
-        <h4 className={`font-semibold text-sm ${colors.text}`}>
-          {notification.title}
-        </h4>
-        {notification.message && (
-          <p className={`text-sm mt-1 ${colors.text} opacity-90`}>
-            {notification.message}
-          </p>
-        )}
-      </div>
-      <Button
-        onClick={handleClose}
-        size="icon"
-        variant="text"
-        color={buttonColorMap[notification.type]}
-        className="h-6 w-6 shrink-0 p-0"
-        aria-label="Close notification"
-      >
-        <X className="w-4 h-4" />
-      </Button>
-    </div>
+      <Stack direction="row" align="start" gap={3}>
+        <Icon className="mt-0.5 h-5 w-5 shrink-0" style={{ color: tone }} />
+        <Stack gap={1} className="min-w-0 flex-1">
+          <h4 className="text-sm font-semibold">{notification.title}</h4>
+          {notification.message && (
+            <p
+              className="text-sm"
+              style={{ color: "var(--ui-color-text-secondary)" }}
+            >
+              {notification.message}
+            </p>
+          )}
+        </Stack>
+        <Button
+          onClick={handleClose}
+          size="icon"
+          variant="text"
+          color={buttonColorMap[notification.type]}
+          className="h-6 w-6 shrink-0 p-0"
+          aria-label="Close notification"
+        >
+          <X className="w-4 h-4" />
+        </Button>
+      </Stack>
+    </Surface>
   );
 }

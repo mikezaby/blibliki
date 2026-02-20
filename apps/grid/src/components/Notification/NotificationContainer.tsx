@@ -1,3 +1,4 @@
+import { Stack } from "@blibliki/ui";
 import { useAppSelector } from "@/hooks";
 import { RootState } from "@/store";
 import NotificationItem from "./NotificationItem";
@@ -10,8 +11,9 @@ export default function NotificationContainer() {
   if (notifications.length === 0) return null;
 
   return (
-    <div
-      className="fixed top-[54px] right-4 z-10 flex flex-col gap-3 pointer-events-none"
+    <Stack
+      gap={3}
+      className="pointer-events-none fixed right-4 top-[54px] z-10"
       aria-live="polite"
       aria-atomic="true"
     >
@@ -20,6 +22,6 @@ export default function NotificationContainer() {
           <NotificationItem notification={notification} />
         </div>
       ))}
-    </div>
+    </Stack>
   );
 }
