@@ -14,18 +14,17 @@ import {
   DialogDescription,
   DialogTitle,
   DialogTrigger,
-} from "@blibliki/ui";
-import { AudioContext } from "@blibliki/utils/web-audio-api";
-import { Download, Edit2, Plus, Trash2, Upload, Waves } from "lucide-react";
-import { ChangeEvent, useMemo, useRef, useState } from "react";
-import { Fader, type MarkProps } from "@blibliki/ui";
-import {
+  Fader,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@blibliki/ui";
+import { AudioContext } from "@blibliki/utils/web-audio-api";
+import { Download, Edit2, Plus, Trash2, Upload, Waves } from "lucide-react";
+import { ChangeEvent, useMemo, useRef, useState } from "react";
+import type { MarkProps } from "@blibliki/ui";
 import { ModuleComponent } from "..";
 import Container from "../Container";
 import {
@@ -471,7 +470,7 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
               Preset
             </p>
             <Select value={selectedPresetId} onValueChange={applyPreset}>
-              <SelectTrigger className="w-full bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Choose preset" />
               </SelectTrigger>
               <SelectContent>

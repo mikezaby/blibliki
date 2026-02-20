@@ -7,7 +7,7 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui";
+} from "@blibliki/ui";
 
 type TOption = string[] | number[] | TDefOption[] | TIDOption[];
 
