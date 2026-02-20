@@ -9,6 +9,7 @@ import {
   IconButton,
   Stack,
   Surface,
+  Text,
 } from "@blibliki/ui";
 import { Handle, HandleType, NodeProps, Position } from "@xyflow/react";
 import { Settings } from "lucide-react";
@@ -26,10 +27,10 @@ export const NodeTypes = {
 export const getNodeContainerClassName = (selected: boolean) =>
   cn(
     "flex cursor-grab items-stretch rounded-lg border min-w-[200px] transition-all duration-200",
-    "bg-white dark:bg-slate-800 shadow-lg hover:shadow-xl",
+    "bg-surface-raised shadow-lg hover:shadow-xl",
     selected
-      ? "border-cyan-500 ring-4 ring-cyan-300/70 shadow-2xl scale-[1.015] dark:ring-cyan-700/50"
-      : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600",
+      ? "border-info ring-4 ring-info/35 shadow-2xl scale-[1.015]"
+      : "border-border-subtle hover:border-border-strong",
   );
 
 export default function AudioNode(props: NodeProps) {
@@ -52,10 +53,10 @@ export default function AudioNode(props: NodeProps) {
 
         <Stack gap={2} className="relative justify-center p-3">
           <Stack direction="row" align="center" gap={2} className="pr-7">
-            <div className="w-2 h-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
-            <span className="truncate text-sm font-medium">
-              {audioModule.name || audioModule.moduleType}
-            </span>
+            <div className="h-2 w-2 rounded-full bg-linear-to-br from-brand to-brand-secondary" />
+            <Text asChild size="sm" weight="medium" className="truncate">
+              <span>{audioModule.name || audioModule.moduleType}</span>
+            </Text>
 
             <DialogTrigger asChild>
               <IconButton
@@ -116,8 +117,8 @@ function IO({ io }: { io: IIOSerialize }) {
     // Determine gradient class based on IOType
     const getGradientClass = (ioType: string) =>
       ioType.toLowerCase().includes("audio")
-        ? "bg-gradient-to-r from-blue-500 to-purple-500"
-        : "bg-gradient-to-r from-purple-500 to-pink-500";
+        ? "bg-linear-to-r from-brand to-brand-secondary"
+        : "bg-linear-to-r from-brand-secondary to-info";
 
     const gradientClass = getGradientClass(io.ioType);
 
@@ -126,16 +127,19 @@ function IO({ io }: { io: IIOSerialize }) {
 
   return (
     <div className="group/io relative flex items-center">
-      <div
-        className={`w-full truncate px-3 py-2 text-xs font-medium ${handleProps.isInput ? "text-left" : "text-right"}`}
+      <Text
+        asChild
+        size="xs"
+        weight="medium"
+        className={`w-full truncate px-3 py-2 ${handleProps.isInput ? "text-left" : "text-right"}`}
       >
-        {io.name}
-      </div>
+        <div>{io.name}</div>
+      </Text>
       <Handle
         id={io.name}
         type={handleProps.type}
         position={handleProps.position}
-        className={`${handleProps.className} ${handleProps.gradientClass} w-4 h-4 rounded-full border-2 border-white dark:border-slate-700 shadow-lg hover:scale-110 transition-all duration-200 cursor-pointer`}
+        className={`${handleProps.className} ${handleProps.gradientClass} h-4 w-4 cursor-pointer rounded-full border-2 border-surface-raised shadow-lg transition-all duration-200 hover:scale-110`}
       />
 
       {/* Connection indicator dot */}
