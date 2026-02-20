@@ -1,13 +1,12 @@
 import { IStep, stepPropSchema } from "@blibliki/engine";
 import {
+  Badge,
   Button,
   Divider,
   Fader,
   Stack,
   Surface,
-  uiColorMix,
-  uiTone,
-  uiVars,
+  Text,
   type MarkProps,
 } from "@blibliki/ui";
 import CCEditor from "./CCEditor";
@@ -45,15 +44,7 @@ export default function StepEditor({
 
   const hasNotes = step.notes.length > 0;
   const hasCC = step.ccMessages.length > 0;
-  const statusStyle = step.active
-    ? {
-        background: uiColorMix(uiTone("success"), "transparent", 82),
-        color: uiTone("success", "600"),
-      }
-    : {
-        background: uiVars.surface.panel,
-        color: uiVars.text.muted,
-      };
+  const statusTone = step.active ? "success" : "neutral";
 
   return (
     <Surface
@@ -70,21 +61,20 @@ export default function StepEditor({
               <span className="text-sm font-semibold">
                 Step {stepIndex + 1}
               </span>
-              <span
-                className="rounded-full px-2 py-0.5 text-xs font-medium"
-                style={statusStyle}
-              >
+              <Badge tone={statusTone} variant="soft" size="sm">
                 {step.active ? "Active" : "Muted"}
-              </span>
+              </Badge>
               {hasNotes && (
-                <span className="text-xs" style={{ color: uiVars.text.muted }}>
-                  {step.notes.length} note{step.notes.length !== 1 ? "s" : ""}
-                </span>
+                <Text asChild tone="muted" size="xs">
+                  <span>
+                    {step.notes.length} note{step.notes.length !== 1 ? "s" : ""}
+                  </span>
+                </Text>
               )}
               {hasCC && (
-                <span className="text-xs" style={{ color: uiVars.text.muted }}>
-                  {step.ccMessages.length} CC
-                </span>
+                <Text asChild tone="muted" size="xs">
+                  <span>{step.ccMessages.length} CC</span>
+                </Text>
               )}
             </Stack>
 

@@ -33,7 +33,7 @@ describe("StepButton", () => {
     });
   });
 
-  it("uses surface-1 token for inactive step background", () => {
+  it("uses semantic surface/text classes for inactive step styling", () => {
     render(
       <StepButton
         step={createStep()}
@@ -47,8 +47,7 @@ describe("StepButton", () => {
 
     const stepCellButton = screen.getByRole("button", { name: "Step 4" });
 
-    expect(stepCellButton.getAttribute("style") ?? "").toContain(
-      "var(--ui-color-surface-1)",
-    );
+    expect(stepCellButton.className).toContain("bg-surface-panel");
+    expect(stepCellButton.className).toContain("text-content-muted");
   });
 });

@@ -7,7 +7,7 @@ import {
   OptionSelect,
   Stack,
   Surface,
-  uiVars,
+  Text,
 } from "@blibliki/ui";
 import { useUser } from "@clerk/clerk-react";
 import { Cpu, Save } from "lucide-react";
@@ -91,11 +91,11 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
               <h2 className="text-lg font-semibold tracking-tight">
                 {isNew ? "Add Device" : "Edit Device"}
               </h2>
-              <p className="text-sm" style={{ color: uiVars.text.muted }}>
+              <Text tone="muted">
                 {isNew
                   ? "Configure a new Blibliki Pi device"
                   : "Update device settings"}
-              </p>
+              </Text>
             </div>
           </Stack>
         </header>
@@ -116,12 +116,10 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
             }}
             className="font-mono"
           />
-          {errors.token && (
-            <p className="text-sm text-red-500">{errors.token}</p>
-          )}
-          <p className="text-xs" style={{ color: uiVars.text.muted }}>
+          {errors.token && <Text tone="error">{errors.token}</Text>}
+          <Text tone="muted" size="xs">
             Copy this from the blibliki-pi output on your device
-          </p>
+          </Text>
         </Stack>
 
         <Stack gap={2}>
@@ -135,7 +133,7 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
               setFormData({ ...formData, name: e.target.value });
             }}
           />
-          {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+          {errors.name && <Text tone="error">{errors.name}</Text>}
         </Stack>
 
         <Stack gap={2}>
@@ -148,9 +146,9 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
               setFormData({ ...formData, patchId: value });
             }}
           />
-          <p className="text-xs" style={{ color: uiVars.text.muted }}>
+          <Text tone="muted" size="xs">
             This patch will be auto-loaded when the device starts
-          </p>
+          </Text>
         </Stack>
       </Stack>
 

@@ -1,4 +1,5 @@
 import {
+  Badge,
   Button,
   Card,
   CardContent,
@@ -7,9 +8,7 @@ import {
   CardTitle,
   Stack,
   Surface,
-  uiColorMix,
-  uiTone,
-  uiVars,
+  Text,
 } from "@blibliki/ui";
 import { useUser } from "@clerk/clerk-react";
 import { Plus, Trash2, Edit2, Cpu, Copy, Check } from "lucide-react";
@@ -59,7 +58,7 @@ export default function Devices() {
     return (
       <Surface tone="canvas" className="h-screen">
         <Stack align="center" justify="center" className="h-full">
-          <p style={{ color: uiVars.text.muted }}>Loading devices...</p>
+          <Text tone="muted">Loading devices...</Text>
         </Stack>
       </Surface>
     );
@@ -77,9 +76,9 @@ export default function Devices() {
         >
           <Stack gap={1}>
             <h1 className="mb-2 text-3xl font-bold">Blibliki Pi Devices</h1>
-            <p style={{ color: uiVars.text.muted }}>
+            <Text tone="muted">
               Manage your Raspberry Pi and Node.js devices
-            </p>
+            </Text>
           </Stack>
           <Button onClick={handleAdd} color="info">
             <Plus className="w-4 h-4 mr-2" />
@@ -98,22 +97,18 @@ export default function Devices() {
               className="flex-wrap"
             >
               <Stack gap={2} className="min-w-0 flex-1">
-                <p className="text-sm font-medium">
+                <Text size="sm" weight="medium">
                   Your User ID (for Pi setup)
-                </p>
-                <code
-                  className="inline-block max-w-full break-all rounded-md border px-3 py-2 font-mono text-sm"
-                  style={{
-                    background: uiVars.surface.panel,
-                    borderColor: uiVars.border.subtle,
-                  }}
-                >
-                  {user.id}
-                </code>
-                <p className="text-xs" style={{ color: uiVars.text.muted }}>
+                </Text>
+                <Surface tone="panel" border="subtle" radius="sm" asChild>
+                  <code className="inline-block max-w-full break-all px-3 py-2 font-mono text-sm">
+                    {user.id}
+                  </code>
+                </Surface>
+                <Text tone="muted" size="xs">
                   Copy this ID and paste it when starting your Blibliki Pi
                   device
-                </p>
+                </Text>
               </Stack>
               <Button
                 onClick={() => {
@@ -141,25 +136,16 @@ export default function Devices() {
         )}
 
         {devices.length === 0 ? (
-          <Card
-            className="border-2 border-dashed"
-            style={{ borderColor: uiVars.border.subtle }}
-          >
+          <Card className="border-2 border-dashed">
             <CardContent className="py-16">
               <Stack align="center" justify="center" gap={4}>
-                <Cpu
-                  className="mb-4 h-16 w-16"
-                  style={{ color: uiVars.text.muted }}
-                />
+                <Cpu className="mb-4 h-16 w-16 text-content-muted" />
                 <Stack align="center" gap={1}>
                   <h3 className="text-xl font-semibold">No devices yet</h3>
-                  <p
-                    className="max-w-md text-center"
-                    style={{ color: uiVars.text.muted }}
-                  >
+                  <Text tone="muted" className="max-w-md text-center">
                     Add your first Blibliki Pi device to start running patches
                     on Raspberry Pi or other Node.js environments.
-                  </p>
+                  </Text>
                 </Stack>
                 <Button onClick={handleAdd} color="info">
                   <Plus className="w-4 h-4 mr-2" />
@@ -187,36 +173,27 @@ export default function Devices() {
                       <CardDescription className="text-xs uppercase tracking-wide">
                         Token
                       </CardDescription>
-                      <div
-                        className="break-all rounded p-2 font-mono text-sm"
-                        style={{ background: uiVars.surface.panel }}
+                      <Surface
+                        tone="panel"
+                        radius="sm"
+                        className="break-all p-2 font-mono text-sm"
                       >
                         {device.token.substring(0, 20)}...
-                      </div>
+                      </Surface>
                     </Stack>
                     <Stack gap={1}>
                       <CardDescription className="text-xs uppercase tracking-wide">
                         Assigned Patch
                       </CardDescription>
-                      <div className="text-sm">
+                      <div>
                         {device.patchId ? (
-                          <span
-                            className="rounded px-2 py-1"
-                            style={{
-                              background: uiColorMix(
-                                uiTone("success"),
-                                "transparent",
-                                82,
-                              ),
-                              color: uiTone("success", "600"),
-                            }}
-                          >
+                          <Badge tone="success" variant="soft" size="sm">
                             Patch assigned
-                          </span>
+                          </Badge>
                         ) : (
-                          <span style={{ color: uiVars.text.muted }}>
-                            No patch assigned
-                          </span>
+                          <Text asChild tone="muted" size="sm">
+                            <span>No patch assigned</span>
+                          </Text>
                         )}
                       </div>
                     </Stack>

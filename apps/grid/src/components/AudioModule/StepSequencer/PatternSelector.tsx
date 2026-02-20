@@ -6,7 +6,7 @@ import {
   Stack,
   Surface,
   Textarea,
-  uiTone,
+  Text,
 } from "@blibliki/ui";
 import { Plus, X } from "lucide-react";
 import { TUpdateProp } from "..";
@@ -73,7 +73,9 @@ export default function PatternSelector({
       className="flex-wrap"
     >
       <Stack gap={2}>
-        <p className="text-sm font-medium">Pattern:</p>
+        <Text size="sm" weight="medium">
+          Pattern:
+        </Text>
         <Stack direction="row" gap={1} className="flex-wrap">
           {patterns.map((pattern, index) => (
             <div key={index} className="relative group">
@@ -137,12 +139,9 @@ export default function PatternSelector({
               className="nodrag w-48 font-mono text-sm leading-5"
             />
             {sequencePosition && (
-              <span
-                className="text-xs font-medium"
-                style={{ color: uiTone("success", "600") }}
-              >
-                {sequencePosition}
-              </span>
+              <Text asChild tone="success" size="xs" weight="medium">
+                <span>{sequencePosition}</span>
+              </Text>
             )}
           </Stack>
         </Surface>

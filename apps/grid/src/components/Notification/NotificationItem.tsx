@@ -1,12 +1,4 @@
-import {
-  Button,
-  Stack,
-  Surface,
-  uiColorMix,
-  uiTone,
-  uiVars,
-  type UIIntentTone,
-} from "@blibliki/ui";
+import { Button, Stack, Surface, Text } from "@blibliki/ui";
 import {
   CheckCircle2,
   AlertCircle,
@@ -29,13 +21,6 @@ const iconMap = {
   info: Info,
 };
 
-const toneMap: Record<Notification["type"], UIIntentTone> = {
-  success: "success",
-  error: "error",
-  warning: "warning",
-  info: "info",
-} as const;
-
 const buttonColorMap = {
   success: "success",
   error: "error",
@@ -43,12 +28,25 @@ const buttonColorMap = {
   info: "info",
 } as const;
 
+const iconColorClassMap = {
+  success: "text-success",
+  error: "text-error",
+  warning: "text-warning",
+  info: "text-info",
+} as const;
+
+const surfaceTintClassMap = {
+  success: "bg-success/10 border-success/35",
+  error: "bg-error/10 border-error/35",
+  warning: "bg-warning/10 border-warning/35",
+  info: "bg-info/10 border-info/35",
+} as const;
+
 export default function NotificationItem({
   notification,
 }: NotificationItemProps) {
   const dispatch = useAppDispatch();
   const Icon = iconMap[notification.type];
-  const tone = toneMap[notification.type];
 
   useEffect(() => {
     if (notification.duration && notification.duration > 0) {
@@ -71,24 +69,19 @@ export default function NotificationItem({
       tone="raised"
       border="subtle"
       radius="lg"
-      className="min-w-[320px] max-w-md animate-slideInRight p-4"
+      className={`min-w-[320px] max-w-md animate-slideInRight p-4 ${surfaceTintClassMap[notification.type]}`}
       role="alert"
-      style={{
-        background: uiColorMix(uiTone(tone), uiVars.surface.raised, 88),
-        borderColor: uiColorMix(uiTone(tone), uiVars.border.subtle, 65),
-      }}
     >
       <Stack direction="row" align="start" gap={3}>
         <Icon
-          className="mt-0.5 h-5 w-5 shrink-0"
-          style={{ color: uiTone(tone) }}
+          className={`mt-0.5 h-5 w-5 shrink-0 ${iconColorClassMap[notification.type]}`}
         />
         <Stack gap={1} className="min-w-0 flex-1">
-          <h4 className="text-sm font-semibold">{notification.title}</h4>
+          <Text asChild size="sm" weight="semibold">
+            <h4>{notification.title}</h4>
+          </Text>
           {notification.message && (
-            <p className="text-sm" style={{ color: uiVars.text.secondary }}>
-              {notification.message}
-            </p>
+            <Text tone="secondary">{notification.message}</Text>
           )}
         </Stack>
         <Button

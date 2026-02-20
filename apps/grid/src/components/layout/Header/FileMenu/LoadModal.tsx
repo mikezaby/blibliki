@@ -1,4 +1,4 @@
-import { Button, Divider, Input, Stack, Surface, uiVars } from "@blibliki/ui";
+import { Button, Divider, Input, Stack, Surface, Text } from "@blibliki/ui";
 import { Link } from "@tanstack/react-router";
 import { FolderOpen, Search, User, ChevronRight } from "lucide-react";
 import { useState } from "react";
@@ -39,9 +39,7 @@ export default function LoadPatchModal() {
                 <h2 className="text-lg font-semibold tracking-tight">
                   Load Patch
                 </h2>
-                <p className="text-sm" style={{ color: uiVars.text.muted }}>
-                  Select a patch to load into the grid
-                </p>
+                <Text tone="muted">Select a patch to load into the grid</Text>
               </div>
             </Stack>
           </header>
@@ -52,10 +50,7 @@ export default function LoadPatchModal() {
         <Surface tone="panel" radius="none" asChild>
           <section className="p-4">
             <div className="relative">
-              <Search
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
-                style={{ color: uiVars.text.muted }}
-              />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-content-muted" />
               <Input
                 placeholder="Search patches..."
                 value={searchQuery}
@@ -73,15 +68,12 @@ export default function LoadPatchModal() {
         <div className="max-h-96 overflow-y-auto">
           {filteredPatches.length === 0 ? (
             <div className="p-8 text-center">
-              <FolderOpen
-                className="mx-auto mb-4 h-12 w-12"
-                style={{ color: uiVars.text.muted }}
-              />
-              <p className="text-sm" style={{ color: uiVars.text.muted }}>
+              <FolderOpen className="mx-auto mb-4 h-12 w-12 text-content-muted" />
+              <Text tone="muted">
                 {searchQuery
                   ? "No patches match your search"
                   : "No patches found"}
-              </p>
+              </Text>
             </div>
           ) : (
             <ul className="space-y-1 p-2">
@@ -106,22 +98,18 @@ export default function LoadPatchModal() {
                             {name || "Untitled Patch"}
                           </h3>
                         </div>
-                        <div
-                          className="flex items-center gap-4 text-xs"
-                          style={{ color: uiVars.text.muted }}
-                        >
+                        <div className="flex items-center gap-4 text-xs">
                           {userId && (
-                            <span className="flex items-center gap-1">
-                              <User className="h-3 w-3" />
-                              {userId.slice(0, 8)}...
-                            </span>
+                            <Text asChild tone="muted" size="xs">
+                              <span className="flex items-center gap-1">
+                                <User className="h-3 w-3" />
+                                {userId.slice(0, 8)}...
+                              </span>
+                            </Text>
                           )}
                         </div>
                       </div>
-                      <ChevronRight
-                        className="h-4 w-4"
-                        style={{ color: uiVars.text.muted }}
-                      />
+                      <ChevronRight className="h-4 w-4 text-content-muted" />
                     </Link>
                   </Button>
                 </li>
@@ -135,13 +123,12 @@ export default function LoadPatchModal() {
         <Surface tone="panel" radius="none" asChild>
           <footer className="p-4">
             <Stack direction="row" align="center" justify="between">
-              <p
-                className="text-xs italic"
-                style={{ color: uiVars.text.muted }}
-              >
-                {filteredPatches.length}{" "}
-                {filteredPatches.length === 1 ? "patch" : "patches"} available
-              </p>
+              <Text asChild tone="muted" size="xs" className="italic">
+                <p>
+                  {filteredPatches.length}{" "}
+                  {filteredPatches.length === 1 ? "patch" : "patches"} available
+                </p>
+              </Text>
               <Button
                 variant="text"
                 color="secondary"

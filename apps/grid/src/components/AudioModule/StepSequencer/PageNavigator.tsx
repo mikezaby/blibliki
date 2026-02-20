@@ -1,5 +1,5 @@
 import { IPage } from "@blibliki/engine";
-import { Button, Stack, uiVars } from "@blibliki/ui";
+import { Button, Stack, Text } from "@blibliki/ui";
 import { Plus } from "lucide-react";
 
 type PageNavigatorProps = {
@@ -33,9 +33,9 @@ export default function PageNavigator({
         ←
       </Button>
 
-      <p className="text-sm font-medium">
+      <Text size="sm" weight="medium">
         Page {activePageNo + 1} / {pages.length}
-      </p>
+      </Text>
 
       <Button
         variant="outlined"
@@ -48,9 +48,9 @@ export default function PageNavigator({
         →
       </Button>
 
-      <p className="text-xs" style={{ color: uiVars.text.muted }}>
+      <Text tone="muted" size="xs">
         {pages[activePageNo]?.name ?? "Unnamed Page"}
-      </p>
+      </Text>
 
       <Button color="success" size="sm" onClick={onAddPage}>
         <Plus className="w-4 h-4" />

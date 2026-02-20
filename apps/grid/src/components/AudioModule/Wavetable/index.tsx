@@ -19,13 +19,12 @@ import {
   Stack,
   Surface,
   Textarea,
+  Text,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  uiTone,
-  uiVars,
 } from "@blibliki/ui";
 import type { MarkProps } from "@blibliki/ui";
 import { AudioContext } from "@blibliki/utils/web-audio-api";
@@ -281,12 +280,17 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
               <p className="text-xs font-semibold tracking-tight">
                 Wavetable Bank
               </p>
-              <p className="text-xs" style={{ color: uiVars.text.muted }}>
-                {safeTables.length} tables • {playbackLabel}
-              </p>
-              <p className="text-xs" style={{ color: uiVars.text.muted }}>
-                Base {position.toFixed(3)} • Actual {actualPosition.toFixed(3)}
-              </p>
+              <Text asChild tone="muted" size="xs">
+                <p>
+                  {safeTables.length} tables • {playbackLabel}
+                </p>
+              </Text>
+              <Text asChild tone="muted" size="xs">
+                <p>
+                  Base {position.toFixed(3)} • Actual{" "}
+                  {actualPosition.toFixed(3)}
+                </p>
+              </Text>
             </div>
 
             <div className="flex items-center gap-2">
@@ -475,9 +479,9 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
           </div>
 
           {wavError ? (
-            <p className="text-xs" style={{ color: uiTone("error", "600") }}>
+            <Text tone="error" size="xs">
               {wavError}
-            </p>
+            </Text>
           ) : null}
 
           <Surface

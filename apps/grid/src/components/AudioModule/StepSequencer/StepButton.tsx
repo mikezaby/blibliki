@@ -1,6 +1,5 @@
 import { IStep } from "@blibliki/engine";
-import { Button, Stack, uiColorMix, uiTone, uiVars } from "@blibliki/ui";
-import { type CSSProperties } from "react";
+import { Button, Stack } from "@blibliki/ui";
 
 type StepButtonProps = {
   step: IStep;
@@ -27,60 +26,35 @@ export default function StepButton({
     ? Math.max(...step.notes.map((n) => n.velocity))
     : 0;
   const intensity = maxVelocity / 127; // 0-1 range
+  const intensityTier =
+    !isActive || !hasNotes
+      ? "inactive"
+      : intensity > 0.66
+        ? "high"
+        : intensity > 0.33
+          ? "mid"
+          : "low";
 
-  const getBackgroundColor = () => {
-    if (!isActive || !hasNotes) {
-      return uiVars.surface.panel;
-    }
+  const stepToneClasses =
+    intensityTier === "inactive"
+      ? "bg-surface-panel text-content-muted"
+      : intensityTier === "high"
+        ? "bg-info text-white"
+        : intensityTier === "mid"
+          ? "bg-info/85 text-content-primary"
+          : "bg-info/65 text-content-primary";
 
-    if (intensity > 0.66) return uiTone("info", "600");
-    if (intensity > 0.33) return uiTone("info");
-    return uiColorMix(uiTone("info"), "white", 30);
-  };
+  const stepBorderClasses = isPlaying
+    ? "border-warning border-2 ring-2 ring-warning/25"
+    : isSelected
+      ? "border-info border-2"
+      : isActive && hasNotes
+        ? "border-info/60"
+        : "border-border-subtle";
 
-  const getBorderColor = () => {
-    if (isPlaying) {
-      return uiTone("warning");
-    }
-    if (isSelected) {
-      return uiTone("info");
-    }
-    if (isActive && hasNotes) {
-      return uiColorMix(uiTone("info", "600"), uiVars.border.subtle, 35);
-    }
-    return uiVars.border.subtle;
-  };
-
-  const getTextColor = () => {
-    if (!isActive || !hasNotes) {
-      return uiVars.text.muted;
-    }
-    return intensity > 0.5 ? uiTone("info", "contrast") : uiVars.text.primary;
-  };
-
-  const stepStyle: CSSProperties = {
-    background: getBackgroundColor(),
-    borderColor: getBorderColor(),
-    color: getTextColor(),
-    borderWidth: isPlaying || isSelected ? 2 : 1,
-    boxShadow: isPlaying
-      ? `0 0 0 2px ${uiColorMix(uiTone("warning"), "transparent", 75)}`
-      : undefined,
-  };
-
-  const toggleStyle: CSSProperties = isActive
-    ? {
-        background: uiTone("success"),
-        borderColor: uiTone("success", "600"),
-      }
-    : {
-        background: "transparent",
-        borderColor: uiVars.border.subtle,
-      };
-
-  const indicatorStyle: CSSProperties = {
-    background: uiColorMix("currentColor", uiVars.text.primary, 25),
-  };
+  const toggleClasses = isActive
+    ? "bg-success border-success/80"
+    : "bg-transparent border-border-subtle";
 
   return (
     <Stack align="center" gap={1}>
@@ -93,8 +67,7 @@ export default function StepButton({
           e.stopPropagation();
           onToggleActive();
         }}
-        className="h-3 w-3 rounded-full border-2 p-0 transition-all hover:scale-125"
-        style={toggleStyle}
+        className={`h-3 w-3 rounded-full border-2 p-0 transition-all hover:scale-125 ${toggleClasses}`}
         title={isActive ? "Click to mute step" : "Click to activate step"}
       />
 
@@ -104,17 +77,15 @@ export default function StepButton({
         color="neutral"
         aria-label={`Step ${stepIndex + 1}`}
         onClick={onSelect}
-        className={`relative h-12 w-full justify-center px-0 text-xs font-medium transition-all duration-150 hover:scale-105 ${
+        className={`relative h-12 w-full justify-center px-0 text-xs font-medium transition-all duration-150 hover:scale-105 ${stepToneClasses} ${stepBorderClasses} ${
           isPlaying ? "animate-pulse" : ""
         }`}
-        style={stepStyle}
       >
         {stepIndex + 1}
         {hasNotes && (
           <span
             aria-hidden
-            className="absolute bottom-1 right-1 h-1 w-1 rounded-full"
-            style={indicatorStyle}
+            className="absolute bottom-1 right-1 h-1 w-1 rounded-full bg-current/25"
           />
         )}
       </Button>

@@ -11,8 +11,7 @@ import {
   OptionSelect,
   Stack,
   Surface,
-  uiColorMix,
-  uiVars,
+  Text,
 } from "@blibliki/ui";
 import { ChevronDown, ChevronUp, SquarePlus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -225,9 +224,11 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
         <Stack gap={3}>
           <Stack direction="row" align="center" justify="between">
             <h3 className="text-sm font-semibold">Page Navigation</h3>
-            <span className="text-xs" style={{ color: uiVars.text.muted }}>
-              {activePage + 1} / {pages.length}
-            </span>
+            <Text asChild tone="muted" size="xs">
+              <span>
+                {activePage + 1} / {pages.length}
+              </span>
+            </Text>
           </Stack>
 
           <Stack direction="row" gap={2} className="flex-wrap">
@@ -266,14 +267,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
         tone="subtle"
         border="subtle"
         radius="lg"
-        className="p-4"
-        style={{
-          background: `linear-gradient(135deg, ${uiVars.surface.subtle}, ${uiColorMix(
-            uiVars.surface.panel,
-            uiVars.surface.subtle,
-            50,
-          )})`,
-        }}
+        className="bg-gradient-to-br from-surface-subtle to-surface-panel p-4"
       >
         <Stack gap={3}>
           <h3 className="text-sm font-semibold">Page Settings</h3>
@@ -331,11 +325,11 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
               Global Mappings
             </Button>
           </Stack>
-          <p className="text-xs" style={{ color: uiVars.text.muted }}>
+          <Text tone="muted" size="xs">
             {viewMode === "page"
               ? "These mappings apply only to the current page"
               : "These mappings are available on all pages"}
-          </p>
+          </Text>
         </Stack>
       </Surface>
 
@@ -350,9 +344,11 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
           <h3 className="text-sm font-semibold">
             {viewMode === "global" ? "Global " : "Page "}MIDI Mappings
           </h3>
-          <span className="text-xs" style={{ color: uiVars.text.muted }}>
-            {mappings.length} {mappings.length === 1 ? "mapping" : "mappings"}
-          </span>
+          <Text asChild tone="muted" size="xs">
+            <span>
+              {mappings.length} {mappings.length === 1 ? "mapping" : "mappings"}
+            </span>
+          </Text>
         </Stack>
 
         <Stack gap={3}>
@@ -444,10 +440,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
 
                 {/* Advanced settings (expandable) */}
                 {isExpanded && (
-                  <div
-                    className="flex flex-col gap-3 border-t pt-3"
-                    style={{ borderColor: uiVars.border.subtle }}
-                  >
+                  <div className="flex flex-col gap-3 border-t border-border-subtle pt-3">
                     <div className="flex items-center gap-2">
                       <Label className="min-w-[80px] text-xs font-medium">
                         Mode
@@ -476,23 +469,22 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                           });
                         }}
                       />
-                      <span
-                        className="ml-2 text-xs"
-                        style={{ color: uiVars.text.muted }}
-                      >
-                        {mode === MidiMappingMode.direct &&
-                          "Maps MIDI value directly to parameter"}
-                        {mode === MidiMappingMode.directRev &&
-                          "Maps MIDI value directly to parameter reverse"}
-                        {mode === MidiMappingMode.toggleInc &&
-                          "Only responds to button press (127)"}
-                        {mode === MidiMappingMode.toggleDec &&
-                          "Only responds to button press (127)"}
-                        {mode === MidiMappingMode.incDec &&
-                          "Increment/decrement based on threshold"}
-                        {mode === MidiMappingMode.incDecRev &&
-                          "Increment/decrement based on threshold reverse"}
-                      </span>
+                      <Text asChild tone="muted" size="xs">
+                        <span className="ml-2">
+                          {mode === MidiMappingMode.direct &&
+                            "Maps MIDI value directly to parameter"}
+                          {mode === MidiMappingMode.directRev &&
+                            "Maps MIDI value directly to parameter reverse"}
+                          {mode === MidiMappingMode.toggleInc &&
+                            "Only responds to button press (127)"}
+                          {mode === MidiMappingMode.toggleDec &&
+                            "Only responds to button press (127)"}
+                          {mode === MidiMappingMode.incDec &&
+                            "Increment/decrement based on threshold"}
+                          {mode === MidiMappingMode.incDecRev &&
+                            "Increment/decrement based on threshold reverse"}
+                        </span>
+                      </Text>
                     </div>
 
                     {(mode === MidiMappingMode.incDec ||
@@ -515,13 +507,12 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                               });
                             }}
                           />
-                          <span
-                            className="ml-2 text-xs"
-                            style={{ color: uiVars.text.muted }}
-                          >
-                            Value &gt; threshold increments, ≤ threshold
-                            decrements
-                          </span>
+                          <Text asChild tone="muted" size="xs">
+                            <span className="ml-2">
+                              Value &gt; threshold increments, ≤ threshold
+                              decrements
+                            </span>
+                          </Text>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -556,12 +547,12 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                               }
                             }}
                           />
-                          <span
-                            className="ml-2 text-xs"
-                            style={{ color: uiVars.text.muted }}
-                          >
-                            Amount to increment/decrement (leave empty for auto)
-                          </span>
+                          <Text asChild tone="muted" size="xs">
+                            <span className="ml-2">
+                              Amount to increment/decrement (leave empty for
+                              auto)
+                            </span>
+                          </Text>
                         </div>
                       </>
                     )}
