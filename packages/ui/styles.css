@@ -1158,7 +1158,10 @@
 
   .ui-fader__marks--horizontal {
     width: 100%;
-    justify-content: space-between;
+    display: block;
+    position: relative;
+    min-height: 2.25rem;
+    overflow: visible;
   }
 
   .ui-fader__marks--vertical {
@@ -1179,6 +1182,28 @@
     line-height: 1;
     color: var(--ui-color-text-secondary);
     gap: 0.3125rem;
+  }
+
+  .ui-fader__mark-button--horizontal {
+    position: absolute;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.125rem;
+    text-align: center;
+    padding: 0.125rem 0.25rem;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
+  .ui-fader__mark-button--horizontal-start {
+    transform: translateX(0);
+  }
+
+  .ui-fader__mark-button--horizontal-end {
+    transform: translateX(-100%);
   }
 
   .ui-fader__mark-dot {

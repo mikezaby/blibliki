@@ -92,6 +92,28 @@ export const Horizontal: Story = {
   ),
 };
 
+export const HorizontalWithMarks: Story = {
+  args: {
+    name: "Pan",
+    min: -1,
+    max: 1,
+    step: 0.01,
+    value: 0,
+    orientation: "horizontal",
+    marks: [
+      { value: -1, label: "L" },
+      { value: 0, label: "C" },
+      { value: 1, label: "R" },
+    ],
+    hideMarks: false,
+  },
+  render: (args) => (
+    <div style={{ width: "18rem" }}>
+      <ControlledFader {...args} />
+    </div>
+  ),
+};
+
 export const Exponential: Story = {
   args: {
     name: "Frequency",

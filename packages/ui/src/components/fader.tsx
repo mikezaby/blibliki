@@ -108,6 +108,10 @@ function Fader(props: FaderProps) {
     const nextSliderValue = clamp(markValue, min, max);
     onChange(nextSliderValue, calcValue(nextSliderValue, min, max, exp));
   };
+  const getHorizontalMarkPosition = (markValue: number) => {
+    if (max === min) return 0;
+    return ((clamp(markValue, min, max) - min) / (max - min)) * 100;
+  };
 
   const hasOnlyZeroMarks = marks
     ? marks.every((mark) => mark.value === 0)
@@ -187,7 +191,21 @@ function Fader(props: FaderProps) {
                 size="sm"
                 variant="text"
                 color="secondary"
-                className="ui-fader__mark-button"
+                className={cn(
+                  "ui-fader__mark-button",
+                  orientation === "horizontal" && "ui-fader__mark-button--horizontal",
+                  orientation === "horizontal" &&
+                    mark.value <= min &&
+                    "ui-fader__mark-button--horizontal-start",
+                  orientation === "horizontal" &&
+                    mark.value >= max &&
+                    "ui-fader__mark-button--horizontal-end",
+                )}
+                style={
+                  orientation === "horizontal"
+                    ? { left: `${getHorizontalMarkPosition(mark.value)}%` }
+                    : undefined
+                }
                 onClick={onMarkClick(mark.value)}
               >
                 <span className="ui-fader__mark-dot" aria-hidden />
