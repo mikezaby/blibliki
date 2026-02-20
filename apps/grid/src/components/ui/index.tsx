@@ -17,12 +17,3 @@ export {
   ContextMenuSubTrigger,
   ContextMenuRadioGroup,
 } from "./context-menu";
-
-export {
-  Card,
-  CardHeader,
-  CardFooter,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "./card";

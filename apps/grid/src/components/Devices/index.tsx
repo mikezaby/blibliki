@@ -1,9 +1,14 @@
-import { Button } from "@blibliki/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@blibliki/ui";
 import { useUser } from "@clerk/clerk-react";
 import { Plus, Trash2, Edit2, Cpu, Copy, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { open } from "@/components/Modal/modalSlice";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { loadDevices, deleteDevice } from "@/devicesSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import DeviceModal from "./DeviceModal";

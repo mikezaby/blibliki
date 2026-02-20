@@ -305,6 +305,59 @@
     font-size: 0.8125rem;
   }
 
+  :where(.ui-card) {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    border: 1px solid var(--ui-color-border-subtle);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-color-surface-raised);
+    color: var(--ui-color-text-primary);
+    padding: 1.5rem 0;
+    box-shadow: 0 1px 2px
+      color-mix(in oklab, var(--ui-color-text-primary), transparent 90%);
+  }
+
+  :where(.ui-card-header) {
+    display: grid;
+    grid-template-rows: auto auto;
+    align-items: start;
+    gap: 0.375rem;
+    padding: 0 1.5rem;
+  }
+
+  :where(.ui-card-header):has(.ui-card-action) {
+    grid-template-columns: 1fr auto;
+  }
+
+  :where(.ui-card-title) {
+    line-height: 1.2;
+    font-weight: 600;
+  }
+
+  :where(.ui-card-description) {
+    font-size: 0.875rem;
+    line-height: 1.35;
+    color: var(--ui-color-text-secondary);
+  }
+
+  :where(.ui-card-action) {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: start;
+    justify-self: end;
+  }
+
+  :where(.ui-card-content) {
+    padding: 0 1.5rem;
+  }
+
+  :where(.ui-card-footer) {
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+  }
+
   :where(.ui-icon-button) {
     border-radius: 9999px;
     line-height: 0;

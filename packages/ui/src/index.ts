@@ -1,5 +1,14 @@
 export { Button, buttonVariants, type ButtonProps } from "./components/button";
 export {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "./components/card";
+export {
   Surface,
   surfaceVariants,
   type SurfaceProps,
