@@ -1,5 +1,5 @@
 import { IStep } from "@blibliki/engine";
-import { Stack } from "@blibliki/ui";
+import { Button, Stack } from "@blibliki/ui";
 import { type CSSProperties } from "react";
 
 type StepButtonProps = {
@@ -30,7 +30,7 @@ export default function StepButton({
 
   const getBackgroundColor = () => {
     if (!isActive || !hasNotes) {
-      return "var(--ui-color-surface-panel)";
+      return "var(--ui-color-surface-1)";
     }
 
     if (intensity > 0.66) return "var(--ui-color-info-600)";
@@ -49,10 +49,6 @@ export default function StepButton({
       return "color-mix(in oklab, var(--ui-color-info-600), var(--ui-color-border-subtle) 35%)";
     }
     return "var(--ui-color-border-subtle)";
-  };
-
-  const getAnimation = () => {
-    return isPlaying ? "animate-pulse" : "";
   };
 
   const getTextColor = () => {
@@ -91,29 +87,40 @@ export default function StepButton({
 
   return (
     <Stack align="center" gap={1}>
-      <button
+      <Button
+        size="icon"
+        variant="outlined"
+        color="neutral"
+        aria-label={isActive ? "Mute step" : "Activate step"}
         onClick={(e) => {
           e.stopPropagation();
           onToggleActive();
         }}
-        className="h-3 w-3 cursor-pointer rounded-full border-2 transition-all hover:scale-125"
+        className="h-3 w-3 rounded-full border-2 p-0 transition-all hover:scale-125"
         style={toggleStyle}
         title={isActive ? "Click to mute step" : "Click to activate step"}
       />
 
-      <button
+      <Button
+        size="sm"
+        variant="outlined"
+        color="neutral"
+        aria-label={`Step ${stepIndex + 1}`}
         onClick={onSelect}
-        className={`relative flex h-12 w-full items-center justify-center rounded border text-xs font-medium transition-all duration-150 hover:scale-105 ${getAnimation()}`}
+        className={`relative h-12 w-full justify-center px-0 text-xs font-medium transition-all duration-150 hover:scale-105 ${
+          isPlaying ? "animate-pulse" : ""
+        }`}
         style={stepStyle}
       >
         {stepIndex + 1}
         {hasNotes && (
-          <div
+          <span
+            aria-hidden
             className="absolute bottom-1 right-1 h-1 w-1 rounded-full"
             style={indicatorStyle}
           />
         )}
-      </button>
+      </Button>
     </Stack>
   );
 }

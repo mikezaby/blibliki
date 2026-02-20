@@ -23,7 +23,7 @@ export default function StepGrid({
   const visibleSteps = steps.slice(0, stepsPerPage);
 
   return (
-    <Surface tone="subtle" border="subtle" radius="md" className="p-4">
+    <Surface tone="raised" border="subtle" radius="md" className="p-4">
       <div
         className="grid gap-2"
         style={{
