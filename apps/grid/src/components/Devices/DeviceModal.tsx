@@ -7,6 +7,7 @@ import {
   OptionSelect,
   Stack,
   Surface,
+  uiVars,
 } from "@blibliki/ui";
 import { useUser } from "@clerk/clerk-react";
 import { Cpu, Save } from "lucide-react";
@@ -90,10 +91,7 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
               <h2 className="text-lg font-semibold tracking-tight">
                 {isNew ? "Add Device" : "Edit Device"}
               </h2>
-              <p
-                className="text-sm"
-                style={{ color: "var(--ui-color-text-muted)" }}
-              >
+              <p className="text-sm" style={{ color: uiVars.text.muted }}>
                 {isNew
                   ? "Configure a new Blibliki Pi device"
                   : "Update device settings"}
@@ -121,10 +119,7 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
           {errors.token && (
             <p className="text-sm text-red-500">{errors.token}</p>
           )}
-          <p
-            className="text-xs"
-            style={{ color: "var(--ui-color-text-muted)" }}
-          >
+          <p className="text-xs" style={{ color: uiVars.text.muted }}>
             Copy this from the blibliki-pi output on your device
           </p>
         </Stack>
@@ -153,10 +148,7 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
               setFormData({ ...formData, patchId: value });
             }}
           />
-          <p
-            className="text-xs"
-            style={{ color: "var(--ui-color-text-muted)" }}
-          >
+          <p className="text-xs" style={{ color: uiVars.text.muted }}>
             This patch will be auto-loaded when the device starts
           </p>
         </Stack>

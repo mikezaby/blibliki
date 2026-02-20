@@ -23,6 +23,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  uiTone,
+  uiVars,
 } from "@blibliki/ui";
 import type { MarkProps } from "@blibliki/ui";
 import { AudioContext } from "@blibliki/utils/web-audio-api";
@@ -278,16 +280,10 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
               <p className="text-xs font-semibold tracking-tight">
                 Wavetable Bank
               </p>
-              <p
-                className="text-xs"
-                style={{ color: "var(--ui-color-text-muted)" }}
-              >
+              <p className="text-xs" style={{ color: uiVars.text.muted }}>
                 {safeTables.length} tables • {playbackLabel}
               </p>
-              <p
-                className="text-xs"
-                style={{ color: "var(--ui-color-text-muted)" }}
-              >
+              <p className="text-xs" style={{ color: uiVars.text.muted }}>
                 Base {position.toFixed(3)} • Actual {actualPosition.toFixed(3)}
               </p>
             </div>
@@ -476,10 +472,7 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
           </div>
 
           {wavError ? (
-            <p
-              className="text-xs"
-              style={{ color: "var(--ui-color-error-600)" }}
-            >
+            <p className="text-xs" style={{ color: uiTone("error", "600") }}>
               {wavError}
             </p>
           ) : null}

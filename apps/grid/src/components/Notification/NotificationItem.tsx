@@ -1,4 +1,12 @@
-import { Button, Stack, Surface } from "@blibliki/ui";
+import {
+  Button,
+  Stack,
+  Surface,
+  uiColorMix,
+  uiTone,
+  uiVars,
+  type UIIntentTone,
+} from "@blibliki/ui";
 import {
   CheckCircle2,
   AlertCircle,
@@ -21,11 +29,11 @@ const iconMap = {
   info: Info,
 };
 
-const toneMap = {
-  success: "var(--ui-color-success-500)",
-  error: "var(--ui-color-error-500)",
-  warning: "var(--ui-color-warning-500)",
-  info: "var(--ui-color-info-500)",
+const toneMap: Record<Notification["type"], UIIntentTone> = {
+  success: "success",
+  error: "error",
+  warning: "warning",
+  info: "info",
 } as const;
 
 const buttonColorMap = {
@@ -66,19 +74,19 @@ export default function NotificationItem({
       className="min-w-[320px] max-w-md animate-slideInRight p-4"
       role="alert"
       style={{
-        background: `color-mix(in oklab, ${tone}, var(--ui-color-surface-raised) 88%)`,
-        borderColor: `color-mix(in oklab, ${tone}, var(--ui-color-border-subtle) 65%)`,
+        background: uiColorMix(uiTone(tone), uiVars.surface.raised, 88),
+        borderColor: uiColorMix(uiTone(tone), uiVars.border.subtle, 65),
       }}
     >
       <Stack direction="row" align="start" gap={3}>
-        <Icon className="mt-0.5 h-5 w-5 shrink-0" style={{ color: tone }} />
+        <Icon
+          className="mt-0.5 h-5 w-5 shrink-0"
+          style={{ color: uiTone(tone) }}
+        />
         <Stack gap={1} className="min-w-0 flex-1">
           <h4 className="text-sm font-semibold">{notification.title}</h4>
           {notification.message && (
-            <p
-              className="text-sm"
-              style={{ color: "var(--ui-color-text-secondary)" }}
-            >
+            <p className="text-sm" style={{ color: uiVars.text.secondary }}>
               {notification.message}
             </p>
           )}

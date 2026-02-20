@@ -5,6 +5,9 @@ import {
   Fader,
   Stack,
   Surface,
+  uiColorMix,
+  uiTone,
+  uiVars,
   type MarkProps,
 } from "@blibliki/ui";
 import CCEditor from "./CCEditor";
@@ -44,13 +47,12 @@ export default function StepEditor({
   const hasCC = step.ccMessages.length > 0;
   const statusStyle = step.active
     ? {
-        background:
-          "color-mix(in oklab, var(--ui-color-success-500), transparent 82%)",
-        color: "var(--ui-color-success-600)",
+        background: uiColorMix(uiTone("success"), "transparent", 82),
+        color: uiTone("success", "600"),
       }
     : {
-        background: "var(--ui-color-surface-panel)",
-        color: "var(--ui-color-text-muted)",
+        background: uiVars.surface.panel,
+        color: uiVars.text.muted,
       };
 
   return (
@@ -75,18 +77,12 @@ export default function StepEditor({
                 {step.active ? "Active" : "Muted"}
               </span>
               {hasNotes && (
-                <span
-                  className="text-xs"
-                  style={{ color: "var(--ui-color-text-muted)" }}
-                >
+                <span className="text-xs" style={{ color: uiVars.text.muted }}>
                   {step.notes.length} note{step.notes.length !== 1 ? "s" : ""}
                 </span>
               )}
               {hasCC && (
-                <span
-                  className="text-xs"
-                  style={{ color: "var(--ui-color-text-muted)" }}
-                >
+                <span className="text-xs" style={{ color: uiVars.text.muted }}>
                   {step.ccMessages.length} CC
                 </span>
               )}

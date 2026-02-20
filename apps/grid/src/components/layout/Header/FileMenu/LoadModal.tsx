@@ -1,4 +1,4 @@
-import { Button, Divider, Input, Stack, Surface } from "@blibliki/ui";
+import { Button, Divider, Input, Stack, Surface, uiVars } from "@blibliki/ui";
 import { Link } from "@tanstack/react-router";
 import { FolderOpen, Search, User, ChevronRight } from "lucide-react";
 import { useState } from "react";
@@ -39,10 +39,7 @@ export default function LoadPatchModal() {
                 <h2 className="text-lg font-semibold tracking-tight">
                   Load Patch
                 </h2>
-                <p
-                  className="text-sm"
-                  style={{ color: "var(--ui-color-text-muted)" }}
-                >
+                <p className="text-sm" style={{ color: uiVars.text.muted }}>
                   Select a patch to load into the grid
                 </p>
               </div>
@@ -57,7 +54,7 @@ export default function LoadPatchModal() {
             <div className="relative">
               <Search
                 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
-                style={{ color: "var(--ui-color-text-muted)" }}
+                style={{ color: uiVars.text.muted }}
               />
               <Input
                 placeholder="Search patches..."
@@ -78,12 +75,9 @@ export default function LoadPatchModal() {
             <div className="p-8 text-center">
               <FolderOpen
                 className="mx-auto mb-4 h-12 w-12"
-                style={{ color: "var(--ui-color-text-muted)" }}
+                style={{ color: uiVars.text.muted }}
               />
-              <p
-                className="text-sm"
-                style={{ color: "var(--ui-color-text-muted)" }}
-              >
+              <p className="text-sm" style={{ color: uiVars.text.muted }}>
                 {searchQuery
                   ? "No patches match your search"
                   : "No patches found"}
@@ -114,7 +108,7 @@ export default function LoadPatchModal() {
                         </div>
                         <div
                           className="flex items-center gap-4 text-xs"
-                          style={{ color: "var(--ui-color-text-muted)" }}
+                          style={{ color: uiVars.text.muted }}
                         >
                           {userId && (
                             <span className="flex items-center gap-1">
@@ -126,7 +120,7 @@ export default function LoadPatchModal() {
                       </div>
                       <ChevronRight
                         className="h-4 w-4"
-                        style={{ color: "var(--ui-color-text-muted)" }}
+                        style={{ color: uiVars.text.muted }}
                       />
                     </Link>
                   </Button>
@@ -143,7 +137,7 @@ export default function LoadPatchModal() {
             <Stack direction="row" align="center" justify="between">
               <p
                 className="text-xs italic"
-                style={{ color: "var(--ui-color-text-muted)" }}
+                style={{ color: uiVars.text.muted }}
               >
                 {filteredPatches.length}{" "}
                 {filteredPatches.length === 1 ? "patch" : "patches"} available

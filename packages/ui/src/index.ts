@@ -93,6 +93,13 @@ export {
 export { UIProvider, type UIProviderProps } from "./UIProvider";
 export { cn } from "./lib/cn";
 export {
+  uiColorMix,
+  uiTone,
+  uiVars,
+  type UIIntentTone,
+  type UIIntentToneLevel,
+} from "./semantic";
+export {
   createTheme,
   themeToCssVariables,
   type UIMode,

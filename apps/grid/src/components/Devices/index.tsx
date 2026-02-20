@@ -7,6 +7,9 @@ import {
   CardTitle,
   Stack,
   Surface,
+  uiColorMix,
+  uiTone,
+  uiVars,
 } from "@blibliki/ui";
 import { useUser } from "@clerk/clerk-react";
 import { Plus, Trash2, Edit2, Cpu, Copy, Check } from "lucide-react";
@@ -56,9 +59,7 @@ export default function Devices() {
     return (
       <Surface tone="canvas" className="h-screen">
         <Stack align="center" justify="center" className="h-full">
-          <p style={{ color: "var(--ui-color-text-muted)" }}>
-            Loading devices...
-          </p>
+          <p style={{ color: uiVars.text.muted }}>Loading devices...</p>
         </Stack>
       </Surface>
     );
@@ -76,7 +77,7 @@ export default function Devices() {
         >
           <Stack gap={1}>
             <h1 className="mb-2 text-3xl font-bold">Blibliki Pi Devices</h1>
-            <p style={{ color: "var(--ui-color-text-muted)" }}>
+            <p style={{ color: uiVars.text.muted }}>
               Manage your Raspberry Pi and Node.js devices
             </p>
           </Stack>
@@ -103,16 +104,13 @@ export default function Devices() {
                 <code
                   className="inline-block max-w-full break-all rounded-md border px-3 py-2 font-mono text-sm"
                   style={{
-                    background: "var(--ui-color-surface-panel)",
-                    borderColor: "var(--ui-color-border-subtle)",
+                    background: uiVars.surface.panel,
+                    borderColor: uiVars.border.subtle,
                   }}
                 >
                   {user.id}
                 </code>
-                <p
-                  className="text-xs"
-                  style={{ color: "var(--ui-color-text-muted)" }}
-                >
+                <p className="text-xs" style={{ color: uiVars.text.muted }}>
                   Copy this ID and paste it when starting your Blibliki Pi
                   device
                 </p>
@@ -145,19 +143,19 @@ export default function Devices() {
         {devices.length === 0 ? (
           <Card
             className="border-2 border-dashed"
-            style={{ borderColor: "var(--ui-color-border-subtle)" }}
+            style={{ borderColor: uiVars.border.subtle }}
           >
             <CardContent className="py-16">
               <Stack align="center" justify="center" gap={4}>
                 <Cpu
                   className="mb-4 h-16 w-16"
-                  style={{ color: "var(--ui-color-text-muted)" }}
+                  style={{ color: uiVars.text.muted }}
                 />
                 <Stack align="center" gap={1}>
                   <h3 className="text-xl font-semibold">No devices yet</h3>
                   <p
                     className="max-w-md text-center"
-                    style={{ color: "var(--ui-color-text-muted)" }}
+                    style={{ color: uiVars.text.muted }}
                   >
                     Add your first Blibliki Pi device to start running patches
                     on Raspberry Pi or other Node.js environments.
@@ -191,7 +189,7 @@ export default function Devices() {
                       </CardDescription>
                       <div
                         className="break-all rounded p-2 font-mono text-sm"
-                        style={{ background: "var(--ui-color-surface-panel)" }}
+                        style={{ background: uiVars.surface.panel }}
                       >
                         {device.token.substring(0, 20)}...
                       </div>
@@ -205,15 +203,18 @@ export default function Devices() {
                           <span
                             className="rounded px-2 py-1"
                             style={{
-                              background:
-                                "color-mix(in oklab, var(--ui-color-success-500), transparent 82%)",
-                              color: "var(--ui-color-success-600)",
+                              background: uiColorMix(
+                                uiTone("success"),
+                                "transparent",
+                                82,
+                              ),
+                              color: uiTone("success", "600"),
                             }}
                           >
                             Patch assigned
                           </span>
                         ) : (
-                          <span style={{ color: "var(--ui-color-text-muted)" }}>
+                          <span style={{ color: uiVars.text.muted }}>
                             No patch assigned
                           </span>
                         )}

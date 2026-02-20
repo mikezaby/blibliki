@@ -11,6 +11,8 @@ import {
   OptionSelect,
   Stack,
   Surface,
+  uiColorMix,
+  uiVars,
 } from "@blibliki/ui";
 import { ChevronDown, ChevronUp, SquarePlus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -223,10 +225,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
         <Stack gap={3}>
           <Stack direction="row" align="center" justify="between">
             <h3 className="text-sm font-semibold">Page Navigation</h3>
-            <span
-              className="text-xs"
-              style={{ color: "var(--ui-color-text-muted)" }}
-            >
+            <span className="text-xs" style={{ color: uiVars.text.muted }}>
               {activePage + 1} / {pages.length}
             </span>
           </Stack>
@@ -269,8 +268,11 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
         radius="lg"
         className="p-4"
         style={{
-          background:
-            "linear-gradient(135deg, var(--ui-color-surface-subtle), color-mix(in oklab, var(--ui-color-surface-panel), var(--ui-color-surface-subtle) 50%))",
+          background: `linear-gradient(135deg, ${uiVars.surface.subtle}, ${uiColorMix(
+            uiVars.surface.panel,
+            uiVars.surface.subtle,
+            50,
+          )})`,
         }}
       >
         <Stack gap={3}>
@@ -329,10 +331,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
               Global Mappings
             </Button>
           </Stack>
-          <p
-            className="text-xs"
-            style={{ color: "var(--ui-color-text-muted)" }}
-          >
+          <p className="text-xs" style={{ color: uiVars.text.muted }}>
             {viewMode === "page"
               ? "These mappings apply only to the current page"
               : "These mappings are available on all pages"}
@@ -351,10 +350,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
           <h3 className="text-sm font-semibold">
             {viewMode === "global" ? "Global " : "Page "}MIDI Mappings
           </h3>
-          <span
-            className="text-xs"
-            style={{ color: "var(--ui-color-text-muted)" }}
-          >
+          <span className="text-xs" style={{ color: uiVars.text.muted }}>
             {mappings.length} {mappings.length === 1 ? "mapping" : "mappings"}
           </span>
         </Stack>
@@ -450,7 +446,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                 {isExpanded && (
                   <div
                     className="flex flex-col gap-3 border-t pt-3"
-                    style={{ borderColor: "var(--ui-color-border-subtle)" }}
+                    style={{ borderColor: uiVars.border.subtle }}
                   >
                     <div className="flex items-center gap-2">
                       <Label className="min-w-[80px] text-xs font-medium">
@@ -482,7 +478,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                       />
                       <span
                         className="ml-2 text-xs"
-                        style={{ color: "var(--ui-color-text-muted)" }}
+                        style={{ color: uiVars.text.muted }}
                       >
                         {mode === MidiMappingMode.direct &&
                           "Maps MIDI value directly to parameter"}
@@ -521,7 +517,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                           />
                           <span
                             className="ml-2 text-xs"
-                            style={{ color: "var(--ui-color-text-muted)" }}
+                            style={{ color: uiVars.text.muted }}
                           >
                             Value &gt; threshold increments, ≤ threshold
                             decrements
@@ -562,7 +558,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                           />
                           <span
                             className="ml-2 text-xs"
-                            style={{ color: "var(--ui-color-text-muted)" }}
+                            style={{ color: uiVars.text.muted }}
                           >
                             Amount to increment/decrement (leave empty for auto)
                           </span>

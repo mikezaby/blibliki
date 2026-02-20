@@ -1,5 +1,5 @@
 import { IStep } from "@blibliki/engine";
-import { Button, Stack } from "@blibliki/ui";
+import { Button, Stack, uiColorMix, uiTone, uiVars } from "@blibliki/ui";
 import { type CSSProperties } from "react";
 
 type StepButtonProps = {
@@ -30,34 +30,32 @@ export default function StepButton({
 
   const getBackgroundColor = () => {
     if (!isActive || !hasNotes) {
-      return "var(--ui-color-surface-1)";
+      return uiVars.surface.panel;
     }
 
-    if (intensity > 0.66) return "var(--ui-color-info-600)";
-    if (intensity > 0.33) return "var(--ui-color-info-500)";
-    return "color-mix(in oklab, var(--ui-color-info-500), white 30%)";
+    if (intensity > 0.66) return uiTone("info", "600");
+    if (intensity > 0.33) return uiTone("info");
+    return uiColorMix(uiTone("info"), "white", 30);
   };
 
   const getBorderColor = () => {
     if (isPlaying) {
-      return "var(--ui-color-warning-500)";
+      return uiTone("warning");
     }
     if (isSelected) {
-      return "var(--ui-color-info-500)";
+      return uiTone("info");
     }
     if (isActive && hasNotes) {
-      return "color-mix(in oklab, var(--ui-color-info-600), var(--ui-color-border-subtle) 35%)";
+      return uiColorMix(uiTone("info", "600"), uiVars.border.subtle, 35);
     }
-    return "var(--ui-color-border-subtle)";
+    return uiVars.border.subtle;
   };
 
   const getTextColor = () => {
     if (!isActive || !hasNotes) {
-      return "var(--ui-color-text-muted)";
+      return uiVars.text.muted;
     }
-    return intensity > 0.5
-      ? "var(--ui-color-info-contrast)"
-      : "var(--ui-color-text-primary)";
+    return intensity > 0.5 ? uiTone("info", "contrast") : uiVars.text.primary;
   };
 
   const stepStyle: CSSProperties = {
@@ -66,23 +64,22 @@ export default function StepButton({
     color: getTextColor(),
     borderWidth: isPlaying || isSelected ? 2 : 1,
     boxShadow: isPlaying
-      ? "0 0 0 2px color-mix(in oklab, var(--ui-color-warning-500), transparent 75%)"
+      ? `0 0 0 2px ${uiColorMix(uiTone("warning"), "transparent", 75)}`
       : undefined,
   };
 
   const toggleStyle: CSSProperties = isActive
     ? {
-        background: "var(--ui-color-success-500)",
-        borderColor: "var(--ui-color-success-600)",
+        background: uiTone("success"),
+        borderColor: uiTone("success", "600"),
       }
     : {
         background: "transparent",
-        borderColor: "var(--ui-color-border-subtle)",
+        borderColor: uiVars.border.subtle,
       };
 
   const indicatorStyle: CSSProperties = {
-    background:
-      "color-mix(in oklab, currentColor, var(--ui-color-text-primary) 25%)",
+    background: uiColorMix("currentColor", uiVars.text.primary, 25),
   };
 
   return (

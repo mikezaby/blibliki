@@ -1,5 +1,13 @@
 import { IPattern, moduleSchemas, ModuleType } from "@blibliki/engine";
-import { Button, IconButton, Label, Stack, Surface } from "@blibliki/ui";
+import {
+  Button,
+  IconButton,
+  Label,
+  Stack,
+  Surface,
+  uiTone,
+  uiVars,
+} from "@blibliki/ui";
 import { Plus, X } from "lucide-react";
 import { TUpdateProp } from "..";
 import { CheckboxField } from "../attributes/Field";
@@ -127,15 +135,15 @@ export default function PatternSelector({
               placeholder="e.g., 2A4B2AC"
               className="nodrag w-48 resize-none rounded border px-2 py-1 font-mono text-sm leading-5"
               style={{
-                background: "var(--ui-color-surface-raised)",
-                borderColor: "var(--ui-color-border-subtle)",
-                color: "var(--ui-color-text-primary)",
+                background: uiVars.surface.raised,
+                borderColor: uiVars.border.subtle,
+                color: uiVars.text.primary,
               }}
             />
             {sequencePosition && (
               <span
                 className="text-xs font-medium"
-                style={{ color: "var(--ui-color-success-600)" }}
+                style={{ color: uiTone("success", "600") }}
               >
                 {sequencePosition}
               </span>

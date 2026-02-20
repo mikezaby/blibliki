@@ -1,5 +1,5 @@
 import { IPage } from "@blibliki/engine";
-import { Button, Stack } from "@blibliki/ui";
+import { Button, Stack, uiVars } from "@blibliki/ui";
 import { Plus } from "lucide-react";
 
 type PageNavigatorProps = {
@@ -48,7 +48,7 @@ export default function PageNavigator({
         →
       </Button>
 
-      <p className="text-xs" style={{ color: "var(--ui-color-text-muted)" }}>
+      <p className="text-xs" style={{ color: uiVars.text.muted }}>
         {pages[activePageNo]?.name ?? "Unnamed Page"}
       </p>
 
