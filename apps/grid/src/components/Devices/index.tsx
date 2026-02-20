@@ -121,7 +121,7 @@ export default function Devices() {
               >
                 {copiedUserId ? (
                   <>
-                    <Check className="w-4 h-4 mr-2 text-green-600" />
+                    <Check className="w-4 h-4 mr-2 text-success" />
                     Copied!
                   </>
                 ) : (
@@ -163,7 +163,7 @@ export default function Devices() {
               >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Cpu className="w-5 h-5 text-blue-600" />
+                    <Cpu className="w-5 h-5 text-brand" />
                     {device.name}
                   </CardTitle>
                 </CardHeader>

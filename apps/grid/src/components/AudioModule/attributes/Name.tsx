@@ -24,7 +24,7 @@ export default function Name(props: NameInterface) {
     <Surface tone="subtle" border="subtle" radius="md" className="p-3">
       <Stack gap={3}>
         <Stack direction="row" align="center" gap={2}>
-          <div className="h-2 w-2 rounded-full bg-gradient-to-br from-green-500 to-emerald-600" />
+          <div className="h-2 w-2 rounded-full bg-gradient-to-br from-brand to-brand-secondary" />
           <Label className="text-xs font-semibold tracking-tight">
             Module Name
           </Label>

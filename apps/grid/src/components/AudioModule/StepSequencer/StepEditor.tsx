@@ -189,7 +189,7 @@ export default function StepEditor({
                 className="flex items-start gap-3 p-3"
               >
                 <div className="flex items-center gap-2 min-w-[60px] pt-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  <div className="w-2 h-2 rounded-full bg-brand" />
                   <span className="font-mono text-sm font-semibold">
                     {note.note}
                   </span>
@@ -235,7 +235,7 @@ export default function StepEditor({
                 className="flex items-start gap-3 p-3"
               >
                 <div className="flex items-center gap-2 min-w-[60px] pt-2">
-                  <div className="w-2 h-2 rounded-full bg-purple-500" />
+                  <div className="w-2 h-2 rounded-full bg-brand-secondary" />
                   <span className="font-mono text-sm font-semibold">
                     CC {ccMsg.cc}
                   </span>

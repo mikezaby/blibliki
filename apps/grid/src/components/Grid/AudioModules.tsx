@@ -23,13 +23,13 @@ export default function AudioModules() {
       radius="none"
       shadow="xl"
       asChild
-      className={`absolute top-12 left-0 z-10 h-[calc(100vh-3rem)] w-47.25 border-r border-b transition-transform duration-300 ease-in-out ${
+      className={`absolute top-12 left-0 z-10 flex h-[calc(100vh-3rem)] w-47.25 flex-col border-r border-b transition-transform duration-300 ease-in-out ${
         visible ? "translate-x-0" : "-translate-x-[189px]"
       }`}
     >
       <aside>
         <Stack direction="row" align="center" gap={2} className="p-4">
-          <div className="w-5 h-5 bg-linear-to-br from-blue-500 to-purple-600 rounded flex items-center justify-center shadow-sm">
+          <div className="flex h-5 w-5 items-center justify-center rounded bg-linear-to-br from-brand to-brand-secondary shadow-sm">
             <Blocks className="w-3 h-3 text-white" />
           </div>
           <h2 className="text-sm font-semibold">Audio Modules</h2>
@@ -51,7 +51,7 @@ export default function AudioModules() {
           onClick={onClick}
         />
 
-        <nav className="flex-1 overflow-y-auto py-2">
+        <nav className="min-h-0 flex-1 overflow-y-auto py-2">
           <ul className="px-3 space-y-1">
             {SupportedModules.map((moduleName) => (
               <li key={moduleName}>
@@ -66,7 +66,7 @@ export default function AudioModules() {
                   draggable
                 >
                   <Stack direction="row" align="center" gap={2}>
-                    <div className="w-2 h-2 bg-linear-to-br from-blue-500 to-purple-600 rounded-full group-hover:scale-110 transition-transform duration-200" />
+                    <div className="h-2 w-2 rounded-full bg-linear-to-br from-brand to-brand-secondary transition-transform duration-200 group-hover:scale-110" />
                     <span>{moduleName}</span>
                   </Stack>
                 </Button>

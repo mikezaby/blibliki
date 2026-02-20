@@ -312,8 +312,8 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
 
                 <DialogContent className="sm:max-w-xl max-w-[calc(100vw-2rem)] p-0 gap-0">
                   <div className="flex items-center gap-3 rounded-t-lg border-b border-border-subtle bg-surface-subtle p-6">
-                    <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg flex items-center justify-center shadow-sm">
-                      <Waves className="w-4 h-4 text-white" />
+                    <div className="w-8 h-8 bg-gradient-to-br from-brand to-brand-secondary rounded-lg flex items-center justify-center shadow-sm">
+                      <Waves className="w-4 h-4 text-brand-contrast" />
                     </div>
                     <div className="flex-1">
                       <DialogTitle className="text-lg font-semibold tracking-tight">

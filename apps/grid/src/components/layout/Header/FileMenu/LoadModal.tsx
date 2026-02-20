@@ -32,7 +32,7 @@ export default function LoadPatchModal() {
         <Surface tone="panel" radius="none" asChild>
           <header className="p-6">
             <Stack direction="row" align="center" gap={3}>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 shadow-sm">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand to-brand-secondary shadow-sm">
                 <FolderOpen className="h-4 w-4 text-white" />
               </div>
               <div className="flex-1">
@@ -93,7 +93,7 @@ export default function LoadPatchModal() {
                     >
                       <div className="min-w-0 flex-1 text-left">
                         <div className="mb-1 flex items-center gap-2">
-                          <div className="h-2 w-2 rounded-full bg-gradient-to-br from-blue-500 to-purple-600" />
+                          <div className="h-2 w-2 rounded-full bg-gradient-to-br from-brand to-brand-secondary" />
                           <h3 className="truncate font-medium">
                             {name || "Untitled Patch"}
                           </h3>

@@ -84,7 +84,7 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
       <Surface tone="panel" radius="none" asChild>
         <header className="p-6">
           <Stack direction="row" align="center" gap={3}>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-blue-500 to-purple-600 shadow-sm">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-brand to-brand-secondary shadow-sm">
               <Cpu className="h-4 w-4 text-white" />
             </div>
             <div className="flex-1">
