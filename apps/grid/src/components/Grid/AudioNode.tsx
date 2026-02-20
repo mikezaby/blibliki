@@ -6,6 +6,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  IconButton,
+  Stack,
+  Surface,
 } from "@blibliki/ui";
 import { Handle, HandleType, NodeProps, Position } from "@xyflow/react";
 import { Settings } from "lucide-react";
@@ -47,19 +50,26 @@ export default function AudioNode(props: NodeProps) {
           </IOContainer>
         )}
 
-        <div className={"relative flex flex-col justify-center p-3 gap-2"}>
-          <div className="flex items-center gap-2 pr-7">
+        <Stack gap={2} className="relative justify-center p-3">
+          <Stack direction="row" align="center" gap={2} className="pr-7">
             <div className="w-2 h-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
-            <span className="text-sm font-medium text-slate-900 dark:text-white truncate">
+            <span className="truncate text-sm font-medium">
               {audioModule.name || audioModule.moduleType}
             </span>
 
             <DialogTrigger asChild>
-              <Settings className="h-3 w-3 cursor-pointer" />
+              <IconButton
+                aria-label="Open module settings"
+                size="xs"
+                variant="text"
+                color="neutral"
+                icon={<Settings className="h-3 w-3" />}
+                className="absolute right-1 top-1"
+              />
             </DialogTrigger>
-          </div>
+          </Stack>
           <AudioModule audioModule={audioModuleProps} />
-        </div>
+        </Stack>
 
         {outputs.length > 0 && (
           <IOContainer type="output">
@@ -77,7 +87,7 @@ export default function AudioNode(props: NodeProps) {
             Configure name and voice settings for this module.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
+        <Stack gap={3}>
           <Name
             id={audioModule.id}
             moduleType={audioModule.moduleType}
@@ -90,7 +100,7 @@ export default function AudioNode(props: NodeProps) {
               value={audioModule.voices}
             />
           )}
-        </div>
+        </Stack>
       </DialogContent>
     </Dialog>
   );
@@ -117,7 +127,7 @@ function IO({ io }: { io: IIOSerialize }) {
   return (
     <div className="group/io relative flex items-center">
       <div
-        className={`px-3 py-2 w-full text-xs font-medium text-slate-700 dark:text-slate-200 truncate ${handleProps.isInput ? "text-left" : "text-right"}`}
+        className={`w-full truncate px-3 py-2 text-xs font-medium ${handleProps.isInput ? "text-left" : "text-right"}`}
       >
         {io.name}
       </div>
@@ -144,13 +154,14 @@ function IOContainer({
   type: "input" | "output";
 }) {
   const isInput = type === "input";
-  const bgColor = "bg-slate-50 dark:bg-slate-900/50";
 
   return (
-    <div
-      className={`flex flex-col justify-center min-w-[80px] ${bgColor} ${isInput ? "rounded-l-lg" : "rounded-r-lg"}`}
+    <Surface
+      tone="subtle"
+      radius="none"
+      className={`flex min-w-[80px] flex-col justify-center ${isInput ? "rounded-l-lg" : "rounded-r-lg"}`}
     >
       <div className="flex flex-col py-2">{children}</div>
-    </div>
+    </Surface>
   );
 }

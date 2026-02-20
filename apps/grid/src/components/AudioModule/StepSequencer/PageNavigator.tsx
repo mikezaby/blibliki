@@ -1,5 +1,5 @@
 import { IPage } from "@blibliki/engine";
-import { Button } from "@blibliki/ui";
+import { Button, Stack } from "@blibliki/ui";
 import { Plus } from "lucide-react";
 
 type PageNavigatorProps = {
@@ -21,7 +21,7 @@ export default function PageNavigator({
   const canGoNext = activePageNo < pages.length - 1;
 
   return (
-    <div className="flex items-center gap-3">
+    <Stack direction="row" align="center" gap={3} className="flex-wrap">
       <Button
         variant="outlined"
         size="sm"
@@ -33,9 +33,9 @@ export default function PageNavigator({
         ←
       </Button>
 
-      <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+      <p className="text-sm font-medium">
         Page {activePageNo + 1} / {pages.length}
-      </div>
+      </p>
 
       <Button
         variant="outlined"
@@ -48,9 +48,9 @@ export default function PageNavigator({
         →
       </Button>
 
-      <div className="text-xs text-slate-500 dark:text-slate-400">
+      <p className="text-xs" style={{ color: "var(--ui-color-text-muted)" }}>
         {pages[activePageNo]?.name ?? "Unnamed Page"}
-      </div>
+      </p>
 
       <Button color="success" size="sm" onClick={onAddPage}>
         <Plus className="w-4 h-4" />
@@ -68,6 +68,6 @@ export default function PageNavigator({
           Delete Page
         </Button>
       )}
-    </div>
+    </Stack>
   );
 }

@@ -1,6 +1,12 @@
 import { IStep, stepPropSchema } from "@blibliki/engine";
-import { Button } from "@blibliki/ui";
-import { Fader, type MarkProps } from "@blibliki/ui";
+import {
+  Button,
+  Divider,
+  Fader,
+  Stack,
+  Surface,
+  type MarkProps,
+} from "@blibliki/ui";
 import CCEditor from "./CCEditor";
 import NoteEditor from "./NoteEditor";
 
@@ -23,120 +29,149 @@ export default function StepEditor({
 }: StepEditorProps) {
   if (!step) {
     return (
-      <div className="p-6 text-center text-slate-500">
+      <Surface
+        tone="subtle"
+        border="subtle"
+        radius="md"
+        className="p-6 text-center"
+      >
         Select a step to edit
-      </div>
+      </Surface>
     );
   }
 
   const hasNotes = step.notes.length > 0;
   const hasCC = step.ccMessages.length > 0;
+  const statusStyle = step.active
+    ? {
+        background:
+          "color-mix(in oklab, var(--ui-color-success-500), transparent 82%)",
+        color: "var(--ui-color-success-600)",
+      }
+    : {
+        background: "var(--ui-color-surface-panel)",
+        color: "var(--ui-color-text-muted)",
+      };
 
   return (
-    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+    <Surface
+      tone="raised"
+      border="subtle"
+      radius="lg"
+      className="overflow-hidden"
+    >
       {/* Header */}
-      <div className="px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Step {stepIndex + 1}
-            </span>
-            <div
-              className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                step.active
-                  ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300"
-                  : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400"
-              }`}
-            >
-              {step.active ? "Active" : "Muted"}
-            </div>
-            {hasNotes && (
-              <div className="text-xs text-slate-600 dark:text-slate-400">
-                {step.notes.length} note{step.notes.length !== 1 ? "s" : ""}
-              </div>
-            )}
-            {hasCC && (
-              <div className="text-xs text-slate-600 dark:text-slate-400">
-                {step.ccMessages.length} CC
-              </div>
-            )}
-          </div>
+      <Surface tone="panel" radius="none" asChild>
+        <header className="px-4 py-3">
+          <Stack direction="row" align="center" justify="between" gap={3}>
+            <Stack direction="row" align="center" gap={3} className="flex-wrap">
+              <span className="text-sm font-semibold">
+                Step {stepIndex + 1}
+              </span>
+              <span
+                className="rounded-full px-2 py-0.5 text-xs font-medium"
+                style={statusStyle}
+              >
+                {step.active ? "Active" : "Muted"}
+              </span>
+              {hasNotes && (
+                <span
+                  className="text-xs"
+                  style={{ color: "var(--ui-color-text-muted)" }}
+                >
+                  {step.notes.length} note{step.notes.length !== 1 ? "s" : ""}
+                </span>
+              )}
+              {hasCC && (
+                <span
+                  className="text-xs"
+                  style={{ color: "var(--ui-color-text-muted)" }}
+                >
+                  {step.ccMessages.length} CC
+                </span>
+              )}
+            </Stack>
 
-          {/* Quick Actions */}
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="text"
-              color="secondary"
-              onClick={() => {
-                onUpdate({ probability: 100 });
-              }}
-              title="Reset probability to 100%"
-            >
-              100%
-            </Button>
-            <Button
-              size="sm"
-              variant="text"
-              color="error"
-              onClick={() => {
-                onUpdate({ notes: [], ccMessages: [] });
-              }}
-              title="Clear all notes and CC"
-            >
-              Clear
-            </Button>
-          </div>
-        </div>
-      </div>
+            {/* Quick Actions */}
+            <Stack direction="row" gap={2}>
+              <Button
+                size="sm"
+                variant="text"
+                color="secondary"
+                onClick={() => {
+                  onUpdate({ probability: 100 });
+                }}
+                title="Reset probability to 100%"
+              >
+                100%
+              </Button>
+              <Button
+                size="sm"
+                variant="text"
+                color="error"
+                onClick={() => {
+                  onUpdate({ notes: [], ccMessages: [] });
+                }}
+                title="Clear all notes and CC"
+              >
+                Clear
+              </Button>
+            </Stack>
+          </Stack>
+        </header>
+      </Surface>
 
       {/* Main Parameters - Always Visible */}
-      <div className="px-4 py-3 bg-slate-50/50 dark:bg-slate-900/30 border-b border-slate-200 dark:border-slate-700">
-        <div className="grid grid-cols-3 gap-4">
-          <Fader
-            name={stepPropSchema.probability.label ?? "Probability"}
-            value={step.probability}
-            onChange={(_, value) => {
-              onUpdate({ probability: value });
-            }}
-            min={stepPropSchema.probability.min}
-            max={stepPropSchema.probability.max}
-            step={stepPropSchema.probability.step}
-            orientation="horizontal"
-          />
+      <Divider />
+      <Surface tone="subtle" radius="none" asChild>
+        <section className="px-4 py-3">
+          <div className="grid grid-cols-3 gap-4">
+            <Fader
+              name={stepPropSchema.probability.label ?? "Probability"}
+              value={step.probability}
+              onChange={(_, value) => {
+                onUpdate({ probability: value });
+              }}
+              min={stepPropSchema.probability.min}
+              max={stepPropSchema.probability.max}
+              step={stepPropSchema.probability.step}
+              orientation="horizontal"
+            />
 
-          <Fader
-            name={stepPropSchema.duration.label ?? "Duration"}
-            value={stepPropSchema.duration.options.indexOf(step.duration)}
-            onChange={(_, value) => {
-              const index = Math.round(value);
-              const duration = stepPropSchema.duration.options[index];
-              onUpdate({ duration });
-            }}
-            marks={DURATION_MARKS}
-            hideMarks
-            step={1}
-            orientation="horizontal"
-          />
+            <Fader
+              name={stepPropSchema.duration.label ?? "Duration"}
+              value={stepPropSchema.duration.options.indexOf(step.duration)}
+              onChange={(_, value) => {
+                const index = Math.round(value);
+                const duration = stepPropSchema.duration.options[index];
+                onUpdate({ duration });
+              }}
+              marks={DURATION_MARKS}
+              hideMarks
+              step={1}
+              orientation="horizontal"
+            />
 
-          <Fader
-            name={stepPropSchema.microtimeOffset.label ?? "Microtiming"}
-            value={step.microtimeOffset}
-            onChange={(_, value) => {
-              onUpdate({ microtimeOffset: value });
-            }}
-            min={stepPropSchema.microtimeOffset.min}
-            max={stepPropSchema.microtimeOffset.max}
-            step={stepPropSchema.microtimeOffset.step}
-            orientation="horizontal"
-          />
-        </div>
-      </div>
+            <Fader
+              name={stepPropSchema.microtimeOffset.label ?? "Microtiming"}
+              value={step.microtimeOffset}
+              onChange={(_, value) => {
+                onUpdate({ microtimeOffset: value });
+              }}
+              min={stepPropSchema.microtimeOffset.min}
+              max={stepPropSchema.microtimeOffset.max}
+              step={stepPropSchema.microtimeOffset.step}
+              orientation="horizontal"
+            />
+          </div>
+        </section>
+      </Surface>
 
       {/* Notes and CC Content */}
-      <div className="p-4 space-y-4">
+      <Divider />
+      <Stack gap={4} className="p-4">
         {/* Input Section */}
-        <div className="flex gap-3 items-center">
+        <Stack direction="row" gap={3} align="center" className="flex-wrap">
           <NoteEditor
             notes={step.notes}
             onChange={(notes) => {
@@ -145,7 +180,7 @@ export default function StepEditor({
           />
 
           {/* Separator */}
-          <div className="h-10 w-px bg-slate-300 dark:bg-slate-600 mx-2" />
+          <Divider orientation="vertical" className="mx-2 h-10" />
 
           <CCEditor
             ccMessages={step.ccMessages}
@@ -153,20 +188,23 @@ export default function StepEditor({
               onUpdate({ ccMessages });
             }}
           />
-        </div>
+        </Stack>
 
         {/* Combined Notes and CC Grid */}
         {(step.notes.length > 0 || step.ccMessages.length > 0) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {/* Render all notes */}
             {step.notes.map((note, index) => (
-              <div
+              <Surface
                 key={`note-${index}`}
-                className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
+                tone="subtle"
+                border="subtle"
+                radius="md"
+                className="flex items-start gap-3 p-3"
               >
                 <div className="flex items-center gap-2 min-w-[60px] pt-2">
                   <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  <span className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  <span className="font-mono text-sm font-semibold">
                     {note.note}
                   </span>
                 </div>
@@ -198,18 +236,21 @@ export default function StepEditor({
                 >
                   ✕
                 </Button>
-              </div>
+              </Surface>
             ))}
 
             {/* Render all CC messages */}
             {step.ccMessages.map((ccMsg, index) => (
-              <div
+              <Surface
                 key={`cc-${index}`}
-                className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
+                tone="subtle"
+                border="subtle"
+                radius="md"
+                className="flex items-start gap-3 p-3"
               >
                 <div className="flex items-center gap-2 min-w-[60px] pt-2">
                   <div className="w-2 h-2 rounded-full bg-purple-500" />
-                  <span className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  <span className="font-mono text-sm font-semibold">
                     CC {ccMsg.cc}
                   </span>
                 </div>
@@ -241,11 +282,11 @@ export default function StepEditor({
                 >
                   ✕
                 </Button>
-              </div>
+              </Surface>
             ))}
           </div>
         )}
-      </div>
-    </div>
+      </Stack>
+    </Surface>
   );
 }

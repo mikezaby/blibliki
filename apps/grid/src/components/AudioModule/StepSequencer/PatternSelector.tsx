@@ -1,5 +1,5 @@
 import { IPattern, moduleSchemas, ModuleType } from "@blibliki/engine";
-import { Button, IconButton, Label } from "@blibliki/ui";
+import { Button, IconButton, Label, Stack, Surface } from "@blibliki/ui";
 import { Plus, X } from "lucide-react";
 import { TUpdateProp } from "..";
 import { CheckboxField } from "../attributes/Field";
@@ -57,12 +57,16 @@ export default function PatternSelector({
   };
 
   return (
-    <div className="flex justify-between items-center gap-2">
-      <div>
-        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          Pattern:
-        </span>
-        <div className="flex gap-1">
+    <Stack
+      direction="row"
+      justify="between"
+      align="start"
+      gap={3}
+      className="flex-wrap"
+    >
+      <Stack gap={2}>
+        <p className="text-sm font-medium">Pattern:</p>
+        <Stack direction="row" gap={1} className="flex-wrap">
           {patterns.map((pattern, index) => (
             <div key={index} className="relative group">
               <Button
@@ -96,41 +100,49 @@ export default function PatternSelector({
             <Plus className="w-4 h-4" />
             New
           </Button>
-        </div>
-      </div>
+        </Stack>
+      </Stack>
 
-      <div className="flex gap-2">
+      <Stack direction="row" gap={2} align="start" className="flex-wrap">
         {/* Pattern Sequence Section */}
-        <div className="flex items-center gap-2">
+        <Stack direction="row" align="center" gap={2}>
           <CheckboxField
             name="Pattern sequence"
             value={enableSequence}
             schema={schema.enableSequence}
             onChange={updateProp("enableSequence")}
           />
-        </div>
+        </Stack>
 
-        <div className="flex items-center gap-2">
-          <Label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-            Sequence:
-          </Label>
-          <textarea
-            rows={3}
-            value={formatPatternSequence(patternSequence)}
-            onChange={(e) => {
-              handleSequenceChange(e.target.value);
-            }}
-            disabled={isRunning}
-            placeholder="e.g., 2A4B2AC"
-            className="nodrag px-2 py-1 text-sm font-mono border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 w-48 resize-none leading-5"
-          />
-          {sequencePosition && (
-            <span className="text-xs font-medium text-green-600 dark:text-green-400">
-              {sequencePosition}
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
+        <Surface tone="subtle" border="subtle" radius="md" className="p-2">
+          <Stack direction="row" align="center" gap={2}>
+            <Label className="text-xs font-medium">Sequence:</Label>
+            <textarea
+              rows={3}
+              value={formatPatternSequence(patternSequence)}
+              onChange={(e) => {
+                handleSequenceChange(e.target.value);
+              }}
+              disabled={isRunning}
+              placeholder="e.g., 2A4B2AC"
+              className="nodrag w-48 resize-none rounded border px-2 py-1 font-mono text-sm leading-5"
+              style={{
+                background: "var(--ui-color-surface-raised)",
+                borderColor: "var(--ui-color-border-subtle)",
+                color: "var(--ui-color-text-primary)",
+              }}
+            />
+            {sequencePosition && (
+              <span
+                className="text-xs font-medium"
+                style={{ color: "var(--ui-color-success-600)" }}
+              >
+                {sequencePosition}
+              </span>
+            )}
+          </Stack>
+        </Surface>
+      </Stack>
+    </Stack>
   );
 }

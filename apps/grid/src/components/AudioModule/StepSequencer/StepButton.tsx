@@ -1,4 +1,6 @@
 import { IStep } from "@blibliki/engine";
+import { Stack } from "@blibliki/ui";
+import { type CSSProperties } from "react";
 
 type StepButtonProps = {
   step: IStep;
@@ -26,86 +28,92 @@ export default function StepButton({
     : 0;
   const intensity = maxVelocity / 127; // 0-1 range
 
-  // Determine background color based on state
   const getBackgroundColor = () => {
     if (!isActive || !hasNotes) {
-      return "bg-slate-100 dark:bg-slate-700"; // Inactive/empty
+      return "var(--ui-color-surface-panel)";
     }
 
-    // Active with notes - use intensity
-    if (intensity > 0.66) return "bg-blue-500 dark:bg-blue-600";
-    if (intensity > 0.33) return "bg-blue-400 dark:bg-blue-500";
-    return "bg-blue-300 dark:bg-blue-400";
+    if (intensity > 0.66) return "var(--ui-color-info-600)";
+    if (intensity > 0.33) return "var(--ui-color-info-500)";
+    return "color-mix(in oklab, var(--ui-color-info-500), white 30%)";
   };
 
-  // Determine border style
-  const getBorderStyle = () => {
+  const getBorderColor = () => {
     if (isPlaying) {
-      return "border-2 border-orange-500 shadow-lg shadow-orange-200 dark:shadow-orange-900"; // Playing
+      return "var(--ui-color-warning-500)";
     }
     if (isSelected) {
-      return "border-2 border-yellow-400 dark:border-yellow-500"; // Selected
+      return "var(--ui-color-info-500)";
     }
     if (isActive && hasNotes) {
-      return "border border-blue-600 dark:border-blue-400"; // Active with notes
+      return "color-mix(in oklab, var(--ui-color-info-600), var(--ui-color-border-subtle) 35%)";
     }
-    return "border border-slate-300 dark:border-slate-600"; // Default
+    return "var(--ui-color-border-subtle)";
   };
 
-  // Add pulsing animation for playing step
   const getAnimation = () => {
     return isPlaying ? "animate-pulse" : "";
   };
 
   const getTextColor = () => {
     if (!isActive || !hasNotes) {
-      return "text-slate-400 dark:text-slate-500";
+      return "var(--ui-color-text-muted)";
     }
     return intensity > 0.5
-      ? "text-white"
-      : "text-slate-700 dark:text-slate-100";
+      ? "var(--ui-color-info-contrast)"
+      : "var(--ui-color-text-primary)";
+  };
+
+  const stepStyle: CSSProperties = {
+    background: getBackgroundColor(),
+    borderColor: getBorderColor(),
+    color: getTextColor(),
+    borderWidth: isPlaying || isSelected ? 2 : 1,
+    boxShadow: isPlaying
+      ? "0 0 0 2px color-mix(in oklab, var(--ui-color-warning-500), transparent 75%)"
+      : undefined,
+  };
+
+  const toggleStyle: CSSProperties = isActive
+    ? {
+        background: "var(--ui-color-success-500)",
+        borderColor: "var(--ui-color-success-600)",
+      }
+    : {
+        background: "transparent",
+        borderColor: "var(--ui-color-border-subtle)",
+      };
+
+  const indicatorStyle: CSSProperties = {
+    background:
+      "color-mix(in oklab, currentColor, var(--ui-color-text-primary) 25%)",
   };
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <Stack align="center" gap={1}>
       <button
         onClick={(e) => {
           e.stopPropagation();
           onToggleActive();
         }}
-        className={`
-          w-3 h-3 rounded-full border-2 transition-all
-          hover:scale-125 cursor-pointer
-          ${
-            isActive
-              ? "bg-green-500 border-green-600 dark:bg-green-400 dark:border-green-500"
-              : "bg-transparent border-slate-400 dark:border-slate-500"
-          }
-        `}
+        className="h-3 w-3 cursor-pointer rounded-full border-2 transition-all hover:scale-125"
+        style={toggleStyle}
         title={isActive ? "Click to mute step" : "Click to activate step"}
       />
 
       <button
         onClick={onSelect}
-        className={`
-          relative
-          h-12 w-full
-          rounded
-          flex items-center justify-center
-          text-xs font-medium
-          transition-all duration-150
-          hover:scale-105
-          ${getBackgroundColor()}
-          ${getBorderStyle()}
-          ${getAnimation()}
-          ${getTextColor()}
-        `}
+        className={`relative flex h-12 w-full items-center justify-center rounded border text-xs font-medium transition-all duration-150 hover:scale-105 ${getAnimation()}`}
+        style={stepStyle}
       >
         {stepIndex + 1}
         {hasNotes && (
-          <div className="absolute bottom-1 right-1 w-1 h-1 rounded-full bg-current" />
+          <div
+            className="absolute bottom-1 right-1 h-1 w-1 rounded-full"
+            style={indicatorStyle}
+          />
         )}
       </button>
-    </div>
+    </Stack>
   );
 }

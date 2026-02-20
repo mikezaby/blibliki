@@ -6,9 +6,9 @@ import {
   Engine,
   StepSequencer as StepSequencerModule,
 } from "@blibliki/engine";
+import { Stack } from "@blibliki/ui";
 import { useState, useCallback } from "react";
 import { ModuleComponent } from "..";
-import Container from "../Container";
 import Controls from "./Controls";
 import PageNavigator from "./PageNavigator";
 import PatternSelector from "./PatternSelector";
@@ -229,7 +229,7 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
   };
 
   return (
-    <Container className="flex flex-col gap-4 p-4 w-full min-w-[800px]">
+    <Stack gap={4} className="w-full min-w-[800px] p-4">
       <PatternSelector
         patterns={patterns}
         activePatternNo={activePatternNo}
@@ -291,7 +291,7 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
           updateStep(selectedStep, updates);
         }}
       />
-    </Container>
+    </Stack>
   );
 };
 

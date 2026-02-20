@@ -16,16 +16,18 @@ import {
   DialogTrigger,
   Fader,
   Input,
+  Stack,
+  Surface,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@blibliki/ui";
+import type { MarkProps } from "@blibliki/ui";
 import { AudioContext } from "@blibliki/utils/web-audio-api";
 import { Download, Edit2, Plus, Trash2, Upload, Waves } from "lucide-react";
 import { ChangeEvent, useMemo, useRef, useState } from "react";
-import type { MarkProps } from "@blibliki/ui";
 import { ModuleComponent } from "..";
 import Container from "../Container";
 import {
@@ -263,18 +265,29 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
   };
 
   return (
-    <div className="flex flex-col gap-y-8">
-      <Container className="flex-col items-stretch gap-y-3">
-        <div className="space-y-3 p-3 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700">
+    <Stack gap={6}>
+      <Container direction="column" className="items-stretch gap-y-3">
+        <Surface
+          tone="subtle"
+          border="subtle"
+          radius="lg"
+          className="space-y-3 p-3"
+        >
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-tight">
+              <p className="text-xs font-semibold tracking-tight">
                 Wavetable Bank
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p
+                className="text-xs"
+                style={{ color: "var(--ui-color-text-muted)" }}
+              >
                 {safeTables.length} tables • {playbackLabel}
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p
+                className="text-xs"
+                style={{ color: "var(--ui-color-text-muted)" }}
+              >
                 Base {position.toFixed(3)} • Actual {actualPosition.toFixed(3)}
               </p>
             </div>
@@ -463,13 +476,21 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
           </div>
 
           {wavError ? (
-            <p className="text-xs text-red-600 dark:text-red-400">{wavError}</p>
+            <p
+              className="text-xs"
+              style={{ color: "var(--ui-color-error-600)" }}
+            >
+              {wavError}
+            </p>
           ) : null}
 
-          <div className="space-y-2 p-3 rounded-md border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/50">
-            <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Preset
-            </p>
+          <Surface
+            tone="panel"
+            border="subtle"
+            radius="md"
+            className="space-y-2 p-3"
+          >
+            <p className="text-xs font-semibold">Preset</p>
             <Select value={selectedPresetId} onValueChange={applyPreset}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Choose preset" />
@@ -483,11 +504,16 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Surface>
 
-          <div className="space-y-2">
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="flex-1 h-44 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900/60 p-2 overflow-hidden">
+          <Stack gap={2}>
+            <Stack direction="row" gap={2} className="flex-col sm:flex-row">
+              <Surface
+                tone="panel"
+                border="subtle"
+                radius="md"
+                className="h-44 flex-1 overflow-hidden p-2"
+              >
                 <svg
                   className="h-full w-full"
                   viewBox={`0 0 ${PREVIEW_WIDTH} ${PREVIEW_HEIGHT}`}
@@ -538,9 +564,14 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                     );
                   })}
                 </svg>
-              </div>
+              </Surface>
 
-              <div className="shrink-0 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900/60 px-1 sm:px-0 sm:w-[90px] flex items-center justify-center">
+              <Surface
+                tone="panel"
+                border="subtle"
+                radius="md"
+                className="flex shrink-0 items-center justify-center px-1 sm:w-[90px] sm:px-0"
+              >
                 <Fader
                   name="Position"
                   marks={POSITION_MARKS}
@@ -551,10 +582,10 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                   onChange={updateProp("position")}
                   value={position}
                 />
-              </div>
-            </div>
-          </div>
-        </div>
+              </Surface>
+            </Stack>
+          </Stack>
+        </Surface>
       </Container>
 
       <Container>
@@ -589,7 +620,7 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
           value={fine}
         />
       </Container>
-    </div>
+    </Stack>
   );
 };
 

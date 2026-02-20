@@ -1,4 +1,5 @@
 import { IStep } from "@blibliki/engine";
+import { Surface } from "@blibliki/ui";
 import StepButton from "./StepButton";
 
 type StepGridProps = {
@@ -22,7 +23,7 @@ export default function StepGrid({
   const visibleSteps = steps.slice(0, stepsPerPage);
 
   return (
-    <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded">
+    <Surface tone="subtle" border="subtle" radius="md" className="p-4">
       <div
         className="grid gap-2"
         style={{
@@ -45,6 +46,6 @@ export default function StepGrid({
           />
         ))}
       </div>
-    </div>
+    </Surface>
   );
 }

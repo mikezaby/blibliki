@@ -1,4 +1,5 @@
 import { Engine, Note } from "@blibliki/engine";
+import { cn } from "@blibliki/ui";
 import { useCallback, useMemo, useState } from "react";
 
 const Keys: Record<string, string> = {
@@ -28,12 +29,11 @@ export default function Key(props: KeyProps) {
   const { id, note, active, triggerable } = props;
 
   const className = useMemo(() => {
-    const names = [Keys[note.name]];
-    names.push("nodrag cursor-pointer");
-
-    if (active || mouseDown) names.push("active");
-
-    return names.join(" ");
+    return cn(
+      Keys[note.name],
+      "nodrag cursor-pointer",
+      (active || mouseDown) && "active",
+    );
   }, [active, mouseDown, note.name]);
 
   const trigger = useCallback(
