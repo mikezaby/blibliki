@@ -1251,6 +1251,18 @@
     min-width: 9rem;
   }
 
+  :where(.ui-context-content) {
+    max-height: min(
+      24rem,
+      var(--radix-context-menu-content-available-height, 24rem)
+    );
+    transform-origin: var(--radix-context-menu-content-transform-origin);
+  }
+
+  :where(.ui-context-sub-content) {
+    transform-origin: var(--radix-context-menu-content-transform-origin);
+  }
+
   :where(.ui-dropdown-item) {
     position: relative;
     display: flex;

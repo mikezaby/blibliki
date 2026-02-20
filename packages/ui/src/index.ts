@@ -56,6 +56,23 @@ export {
   type DialogContentProps,
 } from "./components/dialog";
 export {
+  ContextMenu,
+  ContextMenuPortal,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuLabel,
+  ContextMenuItem,
+  ContextMenuCheckboxItem,
+  ContextMenuRadioGroup,
+  ContextMenuRadioItem,
+  ContextMenuSeparator,
+  ContextMenuShortcut,
+  ContextMenuSub,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
+} from "./components/context-menu";
+export {
   DropdownMenu,
   DropdownMenuPortal,
   DropdownMenuTrigger,
