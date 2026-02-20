@@ -20,19 +20,18 @@ import {
   Download,
   TableOfContents,
 } from "lucide-react";
-import { ReactNode } from "react";
-import { TriggerModal } from "@/components/Modal";
+import { open as openModal } from "@/components/Modal/modalSlice";
 import { useAppDispatch, usePatch } from "@/hooks";
 import useUpload from "@/hooks/useUpload";
 import { destroy, load, save } from "@/patchSlice";
 import ExportEngine from "./ExportEngine";
 import ExportGrid from "./ExportGrid";
 
-const menuItemClassName = "w-full justify-start";
-
 export default function FileMenu() {
   const dispatch = useAppDispatch();
   const { patch, canCreate, canUpdate, canDelete } = usePatch();
+  const navigate = useNavigate();
+  const { user } = useUser();
   const { open: openUpload } = useUpload({
     accept: ".json",
     onFilesSelected: async (value) => {
@@ -42,6 +41,17 @@ export default function FileMenu() {
       dispatch(load({ ...patch, id: "", userId: "" }));
     },
   });
+
+  const onSave = (asNew: boolean) => {
+    if (!user) throw Error("You can't save without login");
+
+    void dispatch(save({ userId: user.id, asNew }));
+  };
+
+  const onDestroy = async () => {
+    await dispatch(destroy());
+    await navigate({ to: "/patch/$patchId", params: { patchId: "new" } });
+  };
 
   return (
     <DropdownMenu>
@@ -55,55 +65,53 @@ export default function FileMenu() {
       <DropdownMenuContent className="w-72 p-2" align="start" alignOffset={-4}>
         <DropdownMenuGroup className="space-y-1">
           <DropdownMenuItem asChild>
-            <Button
-              asChild
-              variant="text"
-              color="neutral"
-              size="sm"
-              className={menuItemClassName}
-            >
-              <Link to="/patch/$patchId" params={{ patchId: "new" }}>
-                <Plus className="w-4 h-4" />
-                New
-              </Link>
-            </Button>
+            <Link to="/patch/$patchId" params={{ patchId: "new" }}>
+              <Plus className="w-4 h-4" />
+              New
+            </Link>
           </DropdownMenuItem>
 
           {(canCreate || canUpdate) && (
-            <DropdownMenuItem asChild>
-              <SaveButton asNew={false} className={menuItemClassName}>
-                <Save className="w-4 h-4" />
-                Save
-              </SaveButton>
+            <DropdownMenuItem
+              onSelect={() => {
+                onSave(false);
+              }}
+            >
+              <Save className="w-4 h-4" />
+              Save
             </DropdownMenuItem>
           )}
 
           {patch.id && canCreate && (
-            <DropdownMenuItem asChild>
-              <SaveButton asNew={true} className={menuItemClassName}>
-                <Copy className="w-4 h-4" />
-                Save As Copy
-              </SaveButton>
+            <DropdownMenuItem
+              onSelect={() => {
+                onSave(true);
+              }}
+            >
+              <Copy className="w-4 h-4" />
+              Save As Copy
             </DropdownMenuItem>
           )}
 
-          <DropdownMenuItem asChild>
-            <TriggerModal
-              modalName="patch"
-              type="open"
-              className={menuItemClassName}
-            >
-              <FolderOpen className="w-4 h-4" />
-              Load
-            </TriggerModal>
+          <DropdownMenuItem
+            onSelect={() => {
+              dispatch(openModal("patch"));
+            }}
+          >
+            <FolderOpen className="w-4 h-4" />
+            Load
           </DropdownMenuItem>
 
           {canDelete && (
-            <DropdownMenuItem asChild>
-              <Destroy disabled={!patch.id} className={menuItemClassName}>
-                <Trash2 className="w-4 h-4" />
-                Delete
-              </Destroy>
+            <DropdownMenuItem
+              variant="destructive"
+              disabled={!patch.id}
+              onSelect={() => {
+                void onDestroy();
+              }}
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete
             </DropdownMenuItem>
           )}
         </DropdownMenuGroup>
@@ -111,28 +119,24 @@ export default function FileMenu() {
         <DropdownMenuSeparator className="my-2" />
 
         <DropdownMenuGroup className="space-y-1">
-          <DropdownMenuItem asChild>
-            <Button
-              onClick={openUpload}
-              variant="text"
-              color="neutral"
-              size="sm"
-              className={menuItemClassName}
-            >
-              <Upload className="w-4 h-4" />
-              Import
-            </Button>
+          <DropdownMenuItem
+            onSelect={() => {
+              openUpload();
+            }}
+          >
+            <Upload className="w-4 h-4" />
+            Import
           </DropdownMenuItem>
 
           <DropdownMenuItem asChild>
-            <ExportGrid className={menuItemClassName}>
+            <ExportGrid className="w-full justify-start">
               <Download className="w-4 h-4" />
               Export for Grid
             </ExportGrid>
           </DropdownMenuItem>
 
           <DropdownMenuItem asChild>
-            <ExportEngine className={menuItemClassName}>
+            <ExportEngine className="w-full justify-start">
               <Download className="w-4 h-4" />
               Export for engine
             </ExportEngine>
@@ -140,63 +144,5 @@ export default function FileMenu() {
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-function SaveButton(props: {
-  asNew: boolean;
-  children: ReactNode;
-  className?: string;
-}) {
-  const dispatch = useAppDispatch();
-  const { user } = useUser();
-  const { asNew, children, className = "" } = props;
-
-  const onSave = () => {
-    if (!user) throw Error("You can't save without login");
-
-    void dispatch(save({ userId: user.id, asNew }));
-  };
-
-  return (
-    <Button
-      onClick={onSave}
-      variant="text"
-      color="neutral"
-      size="sm"
-      className={className}
-    >
-      {children}
-    </Button>
-  );
-}
-
-function Destroy(props: {
-  disabled: boolean;
-  children: ReactNode;
-  className?: string;
-}) {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-  const { disabled, children, className = "" } = props;
-
-  const onDestroy = async () => {
-    await dispatch(destroy());
-    await navigate({ to: "/patch/$patchId", params: { patchId: "new" } });
-  };
-
-  return (
-    <Button
-      className={className}
-      onClick={() => {
-        void onDestroy();
-      }}
-      disabled={disabled}
-      variant="text"
-      color="error"
-      size="sm"
-    >
-      {children}
-    </Button>
   );
 }
