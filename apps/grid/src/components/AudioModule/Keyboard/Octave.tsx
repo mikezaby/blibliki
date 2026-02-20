@@ -1,24 +1,6 @@
 import { Note } from "@blibliki/engine";
 import Key from "./Key";
 
-const toneWidth = 25.3;
-const semiToneHeight = 24 * 4;
-
-const toneWidthColumn = `${(toneWidth * 2.0) / 3}px`;
-const semiToneWidthColumn = `${(toneWidth * 1.0) / 3}px`;
-
-const style = {
-  display: "inline-grid",
-  gridTemplateColumns: `${toneWidthColumn} ${semiToneWidthColumn}
-    ${semiToneWidthColumn} ${semiToneWidthColumn} ${semiToneWidthColumn}
-    ${semiToneWidthColumn} ${toneWidthColumn}
-    ${toneWidthColumn} ${semiToneWidthColumn}
-    ${semiToneWidthColumn} ${semiToneWidthColumn} ${semiToneWidthColumn}
-    ${semiToneWidthColumn} ${semiToneWidthColumn} ${semiToneWidthColumn}
-    ${semiToneWidthColumn} ${toneWidthColumn}`,
-  gridTemplateRows: `${semiToneHeight}px`,
-};
-
 type OctaveProps = {
   id: string;
   octave: number;
@@ -35,7 +17,7 @@ export default function Octave(params: OctaveProps) {
   } = params;
 
   return (
-    <div style={style}>
+    <div className="keyboard-octave">
       {Note.notes(octave).map((note: Note) => (
         <Key
           key={note.fullName}

@@ -1,3 +1,12 @@
+.keyboard-octave {
+  display: inline-grid;
+  grid-template-columns:
+    16.8667px 8.4333px 8.4333px 8.4333px 8.4333px 8.4333px 16.8667px 16.8667px
+    8.4333px 8.4333px 8.4333px 8.4333px 8.4333px 8.4333px 8.4333px 8.4333px
+    16.8667px;
+  grid-template-rows: 96px;
+}
+
 .white-key {
   position: relative;
   background: #fff;
