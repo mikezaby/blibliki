@@ -138,7 +138,9 @@ function SelectItem({
           <SelectCheckIcon className="ui-select-indicator-icon" />
         </SelectPrimitive.ItemIndicator>
       </span>
-      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemText className="ui-select-item-text">
+        {children}
+      </SelectPrimitive.ItemText>
     </SelectPrimitive.Item>
   );
 }
@@ -228,7 +230,7 @@ function OptionSelect<T extends OptionSelectValue | undefined>({
   options,
   label,
   contentClassName,
-  triggerClassName = "w-[180px]",
+  triggerClassName,
   disabled = false,
   onChange,
 }: OptionSelectProps<T>) {
@@ -272,21 +274,42 @@ function OptionSelect<T extends OptionSelectValue | undefined>({
     onChange(newValue as T);
   };
 
+  const selectedValue =
+    value !== undefined && value !== "" ? value.toString() : undefined;
+  const placeholder =
+    label && label.length > 0 ? label : "Select...";
+  const longestDisplayLength = useMemo(() => {
+    const longestOption = normalizedOptions.reduce((maxLength, option) => {
+      const length = option.name.length;
+      return Math.max(maxLength, length);
+    }, 0);
+
+    return Math.max(placeholder.length, longestOption);
+  }, [normalizedOptions, placeholder]);
+  const autoWidthCh = Math.min(Math.max(longestDisplayLength + 6, 18), 40);
+
+  const triggerStyle = triggerClassName
+    ? undefined
+    : ({
+        width: `clamp(10rem, ${autoWidthCh}ch, 26rem)`,
+        maxWidth: "100%",
+      } as const);
+
   return (
     <Select
-      value={value?.toString()}
+      value={selectedValue}
       onValueChange={onValueChange}
       disabled={disabled}
     >
-      <SelectTrigger className={triggerClassName}>
-        <SelectValue placeholder={label} />
+      <SelectTrigger className={triggerClassName} style={triggerStyle}>
+        <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent className={contentClassName}>
         <SelectGroup>
           <SelectLabel>Select...</SelectLabel>
           {normalizedOptions.map((option) => (
             <SelectItem key={option.value} value={option.value.toString()}>
-              {option.name} ({option.value})
+              {option.name}
             </SelectItem>
           ))}
         </SelectGroup>

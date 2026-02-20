@@ -136,7 +136,7 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
             label="Select patch"
             value={formData.patchId}
             options={patches}
-            onChange={(value) => {
+            onChange={(value: string) => {
               setFormData({ ...formData, patchId: value });
             }}
           />

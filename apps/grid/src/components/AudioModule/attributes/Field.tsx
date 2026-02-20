@@ -98,6 +98,7 @@ export const SelectField = <T extends string | number>({
         value={value!}
         options={schema.options}
         onChange={onChange}
+        triggerClassName="w-full"
         contentClassName="text-sm"
       />
     </div>
@@ -133,7 +134,7 @@ export const CheckboxField = ({
       <Switch
         checked={Boolean(value)}
         color="success"
-        onCheckedChange={(checked) => {
+        onCheckedChange={(checked: boolean) => {
           onChange(checked);
         }}
       />

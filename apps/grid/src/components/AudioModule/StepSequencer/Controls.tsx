@@ -1,5 +1,12 @@
 import { Resolution, PlaybackMode } from "@blibliki/engine";
-import { Button } from "@blibliki/ui";
+import {
+  Button,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@blibliki/ui";
 
 type ControlsProps = {
   stepsPerPage: number;
@@ -12,6 +19,18 @@ type ControlsProps = {
   onStart: () => void;
   onStop: () => void;
 };
+
+const STEP_OPTIONS = [4, 8, 12, 16] as const;
+const RESOLUTION_OPTIONS = [
+  { value: Resolution.thirtysecond, label: "1/32" },
+  { value: Resolution.sixteenth, label: "1/16" },
+  { value: Resolution.eighth, label: "1/8" },
+  { value: Resolution.quarter, label: "1/4" },
+] as const;
+const PLAYBACK_MODE_OPTIONS = [
+  { value: PlaybackMode.loop, label: "Loop" },
+  { value: PlaybackMode.oneShot, label: "One-Shot" },
+] as const;
 
 export default function Controls({
   stepsPerPage,
@@ -43,53 +62,69 @@ export default function Controls({
         <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
           Steps:
         </label>
-        <select
-          value={stepsPerPage}
-          onChange={(e) => {
-            onStepsChange(Number(e.target.value));
+        <Select
+          value={stepsPerPage.toString()}
+          onValueChange={(nextValue) => {
+            onStepsChange(Number(nextValue));
           }}
-          className="px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
         >
-          {[4, 8, 12, 16].map((num) => (
-            <option key={num} value={num}>
-              {num}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger size="sm" className="w-20">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {STEP_OPTIONS.map((num) => (
+              <SelectItem key={num} value={num.toString()}>
+                {num}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="flex items-center gap-2">
         <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
           Resolution:
         </label>
-        <select
+        <Select
           value={resolution}
-          onChange={(e) => {
-            onResolutionChange(e.target.value as Resolution);
+          onValueChange={(nextValue) => {
+            onResolutionChange(nextValue as Resolution);
           }}
-          className="px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
         >
-          <option value={Resolution.thirtysecond}>1/32</option>
-          <option value={Resolution.sixteenth}>1/16</option>
-          <option value={Resolution.eighth}>1/8</option>
-          <option value={Resolution.quarter}>1/4</option>
-        </select>
+          <SelectTrigger size="sm" className="w-20">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {RESOLUTION_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="flex items-center gap-2">
         <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
           Mode:
         </label>
-        <select
+        <Select
           value={playbackMode}
-          onChange={(e) => {
-            onPlaybackModeChange(e.target.value as PlaybackMode);
+          onValueChange={(nextValue) => {
+            onPlaybackModeChange(nextValue as PlaybackMode);
           }}
-          className="px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
         >
-          <option value={PlaybackMode.loop}>Loop</option>
-          <option value={PlaybackMode.oneShot}>One-Shot</option>
-        </select>
+          <SelectTrigger size="sm" className="w-28">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PLAYBACK_MODE_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

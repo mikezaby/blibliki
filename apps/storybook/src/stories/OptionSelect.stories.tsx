@@ -9,6 +9,13 @@ const idOptions = [
   { id: "patch-3", name: "Soft Lead" },
 ];
 const numericOptions = [1, 2, 3, 4];
+const longLabelOptions = [
+  {
+    id: "very-long-option",
+    name: "Extremely Long Wavetable Preset Name With Many Words",
+  },
+  { id: "short", name: "Short" },
+];
 
 const meta = {
   title: "Primitives/OptionSelect",
@@ -35,6 +42,22 @@ function StringDemo(props: Omit<OptionSelectProps<string>, "onChange">) {
 
 function NumberDemo(props: Omit<OptionSelectProps<number>, "onChange">) {
   const [value, setValue] = useState(props.value);
+
+  return (
+    <OptionSelect
+      {...props}
+      value={value}
+      onChange={(next) => {
+        setValue(next);
+      }}
+    />
+  );
+}
+
+function OptionalStringDemo(
+  props: Omit<OptionSelectProps<string | undefined>, "onChange">,
+) {
+  const [value, setValue] = useState<string | undefined>(props.value);
 
   return (
     <OptionSelect
@@ -88,6 +111,23 @@ export const Disabled: Story = {
       options={stringOptions}
       disabled
       triggerClassName="w-[220px]"
+    />
+  ),
+};
+
+export const Placeholder: Story = {
+  render: () => (
+    <OptionalStringDemo options={stringOptions} value={undefined} triggerClassName="w-[220px]" />
+  ),
+};
+
+export const LongSelectedText: Story = {
+  render: () => (
+    <StringDemo
+      label="Preset"
+      value="very-long-option"
+      options={longLabelOptions}
+      triggerClassName="w-[180px]"
     />
   ),
 };

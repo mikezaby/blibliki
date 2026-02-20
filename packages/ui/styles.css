@@ -587,6 +587,8 @@
     padding: 0 0.75rem;
     font-size: 0.875rem;
     line-height: 1;
+    text-align: left;
+    white-space: nowrap;
     cursor: pointer;
     transition:
       background-color 120ms ease,
@@ -633,7 +635,17 @@
   }
 
   .ui-select-value {
+    flex: 1 1 auto;
+    min-width: 0;
     display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ui-select-value > span {
+    display: block;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -706,6 +718,7 @@
     position: relative;
     display: flex;
     width: 100%;
+    min-width: 0;
     align-items: center;
     gap: 0.5rem;
     border: 1px solid transparent;
@@ -740,6 +753,14 @@
   .ui-select-item[data-disabled] {
     pointer-events: none;
     opacity: 0.5;
+  }
+
+  .ui-select-item-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .ui-select-indicator {
