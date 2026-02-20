@@ -1,5 +1,5 @@
 import { IStepCC } from "@blibliki/engine";
-import { Button } from "@blibliki/ui";
+import { Button, Input } from "@blibliki/ui";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
@@ -31,7 +31,7 @@ export default function CCEditor({ ccMessages, onChange }: CCEditorProps) {
 
   return (
     <>
-      <input
+      <Input
         type="number"
         value={ccInput}
         onChange={(e) => {
@@ -43,9 +43,9 @@ export default function CCEditor({ ccMessages, onChange }: CCEditorProps) {
         placeholder="CC#"
         min={0}
         max={127}
-        className="w-20 px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400"
+        className="w-20 text-center"
       />
-      <input
+      <Input
         type="number"
         value={valueInput}
         onChange={(e) => {
@@ -57,7 +57,7 @@ export default function CCEditor({ ccMessages, onChange }: CCEditorProps) {
         placeholder="Value"
         min={0}
         max={127}
-        className="w-20 px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400"
+        className="w-20 text-center"
       />
       <Button color="secondary" onClick={addCC}>
         <Plus className="w-4 h-4" />

@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
   Fader,
+  Input,
   Select,
   SelectContent,
   SelectItem,
@@ -279,7 +280,7 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
             </div>
 
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 ref={wavFileInputRef}
                 type="file"
                 accept=".wav,audio/wav,audio/wave,audio/x-wav"

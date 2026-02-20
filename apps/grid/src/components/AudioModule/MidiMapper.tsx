@@ -4,12 +4,12 @@ import {
   ModuleType,
   moduleSchemas,
 } from "@blibliki/engine";
-import { Button, OptionSelect } from "@blibliki/ui";
+import { Button, Input, OptionSelect } from "@blibliki/ui";
 import { ChevronDown, ChevronUp, SquarePlus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAppSelector, useAppDispatch } from "@/hooks";
 import { ModuleComponent } from ".";
-import { Input, Label } from "../ui";
+import { Label } from "../ui";
 import Container from "./Container";
 import { initialize } from "./MidiInput/midiDevicesSlice";
 import { modulesSelector } from "./modulesSlice";
@@ -348,8 +348,8 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                       CC
                     </Label>
                     <Input
-                      className="w-24 text-center bg-slate-50 dark:bg-slate-950/50 font-mono"
-                      type="string"
+                      className="w-24 text-center font-mono"
+                      type="text"
                       value={mapping.autoAssign ? "Mapping..." : mapping.cc}
                       placeholder="Unmapped"
                       readOnly
@@ -472,7 +472,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                             Threshold
                           </Label>
                           <Input
-                            className="w-24 text-center bg-slate-50 dark:bg-slate-950/50"
+                            className="w-24 text-center"
                             type="number"
                             min={0}
                             max={127}
@@ -495,7 +495,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                             Step
                           </Label>
                           <Input
-                            className="w-24 text-center bg-slate-50 dark:bg-slate-950/50"
+                            className="w-24 text-center"
                             type="number"
                             step="any"
                             value={mapping.step ?? ""}

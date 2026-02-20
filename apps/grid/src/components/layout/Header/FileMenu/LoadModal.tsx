@@ -1,9 +1,8 @@
-import { Button, Divider, Stack, Surface } from "@blibliki/ui";
+import { Button, Divider, Input, Stack, Surface } from "@blibliki/ui";
 import { Link } from "@tanstack/react-router";
 import { FolderOpen, Search, User, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import Modal, { close as closeModal } from "@/components/Modal";
-import { Input } from "@/components/ui";
 import { useAppDispatch, usePatches } from "@/hooks";
 
 export default function LoadPatchModal() {

@@ -1,10 +1,10 @@
 import { IDevice } from "@blibliki/models";
-import { Button, Divider, OptionSelect, Stack, Surface } from "@blibliki/ui";
+import { Button, Divider, Input, OptionSelect, Stack, Surface } from "@blibliki/ui";
 import { useUser } from "@clerk/clerk-react";
 import { Cpu, Save } from "lucide-react";
 import { useState } from "react";
 import Modal, { close as closeModal } from "@/components/Modal";
-import { Input, Label } from "@/components/ui";
+import { Label } from "@/components/ui";
 import { saveDevice } from "@/devicesSlice";
 import { useAppDispatch, useAppSelector, usePatches } from "@/hooks";
 
@@ -100,10 +100,11 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
             id="token"
             placeholder="Enter the token from your Raspberry Pi"
             value={formData.token}
+            aria-invalid={Boolean(errors.token)}
             onChange={(e) => {
               setFormData({ ...formData, token: e.target.value });
             }}
-            className={`font-mono ${errors.token ? "border-red-500" : ""}`}
+            className="font-mono"
           />
           {errors.token && (
             <p className="text-sm text-red-500">{errors.token}</p>
@@ -122,10 +123,10 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
             id="name"
             placeholder="e.g., Experimental Synth"
             value={formData.name}
+            aria-invalid={Boolean(errors.name)}
             onChange={(e) => {
               setFormData({ ...formData, name: e.target.value });
             }}
-            className={errors.name ? "border-red-500" : undefined}
           />
           {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
         </Stack>

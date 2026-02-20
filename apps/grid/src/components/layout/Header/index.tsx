@@ -1,9 +1,8 @@
-import { Button, Divider, IconButton, Stack, Surface } from "@blibliki/ui";
+import { Button, Divider, IconButton, Input, Stack, Surface } from "@blibliki/ui";
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/clerk-react";
 import { Link } from "@tanstack/react-router";
 import { Cpu, LogIn, Play, Square } from "lucide-react";
 import { ChangeEvent, useCallback, useEffect } from "react";
-import { Input } from "@/components/ui";
 import { start, stop, setBpm } from "@/globalSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { setName as setPatchName } from "@/patchSlice";
@@ -65,7 +64,8 @@ export default function Header() {
         <Stack direction="row" align="center" gap={2}>
           <label className={fieldLabelClassName}>Project</label>
           <Input
-            className="h-7 w-40 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+            size="sm"
+            className="w-40 font-medium"
             onChange={(event: ChangeEvent<HTMLInputElement>) =>
               dispatch(setPatchName(event.target.value))
             }
@@ -86,7 +86,8 @@ export default function Header() {
           <Stack direction="row" align="center" gap={2}>
             <label className={fieldLabelClassName}>BPM</label>
             <Input
-              className="h-7 w-18 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm font-mono text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+              size="sm"
+              className="w-18 text-center font-mono"
               type="number"
               min="10"
               max="999"

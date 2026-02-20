@@ -243,6 +243,68 @@
     padding: 0;
   }
 
+  :where(.ui-input) {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    border: 1px solid var(--ui-color-border-subtle);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-color-surface-raised);
+    color: var(--ui-color-text-primary);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    padding: 0 0.75rem;
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease,
+      box-shadow 120ms ease;
+  }
+
+  :where(.ui-input)::placeholder {
+    color: var(--ui-color-text-muted);
+  }
+
+  :where(.ui-input):hover:not(:disabled) {
+    border-color: color-mix(
+      in oklab,
+      var(--ui-color-border-subtle),
+      var(--ui-color-text-primary) 14%
+    );
+  }
+
+  :where(.ui-input):focus-visible {
+    outline: 2px solid transparent;
+    border-color: color-mix(
+      in oklab,
+      var(--ui-color-border-subtle),
+      var(--ui-color-primary-500) 36%
+    );
+    box-shadow: 0 0 0 2px
+      color-mix(in oklab, var(--ui-color-primary-500), transparent 76%);
+  }
+
+  :where(.ui-input):disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  :where(.ui-input[aria-invalid="true"]) {
+    border-color: var(--ui-color-error-500);
+    box-shadow: 0 0 0 2px
+      color-mix(in oklab, var(--ui-color-error-500), transparent 78%);
+  }
+
+  :where(.ui-input--size-md) {
+    height: 2.25rem;
+  }
+
+  :where(.ui-input--size-sm) {
+    height: 1.75rem;
+    padding: 0 0.625rem;
+    font-size: 0.8125rem;
+  }
+
   :where(.ui-icon-button) {
     border-radius: 9999px;
     line-height: 0;

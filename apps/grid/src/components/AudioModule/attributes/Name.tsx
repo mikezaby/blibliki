@@ -1,6 +1,7 @@
 import { ModuleType } from "@blibliki/engine";
+import { Input } from "@blibliki/ui";
 import { ChangeEvent } from "react";
-import { Input, Label } from "@/components/ui";
+import { Label } from "@/components/ui";
 import { useAppDispatch } from "@/hooks";
 import { updateModule } from "../modulesSlice";
 
@@ -31,7 +32,6 @@ export default function Name(props: NameInterface) {
       <Input
         value={value}
         onChange={updateProp}
-        className="text-sm bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors"
         placeholder="Enter module name"
       />
     </div>

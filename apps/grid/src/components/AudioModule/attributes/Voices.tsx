@@ -1,7 +1,7 @@
 import { ModuleType } from "@blibliki/engine";
+import { Input } from "@blibliki/ui";
 import { Label } from "@radix-ui/react-label";
 import { ChangeEvent } from "react";
-import { Input } from "@/components/ui";
 import { useAppDispatch } from "@/hooks";
 import { updateModule } from "../modulesSlice";
 
@@ -34,7 +34,6 @@ export default function Voices(props: NameInterface) {
         type="number"
         value={value}
         onChange={onChange}
-        className="text-sm bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
         min="1"
         max="64"
       />

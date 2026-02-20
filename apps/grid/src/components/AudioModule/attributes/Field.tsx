@@ -5,10 +5,9 @@ import {
   PropSchema,
   StringProp,
 } from "@blibliki/engine";
-import { OptionSelect, Switch } from "@blibliki/ui";
+import { Input, OptionSelect, Switch } from "@blibliki/ui";
 import { Label } from "@radix-ui/react-label";
 import { ChangeEvent } from "react";
-import { Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 type FieldProps<T extends string | number | boolean | string[] | number[]> = {
@@ -59,9 +58,7 @@ export const InputField = <T extends string | number>({
         type={inputType}
         value={value}
         onChange={internalOnChange}
-        className={`text-sm bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors ${
-          inputType === "number" ? "w-20 text-center font-mono" : ""
-        }`}
+        className={inputType === "number" ? "w-20 text-center font-mono" : undefined}
       />
     </div>
   );
