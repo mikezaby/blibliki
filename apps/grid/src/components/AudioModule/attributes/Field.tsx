@@ -5,8 +5,7 @@ import {
   PropSchema,
   StringProp,
 } from "@blibliki/engine";
-import { Input, OptionSelect, Switch } from "@blibliki/ui";
-import { Label } from "@radix-ui/react-label";
+import { Input, Label, OptionSelect, Switch } from "@blibliki/ui";
 import { ChangeEvent } from "react";
 import { cn } from "@/lib/utils";
 

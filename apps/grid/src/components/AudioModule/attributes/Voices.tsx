@@ -1,6 +1,5 @@
 import { ModuleType } from "@blibliki/engine";
-import { Input } from "@blibliki/ui";
-import { Label } from "@radix-ui/react-label";
+import { Input, Label } from "@blibliki/ui";
 import { ChangeEvent } from "react";
 import { useAppDispatch } from "@/hooks";
 import { updateModule } from "../modulesSlice";

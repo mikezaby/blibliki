@@ -1,6 +1,7 @@
 import { Resolution, PlaybackMode } from "@blibliki/engine";
 import {
   Button,
+  Label,
   Select,
   SelectContent,
   SelectItem,
@@ -59,9 +60,9 @@ export default function Controls({
       <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
 
       <div className="flex items-center gap-2">
-        <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+        <Label className="text-xs font-medium text-slate-600 dark:text-slate-400">
           Steps:
-        </label>
+        </Label>
         <Select
           value={stepsPerPage.toString()}
           onValueChange={(nextValue) => {
@@ -82,9 +83,9 @@ export default function Controls({
       </div>
 
       <div className="flex items-center gap-2">
-        <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+        <Label className="text-xs font-medium text-slate-600 dark:text-slate-400">
           Resolution:
-        </label>
+        </Label>
         <Select
           value={resolution}
           onValueChange={(nextValue) => {
@@ -105,9 +106,9 @@ export default function Controls({
       </div>
 
       <div className="flex items-center gap-2">
-        <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+        <Label className="text-xs font-medium text-slate-600 dark:text-slate-400">
           Mode:
-        </label>
+        </Label>
         <Select
           value={playbackMode}
           onValueChange={(nextValue) => {

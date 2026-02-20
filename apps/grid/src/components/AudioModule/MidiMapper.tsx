@@ -4,12 +4,11 @@ import {
   ModuleType,
   moduleSchemas,
 } from "@blibliki/engine";
-import { Button, Input, OptionSelect } from "@blibliki/ui";
+import { Button, Input, Label, OptionSelect } from "@blibliki/ui";
 import { ChevronDown, ChevronUp, SquarePlus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAppSelector, useAppDispatch } from "@/hooks";
 import { ModuleComponent } from ".";
-import { Label } from "../ui";
 import Container from "./Container";
 import { initialize } from "./MidiInput/midiDevicesSlice";
 import { modulesSelector } from "./modulesSlice";

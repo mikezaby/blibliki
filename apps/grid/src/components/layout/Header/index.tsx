@@ -1,4 +1,12 @@
-import { Button, Divider, IconButton, Input, Stack, Surface } from "@blibliki/ui";
+import {
+  Button,
+  Divider,
+  IconButton,
+  Input,
+  Label,
+  Stack,
+  Surface,
+} from "@blibliki/ui";
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/clerk-react";
 import { Link } from "@tanstack/react-router";
 import { Cpu, LogIn, Play, Square } from "lucide-react";
@@ -62,7 +70,7 @@ export default function Header() {
         <Divider orientation="vertical" className="h-6" />
 
         <Stack direction="row" align="center" gap={2}>
-          <label className={fieldLabelClassName}>Project</label>
+          <Label className={fieldLabelClassName}>Project</Label>
           <Input
             size="sm"
             className="w-40 font-medium"
@@ -84,7 +92,7 @@ export default function Header() {
       >
         <Stack direction="row" align="center" gap={3}>
           <Stack direction="row" align="center" gap={2}>
-            <label className={fieldLabelClassName}>BPM</label>
+            <Label className={fieldLabelClassName}>BPM</Label>
             <Input
               size="sm"
               className="w-18 text-center font-mono"

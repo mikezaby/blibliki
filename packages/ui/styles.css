@@ -305,6 +305,22 @@
     font-size: 0.8125rem;
   }
 
+  :where(.ui-label) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1;
+    font-weight: 500;
+    color: var(--ui-color-text-primary);
+    user-select: none;
+  }
+
+  :where(.ui-label[data-disabled="true"]) {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
   :where(.ui-card) {
     display: flex;
     flex-direction: column;

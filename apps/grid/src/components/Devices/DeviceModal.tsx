@@ -1,10 +1,17 @@
 import { IDevice } from "@blibliki/models";
-import { Button, Divider, Input, OptionSelect, Stack, Surface } from "@blibliki/ui";
+import {
+  Button,
+  Divider,
+  Input,
+  Label,
+  OptionSelect,
+  Stack,
+  Surface,
+} from "@blibliki/ui";
 import { useUser } from "@clerk/clerk-react";
 import { Cpu, Save } from "lucide-react";
 import { useState } from "react";
 import Modal, { close as closeModal } from "@/components/Modal";
-import { Label } from "@/components/ui";
 import { saveDevice } from "@/devicesSlice";
 import { useAppDispatch, useAppSelector, usePatches } from "@/hooks";
 

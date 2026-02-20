@@ -1,5 +1,5 @@
 import { IPattern, moduleSchemas, ModuleType } from "@blibliki/engine";
-import { Button, IconButton } from "@blibliki/ui";
+import { Button, IconButton, Label } from "@blibliki/ui";
 import { Plus, X } from "lucide-react";
 import { TUpdateProp } from "..";
 import { CheckboxField } from "../attributes/Field";
@@ -111,9 +111,9 @@ export default function PatternSelector({
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+          <Label className="text-xs font-medium text-slate-600 dark:text-slate-400">
             Sequence:
-          </label>
+          </Label>
           <textarea
             rows={3}
             value={formatPatternSequence(patternSequence)}

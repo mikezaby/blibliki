@@ -21,6 +21,7 @@ export {
 } from "./components/divider";
 export { IconButton, type IconButtonProps } from "./components/icon-button";
 export { Input, inputVariants, type InputProps } from "./components/input";
+export { Label } from "./components/label";
 export { Switch, type SwitchProps } from "./components/switch";
 export {
   OptionSelect,
