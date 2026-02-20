@@ -1,3 +1,4 @@
+import { Engine } from "@blibliki/engine";
 import { IPatch } from "@blibliki/models";
 import {
   Button,
@@ -21,15 +22,17 @@ import {
   TableOfContents,
 } from "lucide-react";
 import { open as openModal } from "@/components/Modal/modalSlice";
-import { useAppDispatch, usePatch } from "@/hooks";
+import { modulesSelector } from "@/components/AudioModule/modulesSlice";
+import { useAppDispatch, useAppSelector, usePatch } from "@/hooks";
 import useUpload from "@/hooks/useUpload";
 import { destroy, load, save } from "@/patchSlice";
-import ExportEngine from "./ExportEngine";
-import ExportGrid from "./ExportGrid";
 
 export default function FileMenu() {
   const dispatch = useAppDispatch();
   const { patch, canCreate, canUpdate, canDelete } = usePatch();
+  const { bpm } = useAppSelector((state) => state.global);
+  const gridNodes = useAppSelector((state) => state.gridNodes);
+  const modules = useAppSelector((state) => modulesSelector.selectAll(state));
   const navigate = useNavigate();
   const { user } = useUser();
   const { open: openUpload } = useUpload({
@@ -51,6 +54,37 @@ export default function FileMenu() {
   const onDestroy = async () => {
     await dispatch(destroy());
     await navigate({ to: "/patch/$patchId", params: { patchId: "new" } });
+  };
+
+  const exportGridJSON = () => {
+    const data: IPatch = {
+      id: "",
+      userId: "",
+      name: patch.name,
+      config: { bpm, modules, gridNodes },
+    };
+
+    const jsonData = JSON.stringify(data);
+    const blob = new Blob([jsonData], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${patch.name.split(" ").join("_")}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportEngineJSON = () => {
+    const data = Engine.current.serialize();
+
+    const jsonData = JSON.stringify(data);
+    const blob = new Blob([jsonData], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${patch.name.split(" ").join("_")}_engine.json`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -128,18 +162,22 @@ export default function FileMenu() {
             Import
           </DropdownMenuItem>
 
-          <DropdownMenuItem asChild>
-            <ExportGrid className="w-full justify-start">
-              <Download className="w-4 h-4" />
-              Export for Grid
-            </ExportGrid>
+          <DropdownMenuItem
+            onSelect={() => {
+              exportGridJSON();
+            }}
+          >
+            <Download className="w-4 h-4" />
+            Export for Grid
           </DropdownMenuItem>
 
-          <DropdownMenuItem asChild>
-            <ExportEngine className="w-full justify-start">
-              <Download className="w-4 h-4" />
-              Export for engine
-            </ExportEngine>
+          <DropdownMenuItem
+            onSelect={() => {
+              exportEngineJSON();
+            }}
+          >
+            <Download className="w-4 h-4" />
+            Export for engine
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
