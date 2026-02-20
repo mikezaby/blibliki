@@ -311,17 +311,17 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                 </DialogTrigger>
 
                 <DialogContent className="sm:max-w-xl max-w-[calc(100vw-2rem)] p-0 gap-0">
-                  <div className="flex items-center gap-3 p-6 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-t-lg">
+                  <div className="flex items-center gap-3 rounded-t-lg border-b border-border-subtle bg-surface-subtle p-6">
                     <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg flex items-center justify-center shadow-sm">
                       <Waves className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1">
-                      <DialogTitle className="text-lg font-semibold text-slate-900 dark:text-white tracking-tight">
+                      <DialogTitle className="text-lg font-semibold tracking-tight">
                         {modalView === "list"
                           ? "Wavetable Tables"
                           : "Edit Wavetable Table"}
                       </DialogTitle>
-                      <DialogDescription className="text-sm text-slate-500 dark:text-slate-400">
+                      <DialogDescription className="text-sm text-content-muted">
                         {modalView === "list"
                           ? "Add, edit, or delete tables in the wavetable bank."
                           : "Edit a single table using real/imag coefficient arrays."}
@@ -331,11 +331,16 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
 
                   {modalView === "list" ? (
                     <>
-                      <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                      <div className="border-b border-border-subtle bg-surface-subtle p-4">
                         <div className="flex items-center justify-between">
-                          <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                            tables[{safeTables.length}]
-                          </p>
+                          <Text
+                            asChild
+                            tone="muted"
+                            size="xs"
+                            className="font-mono"
+                          >
+                            <p>tables[{safeTables.length}]</p>
+                          </Text>
                           <Button
                             size="sm"
                             variant="outlined"
@@ -348,20 +353,27 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                         </div>
                       </div>
 
-                      <div className="p-3 bg-slate-50 dark:bg-slate-800 max-h-[24rem] overflow-y-auto space-y-2">
+                      <div className="max-h-[24rem] space-y-2 overflow-y-auto bg-surface-subtle p-3">
                         {safeTables.map((table, index) => (
                           <div
                             key={`wavetable-table-${index}`}
-                            className="flex items-center justify-between rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
+                            className="flex items-center justify-between rounded-md border border-border-subtle bg-surface-raised px-3 py-2"
                           >
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                                Table {index + 1}
-                              </p>
-                              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono truncate">
-                                real[{table.real.length}] • imag[
-                                {table.imag.length}]
-                              </p>
+                              <Text asChild size="sm" weight="medium">
+                                <p>Table {index + 1}</p>
+                              </Text>
+                              <Text
+                                asChild
+                                tone="muted"
+                                size="xs"
+                                className="font-mono"
+                              >
+                                <p className="truncate">
+                                  real[{table.real.length}] • imag[
+                                  {table.imag.length}]
+                                </p>
+                              </Text>
                             </div>
                             <div className="flex items-center gap-1">
                               <Button
@@ -394,7 +406,7 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                         ))}
                       </div>
 
-                      <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-b-lg">
+                      <div className="rounded-b-lg border-t border-border-subtle bg-surface-subtle p-4">
                         <div className="flex items-center justify-end gap-2">
                           <Button
                             variant="text"
@@ -410,15 +422,22 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                     </>
                   ) : (
                     <>
-                      <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                          table {(editingTableIndex ?? 0) + 1}/
-                          {safeTables.length} • format:{" "}
-                          {"{ real: [...], imag: [...] }"}
-                        </p>
+                      <div className="border-b border-border-subtle bg-surface-subtle p-4">
+                        <Text
+                          asChild
+                          tone="muted"
+                          size="xs"
+                          className="font-mono"
+                        >
+                          <p>
+                            table {(editingTableIndex ?? 0) + 1}/
+                            {safeTables.length} • format:{" "}
+                            {"{ real: [...], imag: [...] }"}
+                          </p>
+                        </Text>
                       </div>
 
-                      <div className="p-4 bg-slate-50 dark:bg-slate-800">
+                      <div className="bg-surface-subtle p-4">
                         <Textarea
                           size="sm"
                           resize="vertical"
@@ -433,13 +452,13 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                         />
 
                         {editorError ? (
-                          <p className="mt-3 text-sm text-red-500 dark:text-red-400">
+                          <Text tone="error" className="mt-3">
                             {editorError}
-                          </p>
+                          </Text>
                         ) : null}
                       </div>
 
-                      <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-b-lg">
+                      <div className="rounded-b-lg border-t border-border-subtle bg-surface-subtle p-4">
                         <div className="flex items-center justify-end gap-2">
                           <Button
                             variant="text"
