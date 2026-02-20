@@ -39,7 +39,7 @@ export default function StepButton({
     intensityTier === "inactive"
       ? "bg-surface-panel text-content-muted"
       : intensityTier === "high"
-        ? "bg-info text-white"
+        ? "bg-info text-info-contrast"
         : intensityTier === "mid"
           ? "bg-info/85 text-content-primary"
           : "bg-info/65 text-content-primary";

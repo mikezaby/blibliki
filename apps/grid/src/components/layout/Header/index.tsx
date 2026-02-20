@@ -6,6 +6,7 @@ import {
   Label,
   Stack,
   Surface,
+  Text,
 } from "@blibliki/ui";
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/clerk-react";
 import { Link } from "@tanstack/react-router";
@@ -55,7 +56,9 @@ export default function Header() {
       className="flex h-12 items-center border-x-0 border-t-0 px-4"
     >
       <Stack direction="row" align="center" gap={2} className="mr-4">
-        <h1 className="text-lg font-bold tracking-tight">Blibliki</h1>
+        <Text asChild size="lg" weight="semibold" className="tracking-tight">
+          <h1>Blibliki</h1>
+        </Text>
       </Stack>
 
       <Stack direction="row" align="center" gap={2}>

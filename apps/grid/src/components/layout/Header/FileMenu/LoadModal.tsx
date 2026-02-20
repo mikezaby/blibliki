@@ -33,12 +33,17 @@ export default function LoadPatchModal() {
           <header className="p-6">
             <Stack direction="row" align="center" gap={3}>
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand to-brand-secondary shadow-sm">
-                <FolderOpen className="h-4 w-4 text-white" />
+                <FolderOpen className="h-4 w-4 text-brand-contrast" />
               </div>
               <div className="flex-1">
-                <h2 className="text-lg font-semibold tracking-tight">
-                  Load Patch
-                </h2>
+                <Text
+                  asChild
+                  size="lg"
+                  weight="semibold"
+                  className="tracking-tight"
+                >
+                  <h2>Load Patch</h2>
+                </Text>
                 <Text tone="muted">Select a patch to load into the grid</Text>
               </div>
             </Stack>
@@ -94,9 +99,9 @@ export default function LoadPatchModal() {
                       <div className="min-w-0 flex-1 text-left">
                         <div className="mb-1 flex items-center gap-2">
                           <div className="h-2 w-2 rounded-full bg-gradient-to-br from-brand to-brand-secondary" />
-                          <h3 className="truncate font-medium">
-                            {name || "Untitled Patch"}
-                          </h3>
+                          <Text asChild weight="medium" className="truncate">
+                            <h3>{name || "Untitled Patch"}</h3>
+                          </Text>
                         </div>
                         <div className="flex items-center gap-4 text-xs">
                           {userId && (

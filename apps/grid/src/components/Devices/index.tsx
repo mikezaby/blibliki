@@ -75,7 +75,9 @@ export default function Devices() {
           className="flex-wrap"
         >
           <Stack gap={1}>
-            <h1 className="mb-2 text-3xl font-bold">Blibliki Pi Devices</h1>
+            <Text asChild weight="semibold" className="mb-2 text-3xl">
+              <h1>Blibliki Pi Devices</h1>
+            </Text>
             <Text tone="muted">
               Manage your Raspberry Pi and Node.js devices
             </Text>
@@ -141,7 +143,9 @@ export default function Devices() {
               <Stack align="center" justify="center" gap={4}>
                 <Cpu className="mb-4 h-16 w-16 text-content-muted" />
                 <Stack align="center" gap={1}>
-                  <h3 className="text-xl font-semibold">No devices yet</h3>
+                  <Text asChild weight="semibold" className="text-xl">
+                    <h3>No devices yet</h3>
+                  </Text>
                   <Text tone="muted" className="max-w-md text-center">
                     Add your first Blibliki Pi device to start running patches
                     on Raspberry Pi or other Node.js environments.

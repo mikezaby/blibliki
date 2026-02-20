@@ -85,12 +85,17 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
         <header className="p-6">
           <Stack direction="row" align="center" gap={3}>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-brand to-brand-secondary shadow-sm">
-              <Cpu className="h-4 w-4 text-white" />
+              <Cpu className="h-4 w-4 text-brand-contrast" />
             </div>
             <div className="flex-1">
-              <h2 className="text-lg font-semibold tracking-tight">
-                {isNew ? "Add Device" : "Edit Device"}
-              </h2>
+              <Text
+                asChild
+                size="lg"
+                weight="semibold"
+                className="tracking-tight"
+              >
+                <h2>{isNew ? "Add Device" : "Edit Device"}</h2>
+              </Text>
               <Text tone="muted">
                 {isNew
                   ? "Configure a new Blibliki Pi device"

@@ -1,4 +1,11 @@
-import { Button, Divider, IconButton, Stack, Surface } from "@blibliki/ui";
+import {
+  Button,
+  Divider,
+  IconButton,
+  Stack,
+  Surface,
+  Text,
+} from "@blibliki/ui";
 import { PanelLeftClose, PanelLeftOpen, Blocks } from "lucide-react";
 import { useState, DragEvent } from "react";
 import { AvailableModules } from "@/components/AudioModule/modulesSlice";
@@ -30,9 +37,11 @@ export default function AudioModules() {
       <aside>
         <Stack direction="row" align="center" gap={2} className="p-4">
           <div className="flex h-5 w-5 items-center justify-center rounded bg-linear-to-br from-brand to-brand-secondary shadow-sm">
-            <Blocks className="w-3 h-3 text-white" />
+            <Blocks className="w-3 h-3 text-brand-contrast" />
           </div>
-          <h2 className="text-sm font-semibold">Audio Modules</h2>
+          <Text asChild size="sm" weight="semibold">
+            <h2>Audio Modules</h2>
+          </Text>
         </Stack>
         <Divider />
 
@@ -75,9 +84,9 @@ export default function AudioModules() {
           </ul>
 
           <div className="px-3 pt-4 pb-2">
-            <p className="text-xs text-content-muted italic">
-              Drag modules to the grid to add them
-            </p>
+            <Text asChild tone="muted" size="xs" className="italic">
+              <p>Drag modules to the grid to add them</p>
+            </Text>
           </div>
         </nav>
       </aside>

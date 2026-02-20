@@ -223,7 +223,9 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
       <Surface tone="subtle" border="subtle" radius="lg" className="p-4">
         <Stack gap={3}>
           <Stack direction="row" align="center" justify="between">
-            <h3 className="text-sm font-semibold">Page Navigation</h3>
+            <Text asChild size="sm" weight="semibold">
+              <h3>Page Navigation</h3>
+            </Text>
             <Text asChild tone="muted" size="xs">
               <span>
                 {activePage + 1} / {pages.length}
@@ -270,7 +272,9 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
         className="bg-gradient-to-br from-surface-subtle to-surface-panel p-4"
       >
         <Stack gap={3}>
-          <h3 className="text-sm font-semibold">Page Settings</h3>
+          <Text asChild size="sm" weight="semibold">
+            <h3>Page Settings</h3>
+          </Text>
 
           <Stack direction="row" align="center" gap={4} className="flex-wrap">
             <Stack direction="row" align="center" gap={2} className="flex-1">
@@ -301,7 +305,9 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
       {/* View Mode Toggle */}
       <Surface tone="subtle" border="subtle" radius="lg" className="p-4">
         <Stack gap={3}>
-          <h3 className="text-sm font-semibold">Mapping Scope</h3>
+          <Text asChild size="sm" weight="semibold">
+            <h3>Mapping Scope</h3>
+          </Text>
 
           <Stack direction="row" gap={2}>
             <Button
@@ -341,9 +347,9 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
           justify="between"
           className="px-1"
         >
-          <h3 className="text-sm font-semibold">
-            {viewMode === "global" ? "Global " : "Page "}MIDI Mappings
-          </h3>
+          <Text asChild size="sm" weight="semibold">
+            <h3>{viewMode === "global" ? "Global " : "Page "}MIDI Mappings</h3>
+          </Text>
           <Text asChild tone="muted" size="xs">
             <span>
               {mappings.length} {mappings.length === 1 ? "mapping" : "mappings"}

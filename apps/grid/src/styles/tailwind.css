@@ -34,9 +34,13 @@
   --color-brand-secondary-contrast: var(--ui-color-secondary-contrast);
 
   --color-success: var(--ui-color-success-500);
+  --color-success-contrast: var(--ui-color-success-contrast);
   --color-warning: var(--ui-color-warning-500);
+  --color-warning-contrast: var(--ui-color-warning-contrast);
   --color-error: var(--ui-color-error-500);
+  --color-error-contrast: var(--ui-color-error-contrast);
   --color-info: var(--ui-color-info-500);
+  --color-info-contrast: var(--ui-color-info-contrast);
 
   /* shadcn compatibility tokens used by existing components. */
   --color-background: var(--background);

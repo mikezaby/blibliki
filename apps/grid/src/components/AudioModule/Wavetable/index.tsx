@@ -277,9 +277,14 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
         >
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold tracking-tight">
-                Wavetable Bank
-              </p>
+              <Text
+                asChild
+                size="xs"
+                weight="semibold"
+                className="tracking-tight"
+              >
+                <p>Wavetable Bank</p>
+              </Text>
               <Text asChild tone="muted" size="xs">
                 <p>
                   {safeTables.length} tables • {playbackLabel}
@@ -509,7 +514,9 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
             radius="md"
             className="space-y-2 p-3"
           >
-            <p className="text-xs font-semibold">Preset</p>
+            <Text asChild size="xs" weight="semibold">
+              <p>Preset</p>
+            </Text>
             <Select value={selectedPresetId} onValueChange={applyPreset}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Choose preset" />
