@@ -4,8 +4,6 @@ import { useState, DragEvent } from "react";
 import { AvailableModules } from "@/components/AudioModule/modulesSlice";
 import useDrag from "@/components/Grid/useDrag";
 
-const SIDEBAR_WIDTH_PX = 189;
-
 const SupportedModules = Object.values(AvailableModules)
   .map(({ moduleType }) => moduleType)
   .sort();
@@ -17,7 +15,6 @@ export default function AudioModules() {
   const onClick = () => {
     setVisible(!visible);
   };
-  const left = visible ? "0px" : `-${SIDEBAR_WIDTH_PX}px`;
 
   return (
     <Surface
@@ -26,8 +23,9 @@ export default function AudioModules() {
       radius="none"
       shadow="xl"
       asChild
-      className="absolute top-12 z-10 h-[calc(100vh-3rem)] w-47.25 border-r border-b transition-all duration-300 ease-in-out"
-      style={{ left }}
+      className={`absolute top-12 left-0 z-10 h-[calc(100vh-3rem)] w-47.25 border-r border-b transition-transform duration-300 ease-in-out ${
+        visible ? "translate-x-0" : "-translate-x-[189px]"
+      }`}
     >
       <aside>
         <Stack direction="row" align="center" gap={2} className="p-4">

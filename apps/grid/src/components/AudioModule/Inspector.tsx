@@ -67,8 +67,7 @@ const Inspector: ModuleComponent<ModuleType.Inspector> = (props) => {
           ref={canvasRef}
           width={CANVAS_WIDTH}
           height={CANVAS_HEIGHT}
-          className="rounded"
-          style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT }}
+          className="h-[160px] w-[360px] rounded"
         />
       </Surface>
     </Stack>
