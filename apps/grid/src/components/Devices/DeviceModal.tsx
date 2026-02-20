@@ -1,10 +1,9 @@
 import { IDevice } from "@blibliki/models";
-import { Button, Divider, Stack, Surface } from "@blibliki/ui";
+import { Button, Divider, OptionSelect, Stack, Surface } from "@blibliki/ui";
 import { useUser } from "@clerk/clerk-react";
 import { Cpu, Save } from "lucide-react";
 import { useState } from "react";
 import Modal, { close as closeModal } from "@/components/Modal";
-import Select from "@/components/Select";
 import { Input, Label } from "@/components/ui";
 import { saveDevice } from "@/devicesSlice";
 import { useAppDispatch, useAppSelector, usePatches } from "@/hooks";
@@ -133,7 +132,7 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
 
         <Stack gap={2}>
           <Label htmlFor="patchId">Assigned Patch</Label>
-          <Select
+          <OptionSelect
             label="Select patch"
             value={formData.patchId}
             options={patches}

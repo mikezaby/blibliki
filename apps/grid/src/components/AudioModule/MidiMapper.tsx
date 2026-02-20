@@ -4,10 +4,9 @@ import {
   ModuleType,
   moduleSchemas,
 } from "@blibliki/engine";
-import { Button } from "@blibliki/ui";
+import { Button, OptionSelect } from "@blibliki/ui";
 import { ChevronDown, ChevronUp, SquarePlus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import Select from "@/components/Select";
 import { useAppSelector, useAppDispatch } from "@/hooks";
 import { ModuleComponent } from ".";
 import { Input, Label } from "../ui";
@@ -367,7 +366,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                   </div>
 
                   <div className="flex items-center gap-2 flex-1">
-                    <Select
+                    <OptionSelect
                       label="Select module"
                       value={mapping.moduleId ?? ""}
                       options={modules}
@@ -378,7 +377,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                   </div>
 
                   <div className="flex items-center gap-2 flex-1">
-                    <Select
+                    <OptionSelect
                       label="Select prop"
                       value={mapping.propName ?? ""}
                       options={
@@ -425,7 +424,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                       <Label className="text-xs font-medium text-slate-600 dark:text-slate-400 min-w-[80px]">
                         Mode
                       </Label>
-                      <Select
+                      <OptionSelect
                         label="Select mode"
                         value={mode}
                         options={[

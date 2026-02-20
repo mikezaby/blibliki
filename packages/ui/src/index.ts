@@ -13,6 +13,7 @@ export {
 export { IconButton, type IconButtonProps } from "./components/icon-button";
 export { Switch, type SwitchProps } from "./components/switch";
 export {
+  OptionSelect,
   Select,
   SelectContent,
   SelectGroup,
@@ -23,6 +24,7 @@ export {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
+  type OptionSelectProps,
 } from "./components/select";
 export {
   Fader,

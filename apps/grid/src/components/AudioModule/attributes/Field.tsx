@@ -5,10 +5,9 @@ import {
   PropSchema,
   StringProp,
 } from "@blibliki/engine";
-import { Switch } from "@blibliki/ui";
+import { OptionSelect, Switch } from "@blibliki/ui";
 import { Label } from "@radix-ui/react-label";
 import { ChangeEvent } from "react";
-import Select from "@/components/Select";
 import { Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
@@ -94,12 +93,12 @@ export const SelectField = <T extends string | number>({
           {label}
         </Label>
       </div>
-      <Select
+      <OptionSelect
         label={""}
         value={value!}
         options={schema.options}
         onChange={onChange}
-        className="text-sm"
+        contentClassName="text-sm"
       />
     </div>
   );

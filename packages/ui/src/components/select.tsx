@@ -1,5 +1,6 @@
 import * as SelectPrimitive from "@radix-ui/react-select";
 import type { ComponentProps } from "react";
+import { useMemo } from "react";
 import { cn } from "@/lib/cn";
 
 function SelectChevronDownIcon(props: ComponentProps<"svg">) {
@@ -182,7 +183,120 @@ function SelectScrollDownButton({
   );
 }
 
+type OptionSelectValue = string | number;
+type OptionSelectValueOption = { name: string; value: OptionSelectValue };
+type OptionSelectIdOption = { id: string; name: string };
+type OptionSelectInput =
+  | readonly string[]
+  | readonly number[]
+  | readonly OptionSelectValueOption[]
+  | readonly OptionSelectIdOption[];
+
+export interface OptionSelectProps<T extends OptionSelectValue | undefined> {
+  value: T;
+  options: OptionSelectInput;
+  label?: string;
+  contentClassName?: string;
+  triggerClassName?: string;
+  disabled?: boolean;
+  onChange: (value: T) => void;
+}
+
+function isValueOption(value: unknown): value is OptionSelectValueOption {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "name" in value &&
+      "value" in value &&
+      (typeof (value as { value: unknown }).value === "string" ||
+        typeof (value as { value: unknown }).value === "number"),
+  );
+}
+
+function isIdOption(value: unknown): value is OptionSelectIdOption {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "id" in value &&
+      "name" in value &&
+      typeof (value as { id: unknown }).id === "string",
+  );
+}
+
+function OptionSelect<T extends OptionSelectValue | undefined>({
+  value,
+  options,
+  label,
+  contentClassName,
+  triggerClassName = "w-[180px]",
+  disabled = false,
+  onChange,
+}: OptionSelectProps<T>) {
+  const normalizedOptions = useMemo(() => {
+    if (!options.length) return [];
+
+    const first = options[0];
+    if (typeof first === "string" || typeof first === "number") {
+      return (options as readonly OptionSelectValue[]).map((option) => ({
+        name: option.toString(),
+        value: option,
+      }));
+    }
+
+    if (isValueOption(first)) {
+      return Array.from(options as readonly OptionSelectValueOption[]);
+    }
+
+    if (isIdOption(first)) {
+      return (options as readonly OptionSelectIdOption[]).map((option) => ({
+        name: option.name,
+        value: option.id,
+      }));
+    }
+
+    return [];
+  }, [options]);
+
+  const valueKind = useMemo<"number" | "string">(() => {
+    if (!normalizedOptions.length) {
+      return typeof value === "number" ? "number" : "string";
+    }
+    return typeof normalizedOptions[0]?.value === "number" ? "number" : "string";
+  }, [normalizedOptions, value]);
+
+  const onValueChange = (newValue: string) => {
+    if (valueKind === "number") {
+      onChange(Number(newValue) as T);
+      return;
+    }
+    onChange(newValue as T);
+  };
+
+  return (
+    <Select
+      value={value?.toString()}
+      onValueChange={onValueChange}
+      disabled={disabled}
+    >
+      <SelectTrigger className={triggerClassName}>
+        <SelectValue placeholder={label} />
+      </SelectTrigger>
+      <SelectContent className={contentClassName}>
+        <SelectGroup>
+          <SelectLabel>Select...</SelectLabel>
+          {normalizedOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value.toString()}>
+              {option.name} ({option.value})
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  );
+}
+
 export {
+  OptionSelect,
   Select,
   SelectContent,
   SelectGroup,
