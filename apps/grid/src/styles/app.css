@@ -3,6 +3,33 @@
   height: calc(100vh - 48px);
 }
 
+.grid-controls.react-flow__controls {
+  border: 1px solid var(--ui-color-border-subtle);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-color-surface-raised);
+  box-shadow:
+    0 1px 2px 0 rgb(0 0 0 / 0.08),
+    0 4px 14px 0 rgb(0 0 0 / 0.12);
+}
+
+.grid-controls.react-flow__controls button {
+  color: var(--ui-color-text-primary);
+  background: transparent;
+  border-bottom-color: var(--ui-color-border-subtle);
+}
+
+.grid-controls.react-flow__controls button:last-child {
+  border-bottom: none;
+}
+
+.grid-controls.react-flow__controls button:hover {
+  background: color-mix(
+    in oklab,
+    var(--ui-color-surface-raised-hover),
+    transparent 20%
+  );
+}
+
 g path.react-flow__edge-path {
   stroke-width: 4;
 }
