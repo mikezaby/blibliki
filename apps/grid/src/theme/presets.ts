@@ -17,12 +17,12 @@ const radius = {
 
 const nordTheme = createTheme({
   light: {
-    surface0: "var(--color-sky-50)",
-    surface1: "var(--color-white)",
+    surface0: "var(--color-sky-100)",
+    surface1: "var(--color-sky-50)",
     surfaceRaised: "var(--color-white)",
     surfaceRaisedHover: "var(--color-sky-100)",
-    surface2: "var(--color-sky-100)",
-    borderSubtle: "var(--color-sky-200)",
+    surface2: "var(--color-sky-200)",
+    borderSubtle: "var(--color-sky-300)",
     textPrimary: "var(--color-slate-900)",
     textSecondary: "var(--color-slate-700)",
     textMuted: "var(--color-slate-500)",
@@ -91,10 +91,10 @@ const nordTheme = createTheme({
 
 const solarizedTheme = createTheme({
   light: {
-    surface0: "var(--color-amber-50)",
-    surface1: "var(--color-amber-100)",
+    surface0: "var(--color-amber-100)",
+    surface1: "var(--color-amber-50)",
     surfaceRaised: "var(--color-white)",
-    surfaceRaisedHover: "var(--color-amber-50)",
+    surfaceRaisedHover: "var(--color-amber-100)",
     surface2: "var(--color-amber-200)",
     borderSubtle: "var(--color-amber-300)",
     textPrimary: "var(--color-stone-900)",
@@ -239,18 +239,18 @@ const oneTheme = createTheme({
 
 const monoTheme = createTheme({
   light: {
-    surface0: "var(--color-zinc-50)",
-    surface1: "var(--color-white)",
-    surfaceRaised: "var(--color-zinc-100)",
-    surfaceRaisedHover: "var(--color-zinc-200)",
-    surface2: "var(--color-zinc-300)",
-    borderSubtle: "var(--color-zinc-400)",
+    surface0: "var(--color-zinc-100)",
+    surface1: "var(--color-zinc-50)",
+    surfaceRaised: "var(--color-white)",
+    surfaceRaisedHover: "var(--color-zinc-100)",
+    surface2: "var(--color-zinc-200)",
+    borderSubtle: "var(--color-zinc-300)",
     textPrimary: "var(--color-black)",
-    textSecondary: "var(--color-zinc-900)",
-    textMuted: "var(--color-zinc-700)",
+    textSecondary: "var(--color-zinc-800)",
+    textMuted: "var(--color-zinc-600)",
 
-    primary500: "var(--color-zinc-950)",
-    primary600: "var(--color-zinc-900)",
+    primary500: "var(--color-zinc-900)",
+    primary600: "var(--color-zinc-950)",
     primaryContrast: "var(--color-white)",
 
     secondary500: "var(--color-zinc-500)",
@@ -258,54 +258,54 @@ const monoTheme = createTheme({
     secondaryContrast: "var(--color-white)",
 
     error500: "var(--color-zinc-700)",
-    error600: "var(--color-zinc-600)",
+    error600: "var(--color-zinc-800)",
     errorContrast: "var(--color-white)",
 
-    warning500: "var(--color-zinc-600)",
+    warning500: "var(--color-zinc-400)",
     warning600: "var(--color-zinc-500)",
     warningContrast: "var(--color-white)",
 
-    info500: "var(--color-zinc-500)",
-    info600: "var(--color-zinc-800)",
+    info500: "var(--color-zinc-600)",
+    info600: "var(--color-zinc-700)",
     infoContrast: "var(--color-white)",
 
-    success500: "var(--color-zinc-300)",
-    success600: "var(--color-zinc-200)",
-    successContrast: "var(--color-zinc-950)",
+    success500: "var(--color-zinc-700)",
+    success600: "var(--color-zinc-800)",
+    successContrast: "var(--color-white)",
   },
   dark: {
     surface0: "var(--color-black)",
-    surface1: "var(--color-zinc-950)",
-    surfaceRaised: "var(--color-zinc-900)",
-    surfaceRaisedHover: "var(--color-zinc-800)",
+    surface1: "var(--color-zinc-900)",
+    surfaceRaised: "var(--color-zinc-800)",
+    surfaceRaisedHover: "var(--color-zinc-700)",
     surface2: "var(--color-zinc-700)",
     borderSubtle: "var(--color-zinc-600)",
     textPrimary: "var(--color-white)",
     textSecondary: "var(--color-zinc-200)",
     textMuted: "var(--color-zinc-300)",
 
-    primary500: "var(--color-zinc-100)",
-    primary600: "var(--color-zinc-50)",
+    primary500: "var(--color-zinc-50)",
+    primary600: "var(--color-zinc-100)",
     primaryContrast: "var(--color-black)",
 
-    secondary500: "var(--color-zinc-500)",
-    secondary600: "var(--color-zinc-400)",
+    secondary500: "var(--color-zinc-400)",
+    secondary600: "var(--color-zinc-500)",
     secondaryContrast: "var(--color-zinc-950)",
 
     error500: "var(--color-zinc-500)",
-    error600: "var(--color-zinc-400)",
+    error600: "var(--color-zinc-600)",
     errorContrast: "var(--color-black)",
 
     warning500: "var(--color-zinc-600)",
-    warning600: "var(--color-zinc-500)",
+    warning600: "var(--color-zinc-700)",
     warningContrast: "var(--color-black)",
 
-    info500: "var(--color-zinc-500)",
+    info500: "var(--color-zinc-300)",
     info600: "var(--color-zinc-400)",
     infoContrast: "var(--color-black)",
 
-    success500: "var(--color-zinc-200)",
-    success600: "var(--color-zinc-50)",
+    success500: "var(--color-zinc-300)",
+    success600: "var(--color-zinc-400)",
     successContrast: "var(--color-black)",
   },
   radius,

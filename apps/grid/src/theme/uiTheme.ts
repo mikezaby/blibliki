@@ -9,7 +9,7 @@ export const gridUITheme = createTheme({
     surface2: "var(--color-slate-200)",
     borderSubtle: "var(--color-slate-300)",
     textPrimary: "var(--color-slate-900)",
-    textSecondary: "var(--color-slate-600)",
+    textSecondary: "var(--color-slate-700)",
     textMuted: "var(--color-slate-500)",
 
     primary500: "var(--color-blue-500)",
