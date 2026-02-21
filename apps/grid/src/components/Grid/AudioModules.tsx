@@ -15,6 +15,11 @@ const SupportedModules = Object.values(AvailableModules)
   .map(({ moduleType }) => moduleType)
   .sort();
 
+const PANEL_BASE_CLASS =
+  "absolute top-12 left-0 z-10 flex h-[calc(100vh-3rem)] w-47.25 flex-col border-r border-b transition-transform duration-300 ease-in-out";
+const PANEL_VISIBLE_CLASS = "translate-x-0";
+const PANEL_HIDDEN_CLASS = "-translate-x-[189px]";
+
 export default function AudioModules() {
   const [visible, setVisible] = useState<boolean>(true);
   const { onDragStart } = useDrag();
@@ -30,8 +35,8 @@ export default function AudioModules() {
       radius="none"
       shadow="xl"
       asChild
-      className={`absolute top-12 left-0 z-10 flex h-[calc(100vh-3rem)] w-47.25 flex-col border-r border-b transition-transform duration-300 ease-in-out ${
-        visible ? "translate-x-0" : "-translate-x-[189px]"
+      className={`${PANEL_BASE_CLASS} ${
+        visible ? PANEL_VISIBLE_CLASS : PANEL_HIDDEN_CLASS
       }`}
     >
       <aside>

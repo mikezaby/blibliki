@@ -13,6 +13,7 @@
     "format": "pnpm -r --parallel run format",
     "format:check": "pnpm -r --parallel --no-bail run format:check",
     "test": "pnpm -r --parallel --if-present run test",
+    "storybook:check": "pnpm -C apps/storybook lint && pnpm -C apps/storybook build-storybook",
     "bump": "pnpm -r --parallel --if-present run bump",
     "release": "pnpm -r --parallel --if-present run release"
   },
