@@ -1,4 +1,5 @@
 import { ModuleType } from "@blibliki/engine";
+import { Stack } from "@blibliki/ui";
 import { useState } from "react";
 import { ModuleComponent } from "..";
 import Octave from "./Octave";
@@ -16,8 +17,9 @@ const Keyboard: ModuleComponent<ModuleType.VirtualMidi> = (props) => {
   };
 
   return (
-    <div
-      className="flex"
+    <Stack
+      direction="row"
+      gap={0}
       onPointerDown={enableTriggering}
       onPointerUp={disableTriggering}
       onPointerLeave={disableTriggering}
@@ -40,7 +42,7 @@ const Keyboard: ModuleComponent<ModuleType.VirtualMidi> = (props) => {
         triggerable={triggerable}
         octave={4}
       />
-    </div>
+    </Stack>
   );
 };
 

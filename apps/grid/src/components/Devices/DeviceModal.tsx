@@ -1,10 +1,18 @@
 import { IDevice } from "@blibliki/models";
+import {
+  Button,
+  Divider,
+  Input,
+  Label,
+  OptionSelect,
+  Stack,
+  Surface,
+  Text,
+} from "@blibliki/ui";
 import { useUser } from "@clerk/clerk-react";
 import { Cpu, Save } from "lucide-react";
 import { useState } from "react";
 import Modal, { close as closeModal } from "@/components/Modal";
-import Select from "@/components/Select";
-import { Button, Input, Label } from "@/components/ui";
 import { saveDevice } from "@/devicesSlice";
 import { useAppDispatch, useAppSelector, usePatches } from "@/hooks";
 
@@ -67,107 +75,115 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
   };
 
   return (
-    <>
-      {/* Header */}
-      <div className="flex items-center gap-3 p-6 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-t-lg">
-        <div className="w-8 h-8 bg-linear-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
-          <Cpu className="w-4 h-4 text-white" />
-        </div>
-        <div className="flex-1">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white tracking-tight">
-            {isNew ? "Add Device" : "Edit Device"}
-          </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            {isNew
-              ? "Configure a new Blibliki Pi device"
-              : "Update device settings"}
-          </p>
-        </div>
-      </div>
+    <Surface
+      tone="raised"
+      border="subtle"
+      radius="lg"
+      className="overflow-hidden"
+    >
+      <Surface tone="panel" radius="none" asChild>
+        <header className="p-6">
+          <Stack direction="row" align="center" gap={3}>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-brand to-brand-secondary shadow-sm">
+              <Cpu className="h-4 w-4 text-brand-contrast" />
+            </div>
+            <div className="flex-1">
+              <Text
+                asChild
+                size="lg"
+                weight="semibold"
+                className="tracking-tight"
+              >
+                <h2>{isNew ? "Add Device" : "Edit Device"}</h2>
+              </Text>
+              <Text tone="muted">
+                {isNew
+                  ? "Configure a new Blibliki Pi device"
+                  : "Update device settings"}
+              </Text>
+            </div>
+          </Stack>
+        </header>
+      </Surface>
 
-      {/* Form */}
-      <div className="p-6 space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="token" className="text-slate-700 dark:text-slate-300">
-            Token *
-          </Label>
+      <Divider />
+
+      <Stack gap={4} className="p-6">
+        <Stack gap={2}>
+          <Label htmlFor="token">Token *</Label>
           <Input
             id="token"
             placeholder="Enter the token from your Raspberry Pi"
             value={formData.token}
+            aria-invalid={Boolean(errors.token)}
             onChange={(e) => {
               setFormData({ ...formData, token: e.target.value });
             }}
-            className={`font-mono bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 ${
-              errors.token ? "border-red-500" : ""
-            }`}
+            className="font-mono"
           />
-          {errors.token && (
-            <p className="text-sm text-red-500">{errors.token}</p>
-          )}
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          {errors.token && <Text tone="error">{errors.token}</Text>}
+          <Text tone="muted" size="xs">
             Copy this from the blibliki-pi output on your device
-          </p>
-        </div>
+          </Text>
+        </Stack>
 
-        <div className="space-y-2">
-          <Label htmlFor="name" className="text-slate-700 dark:text-slate-300">
-            Device Name *
-          </Label>
+        <Stack gap={2}>
+          <Label htmlFor="name">Device Name *</Label>
           <Input
             id="name"
             placeholder="e.g., Experimental Synth"
             value={formData.name}
+            aria-invalid={Boolean(errors.name)}
             onChange={(e) => {
               setFormData({ ...formData, name: e.target.value });
             }}
-            className={`bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 ${
-              errors.name ? "border-red-500" : ""
-            }`}
           />
-          {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
-        </div>
+          {errors.name && <Text tone="error">{errors.name}</Text>}
+        </Stack>
 
-        <div className="space-y-2">
-          <Label
-            htmlFor="patchId"
-            className="text-slate-700 dark:text-slate-300"
-          >
-            Assigned Patch
-          </Label>
-          <Select
+        <Stack gap={2}>
+          <Label htmlFor="patchId">Assigned Patch</Label>
+          <OptionSelect
             label="Select patch"
             value={formData.patchId}
             options={patches}
-            onChange={(value) => {
+            onChange={(value: string) => {
               setFormData({ ...formData, patchId: value });
             }}
           />
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <Text tone="muted" size="xs">
             This patch will be auto-loaded when the device starts
-          </p>
-        </div>
-      </div>
+          </Text>
+        </Stack>
+      </Stack>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-b-lg">
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => {
-              void handleSave();
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Save className="w-4 h-4 mr-1" />
-            {isNew ? "Add Device" : "Save Changes"}
-          </Button>
-        </div>
-      </div>
-    </>
+      <Divider />
+
+      <Surface tone="panel" radius="none" asChild>
+        <footer className="p-4">
+          <Stack direction="row" justify="end" gap={2}>
+            <Button
+              variant="text"
+              color="secondary"
+              size="sm"
+              onClick={onClose}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              color="info"
+              onClick={() => {
+                void handleSave();
+              }}
+            >
+              <Save className="mr-1 h-4 w-4" />
+              {isNew ? "Add Device" : "Save Changes"}
+            </Button>
+          </Stack>
+        </footer>
+      </Surface>
+    </Surface>
   );
 }
 
@@ -192,7 +208,7 @@ export default function DeviceModal({ deviceId }: DeviceModalProps) {
   return (
     <Modal
       modalName={modalName}
-      className="sm:max-w-lg max-w-[calc(100vw-2rem)] p-0 gap-0 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+      className="sm:max-w-lg max-w-[calc(100vw-2rem)] p-0 gap-0 border-0 bg-transparent shadow-none"
       onClose={close}
     >
       {isThisModalOpen && (

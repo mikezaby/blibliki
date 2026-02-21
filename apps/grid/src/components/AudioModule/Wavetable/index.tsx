@@ -7,10 +7,6 @@ import {
   extractEmbeddedWavetableTablesFromWavBytes,
   extractWavetableTablesFromAudioBuffer,
 } from "@blibliki/engine";
-import { AudioContext } from "@blibliki/utils/web-audio-api";
-import { Download, Edit2, Plus, Trash2, Upload, Waves } from "lucide-react";
-import { ChangeEvent, useMemo, useRef, useState } from "react";
-import Fader, { MarkProps } from "@/components/Fader";
 import {
   Button,
   Dialog,
@@ -18,14 +14,22 @@ import {
   DialogDescription,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui";
-import {
+  Fader,
+  Input,
+  Stack,
+  Surface,
+  Textarea,
+  Text,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@blibliki/ui";
+import type { MarkProps } from "@blibliki/ui";
+import { AudioContext } from "@blibliki/utils/web-audio-api";
+import { Download, Edit2, Plus, Trash2, Upload, Waves } from "lucide-react";
+import { ChangeEvent, useMemo, useRef, useState } from "react";
 import { ModuleComponent } from "..";
 import Container from "../Container";
 import {
@@ -263,24 +267,39 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
   };
 
   return (
-    <div className="flex flex-col gap-y-8">
-      <Container className="flex-col items-stretch gap-y-3">
-        <div className="space-y-3 p-3 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700">
+    <Stack gap={6}>
+      <Container direction="column" className="items-stretch gap-y-3">
+        <Surface
+          tone="subtle"
+          border="subtle"
+          radius="lg"
+          className="space-y-3 p-3"
+        >
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-tight">
-                Wavetable Bank
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {safeTables.length} tables • {playbackLabel}
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Base {position.toFixed(3)} • Actual {actualPosition.toFixed(3)}
-              </p>
+              <Text
+                asChild
+                size="xs"
+                weight="semibold"
+                className="tracking-tight"
+              >
+                <p>Wavetable Bank</p>
+              </Text>
+              <Text asChild tone="muted" size="xs">
+                <p>
+                  {safeTables.length} tables • {playbackLabel}
+                </p>
+              </Text>
+              <Text asChild tone="muted" size="xs">
+                <p>
+                  Base {position.toFixed(3)} • Actual{" "}
+                  {actualPosition.toFixed(3)}
+                </p>
+              </Text>
             </div>
 
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 ref={wavFileInputRef}
                 type="file"
                 accept=".wav,audio/wav,audio/wave,audio/x-wav"
@@ -291,23 +310,23 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
               />
               <Dialog open={isModalOpen} onOpenChange={handleOpenChange}>
                 <DialogTrigger asChild>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="outlined">
                     Edit Wavetable Config
                   </Button>
                 </DialogTrigger>
 
-                <DialogContent className="sm:max-w-xl max-w-[calc(100vw-2rem)] p-0 gap-0 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-                  <div className="flex items-center gap-3 p-6 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-t-lg">
-                    <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg flex items-center justify-center shadow-sm">
-                      <Waves className="w-4 h-4 text-white" />
+                <DialogContent className="sm:max-w-xl max-w-[calc(100vw-2rem)] p-0 gap-0">
+                  <div className="flex items-center gap-3 rounded-t-lg border-b border-border-subtle bg-surface-subtle p-6">
+                    <div className="w-8 h-8 bg-gradient-to-br from-brand to-brand-secondary rounded-lg flex items-center justify-center shadow-sm">
+                      <Waves className="w-4 h-4 text-brand-contrast" />
                     </div>
                     <div className="flex-1">
-                      <DialogTitle className="text-lg font-semibold text-slate-900 dark:text-white tracking-tight">
+                      <DialogTitle className="text-lg font-semibold tracking-tight">
                         {modalView === "list"
                           ? "Wavetable Tables"
                           : "Edit Wavetable Table"}
                       </DialogTitle>
-                      <DialogDescription className="text-sm text-slate-500 dark:text-slate-400">
+                      <DialogDescription className="text-sm text-content-muted">
                         {modalView === "list"
                           ? "Add, edit, or delete tables in the wavetable bank."
                           : "Edit a single table using real/imag coefficient arrays."}
@@ -317,14 +336,19 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
 
                   {modalView === "list" ? (
                     <>
-                      <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                      <div className="border-b border-border-subtle bg-surface-subtle p-4">
                         <div className="flex items-center justify-between">
-                          <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                            tables[{safeTables.length}]
-                          </p>
+                          <Text
+                            asChild
+                            tone="muted"
+                            size="xs"
+                            className="font-mono"
+                          >
+                            <p>tables[{safeTables.length}]</p>
+                          </Text>
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="outlined"
                             className="gap-1"
                             onClick={addTable}
                           >
@@ -334,26 +358,34 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                         </div>
                       </div>
 
-                      <div className="p-3 bg-slate-50 dark:bg-slate-800 max-h-[24rem] overflow-y-auto space-y-2">
+                      <div className="max-h-[24rem] space-y-2 overflow-y-auto bg-surface-subtle p-3">
                         {safeTables.map((table, index) => (
                           <div
                             key={`wavetable-table-${index}`}
-                            className="flex items-center justify-between rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
+                            className="flex items-center justify-between rounded-md border border-border-subtle bg-surface-raised px-3 py-2"
                           >
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                                Table {index + 1}
-                              </p>
-                              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono truncate">
-                                real[{table.real.length}] • imag[
-                                {table.imag.length}]
-                              </p>
+                              <Text asChild size="sm" weight="medium">
+                                <p>Table {index + 1}</p>
+                              </Text>
+                              <Text
+                                asChild
+                                tone="muted"
+                                size="xs"
+                                className="font-mono"
+                              >
+                                <p className="truncate">
+                                  real[{table.real.length}] • imag[
+                                  {table.imag.length}]
+                                </p>
+                              </Text>
                             </div>
                             <div className="flex items-center gap-1">
                               <Button
                                 type="button"
                                 size="icon"
-                                variant="ghost"
+                                variant="text"
+                                color="secondary"
                                 className="h-8 w-8"
                                 onClick={() => {
                                   openEditTable(index);
@@ -364,8 +396,9 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                               <Button
                                 type="button"
                                 size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 text-red-500 hover:text-red-600"
+                                variant="text"
+                                color="error"
+                                className="h-8 w-8"
                                 onClick={() => {
                                   removeTable(index);
                                 }}
@@ -378,10 +411,11 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                         ))}
                       </div>
 
-                      <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-b-lg">
+                      <div className="rounded-b-lg border-t border-border-subtle bg-surface-subtle p-4">
                         <div className="flex items-center justify-end gap-2">
                           <Button
-                            variant="ghost"
+                            variant="text"
+                            color="secondary"
                             onClick={() => {
                               setIsModalOpen(false);
                             }}
@@ -393,36 +427,49 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                     </>
                   ) : (
                     <>
-                      <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                          table {(editingTableIndex ?? 0) + 1}/
-                          {safeTables.length} • format:{" "}
-                          {"{ real: [...], imag: [...] }"}
-                        </p>
+                      <div className="border-b border-border-subtle bg-surface-subtle p-4">
+                        <Text
+                          asChild
+                          tone="muted"
+                          size="xs"
+                          className="font-mono"
+                        >
+                          <p>
+                            table {(editingTableIndex ?? 0) + 1}/
+                            {safeTables.length} • format:{" "}
+                            {"{ real: [...], imag: [...] }"}
+                          </p>
+                        </Text>
                       </div>
 
-                      <div className="p-4 bg-slate-50 dark:bg-slate-800">
-                        <textarea
+                      <div className="bg-surface-subtle p-4">
+                        <Textarea
+                          size="sm"
+                          resize="vertical"
                           rows={20}
                           value={editorValue}
                           onChange={(event) => {
                             setEditorValue(event.target.value);
                             if (editorError) setEditorError(null);
                           }}
-                          className="w-full min-h-[20rem] resize-y rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-3 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+                          className="w-full min-h-[20rem] p-3 font-mono text-xs"
                           spellCheck={false}
                         />
 
                         {editorError ? (
-                          <p className="mt-3 text-sm text-red-500 dark:text-red-400">
+                          <Text tone="error" className="mt-3">
                             {editorError}
-                          </p>
+                          </Text>
                         ) : null}
                       </div>
 
-                      <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-b-lg">
+                      <div className="rounded-b-lg border-t border-border-subtle bg-surface-subtle p-4">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" onClick={backToList}>
+                          <Button
+                            variant="text"
+                            color="secondary"
+                            onClick={backToList}
+                          >
                             Back
                           </Button>
                           <Button onClick={applyEditedTable}>Save</Button>
@@ -434,7 +481,7 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
               </Dialog>
               <Button
                 size="sm"
-                variant="outline"
+                variant="outlined"
                 className="gap-1"
                 onClick={triggerImportWav}
                 disabled={isImportingWav}
@@ -444,7 +491,7 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
               </Button>
               <Button
                 size="sm"
-                variant="outline"
+                variant="outlined"
                 className="gap-1"
                 onClick={exportWav}
                 disabled={isExportingWav}
@@ -456,15 +503,22 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
           </div>
 
           {wavError ? (
-            <p className="text-xs text-red-600 dark:text-red-400">{wavError}</p>
+            <Text tone="error" size="xs">
+              {wavError}
+            </Text>
           ) : null}
 
-          <div className="space-y-2 p-3 rounded-md border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/50">
-            <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Preset
-            </p>
+          <Surface
+            tone="panel"
+            border="subtle"
+            radius="md"
+            className="space-y-2 p-3"
+          >
+            <Text asChild size="xs" weight="semibold">
+              <p>Preset</p>
+            </Text>
             <Select value={selectedPresetId} onValueChange={applyPreset}>
-              <SelectTrigger className="w-full bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Choose preset" />
               </SelectTrigger>
               <SelectContent>
@@ -476,11 +530,16 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Surface>
 
-          <div className="space-y-2">
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="flex-1 h-44 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900/60 p-2 overflow-hidden">
+          <Stack gap={2}>
+            <Stack direction="row" gap={2} className="flex-col sm:flex-row">
+              <Surface
+                tone="panel"
+                border="subtle"
+                radius="md"
+                className="h-44 flex-1 overflow-hidden p-2"
+              >
                 <svg
                   className="h-full w-full"
                   viewBox={`0 0 ${PREVIEW_WIDTH} ${PREVIEW_HEIGHT}`}
@@ -531,9 +590,14 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                     );
                   })}
                 </svg>
-              </div>
+              </Surface>
 
-              <div className="shrink-0 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900/60 px-1 sm:px-0 sm:w-[90px] flex items-center justify-center">
+              <Surface
+                tone="panel"
+                border="subtle"
+                radius="md"
+                className="flex shrink-0 items-center justify-center px-1 sm:w-[90px] sm:px-0"
+              >
                 <Fader
                   name="Position"
                   marks={POSITION_MARKS}
@@ -544,10 +608,10 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                   onChange={updateProp("position")}
                   value={position}
                 />
-              </div>
-            </div>
-          </div>
-        </div>
+              </Surface>
+            </Stack>
+          </Stack>
+        </Surface>
       </Container>
 
       <Container>
@@ -582,7 +646,7 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
           value={fine}
         />
       </Container>
-    </div>
+    </Stack>
   );
 };
 

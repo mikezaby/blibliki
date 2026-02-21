@@ -1,3 +1,4 @@
+import { Surface } from "@blibliki/ui";
 import {
   ReactFlow,
   Controls,
@@ -31,29 +32,33 @@ export default function Grid() {
   const { onDrop, onDragOver } = useDrag();
 
   return (
-    <div className="grid-container h-full bg-slate-200 dark:bg-slate-600">
-      <AudioModules />
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={NodeTypes}
-        minZoom={0.1}
-        onDrop={onDrop}
-        onDragOver={onDragOver}
-        isValidConnection={isValidConnection}
-        proOptions={DEFAULT_REACT_FLOW_PROPS}
-      >
-        <Controls
-          position="bottom-right"
-          className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg"
-        />
-        <Background variant={BackgroundVariant.Dots} gap={16} size={1.2} />
-        <OnViewportChange viewport={viewport} />
-      </ReactFlow>
-    </div>
+    <Surface
+      tone="canvas"
+      radius="none"
+      asChild
+      className="grid-container h-full"
+    >
+      <div>
+        <AudioModules />
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          nodeTypes={NodeTypes}
+          minZoom={0.1}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+          isValidConnection={isValidConnection}
+          proOptions={DEFAULT_REACT_FLOW_PROPS}
+        >
+          <Controls position="bottom-right" className="grid-controls" />
+          <Background variant={BackgroundVariant.Dots} gap={16} size={1.2} />
+          <OnViewportChange viewport={viewport} />
+        </ReactFlow>
+      </div>
+    </Surface>
   );
 }
 

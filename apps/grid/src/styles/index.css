@@ -1,5 +1,5 @@
 @import "./tailwind.css";
+@import "@blibliki/ui/styles.css";
 @import "@xyflow/react/dist/base.css";
 @import "./app.css";
-@import "./ui";
 @import "./keyboard.css";

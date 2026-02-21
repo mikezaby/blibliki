@@ -1,8 +1,8 @@
 import { Engine, moduleSchemas, ModuleType } from "@blibliki/engine";
+import { Stack, Surface } from "@blibliki/ui";
 import { oscilloscope, requestAnimationFrame } from "@blibliki/utils";
 import { useEffect, useRef } from "react";
 import { ModuleComponent } from ".";
-import Container from "./Container";
 import { SelectField } from "./attributes/Field";
 
 const CANVAS_WIDTH = 360;
@@ -54,7 +54,7 @@ const Inspector: ModuleComponent<ModuleType.Inspector> = (props) => {
   }, [id, fftSize]);
 
   return (
-    <Container className="flex flex-col gap-4">
+    <Stack gap={4}>
       <SelectField
         name="fftSize"
         value={fftSize}
@@ -62,14 +62,15 @@ const Inspector: ModuleComponent<ModuleType.Inspector> = (props) => {
         onChange={updateProp("fftSize")}
         className="w-28"
       />
-      <canvas
-        ref={canvasRef}
-        width={CANVAS_WIDTH}
-        height={CANVAS_HEIGHT}
-        className="rounded bg-background border"
-        style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT }}
-      />
-    </Container>
+      <Surface tone="panel" border="subtle" radius="md" className="w-fit p-1">
+        <canvas
+          ref={canvasRef}
+          width={CANVAS_WIDTH}
+          height={CANVAS_HEIGHT}
+          className="h-[160px] w-[360px] rounded"
+        />
+      </Surface>
+    </Stack>
   );
 };
 

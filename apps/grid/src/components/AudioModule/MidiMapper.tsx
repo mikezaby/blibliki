@@ -4,12 +4,19 @@ import {
   ModuleType,
   moduleSchemas,
 } from "@blibliki/engine";
+import {
+  Button,
+  Input,
+  Label,
+  OptionSelect,
+  Stack,
+  Surface,
+  Text,
+} from "@blibliki/ui";
 import { ChevronDown, ChevronUp, SquarePlus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import Select from "@/components/Select";
 import { useAppSelector, useAppDispatch } from "@/hooks";
 import { ModuleComponent } from ".";
-import { Button, Input, Label } from "../ui";
 import Container from "./Container";
 import { initialize } from "./MidiInput/midiDevicesSlice";
 import { modulesSelector } from "./modulesSlice";
@@ -211,149 +218,165 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
   };
 
   return (
-    <Container className="flex flex-col gap-6">
+    <Container direction="column" className="gap-6">
       {/* Page Navigation */}
-      <div className="flex flex-col gap-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-            Page Navigation
-          </h3>
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            {activePage + 1} / {pages.length}
-          </span>
-        </div>
+      <Surface tone="subtle" border="subtle" radius="lg" className="p-4">
+        <Stack gap={3}>
+          <Stack direction="row" align="center" justify="between">
+            <Text asChild size="sm" weight="semibold">
+              <h3>Page Navigation</h3>
+            </Text>
+            <Text asChild tone="muted" size="xs">
+              <span>
+                {activePage + 1} / {pages.length}
+              </span>
+            </Text>
+          </Stack>
 
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={activePage === 0}
-            onClick={() => {
-              onSwitchPage(activePage - 1);
-            }}
-            className="flex-1"
-          >
-            {"← Previous"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={activePage === pages.length - 1}
-            onClick={() => {
-              onSwitchPage(activePage + 1);
-            }}
-            className="flex-1"
-          >
-            {"Next →"}
-          </Button>
-          <Button
-            size="sm"
-            onClick={onAddPage}
-            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 shadow-md"
-          >
-            <SquarePlus className="w-4 h-4" />
-            New Page
-          </Button>
-        </div>
-      </div>
+          <Stack direction="row" gap={2} className="flex-wrap">
+            <Button
+              variant="outlined"
+              size="sm"
+              disabled={activePage === 0}
+              onClick={() => {
+                onSwitchPage(activePage - 1);
+              }}
+              className="flex-1"
+            >
+              {"← Previous"}
+            </Button>
+            <Button
+              variant="outlined"
+              size="sm"
+              disabled={activePage === pages.length - 1}
+              onClick={() => {
+                onSwitchPage(activePage + 1);
+              }}
+              className="flex-1"
+            >
+              {"Next →"}
+            </Button>
+            <Button size="sm" onClick={onAddPage}>
+              <SquarePlus className="w-4 h-4" />
+              New Page
+            </Button>
+          </Stack>
+        </Stack>
+      </Surface>
 
       {/* Page Settings */}
-      <div className="flex flex-col gap-3 p-4 rounded-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border border-slate-200 dark:border-slate-800 shadow-sm">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-          Page Settings
-        </h3>
+      <Surface
+        tone="subtle"
+        border="subtle"
+        radius="lg"
+        className="bg-gradient-to-br from-surface-subtle to-surface-panel p-4"
+      >
+        <Stack gap={3}>
+          <Text asChild size="sm" weight="semibold">
+            <h3>Page Settings</h3>
+          </Text>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 flex-1">
-            <Label className="text-sm font-medium text-slate-600 dark:text-slate-400 min-w-fit">
-              Page Name
-            </Label>
-            <Input
-              className="flex-1 bg-white dark:bg-slate-950/50"
-              value={page?.name ?? `Page ${activePage}`}
-              onChange={(e) => {
-                onUpdatePageName(activePage, e.currentTarget.value);
+          <Stack direction="row" align="center" gap={4} className="flex-wrap">
+            <Stack direction="row" align="center" gap={2} className="flex-1">
+              <Label className="min-w-fit text-sm font-medium">Page Name</Label>
+              <Input
+                className="flex-1"
+                value={page?.name ?? `Page ${activePage}`}
+                onChange={(e) => {
+                  onUpdatePageName(activePage, e.currentTarget.value);
+                }}
+              />
+            </Stack>
+            <Button
+              color="error"
+              size="sm"
+              disabled={pages.length <= 1}
+              onClick={() => {
+                onRemovePage(activePage);
               }}
-            />
-          </div>
-          <Button
-            variant="destructive"
-            size="sm"
-            disabled={pages.length <= 1}
-            onClick={() => {
-              onRemovePage(activePage);
-            }}
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete
-          </Button>
-        </div>
-      </div>
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete
+            </Button>
+          </Stack>
+        </Stack>
+      </Surface>
 
       {/* View Mode Toggle */}
-      <div className="flex flex-col gap-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-          Mapping Scope
-        </h3>
-        <div className="flex gap-2">
-          <Button
-            variant={viewMode === "page" ? "default" : "outline"}
-            size="sm"
-            onClick={() => {
-              setViewMode("page");
-            }}
-            className="flex-1"
-          >
-            Page Mappings
-          </Button>
-          <Button
-            variant={viewMode === "global" ? "default" : "outline"}
-            size="sm"
-            onClick={() => {
-              setViewMode("global");
-            }}
-            className="flex-1"
-          >
-            Global Mappings
-          </Button>
-        </div>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          {viewMode === "page"
-            ? "These mappings apply only to the current page"
-            : "These mappings are available on all pages"}
-        </p>
-      </div>
+      <Surface tone="subtle" border="subtle" radius="lg" className="p-4">
+        <Stack gap={3}>
+          <Text asChild size="sm" weight="semibold">
+            <h3>Mapping Scope</h3>
+          </Text>
+
+          <Stack direction="row" gap={2}>
+            <Button
+              variant={viewMode === "page" ? "contained" : "outlined"}
+              size="sm"
+              onClick={() => {
+                setViewMode("page");
+              }}
+              className="flex-1"
+            >
+              Page Mappings
+            </Button>
+            <Button
+              variant={viewMode === "global" ? "contained" : "outlined"}
+              size="sm"
+              onClick={() => {
+                setViewMode("global");
+              }}
+              className="flex-1"
+            >
+              Global Mappings
+            </Button>
+          </Stack>
+          <Text tone="muted" size="xs">
+            {viewMode === "page"
+              ? "These mappings apply only to the current page"
+              : "These mappings are available on all pages"}
+          </Text>
+        </Stack>
+      </Surface>
 
       {/* MIDI Mappings */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between px-1">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-            {viewMode === "global" ? "Global " : "Page "}MIDI Mappings
-          </h3>
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            {mappings.length} {mappings.length === 1 ? "mapping" : "mappings"}
-          </span>
-        </div>
+      <Stack gap={4}>
+        <Stack
+          direction="row"
+          align="center"
+          justify="between"
+          className="px-1"
+        >
+          <Text asChild size="sm" weight="semibold">
+            <h3>{viewMode === "global" ? "Global " : "Page "}MIDI Mappings</h3>
+          </Text>
+          <Text asChild tone="muted" size="xs">
+            <span>
+              {mappings.length} {mappings.length === 1 ? "mapping" : "mappings"}
+            </span>
+          </Text>
+        </Stack>
 
-        <div className="flex flex-col gap-3">
+        <Stack gap={3}>
           {mappings.map((mapping, i) => {
             const isExpanded = expandedMappings.has(i);
             const mode = mapping.mode ?? "direct";
 
             return (
-              <div
+              <Surface
                 key={`${viewMode}-${activePage}-${i}`}
-                className="flex flex-col gap-3 p-3 rounded-lg bg-white dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors shadow-sm"
+                tone="raised"
+                border="subtle"
+                radius="lg"
+                className="flex flex-col gap-3 p-3"
               >
                 {/* Main mapping row */}
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
-                    <Label className="text-xs font-medium text-slate-500 dark:text-slate-400 min-w-fit">
-                      CC
-                    </Label>
+                    <Label className="min-w-fit text-xs font-medium">CC</Label>
                     <Input
-                      className="w-24 text-center bg-slate-50 dark:bg-slate-950/50 font-mono"
-                      type="string"
+                      className="w-24 text-center font-mono"
+                      type="text"
                       value={mapping.autoAssign ? "Mapping..." : mapping.cc}
                       placeholder="Unmapped"
                       readOnly
@@ -370,7 +393,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                   </div>
 
                   <div className="flex items-center gap-2 flex-1">
-                    <Select
+                    <OptionSelect
                       label="Select module"
                       value={mapping.moduleId ?? ""}
                       options={modules}
@@ -381,7 +404,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                   </div>
 
                   <div className="flex items-center gap-2 flex-1">
-                    <Select
+                    <OptionSelect
                       label="Select prop"
                       value={mapping.propName ?? ""}
                       options={
@@ -397,12 +420,11 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                   </div>
 
                   <Button
-                    variant="ghost"
-                    size="sm"
+                    variant="text"
+                    size="icon"
                     onClick={() => {
                       toggleExpanded(i);
                     }}
-                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                   >
                     {isExpanded ? (
                       <ChevronUp className="w-4 h-4" />
@@ -412,12 +434,11 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                   </Button>
 
                   <Button
-                    variant="ghost"
-                    size="sm"
+                    variant="text"
+                    size="icon"
                     onClick={() => {
                       onRemoveMapping(i);
                     }}
-                    className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -425,12 +446,12 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
 
                 {/* Advanced settings (expandable) */}
                 {isExpanded && (
-                  <div className="flex flex-col gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                  <div className="flex flex-col gap-3 border-t border-border-subtle pt-3">
                     <div className="flex items-center gap-2">
-                      <Label className="text-xs font-medium text-slate-600 dark:text-slate-400 min-w-[80px]">
+                      <Label className="min-w-[80px] text-xs font-medium">
                         Mode
                       </Label>
-                      <Select
+                      <OptionSelect
                         label="Select mode"
                         value={mode}
                         options={[
@@ -454,31 +475,33 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                           });
                         }}
                       />
-                      <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
-                        {mode === MidiMappingMode.direct &&
-                          "Maps MIDI value directly to parameter"}
-                        {mode === MidiMappingMode.directRev &&
-                          "Maps MIDI value directly to parameter reverse"}
-                        {mode === MidiMappingMode.toggleInc &&
-                          "Only responds to button press (127)"}
-                        {mode === MidiMappingMode.toggleDec &&
-                          "Only responds to button press (127)"}
-                        {mode === MidiMappingMode.incDec &&
-                          "Increment/decrement based on threshold"}
-                        {mode === MidiMappingMode.incDecRev &&
-                          "Increment/decrement based on threshold reverse"}
-                      </span>
+                      <Text asChild tone="muted" size="xs">
+                        <span className="ml-2">
+                          {mode === MidiMappingMode.direct &&
+                            "Maps MIDI value directly to parameter"}
+                          {mode === MidiMappingMode.directRev &&
+                            "Maps MIDI value directly to parameter reverse"}
+                          {mode === MidiMappingMode.toggleInc &&
+                            "Only responds to button press (127)"}
+                          {mode === MidiMappingMode.toggleDec &&
+                            "Only responds to button press (127)"}
+                          {mode === MidiMappingMode.incDec &&
+                            "Increment/decrement based on threshold"}
+                          {mode === MidiMappingMode.incDecRev &&
+                            "Increment/decrement based on threshold reverse"}
+                        </span>
+                      </Text>
                     </div>
 
                     {(mode === MidiMappingMode.incDec ||
                       mode === MidiMappingMode.incDecRev) && (
                       <>
                         <div className="flex items-center gap-2">
-                          <Label className="text-xs font-medium text-slate-600 dark:text-slate-400 min-w-[80px]">
+                          <Label className="min-w-[80px] text-xs font-medium">
                             Threshold
                           </Label>
                           <Input
-                            className="w-24 text-center bg-slate-50 dark:bg-slate-950/50"
+                            className="w-24 text-center"
                             type="number"
                             min={0}
                             max={127}
@@ -490,18 +513,20 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                               });
                             }}
                           />
-                          <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
-                            Value &gt; threshold increments, ≤ threshold
-                            decrements
-                          </span>
+                          <Text asChild tone="muted" size="xs">
+                            <span className="ml-2">
+                              Value &gt; threshold increments, ≤ threshold
+                              decrements
+                            </span>
+                          </Text>
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <Label className="text-xs font-medium text-slate-600 dark:text-slate-400 min-w-[80px]">
+                          <Label className="min-w-[80px] text-xs font-medium">
                             Step
                           </Label>
                           <Input
-                            className="w-24 text-center bg-slate-50 dark:bg-slate-950/50"
+                            className="w-24 text-center"
                             type="number"
                             step="any"
                             value={mapping.step ?? ""}
@@ -528,25 +553,24 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                               }
                             }}
                           />
-                          <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
-                            Amount to increment/decrement (leave empty for auto)
-                          </span>
+                          <Text asChild tone="muted" size="xs">
+                            <span className="ml-2">
+                              Amount to increment/decrement (leave empty for
+                              auto)
+                            </span>
+                          </Text>
                         </div>
                       </>
                     )}
                   </div>
                 )}
-              </div>
+              </Surface>
             );
           })}
-        </div>
-      </div>
+        </Stack>
+      </Stack>
 
-      <Button
-        onClick={onAdd}
-        variant="outline"
-        className="w-full border-dashed border-2 hover:border-solid hover:bg-slate-50 dark:hover:bg-slate-900/50"
-      >
+      <Button onClick={onAdd} variant="outlined">
         <SquarePlus className="w-4 h-4" />
         Add New Mapping
       </Button>

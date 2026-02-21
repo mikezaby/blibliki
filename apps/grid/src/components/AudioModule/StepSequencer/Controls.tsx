@@ -1,4 +1,16 @@
 import { Resolution, PlaybackMode } from "@blibliki/engine";
+import {
+  Button,
+  Divider,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  Stack,
+  Surface,
+  SelectTrigger,
+  SelectValue,
+} from "@blibliki/ui";
 
 type ControlsProps = {
   stepsPerPage: number;
@@ -12,6 +24,18 @@ type ControlsProps = {
   onStop: () => void;
 };
 
+const STEP_OPTIONS = [4, 8, 12, 16] as const;
+const RESOLUTION_OPTIONS = [
+  { value: Resolution.thirtysecond, label: "1/32" },
+  { value: Resolution.sixteenth, label: "1/16" },
+  { value: Resolution.eighth, label: "1/8" },
+  { value: Resolution.quarter, label: "1/4" },
+] as const;
+const PLAYBACK_MODE_OPTIONS = [
+  { value: PlaybackMode.loop, label: "Loop" },
+  { value: PlaybackMode.oneShot, label: "One-Shot" },
+] as const;
+
 export default function Controls({
   stepsPerPage,
   resolution,
@@ -24,87 +48,84 @@ export default function Controls({
   onStop,
 }: ControlsProps) {
   return (
-    <div className="flex gap-4 items-center p-3 bg-slate-50 dark:bg-slate-800 rounded">
-      {/* Start/Stop Buttons */}
-      <div className="flex gap-2">
-        <button
-          onClick={onStart}
-          disabled={isRunning}
-          className={`px-3 py-1 text-sm font-medium rounded ${
-            isRunning
-              ? "bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed"
-              : "bg-green-500 hover:bg-green-600 text-white"
-          }`}
-        >
-          Start
-        </button>
-        <button
-          onClick={onStop}
-          disabled={!isRunning}
-          className={`px-3 py-1 text-sm font-medium rounded ${
-            !isRunning
-              ? "bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed"
-              : "bg-red-500 hover:bg-red-600 text-white"
-          }`}
-        >
-          Stop
-        </button>
-      </div>
+    <Surface tone="subtle" border="subtle" radius="md" className="p-3">
+      <Stack direction="row" align="center" gap={4} className="flex-wrap">
+        <Stack direction="row" gap={2}>
+          <Button
+            color={isRunning ? "error" : "success"}
+            size="sm"
+            className="w-15"
+            onClick={isRunning ? onStop : onStart}
+          >
+            {isRunning ? "Stop" : "Start"}
+          </Button>
+        </Stack>
 
-      <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
+        <Divider orientation="vertical" className="h-6" />
 
-      <div className="flex items-center gap-2">
-        <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-          Steps:
-        </label>
-        <select
-          value={stepsPerPage}
-          onChange={(e) => {
-            onStepsChange(Number(e.target.value));
-          }}
-          className="px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-        >
-          {[4, 8, 12, 16].map((num) => (
-            <option key={num} value={num}>
-              {num}
-            </option>
-          ))}
-        </select>
-      </div>
+        <Stack direction="row" align="center" gap={2}>
+          <Label className="text-xs font-medium">Steps:</Label>
+          <Select
+            value={stepsPerPage.toString()}
+            onValueChange={(nextValue) => {
+              onStepsChange(Number(nextValue));
+            }}
+          >
+            <SelectTrigger size="sm" className="w-20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STEP_OPTIONS.map((num) => (
+                <SelectItem key={num} value={num.toString()}>
+                  {num}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Stack>
 
-      <div className="flex items-center gap-2">
-        <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-          Resolution:
-        </label>
-        <select
-          value={resolution}
-          onChange={(e) => {
-            onResolutionChange(e.target.value as Resolution);
-          }}
-          className="px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-        >
-          <option value={Resolution.thirtysecond}>1/32</option>
-          <option value={Resolution.sixteenth}>1/16</option>
-          <option value={Resolution.eighth}>1/8</option>
-          <option value={Resolution.quarter}>1/4</option>
-        </select>
-      </div>
+        <Stack direction="row" align="center" gap={2}>
+          <Label className="text-xs font-medium">Resolution:</Label>
+          <Select
+            value={resolution}
+            onValueChange={(nextValue) => {
+              onResolutionChange(nextValue as Resolution);
+            }}
+          >
+            <SelectTrigger size="sm" className="w-20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {RESOLUTION_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Stack>
 
-      <div className="flex items-center gap-2">
-        <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-          Mode:
-        </label>
-        <select
-          value={playbackMode}
-          onChange={(e) => {
-            onPlaybackModeChange(e.target.value as PlaybackMode);
-          }}
-          className="px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-        >
-          <option value={PlaybackMode.loop}>Loop</option>
-          <option value={PlaybackMode.oneShot}>One-Shot</option>
-        </select>
-      </div>
-    </div>
+        <Stack direction="row" align="center" gap={2}>
+          <Label className="text-xs font-medium">Mode:</Label>
+          <Select
+            value={playbackMode}
+            onValueChange={(nextValue) => {
+              onPlaybackModeChange(nextValue as PlaybackMode);
+            }}
+          >
+            <SelectTrigger size="sm" className="w-28">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PLAYBACK_MODE_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Stack>
+      </Stack>
+    </Surface>
   );
 }

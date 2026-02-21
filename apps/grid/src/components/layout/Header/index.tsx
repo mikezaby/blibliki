@@ -1,8 +1,17 @@
+import {
+  Button,
+  Divider,
+  IconButton,
+  Input,
+  Label,
+  Stack,
+  Surface,
+  Text,
+} from "@blibliki/ui";
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/clerk-react";
 import { Link } from "@tanstack/react-router";
 import { Cpu, LogIn, Play, Square } from "lucide-react";
 import { ChangeEvent, useCallback, useEffect } from "react";
-import { Button, Input, buttonVariants } from "@/components/ui";
 import { start, stop, setBpm } from "@/globalSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { setName as setPatchName } from "@/patchSlice";
@@ -41,61 +50,59 @@ export default function Header() {
   }, [togglePlay]);
 
   return (
-    <header className="flex items-center h-12 px-4 bg-gradient-to-r from-slate-100 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-lg">
-      {/* Logo in Transport Area */}
-      <div className="flex items-center gap-2 mr-4">
-        <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-          Blibliki
-        </h1>
-      </div>
+    <Surface
+      tone="panel"
+      border="subtle"
+      className="flex h-12 items-center border-x-0 border-t-0 px-4"
+    >
+      <Stack direction="row" align="center" gap={2} className="mr-4">
+        <Text asChild size="lg" weight="semibold" className="tracking-tight">
+          <h1>Blibliki</h1>
+        </Text>
+      </Stack>
 
-      <div className="flex items-center gap-2">
+      <Stack direction="row" align="center" gap={2}>
         <FileMenu />
         <SignedIn>
-          <Link
-            to="/devices"
-            className={
-              buttonVariants({
-                variant: "ghost",
-                size: "sm",
-              }) +
-              " text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 cursor-pointer"
-            }
-          >
-            <Cpu className="w-4 h-4" />
-            <span className="ml-2 text-sm">Devices</span>
-          </Link>
+          <Button asChild variant="text" color="neutral" size="sm">
+            <Link to="/devices">
+              <Cpu className="w-4 h-4" />
+              <span>Devices</span>
+            </Link>
+          </Button>
         </SignedIn>
-      </div>
+      </Stack>
 
-      {/* Project Controls Section */}
-      <div className="flex items-center gap-3 min-w-[280px] ml-6">
-        <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
+      <Stack direction="row" align="center" gap={3} className="ml-6 min-w-70">
+        <Divider orientation="vertical" className="h-6" />
 
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-slate-600 dark:text-slate-400 font-medium uppercase tracking-wide">
-            Project
-          </label>
+        <Stack direction="row" align="center" gap={2}>
+          <Label className={fieldLabelClassName}>Project</Label>
           <Input
-            className="h-7 w-40 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+            size="sm"
+            className="w-40 font-medium"
             onChange={(event: ChangeEvent<HTMLInputElement>) =>
               dispatch(setPatchName(event.target.value))
             }
             value={patchName}
             placeholder="Untitled Patch"
           />
-        </div>
-      </div>
+        </Stack>
+      </Stack>
 
-      {/* Transport Controls Section with Logo */}
-      <div className="flex items-center justify-center flex-1 gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-slate-600 dark:text-slate-400 font-medium uppercase tracking-wide">
-              BPM
-            </label>
+      <Stack
+        direction="row"
+        align="center"
+        justify="center"
+        gap={4}
+        className="flex-1"
+      >
+        <Stack direction="row" align="center" gap={3}>
+          <Stack direction="row" align="center" gap={2}>
+            <Label className={fieldLabelClassName}>BPM</Label>
             <Input
-              className="h-7 w-18 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm font-mono text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+              size="sm"
+              className="w-18 text-center font-mono"
               type="number"
               min="10"
               max="999"
@@ -104,66 +111,71 @@ export default function Header() {
               }}
               value={bpm}
             />
-          </div>
+          </Stack>
 
-          <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
+          <Divider orientation="vertical" className="h-6" />
 
-          <Button
+          <IconButton
+            aria-label={isStarted ? "Stop transport" : "Start transport"}
+            icon={
+              isStarted ? (
+                <Square className="w-4 h-4" />
+              ) : (
+                <Play className="w-4 h-4 ml-0.5" />
+              )
+            }
             onClick={togglePlay}
-            className="h-8 w-8 rounded-full shadow-lg transition-all duration-200 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 shadow-slate-400/25 dark:shadow-slate-800/50 cursor-pointer"
-          >
-            {isStarted ? (
-              <Square className="w-4 h-4" />
-            ) : (
-              <Play className="w-4 h-4 ml-0.5" />
-            )}
-          </Button>
-        </div>
-      </div>
+            variant="contained"
+            color="neutral"
+          />
+        </Stack>
+      </Stack>
 
-      {/* User & Settings Section */}
-      <div className="flex items-center gap-3 min-w-[200px] justify-end">
-        <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
+      <Stack
+        direction="row"
+        align="center"
+        gap={3}
+        justify="end"
+        className="min-w-50"
+      >
+        <Divider orientation="vertical" className="h-6" />
 
         <ColorSchemeToggle />
-        <a
-          href="https://github.com/mikezaby/blibliki"
-          target="_blank"
-          rel="noreferrer"
-          className={
-            buttonVariants({
-              variant: "ghost",
-              size: "sm",
-            }) +
-            " text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 cursor-pointer"
-          }
-        >
-          <Github />
-        </a>
+        <Button asChild variant="text" color="neutral" size="sm">
+          <a
+            href="https://github.com/mikezaby/blibliki"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <Github />
+          </a>
+        </Button>
 
-        <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
+        <Divider orientation="vertical" className="h-6" />
 
         <SignedIn>
           <UserButton userProfileUrl="/user" />
         </SignedIn>
         <SignedOut>
           <Button
-            variant="ghost"
+            variant="text"
+            color="neutral"
             size="sm"
             onClick={() => {
               openSignIn();
             }}
-            className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 cursor-pointer"
           >
             <LogIn className="w-4 h-4" />
-            <span className="ml-2 text-sm">Sign In</span>
+            <span>Sign In</span>
           </Button>
         </SignedOut>
-      </div>
+      </Stack>
       {modalName === "patch" && <LoadModal />}
-    </header>
+    </Surface>
   );
 }
+
+const fieldLabelClassName = "text-xs font-medium uppercase tracking-wide";
 
 function Github() {
   return (

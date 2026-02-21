@@ -1,4 +1,5 @@
 import { IStep } from "@blibliki/engine";
+import { Button, Stack } from "@blibliki/ui";
 
 type StepButtonProps = {
   step: IStep;
@@ -25,90 +26,69 @@ export default function StepButton({
     ? Math.max(...step.notes.map((n) => n.velocity))
     : 0;
   const intensity = maxVelocity / 127; // 0-1 range
+  const intensityTier =
+    !isActive || !hasNotes
+      ? "inactive"
+      : intensity > 0.66
+        ? "high"
+        : intensity > 0.33
+          ? "mid"
+          : "low";
 
-  // Determine background color based on state
-  const getBackgroundColor = () => {
-    if (!isActive || !hasNotes) {
-      return "bg-slate-100 dark:bg-slate-700"; // Inactive/empty
-    }
+  const stepToneClasses =
+    intensityTier === "inactive"
+      ? "bg-surface-panel text-content-muted"
+      : intensityTier === "high"
+        ? "bg-info text-info-contrast"
+        : intensityTier === "mid"
+          ? "bg-info/85 text-content-primary"
+          : "bg-info/65 text-content-primary";
 
-    // Active with notes - use intensity
-    if (intensity > 0.66) return "bg-blue-500 dark:bg-blue-600";
-    if (intensity > 0.33) return "bg-blue-400 dark:bg-blue-500";
-    return "bg-blue-300 dark:bg-blue-400";
-  };
+  const stepBorderClasses = isPlaying
+    ? "border-warning border-2 ring-2 ring-warning/25"
+    : isSelected
+      ? "border-info border-2"
+      : isActive && hasNotes
+        ? "border-info/60"
+        : "border-border-subtle";
 
-  // Determine border style
-  const getBorderStyle = () => {
-    if (isPlaying) {
-      return "border-2 border-orange-500 shadow-lg shadow-orange-200 dark:shadow-orange-900"; // Playing
-    }
-    if (isSelected) {
-      return "border-2 border-yellow-400 dark:border-yellow-500"; // Selected
-    }
-    if (isActive && hasNotes) {
-      return "border border-blue-600 dark:border-blue-400"; // Active with notes
-    }
-    return "border border-slate-300 dark:border-slate-600"; // Default
-  };
-
-  // Add pulsing animation for playing step
-  const getAnimation = () => {
-    return isPlaying ? "animate-pulse" : "";
-  };
-
-  // Text color
-  const getTextColor = () => {
-    if (!isActive || !hasNotes) {
-      return "text-slate-400 dark:text-slate-500";
-    }
-    return intensity > 0.5
-      ? "text-white"
-      : "text-slate-700 dark:text-slate-100";
-  };
+  const toggleClasses = isActive
+    ? "bg-success border-success/80"
+    : "bg-transparent border-border-subtle";
 
   return (
-    <div className="flex flex-col items-center gap-1">
-      {/* Active/Inactive Indicator Dot */}
-      <button
+    <Stack align="center" gap={1}>
+      <Button
+        size="icon"
+        variant="outlined"
+        color="neutral"
+        aria-label={isActive ? "Mute step" : "Activate step"}
         onClick={(e) => {
           e.stopPropagation();
           onToggleActive();
         }}
-        className={`
-          w-3 h-3 rounded-full border-2 transition-all
-          hover:scale-125 cursor-pointer
-          ${
-            isActive
-              ? "bg-green-500 border-green-600 dark:bg-green-400 dark:border-green-500"
-              : "bg-transparent border-slate-400 dark:border-slate-500"
-          }
-        `}
+        className={`h-3 w-3 rounded-full border-2 p-0 transition-all hover:scale-125 ${toggleClasses}`}
         title={isActive ? "Click to mute step" : "Click to activate step"}
       />
 
-      {/* Step Button */}
-      <button
+      <Button
+        size="sm"
+        variant="outlined"
+        color="neutral"
+        aria-label={`Step ${stepIndex + 1}`}
         onClick={onSelect}
-        className={`
-          relative
-          h-12 w-full
-          rounded
-          flex items-center justify-center
-          text-xs font-medium
-          transition-all duration-150
-          hover:scale-105
-          ${getBackgroundColor()}
-          ${getBorderStyle()}
-          ${getAnimation()}
-          ${getTextColor()}
-        `}
+        className={`relative h-12 w-full justify-center px-0 text-xs font-medium transition-all duration-150 hover:scale-105 ${stepToneClasses} ${stepBorderClasses} ${
+          isPlaying ? "animate-pulse" : ""
+        }`}
       >
         {stepIndex + 1}
         {hasNotes && (
-          <div className="absolute bottom-1 right-1 w-1 h-1 rounded-full bg-current" />
+          <span
+            aria-hidden
+            className="absolute bottom-1 right-1 h-1 w-1 rounded-full bg-current/25"
+          />
         )}
-      </button>
-    </div>
+      </Button>
+    </Stack>
   );
 }

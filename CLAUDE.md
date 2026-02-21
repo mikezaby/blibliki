@@ -360,6 +360,13 @@ class MonoScale extends Module<ModuleType.Scale> {
 - ESLint with TypeScript strict rules (config in `eslint.config.js`)
 - React 19 with experimental compiler enabled
 - Tailwind CSS for styling (Grid app uses Tailwind v4)
+- Do not use namespace React imports (`import * as React from "react"`).
+  Use named/default imports instead (for example: `import { useMemo } from "react"` or `import type { ReactNode } from "react"`).
+
+## Scope Discipline
+
+- Only make changes directly related to the current user request.
+- Do not perform unrelated refactors, cleanups, or extra file changes unless explicitly requested.
 
 ## Before Finish
 

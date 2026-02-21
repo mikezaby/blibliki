@@ -1,7 +1,7 @@
 import { ModuleType } from "@blibliki/engine";
 import { moduleSchemas } from "@blibliki/engine";
-import type { MarkProps } from "@/components/Fader";
-import Fader from "@/components/Fader";
+import type { MarkProps } from "@blibliki/ui";
+import { Fader } from "@blibliki/ui";
 import type { ModuleComponent } from ".";
 import Container from "./Container";
 import { CheckboxField, SelectField } from "./attributes/Field";

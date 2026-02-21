@@ -1,6 +1,6 @@
 import { ModuleType } from "@blibliki/engine";
+import { OptionSelect } from "@blibliki/ui";
 import { useEffect } from "react";
-import Select from "@/components/Select";
 import { useAppSelector, useAppDispatch } from "@/hooks";
 import { ModuleComponent } from "..";
 import Container from "../Container";
@@ -21,7 +21,7 @@ const MidiOutput: ModuleComponent<ModuleType.MidiOutput> = (props) => {
 
   return (
     <Container>
-      <Select
+      <OptionSelect
         label="Select MIDI device"
         value={selectedId ?? ""}
         options={devices}

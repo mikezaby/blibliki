@@ -1,4 +1,5 @@
 import { IStep } from "@blibliki/engine";
+import { Surface } from "@blibliki/ui";
 import StepButton from "./StepButton";
 
 type StepGridProps = {
@@ -8,6 +9,13 @@ type StepGridProps = {
   onSelectStep: (index: number) => void;
   onToggleActive: (index: number) => void;
   stepsPerPage: number;
+};
+
+const GRID_COLUMNS_CLASS_BY_STEPS: Record<number, string> = {
+  4: "[grid-template-columns:repeat(4,minmax(0,1fr))]",
+  8: "[grid-template-columns:repeat(8,minmax(0,1fr))]",
+  12: "[grid-template-columns:repeat(12,minmax(0,1fr))]",
+  16: "[grid-template-columns:repeat(16,minmax(0,1fr))]",
 };
 
 export default function StepGrid({
@@ -20,15 +28,13 @@ export default function StepGrid({
 }: StepGridProps) {
   // Only show the configured number of steps
   const visibleSteps = steps.slice(0, stepsPerPage);
+  const gridColumnsClass =
+    GRID_COLUMNS_CLASS_BY_STEPS[stepsPerPage] ??
+    "[grid-template-columns:repeat(16,minmax(0,1fr))]";
 
   return (
-    <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded">
-      <div
-        className="grid gap-2"
-        style={{
-          gridTemplateColumns: `repeat(${stepsPerPage}, minmax(0, 1fr))`,
-        }}
-      >
+    <Surface tone="subtle" border="subtle" radius="md" className="p-4">
+      <div className={`grid gap-2 ${gridColumnsClass}`}>
         {visibleSteps.map((step, index) => (
           <StepButton
             key={index}
@@ -45,6 +51,6 @@ export default function StepGrid({
           />
         ))}
       </div>
-    </div>
+    </Surface>
   );
 }

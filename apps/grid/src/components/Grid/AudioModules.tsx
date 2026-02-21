@@ -1,12 +1,24 @@
+import {
+  Button,
+  Divider,
+  IconButton,
+  Stack,
+  Surface,
+  Text,
+} from "@blibliki/ui";
 import { PanelLeftClose, PanelLeftOpen, Blocks } from "lucide-react";
 import { useState, DragEvent } from "react";
 import { AvailableModules } from "@/components/AudioModule/modulesSlice";
 import useDrag from "@/components/Grid/useDrag";
-import { Button } from "@/components/ui";
 
 const SupportedModules = Object.values(AvailableModules)
   .map(({ moduleType }) => moduleType)
   .sort();
+
+const PANEL_BASE_CLASS =
+  "absolute top-12 left-0 z-10 flex h-[calc(100vh-3rem)] w-47.25 flex-col border-r border-b transition-transform duration-300 ease-in-out";
+const PANEL_VISIBLE_CLASS = "translate-x-0";
+const PANEL_HIDDEN_CLASS = "-translate-x-[189px]";
 
 export default function AudioModules() {
   const [visible, setVisible] = useState<boolean>(true);
@@ -15,63 +27,74 @@ export default function AudioModules() {
   const onClick = () => {
     setVisible(!visible);
   };
-  const left = visible ? "0px" : "-189px";
 
   return (
-    <div
-      className="absolute z-10 top-12 w-[189px] h-[calc(100vh-3rem)] bg-slate-50 dark:bg-slate-900 border-r border-b border-slate-200 dark:border-slate-700 shadow-xl transition-all duration-300 ease-in-out flex flex-col"
-      style={{ left }}
+    <Surface
+      tone="panel"
+      border="subtle"
+      radius="none"
+      shadow="xl"
+      asChild
+      className={`${PANEL_BASE_CLASS} ${
+        visible ? PANEL_VISIBLE_CLASS : PANEL_HIDDEN_CLASS
+      }`}
     >
-      {/* Header Section */}
-      <div className="flex items-center gap-2 p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
-        <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-purple-600 rounded flex items-center justify-center shadow-sm">
-          <Blocks className="w-3 h-3 text-white" />
-        </div>
-        <h2 className="text-sm font-semibold text-slate-900 dark:text-white tracking-tight">
-          Audio Modules
-        </h2>
-      </div>
+      <aside>
+        <Stack direction="row" align="center" gap={2} className="p-4">
+          <div className="flex h-5 w-5 items-center justify-center rounded bg-linear-to-br from-brand to-brand-secondary shadow-sm">
+            <Blocks className="w-3 h-3 text-brand-contrast" />
+          </div>
+          <Text asChild size="sm" weight="semibold">
+            <h2>Audio Modules</h2>
+          </Text>
+        </Stack>
+        <Divider />
 
-      <Button
-        variant="ghost"
-        className="absolute left-[189px] top-0 h-13 rounded-none rounded-r-md border-r border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 shadow-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-        onClick={onClick}
-      >
-        {visible ? (
-          <PanelLeftClose className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-        ) : (
-          <PanelLeftOpen className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-        )}
-      </Button>
+        <IconButton
+          aria-label={"Expand/Collapse audio modules panel"}
+          icon={
+            visible ? (
+              <PanelLeftClose className="w-4 h-4" />
+            ) : (
+              <PanelLeftOpen className="w-4 h-4" />
+            )
+          }
+          variant="contained"
+          color="neutral"
+          className="absolute left-47.25 top-0 h-13 w-13 rounded-none rounded-br-md"
+          onClick={onClick}
+        />
 
-      <nav className="flex-1 overflow-y-auto py-2">
-        <ul className="px-3 space-y-1">
-          {SupportedModules.map((moduleName) => (
-            <li key={moduleName}>
-              <Button
-                variant="ghost"
-                className="w-full justify-start cursor-move h-9 px-3 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/30 transition-colors group"
-                onDragStart={(event: DragEvent) => {
-                  onDragStart(event, moduleName);
-                }}
-                draggable
-              >
-                <div className="flex items-center gap-2 w-full">
-                  <div className="w-2 h-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full group-hover:scale-110 transition-transform duration-200" />
-                  <span className="truncate">{moduleName}</span>
-                </div>
-              </Button>
-            </li>
-          ))}
-        </ul>
+        <nav className="min-h-0 flex-1 overflow-y-auto py-2">
+          <ul className="px-3 space-y-1">
+            {SupportedModules.map((moduleName) => (
+              <li key={moduleName}>
+                <Button
+                  color="neutral"
+                  variant="contained"
+                  size="md"
+                  className="w-full cursor-move justify-start"
+                  onDragStart={(event: DragEvent) => {
+                    onDragStart(event, moduleName);
+                  }}
+                  draggable
+                >
+                  <Stack direction="row" align="center" gap={2}>
+                    <div className="h-2 w-2 rounded-full bg-linear-to-br from-brand to-brand-secondary transition-transform duration-200 group-hover:scale-110" />
+                    <span>{moduleName}</span>
+                  </Stack>
+                </Button>
+              </li>
+            ))}
+          </ul>
 
-        {/* Footer hint */}
-        <div className="px-3 pt-4 pb-2">
-          <p className="text-xs text-slate-400 dark:text-slate-500 italic">
-            Drag modules to the grid to add them
-          </p>
-        </div>
-      </nav>
-    </div>
+          <div className="px-3 pt-4 pb-2">
+            <Text asChild tone="muted" size="xs" className="italic">
+              <p>Drag modules to the grid to add them</p>
+            </Text>
+          </div>
+        </nav>
+      </aside>
+    </Surface>
   );
 }

@@ -1,0 +1,19 @@
+@import "@blibliki/ui/styles.css";
+
+.sb-root {
+  min-height: 100vh;
+  min-width: min(90vw, 760px);
+  box-sizing: border-box;
+  padding: 24px;
+  color: var(--ui-foreground);
+  background: var(--ui-background);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+}
+
+.sb-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}

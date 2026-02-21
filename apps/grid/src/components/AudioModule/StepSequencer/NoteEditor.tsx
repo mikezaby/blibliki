@@ -1,4 +1,6 @@
 import { IStepNote } from "@blibliki/engine";
+import { Button, Input } from "@blibliki/ui";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 
 type NoteEditorProps = {
@@ -23,7 +25,7 @@ export default function NoteEditor({ notes, onChange }: NoteEditorProps) {
 
   return (
     <>
-      <input
+      <Input
         type="text"
         value={noteInput}
         onChange={(e) => {
@@ -33,14 +35,12 @@ export default function NoteEditor({ notes, onChange }: NoteEditorProps) {
           if (e.key === "Enter") addNote();
         }}
         placeholder="Add note (e.g., C4, D#4, E4)..."
-        className="flex-1 px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+        className="flex-1"
       />
-      <button
-        onClick={addNote}
-        className="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors whitespace-nowrap"
-      >
-        + Note
-      </button>
+      <Button onClick={addNote}>
+        <Plus className="w-4 h-4" />
+        Note
+      </Button>
     </>
   );
 }

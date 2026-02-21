@@ -1,0 +1,90 @@
+/*
+ * @blibliki/ui default design tokens.
+ *
+ * These values are package-level fallbacks only.
+ * Product-specific palettes belong in app themes (UIProvider + createTheme),
+ * not in this file.
+ */
+:root {
+  /* Surfaces and borders */
+  --ui-color-surface-0: oklch(0.985 0.004 260);
+  --ui-color-surface-raised: oklch(0.996 0.002 260);
+  --ui-color-surface-raised-hover: oklch(1 0 0);
+  --ui-color-surface-1: oklch(0.96 0.006 260);
+  --ui-color-surface-2: oklch(0.976 0.005 260);
+  --ui-color-border-subtle: oklch(0.84 0.01 260);
+
+  /* Typography */
+  --ui-color-text-primary: oklch(0.18 0.01 260);
+  --ui-color-text-secondary: oklch(0.33 0.01 260);
+  --ui-color-text-muted: oklch(0.48 0.01 260);
+
+  /* Semantic colors */
+  --ui-color-primary-500: oklch(0.62 0.19 255);
+  --ui-color-primary-600: oklch(0.55 0.2 255);
+  --ui-color-primary-contrast: oklch(0.98 0 0);
+
+  --ui-color-secondary-500: oklch(0.62 0.2 300);
+  --ui-color-secondary-600: oklch(0.55 0.21 300);
+  --ui-color-secondary-contrast: oklch(0.98 0 0);
+
+  --ui-color-error-500: oklch(0.63 0.24 28);
+  --ui-color-error-600: oklch(0.57 0.24 28);
+  --ui-color-error-contrast: oklch(0.98 0 0);
+
+  --ui-color-warning-500: oklch(0.78 0.17 78);
+  --ui-color-warning-600: oklch(0.72 0.17 78);
+  --ui-color-warning-contrast: oklch(0.2 0.01 260);
+
+  --ui-color-info-500: oklch(0.66 0.14 220);
+  --ui-color-info-600: oklch(0.59 0.15 220);
+  --ui-color-info-contrast: oklch(0.98 0 0);
+
+  --ui-color-success-500: oklch(0.66 0.17 150);
+  --ui-color-success-600: oklch(0.59 0.18 150);
+  --ui-color-success-contrast: oklch(0.98 0 0);
+
+  --ui-radius-sm: 4px;
+  --ui-radius-md: 8px;
+  --ui-radius-lg: 12px;
+}
+
+:where(.dark, [data-theme="dark"]) {
+  /* Surfaces and borders */
+  --ui-color-surface-0: oklch(0.12 0.01 260);
+  --ui-color-surface-raised: oklch(0.2 0.01 260);
+  --ui-color-surface-raised-hover: oklch(0.24 0.01 260);
+  --ui-color-surface-1: oklch(0.16 0.01 260);
+  --ui-color-surface-2: oklch(0.145 0.012 260);
+  --ui-color-border-subtle: oklch(0.34 0.01 260);
+
+  /* Typography */
+  --ui-color-text-primary: oklch(0.96 0.01 260);
+  --ui-color-text-secondary: oklch(0.76 0.01 260);
+  --ui-color-text-muted: oklch(0.62 0.01 260);
+
+  /* Semantic colors */
+  --ui-color-primary-500: oklch(0.67 0.19 255);
+  --ui-color-primary-600: oklch(0.6 0.2 255);
+  --ui-color-primary-contrast: oklch(0.98 0 0);
+
+  --ui-color-secondary-500: oklch(0.67 0.2 300);
+  --ui-color-secondary-600: oklch(0.6 0.21 300);
+  --ui-color-secondary-contrast: oklch(0.98 0 0);
+
+  --ui-color-error-500: oklch(0.67 0.22 28);
+  --ui-color-error-600: oklch(0.6 0.23 28);
+  --ui-color-error-contrast: oklch(0.98 0 0);
+
+  --ui-color-warning-500: oklch(0.79 0.15 78);
+  --ui-color-warning-600: oklch(0.73 0.16 78);
+  --ui-color-warning-contrast: oklch(0.2 0.01 260);
+
+  --ui-color-info-500: oklch(0.69 0.13 220);
+  --ui-color-info-600: oklch(0.62 0.14 220);
+  --ui-color-info-contrast: oklch(0.98 0 0);
+
+  --ui-color-success-500: oklch(0.69 0.16 150);
+  --ui-color-success-600: oklch(0.62 0.17 150);
+  --ui-color-success-contrast: oklch(0.98 0 0);
+}

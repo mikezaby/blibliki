@@ -1,11 +1,9 @@
-import { DialogTitle } from "@radix-ui/react-dialog";
+import { Dialog, DialogContent, DialogTitle } from "@blibliki/ui";
 import { ReactNode } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { close as _close } from "./modalSlice";
 
 export { open, close } from "./modalSlice";
-export { default as TriggerModal } from "./TriggerModal";
 
 type ModalProps = {
   children: ReactNode;
@@ -33,7 +31,7 @@ export default function Modal(props: ModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={close}>
       <DialogContent className={className}>
-        <DialogTitle className="sr-only">{modalName}</DialogTitle>
+        <DialogTitle className="ui-visually-hidden">{modalName}</DialogTitle>
         {children}
       </DialogContent>
     </Dialog>

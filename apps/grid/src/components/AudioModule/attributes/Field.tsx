@@ -5,10 +5,15 @@ import {
   PropSchema,
   StringProp,
 } from "@blibliki/engine";
-import { Label } from "@radix-ui/react-label";
-import { ChangeEvent } from "react";
-import Select from "@/components/Select";
-import { Input } from "@/components/ui";
+import {
+  Input,
+  Label,
+  OptionSelect,
+  Stack,
+  Surface,
+  Switch,
+} from "@blibliki/ui";
+import { ChangeEvent, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type FieldProps<T extends string | number | boolean | string[] | number[]> = {
@@ -22,6 +27,35 @@ type FieldProps<T extends string | number | boolean | string[] | number[]> = {
 type InputProps<T extends string | number> = FieldProps<T> & {
   schema: NumberProp | StringProp;
 };
+
+function FieldShell({
+  label,
+  className,
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Surface
+      tone="subtle"
+      border="subtle"
+      radius="md"
+      className={cn("p-3", className)}
+    >
+      <Stack gap={3}>
+        <Stack direction="row" align="center" gap={2}>
+          <div className="h-2 w-2 rounded-full bg-gradient-to-br from-brand to-brand-secondary" />
+          <Label className="text-xs font-semibold tracking-tight">
+            {label}
+          </Label>
+        </Stack>
+        {children}
+      </Stack>
+    </Surface>
+  );
+}
 
 export const InputField = <T extends string | number>({
   name,
@@ -43,27 +77,16 @@ export const InputField = <T extends string | number>({
   };
 
   return (
-    <div
-      className={cn(
-        "space-y-3 p-3 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700",
-        className,
-      )}
-    >
-      <div className="flex items-center gap-2">
-        <div className="w-2 h-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
-        <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-tight">
-          {label}
-        </Label>
-      </div>
+    <FieldShell label={label} className={className}>
       <Input
         type={inputType}
         value={value}
         onChange={internalOnChange}
-        className={`text-sm bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors ${
-          inputType === "number" ? "w-20 text-center font-mono" : ""
-        }`}
+        className={
+          inputType === "number" ? "w-20 text-center font-mono" : undefined
+        }
       />
-    </div>
+    </FieldShell>
   );
 };
 
@@ -81,26 +104,16 @@ export const SelectField = <T extends string | number>({
   const label = schema.label ?? name;
 
   return (
-    <div
-      className={cn(
-        "space-y-3 p-3 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700",
-        className,
-      )}
-    >
-      <div className="flex items-center gap-2">
-        <div className="w-2 h-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
-        <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-tight">
-          {label}
-        </Label>
-      </div>
-      <Select
+    <FieldShell label={label} className={className}>
+      <OptionSelect
         label={""}
         value={value!}
         options={schema.options}
         onChange={onChange}
-        className="text-sm"
+        triggerClassName="w-full"
+        contentClassName="text-sm"
       />
-    </div>
+    </FieldShell>
   );
 };
 
@@ -118,39 +131,14 @@ export const CheckboxField = ({
   const label = schema.label ?? name;
 
   return (
-    <div
-      className={cn(
-        "space-y-3 p-3 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700",
-        className,
-      )}
-    >
-      <div className="flex items-center gap-2">
-        <div className="w-2 h-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full" />
-        <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-tight">
-          {label}
-        </Label>
-      </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={value}
-        onClick={() => {
-          onChange(!value);
+    <FieldShell label={label} className={className}>
+      <Switch
+        checked={Boolean(value)}
+        color="success"
+        onCheckedChange={(checked: boolean) => {
+          onChange(checked);
         }}
-        className={cn(
-          "relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-2 cursor-pointer",
-          value
-            ? "bg-green-500 dark:bg-green-600"
-            : "bg-red-400 dark:bg-slate-600",
-        )}
-      >
-        <span
-          className={cn(
-            "inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out pointer-events-none",
-            value ? "translate-x-5" : "translate-x-1",
-          )}
-        />
-      </button>
-    </div>
+      />
+    </FieldShell>
   );
 };

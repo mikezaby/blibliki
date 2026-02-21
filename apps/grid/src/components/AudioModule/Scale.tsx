@@ -1,4 +1,5 @@
 import { moduleSchemas, ModuleType } from "@blibliki/engine";
+import { Stack } from "@blibliki/ui";
 import { ModuleComponent } from ".";
 import Container from "./Container";
 import { InputField, SelectField } from "./attributes/Field";
@@ -10,7 +11,7 @@ const Scale: ModuleComponent<ModuleType.Scale> = (props) => {
   } = props;
 
   return (
-    <div className="flex flex-col gap-y-8">
+    <Stack gap={6}>
       <Container className="justify-start">
         <SelectField
           name="mode"
@@ -39,7 +40,7 @@ const Scale: ModuleComponent<ModuleType.Scale> = (props) => {
           onChange={updateProp("current")}
         />
       </Container>
-    </div>
+    </Stack>
   );
 };
 
