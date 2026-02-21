@@ -33,6 +33,31 @@ export const getNodeContainerClassName = (selected: boolean) =>
       : "border-border-subtle hover:border-border-strong",
   );
 
+type IOTone = "audio" | "midi";
+
+const getIOTone = (ioType: string): IOTone =>
+  ioType.toLowerCase().includes("audio") ? "audio" : "midi";
+
+export const getIOToneClasses = (ioType: string) => {
+  const tone = getIOTone(ioType);
+
+  if (tone === "audio") {
+    return {
+      tone,
+      handleToneClass: "io-handle--audio",
+      indicatorToneClass: "io-indicator--audio",
+      labelToneClass: "io-label--audio",
+    };
+  }
+
+  return {
+    tone,
+    handleToneClass: "io-handle--midi",
+    indicatorToneClass: "io-indicator--midi",
+    labelToneClass: "io-label--midi",
+  };
+};
+
 export default function AudioNode(props: NodeProps) {
   const { id, selected } = props;
   const audioModule = useAudioModule(id);
@@ -53,7 +78,7 @@ export default function AudioNode(props: NodeProps) {
 
         <Stack gap={2} className="relative justify-center p-3">
           <Stack direction="row" align="center" gap={2} className="pr-7">
-            <div className="h-2 w-2 rounded-full bg-linear-to-br from-brand to-brand-secondary" />
+            <div className="h-2 w-2 rounded-full bg-brand" />
             <Text asChild size="sm" weight="medium" className="truncate">
               <span>{audioModule.name || audioModule.moduleType}</span>
             </Text>
@@ -113,16 +138,18 @@ function IO({ io }: { io: IIOSerialize }) {
     const position = isInput ? Position.Left : Position.Right;
     const type: HandleType = isInput ? "target" : "source";
     const className = isInput ? "-left-[8px]" : "-right-[8px]";
+    const { handleToneClass, indicatorToneClass, labelToneClass } =
+      getIOToneClasses(io.ioType);
 
-    // Determine gradient class based on IOType
-    const getGradientClass = (ioType: string) =>
-      ioType.toLowerCase().includes("audio")
-        ? "bg-linear-to-r from-brand to-brand-secondary"
-        : "bg-linear-to-r from-brand-secondary to-info";
-
-    const gradientClass = getGradientClass(io.ioType);
-
-    return { type, position, className, gradientClass, isInput };
+    return {
+      type,
+      position,
+      className,
+      handleToneClass,
+      indicatorToneClass,
+      labelToneClass,
+      isInput,
+    };
   }, [io.ioType]);
 
   return (
@@ -131,7 +158,7 @@ function IO({ io }: { io: IIOSerialize }) {
         asChild
         size="xs"
         weight="medium"
-        className={`w-full truncate px-3 py-2 ${handleProps.isInput ? "text-left" : "text-right"}`}
+        className={`w-full truncate px-3 py-2 ${handleProps.labelToneClass} ${handleProps.isInput ? "text-left" : "text-right"}`}
       >
         <div>{io.name}</div>
       </Text>
@@ -139,12 +166,12 @@ function IO({ io }: { io: IIOSerialize }) {
         id={io.name}
         type={handleProps.type}
         position={handleProps.position}
-        className={`${handleProps.className} ${handleProps.gradientClass} h-4 w-4 cursor-pointer rounded-full border-2 border-surface-raised shadow-lg transition-all duration-200 hover:scale-110`}
+        className={`${handleProps.className} io-handle ${handleProps.handleToneClass} h-4 w-4 cursor-pointer rounded-full border-2 border-surface-raised shadow-lg transition-all duration-200 hover:scale-110`}
       />
 
       {/* Connection indicator dot */}
       <div
-        className={`absolute ${handleProps.isInput ? "-left-1" : "-right-1"} top-1/2 transform -translate-y-1/2 w-1 h-1 ${handleProps.gradientClass} rounded-full opacity-60 group-hover/io:opacity-100 transition-opacity duration-200`}
+        className={`absolute ${handleProps.isInput ? "-left-1" : "-right-1"} io-indicator ${handleProps.indicatorToneClass} top-1/2 transform -translate-y-1/2 w-1 h-1 opacity-60 group-hover/io:opacity-100 transition-opacity duration-200`}
       />
     </div>
   );

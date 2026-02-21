@@ -10,6 +10,10 @@ import {
 } from "@xyflow/react";
 import { useEffect, useRef } from "react";
 import { useAppDispatch, useGridNodes, usePatch } from "@/hooks";
+import {
+  GRID_CANVAS_BACKGROUND,
+  GRID_CANVAS_PATTERN,
+} from "@/theme/gridCanvas";
 import AudioModules from "./AudioModules";
 import { NodeTypes } from "./AudioNode";
 import { setViewport } from "./gridNodesSlice";
@@ -54,7 +58,13 @@ export default function Grid() {
           proOptions={DEFAULT_REACT_FLOW_PROPS}
         >
           <Controls position="bottom-right" className="grid-controls" />
-          <Background variant={BackgroundVariant.Dots} gap={16} size={1.2} />
+          <Background
+            variant={BackgroundVariant.Dots}
+            gap={16}
+            size={1.2}
+            bgColor={GRID_CANVAS_BACKGROUND}
+            color={GRID_CANVAS_PATTERN}
+          />
           <OnViewportChange viewport={viewport} />
         </ReactFlow>
       </div>

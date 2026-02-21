@@ -18,6 +18,7 @@ import { setName as setPatchName } from "@/patchSlice";
 import ColorSchemeToggle from "./ColorSchemeToggle";
 import FileMenu from "./FileMenu";
 import LoadModal from "./FileMenu/LoadModal";
+import ThemePresetSelector from "./ThemePresetSelector";
 import { shouldToggleTransportOnSpace } from "./transportKeyboardShortcut";
 
 export default function Header() {
@@ -140,6 +141,7 @@ export default function Header() {
       >
         <Divider orientation="vertical" className="h-6" />
 
+        <ThemePresetSelector />
         <ColorSchemeToggle />
         <Button asChild variant="text" color="neutral" size="sm">
           <a

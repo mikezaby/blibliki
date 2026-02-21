@@ -1,6 +1,25 @@
 .grid-container {
+  --grid-canvas-background: var(--ui-color-surface-0);
+  --grid-canvas-pattern: color-mix(
+    in oklab,
+    var(--ui-color-border-subtle),
+    var(--ui-color-text-primary) 8%
+  );
   width: 100vw;
   height: calc(100vh - 48px);
+}
+
+.dark .grid-container {
+  --grid-canvas-background: color-mix(
+    in oklab,
+    var(--ui-color-surface-1),
+    var(--ui-color-text-primary) 12%
+  );
+  --grid-canvas-pattern: color-mix(
+    in oklab,
+    var(--ui-color-border-subtle),
+    var(--ui-color-text-primary) 32%
+  );
 }
 
 .grid-controls.react-flow__controls {
@@ -35,5 +54,43 @@ g path.react-flow__edge-path {
 }
 
 g.selected path.react-flow__edge-path {
-  stroke: #6793c6 !important;
+  stroke: var(--ui-color-info-500) !important;
+}
+
+.io-handle--audio {
+  background: var(--ui-color-primary-500);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklab, var(--ui-color-primary-600), transparent 35%);
+}
+
+.io-handle--midi {
+  background: var(--ui-color-secondary-500);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklab, var(--ui-color-secondary-600), transparent 35%);
+}
+
+.io-indicator--audio {
+  background: var(--ui-color-primary-600);
+  border-radius: 9999px;
+}
+
+.io-indicator--midi {
+  background: var(--ui-color-secondary-600);
+  border-radius: 2px;
+}
+
+.io-label--audio {
+  color: color-mix(
+    in oklab,
+    var(--ui-color-text-primary),
+    var(--ui-color-primary-500) 42%
+  );
+}
+
+.io-label--midi {
+  color: color-mix(
+    in oklab,
+    var(--ui-color-text-primary),
+    var(--ui-color-secondary-500) 42%
+  );
 }

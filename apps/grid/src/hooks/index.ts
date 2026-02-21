@@ -20,6 +20,15 @@ export const useAppDispatch: () => AppDispatch = useDispatch;
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 
 export { ColorScheme, useColorScheme } from "./useColorScheme";
+export {
+  DEFAULT_GRID_THEME_PRESET,
+  THEME_PRESET_ROOT_ATTRIBUTE,
+  THEME_PRESET_STORAGE_KEY,
+  useThemePreset,
+  readStoredThemePreset,
+  readThemePresetFromRoot,
+  applyThemePresetToRoot,
+} from "./useThemePreset";
 
 export function useFirebase() {
   const { user } = useUser();
