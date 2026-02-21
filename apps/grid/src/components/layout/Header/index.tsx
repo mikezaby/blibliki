@@ -54,6 +54,7 @@ export default function Header() {
     <Surface
       tone="panel"
       border="subtle"
+      radius="none"
       className="flex h-12 items-center border-x-0 border-t-0 px-4"
     >
       <Stack direction="row" align="center" gap={2} className="mr-4">
