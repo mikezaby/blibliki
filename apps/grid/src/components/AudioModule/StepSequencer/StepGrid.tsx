@@ -33,7 +33,7 @@ export default function StepGrid({
     "[grid-template-columns:repeat(16,minmax(0,1fr))]";
 
   return (
-    <Surface tone="raised" border="subtle" radius="md" className="p-4">
+    <Surface tone="subtle" border="subtle" radius="md" className="p-4">
       <div className={`grid gap-2 ${gridColumnsClass}`}>
         {visibleSteps.map((step, index) => (
           <StepButton
