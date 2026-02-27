@@ -11,6 +11,7 @@ import {
   setGridNodes,
 } from "@/components/Grid/gridNodesSlice";
 import { addNotification } from "@/notificationsSlice";
+import { assertPatchPayloadHasNoUndefined } from "@/patch/patchPayloadValidation";
 import { AppDispatch, RootState } from "@/store";
 import { dispose, setBpm } from "./globalSlice";
 
@@ -97,7 +98,19 @@ export const save =
     try {
       const id = asNew ? undefined : originalPatch.id;
       const userId = id ? originalPatch.userId : props.userId;
-      const patch = new Patch({ id, userId, name: originalPatch.name, config });
+      const documentPath = id ? `patches/${id}` : "patches/<new>";
+      const payload = { userId, name: originalPatch.name, config };
+
+      try {
+        assertPatchPayloadHasNoUndefined(payload, { documentPath });
+      } catch (error) {
+        console.warn(
+          "[PatchSave] Continuing save because Firestore is configured with ignoreUndefinedProperties=true.",
+          error,
+        );
+      }
+
+      const patch = new Patch({ id, ...payload });
       await patch.save();
 
       dispatch(
