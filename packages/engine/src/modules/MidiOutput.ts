@@ -69,9 +69,6 @@ export default class MidiOutput
 
         if (fuzzyMatch) {
           midiDevice = fuzzyMatch.device;
-          console.log(
-            `MIDI device fuzzy matched: "${this.props.selectedName}" -> "${midiDevice.name}" (confidence: ${Math.round(fuzzyMatch.score * 100)}%)`,
-          );
         }
       }
     }
