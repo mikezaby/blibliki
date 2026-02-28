@@ -3,9 +3,15 @@ import ComputerKeyboardDevice from "./ComputerKeyboardDevice";
 import MidiInputDevice from "./MidiInputDevice";
 import MidiOutputDevice from "./MidiOutputDevice";
 import { createMidiAdapter, type IMidiAccess } from "./adapters";
+import { LaunchControlXL3 } from "./controllers/LaunchControlXL3";
 import { findBestMatch } from "./deviceMatcher";
 
 type ListenerCallback = (device: MidiInputDevice | MidiOutputDevice) => void;
+type ControllerTransportControls = {
+  onStart: () => Promise<void> | void;
+  onStop: () => void;
+  isPlayingState: () => boolean;
+};
 
 export default class MidiDeviceManager {
   inputDevices = new Map<string, MidiInputDevice | ComputerKeyboardDevice>();
@@ -13,16 +19,28 @@ export default class MidiDeviceManager {
   private initialized = false;
   private listeners: ListenerCallback[] = [];
   private context: Readonly<Context>;
+  private controllerTransportControls?: ControllerTransportControls;
   private midiAccess: IMidiAccess | null = null;
   private adapter = createMidiAdapter();
 
-  constructor(context: Context) {
+  constructor(context: Context, controls?: ControllerTransportControls) {
     this.context = context;
+    this.controllerTransportControls = controls;
     this.addComputerKeyboard();
   }
 
   async initialize() {
     await this.initializeDevices();
+
+    const input = this.findInputByFuzzyName("LCXL3 DAW");
+    const output = this.findOutputByFuzzyName("LCXL3 DAW");
+    if (input && output) {
+      new LaunchControlXL3({
+        input: input.device as MidiInputDevice,
+        output: output.device,
+        ...this.controllerTransportControls,
+      });
+    }
 
     this.listenChanges();
     this.initialized = true;

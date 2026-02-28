@@ -93,6 +93,41 @@ function getMidiFromMappedValue({
   return Math.round(Math.max(0, Math.min(127, newMidiValue))); // Valid MIDI range
 }
 
+function normalizeNumberToMidi(value: number, propSchema: NumberProp): number {
+  const min = propSchema.min ?? 0;
+  const max = propSchema.max ?? 1;
+  if (max <= min) return 0;
+
+  const normalized = Math.max(0, Math.min(1, (value - min) / (max - min)));
+  const exp = propSchema.exp ?? 1;
+  const midi = Math.pow(normalized, 1 / exp) * 127;
+  return Math.round(Math.max(0, Math.min(127, midi)));
+}
+
+const LAUNCH_CONTROL_DAW_OUTPUT_NAMES = [
+  "LCXL3 DAW",
+  "Launch Control XL 3 DAW",
+  "Launch Control XL3 DAW",
+  "Launch Control XL 3",
+] as const;
+
+function getLaunchControlDawFeedbackStatus(cc: number): number {
+  // Launch Control XL 3 DAW mode:
+  // - Faders/encoders (CC 5-36) use channel 16
+  // - Shift (CC 63) and display brightness (CC 112) use channel 7
+  // - Buttons/navigation use channel 1
+  if (cc >= 5 && cc <= 36) return 0xbf;
+  if (cc === 63 || cc === 112) return 0xb6;
+  return 0xb0;
+}
+
+function toLaunchControlDawFeedbackMessage(
+  cc: number,
+  value: number,
+): Uint8Array {
+  return new Uint8Array([getLaunchControlDawFeedbackStatus(cc), cc, value]);
+}
+
 type MidiMapperSetterHooks = Pick<
   SetterHooks<IMidiMapperProps>,
   "onSetActivePage"
@@ -121,6 +156,11 @@ export default class MidiMapper
     this._midiOut = this.registerMidiOutput({
       name: "midi out",
     });
+
+    // Defer initial sync so patch-load routes can be connected first.
+    queueMicrotask(() => {
+      this.syncControllerValues();
+    });
   }
 
   onSetActivePage: MidiMapperSetterHooks["onSetActivePage"] = (value) => {
@@ -129,20 +169,121 @@ export default class MidiMapper
       0,
     );
 
-    const newPage = this.props.pages[activePage];
-
-    // Send stored CC values to MIDI output when changing pages
-    const now = this.context.currentTime;
-    newPage?.mappings.forEach((mapping) => {
-      if (mapping.cc !== undefined && mapping.value !== undefined) {
-        // Create CC MIDI event and send it
-        const midiEvent = MidiEvent.fromCC(mapping.cc, mapping.value, now);
-        this._midiOut.onMidiEvent(midiEvent);
-      }
+    queueMicrotask(() => {
+      this.syncControllerValues();
     });
 
     return activePage;
   };
+
+  syncControllerValues = () => {
+    const activePage = this.props.pages[this.props.activePage];
+    const ccValues = new Map<number, number>();
+
+    this.props.globalMappings.forEach((mapping) => {
+      const value = this.resolveSyncValue(mapping);
+      if (mapping.cc === undefined || value === undefined) return;
+      ccValues.set(mapping.cc, value);
+    });
+
+    activePage?.mappings.forEach((mapping) => {
+      const value = this.resolveSyncValue(mapping);
+      if (mapping.cc === undefined || value === undefined) return;
+      ccValues.set(mapping.cc, value);
+    });
+
+    if (ccValues.size === 0) return;
+
+    const now = this.context.currentTime;
+    const controllerOutput = this.findLaunchControlDawOutput();
+
+    ccValues.forEach((value, cc) => {
+      const event = MidiEvent.fromCC(cc, value, now);
+      this._midiOut.onMidiEvent(event);
+      controllerOutput?.send(toLaunchControlDawFeedbackMessage(cc, value));
+    });
+  };
+
+  private findLaunchControlDawOutput() {
+    for (const candidate of LAUNCH_CONTROL_DAW_OUTPUT_NAMES) {
+      const match = this.engine.findMidiOutputDeviceByFuzzyName(
+        candidate,
+        0.45,
+      );
+      if (match) return match.device;
+    }
+
+    return undefined;
+  }
+
+  private resolveSyncValue(
+    mapping: MidiMapping<ModuleType>,
+  ): number | undefined {
+    const {
+      moduleId,
+      moduleType,
+      propName,
+      mode = MidiMappingMode.direct,
+      value,
+    } = mapping;
+
+    if (
+      moduleId === undefined ||
+      moduleType === undefined ||
+      propName === undefined
+    )
+      return value;
+
+    let mappedModule: ReturnType<typeof this.engine.findModule>;
+    try {
+      mappedModule = this.engine.findModule(moduleId);
+    } catch {
+      return value;
+    }
+
+    if (mappedModule.moduleType !== moduleType) return value;
+
+    // Modes based on relative/button actions don't have a stable absolute CC target.
+    if (
+      mode === MidiMappingMode.incDec ||
+      mode === MidiMappingMode.incDecRev ||
+      mode === MidiMappingMode.toggleInc ||
+      mode === MidiMappingMode.toggleDec
+    ) {
+      return value;
+    }
+
+    // @ts-expect-error TS7053 ignore dynamic prop key access
+    const propSchema = moduleSchemas[mappedModule.moduleType][
+      propName
+    ] as PropSchema;
+    // @ts-expect-error TS7053 ignore dynamic prop key access
+    const propValue = mappedModule.props[propName] as unknown;
+
+    switch (propSchema.kind) {
+      case "number": {
+        if (typeof propValue !== "number") return value;
+        let midiValue = normalizeNumberToMidi(propValue, propSchema);
+        if (mode === MidiMappingMode.directRev) midiValue = 127 - midiValue;
+        return midiValue;
+      }
+      case "boolean":
+        if (typeof propValue !== "boolean") return value;
+        return propValue ? 127 : 0;
+      case "enum": {
+        const options = propSchema.options;
+        const index = options.findIndex((option) => option === propValue);
+        if (index < 0) return value;
+        if (options.length === 1) return 0;
+        return Math.round((index / (options.length - 1)) * 127);
+      }
+      case "string":
+      case "array":
+        return value;
+      default:
+        return value;
+    }
+  }
 
   handleCC = (event: MidiEvent, triggeredAt: ContextTime) => {
     this.checkAutoAssign(event);

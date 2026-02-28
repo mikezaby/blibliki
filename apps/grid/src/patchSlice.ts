@@ -1,3 +1,4 @@
+import { Engine } from "@blibliki/engine";
 import { IPatch, Patch } from "@blibliki/models";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
@@ -78,6 +79,7 @@ export const load = (patch: Patch | IPatch) => (dispatch: AppDispatch) => {
   dispatch(loadModules(modules as ModuleProps[]));
   dispatch(setGridNodes(gridNodes));
   dispatch(setBpm(bpm));
+  Engine.current.syncMidiControllerValues();
 
   dispatch(setAttributes({ patch: { id, name, userId }, status: "succeeded" }));
 };

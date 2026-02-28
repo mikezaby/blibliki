@@ -1,4 +1,10 @@
-import { BPM, Ticks, TimeSignature, Transport } from "@blibliki/transport";
+import {
+  BPM,
+  Ticks,
+  TimeSignature,
+  Transport,
+  TransportState,
+} from "@blibliki/transport";
 import {
   assertDefined,
   Context,
@@ -106,7 +112,13 @@ export class Engine {
     });
     this.routes = new Routes(this);
     this.modules = new Map();
-    this.midiDeviceManager = new MidiDeviceManager(this.context);
+    this.midiDeviceManager = new MidiDeviceManager(this.context, {
+      onStart: () => this.start(),
+      onStop: () => {
+        this.stop();
+      },
+      isPlayingState: () => this.state === TransportState.playing,
+    });
 
     Engine._engines.set(this.id, this);
     Engine._currentId = this.id;
@@ -212,6 +224,14 @@ export class Engine {
 
   async resume() {
     await this.context.resume();
+  }
+
+  syncMidiControllerValues() {
+    this.modules.forEach((module) => {
+      if (module.moduleType !== ModuleType.MidiMapper) return;
+
+      module.syncControllerValues();
+    });
   }
 
   dispose() {
