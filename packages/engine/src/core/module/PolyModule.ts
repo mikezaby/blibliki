@@ -10,6 +10,7 @@ import {
   ModuleType,
   ModuleTypeToModuleMapping,
   ModuleTypeToPropsMapping,
+  ModuleTypeToStateMapping,
 } from "@/modules";
 import {
   IIOSerialize,
@@ -53,6 +54,7 @@ export abstract class PolyModule<
   outputs: OutputCollection;
   protected monoModuleConstructor: IPolyModuleConstructor<T>["monoModuleConstructor"];
   protected _props!: ModuleTypeToPropsMapping[T];
+  protected _state!: ModuleTypeToStateMapping[T];
   private _voices!: number;
   private _name!: string;
   private pendingUIUpdates = false;
@@ -221,13 +223,17 @@ export abstract class PolyModule<
 
   private sheduleTriggerUpdate() {
     requestAnimationFrame(() => {
-      this.engine._triggerPropsUpdate({
+      const updateParams: IPolyModule<T> & {
+        state?: ModuleTypeToStateMapping[T];
+      } = {
         id: this.id,
         moduleType: this.moduleType,
         voices: this.voices,
         name: this.name,
         props: this.props,
-      });
+        state: this._state,
+      };
+      this.engine._triggerPropsUpdate(updateParams);
       this.pendingUIUpdates = false;
     });
   }

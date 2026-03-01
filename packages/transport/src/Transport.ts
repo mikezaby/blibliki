@@ -125,6 +125,10 @@ export class Transport {
     this._clockCallbacks.push(callback);
   }
 
+  removeClockCallback(callback: TransportClockCallback) {
+    this._clockCallbacks = this._clockCallbacks.filter((c) => c !== callback);
+  }
+
   addPropertyChangeCallback(
     property: TransportProperty,
     callback: TransportPropertyChangeCallback,

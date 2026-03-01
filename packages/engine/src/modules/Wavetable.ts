@@ -1,10 +1,5 @@
 import { ContextTime } from "@blibliki/transport";
-import {
-  cancelAnimationFrame,
-  Context,
-  dbToGain,
-  requestAnimationFrame,
-} from "@blibliki/utils";
+import { Context, dbToGain } from "@blibliki/utils";
 import {
   AnalyserNode,
   GainNode,
@@ -193,7 +188,6 @@ const DEFAULT_PROPS: IWavetableProps = {
 
 type WavetableSetterHooks = Pick<
   SetterHooks<IWavetableProps>,
-  | "onSetTables"
   | "onSetPosition"
   | "onAfterSetTables"
   | "onAfterSetPosition"
@@ -202,6 +196,11 @@ type WavetableSetterHooks = Pick<
   | "onAfterSetCoarse"
   | "onAfterSetOctave"
   | "onAfterSetLowGain"
+>;
+
+type PolyWavetableSetterHooks = Pick<
+  SetterHooks<IWavetableProps>,
+  "onSetTables"
 >;
 
 const clamp = (value: number, min: number, max: number): number => {
@@ -233,8 +232,6 @@ export class MonoWavetable
   positionInputIO!: AudioInput;
   positionBuffer: Float32Array;
   private smoothedPosition = DEFAULT_PROPS.position;
-  private positionAnimationFrame: number | null = null;
-  private periodicWaveFactory: WavetablePeriodicWaveFactory;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Wavetable>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
@@ -252,11 +249,6 @@ export class MonoWavetable
 
     this.smoothedPosition = this.props.position;
     this.positionBuffer = new Float32Array(POSITION_ANALYSER_FFT_SIZE);
-    this.periodicWaveFactory = new WavetablePeriodicWaveFactory({
-      audioContext: this.context.audioContext,
-      tables: this.props.tables,
-      disableNormalization: false,
-    });
 
     this.outputGain = new GainNode(this.context.audioContext, {
       gain: dbToGain(LOW_GAIN),
@@ -271,27 +263,22 @@ export class MonoWavetable
     this.registerOutputs();
   }
 
-  onSetTables: WavetableSetterHooks["onSetTables"] = (tables) => {
-    return sanitizeWavetableTables(tables);
-  };
-
   onSetPosition: WavetableSetterHooks["onSetPosition"] = (value) => {
-    return clamp(value, 0, 1);
+    const newValue = clamp(value, 0, 1);
+    this.parentModule?.setActualPosition(newValue, this.voiceNo);
+
+    return newValue;
   };
 
   onAfterSetTables: WavetableSetterHooks["onAfterSetTables"] = () => {
-    this.periodicWaveFactory.setTables(this.props.tables);
     this.applyPeriodicWave();
   };
 
   onAfterSetPosition: WavetableSetterHooks["onAfterSetPosition"] = (_value) => {
     if (!this.isStated) {
-      this.smoothedPosition = clamp(this.props.position, 0, 1);
       this.applyPeriodicWave();
       return;
     }
-
-    this.ensurePositionAnimation();
   };
 
   onAfterSetFrequency: WavetableSetterHooks["onAfterSetFrequency"] = () => {
@@ -319,13 +306,12 @@ export class MonoWavetable
 
     this.isStated = true;
     this.audioNode.start(time);
-    this.ensurePositionAnimation();
+    this.engine.transport.addClockCallback(this.updatePosition);
   }
 
   stop(time: ContextTime) {
     if (!this.isStated) return;
 
-    this.stopPositionAnimation();
     this.audioNode.stop(time);
     this.rePlugAll(() => {
       this.audioNode = new OscillatorNode(this.context.audioContext, {
@@ -336,13 +322,8 @@ export class MonoWavetable
       this.applyPeriodicWave();
     });
 
+    this.engine.transport.removeClockCallback(this.updatePosition);
     this.isStated = false;
-  }
-
-  override dispose() {
-    this.stopPositionAnimation();
-
-    super.dispose();
   }
 
   triggerAttack = (note: Note, triggeredAt: ContextTime) => {
@@ -409,7 +390,7 @@ export class MonoWavetable
     return clamp(this.props.position + this.readPositionModulation(), 0, 1);
   }
 
-  private updatePosition(): boolean {
+  private updatePosition = (): boolean => {
     const nextPosition = this.getCurrentTargetPosition();
     const delta = nextPosition - this.smoothedPosition;
 
@@ -423,24 +404,19 @@ export class MonoWavetable
 
     this.smoothedPosition += delta * POSITION_SMOOTHING_FACTOR;
     this.applyPeriodicWave();
+    this.parentModule?.setActualPosition(
+      this.getActualPosition(),
+      this.voiceNo,
+    );
     return true;
-  }
-
-  private ensurePositionAnimation() {
-    this.engine.transport.addClockCallback(() => {
-      this.updatePosition();
-    });
-  }
-
-  private stopPositionAnimation() {
-    if (this.positionAnimationFrame === null) return;
-
-    cancelAnimationFrame(this.positionAnimationFrame);
-    this.positionAnimationFrame = null;
-  }
+  };
 
   getActualPosition() {
     return clamp(this.smoothedPosition, 0, 1);
+  }
+
+  private get periodicWaveFactory() {
+    return this.parentModule!.periodicWaveFactory;
   }
 
   private applyPeriodicWave() {
@@ -479,11 +455,11 @@ export class MonoWavetable
   }
 }
 
-export default class Wavetable extends PolyModule<ModuleType.Wavetable> {
-  private state: IWavetableState = {
-    actualPosition: DEFAULT_PROPS.position,
-  };
-  private stateAnimationFrame: number | null = null;
+export default class Wavetable
+  extends PolyModule<ModuleType.Wavetable>
+  implements PolyWavetableSetterHooks
+{
+  periodicWaveFactory: WavetablePeriodicWaveFactory;
 
   constructor(
     engineId: string,
@@ -501,10 +477,24 @@ export default class Wavetable extends PolyModule<ModuleType.Wavetable> {
       monoModuleConstructor,
     });
 
+    this._state = { actualPosition: props.position };
+
+    this.periodicWaveFactory = new WavetablePeriodicWaveFactory({
+      audioContext: this.context.audioContext,
+      tables: this.props.tables,
+      disableNormalization: false,
+    });
+
     this.registerInputs();
     this.registerDefaultIOs("out");
-    this.startStateSync();
   }
+
+  onSetTables: PolyWavetableSetterHooks["onSetTables"] = (tables) => {
+    const sanitizedTables = sanitizeWavetableTables(tables);
+    this.periodicWaveFactory.setTables(sanitizedTables);
+
+    return sanitizedTables;
+  };
 
   start(time: ContextTime) {
     this.audioModules.forEach((audioModule) => {
@@ -518,46 +508,23 @@ export default class Wavetable extends PolyModule<ModuleType.Wavetable> {
     });
   }
 
-  override dispose() {
-    this.stopStateSync();
-    super.dispose();
-  }
+  setActualPosition(position: number, voiceNo: number) {
+    if (voiceNo !== 0) return;
 
-  private startStateSync() {
-    if (this.stateAnimationFrame !== null) return;
+    const actualPosition = clamp(position, 0, 1);
 
-    const tick = () => {
-      this.syncStateFromVoices();
-      this.stateAnimationFrame = requestAnimationFrame(tick);
+    if (this._state.actualPosition === actualPosition) return;
+
+    this._state = {
+      ...this._state,
+      actualPosition,
     };
 
-    this.stateAnimationFrame = requestAnimationFrame(tick);
+    this.triggerPropsUpdate();
   }
 
-  private stopStateSync() {
-    if (this.stateAnimationFrame === null) return;
-
-    cancelAnimationFrame(this.stateAnimationFrame);
-    this.stateAnimationFrame = null;
-  }
-
-  private syncStateFromVoices() {
-    const firstVoice = this.audioModules[0] as MonoWavetable | undefined;
-    const nextPosition = firstVoice
-      ? firstVoice.getActualPosition()
-      : clamp(this.props.position, 0, 1);
-
-    if (Math.abs(this.state.actualPosition - nextPosition) < 0.0005) return;
-
-    this.state = { actualPosition: nextPosition };
-    this.engine._triggerPropsUpdate({
-      id: this.id,
-      moduleType: this.moduleType,
-      voices: this.voices,
-      name: this.name,
-      props: this.props,
-      state: this.state,
-    });
+  override dispose() {
+    super.dispose();
   }
 
   private registerInputs() {
