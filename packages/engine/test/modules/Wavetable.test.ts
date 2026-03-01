@@ -106,6 +106,57 @@ describe("Wavetable", () => {
     expect(highPositionPeak).toBeGreaterThan(0.01);
   });
 
+  it("updates output when tables are changed during playback", async (ctx) => {
+    const oscillator = new Wavetable(ctx.engine.id, {
+      name: "Wavetable Oscillator",
+      moduleType: ModuleType.Wavetable,
+      props: {
+        ...DEFAULT_PROPS,
+        position: 1,
+      },
+      voices: 1,
+      monoModuleConstructor: () => {
+        throw new Error("Not used in test");
+      },
+    });
+    const inspector = new Inspector(ctx.engine.id, {
+      name: "inspector",
+      moduleType: ModuleType.Inspector,
+      props: {},
+    });
+
+    await sleep(10);
+
+    const monoOscillator = oscillator.audioModules[0]!;
+    monoOscillator.start(ctx.context.currentTime);
+    ctx.engine.transport.start(ctx.context.currentTime);
+    monoOscillator.plug({ audioModule: inspector, from: "out", to: "in" });
+
+    await sleep(50);
+    const beforePresetChangePeak = inspector
+      .getValues()
+      .reduce((max, value) => {
+        return Math.max(max, Math.abs(value));
+      }, 0);
+
+    oscillator.props = {
+      tables: [
+        { real: [0, 0], imag: [0, 0] },
+        { real: [0, 0], imag: [0, 0] },
+      ],
+    };
+
+    await sleep(70);
+    ctx.engine.transport.stop(ctx.context.currentTime);
+
+    const afterPresetChangePeak = inspector.getValues().reduce((max, value) => {
+      return Math.max(max, Math.abs(value));
+    }, 0);
+
+    expect(beforePresetChangePeak).toBeGreaterThan(0.01);
+    expect(afterPresetChangePeak).toBeLessThan(0.01);
+  });
+
   it("stays stable with mismatched table harmonic lengths", async (ctx) => {
     const oscillator = new Wavetable(ctx.engine.id, {
       name: "Wavetable Oscillator",

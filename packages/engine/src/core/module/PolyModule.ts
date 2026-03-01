@@ -4,6 +4,7 @@ import {
   Optional,
   uuidv4,
   requestAnimationFrame,
+  upperFirst,
 } from "@blibliki/utils";
 import { Engine } from "@/Engine";
 import {
@@ -55,6 +56,7 @@ export abstract class PolyModule<
   protected monoModuleConstructor: IPolyModuleConstructor<T>["monoModuleConstructor"];
   protected _props!: ModuleTypeToPropsMapping[T];
   protected _state!: ModuleTypeToStateMapping[T];
+  protected _propsInitialized = false;
   private _voices!: number;
   private _name!: string;
   private pendingUIUpdates = false;
@@ -130,8 +132,60 @@ export abstract class PolyModule<
   }
 
   set props(value: Partial<ModuleTypeToPropsMapping[T]>) {
-    this._props = { ...this._props, ...value };
-    this.audioModules.forEach((m) => (m.props = value));
+    const updatedValue: Partial<ModuleTypeToPropsMapping[T]> = {};
+    const isFirstSet = !this._propsInitialized;
+
+    (Object.keys(value) as (keyof ModuleTypeToPropsMapping[T])[]).forEach(
+      (key) => {
+        const propValue = value[key];
+        if (
+          propValue !== undefined &&
+          (isFirstSet || this._props[key] !== propValue)
+        ) {
+          const result = this.callPropHook("onSet", key, propValue);
+          updatedValue[key] = result ?? propValue;
+        }
+      },
+    );
+
+    if (Object.keys(updatedValue).length === 0) {
+      if (isFirstSet) this._propsInitialized = true;
+      return;
+    }
+
+    this._props = { ...this._props, ...updatedValue };
+    this.audioModules.forEach((m) => (m.props = updatedValue));
+
+    (
+      Object.keys(updatedValue) as (keyof ModuleTypeToPropsMapping[T])[]
+    ).forEach((key) => {
+      const propValue = updatedValue[key];
+      if (propValue !== undefined) {
+        this.callPropHook("onAfterSet", key, propValue);
+      }
+    });
+
+    this._propsInitialized = true;
+  }
+
+  private callPropHook<K extends keyof ModuleTypeToPropsMapping[T]>(
+    hookType: "onSet" | "onAfterSet",
+    key: K,
+    value: ModuleTypeToPropsMapping[T][K],
+  ): ModuleTypeToPropsMapping[T][K] | undefined {
+    const hookName = `${hookType}${upperFirst(key as string)}`;
+    const hook = this[hookName as keyof this];
+
+    if (typeof hook === "function") {
+      const result = (
+        hook as (
+          value: ModuleTypeToPropsMapping[T][K],
+        ) => ModuleTypeToPropsMapping[T][K] | undefined
+      ).call(this, value);
+      return result;
+    }
+
+    return undefined;
   }
 
   get voices() {
