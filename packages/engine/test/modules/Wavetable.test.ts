@@ -27,7 +27,6 @@ const DEFAULT_PROPS: IWavetableProps = {
   coarse: 0,
   octave: 0,
   lowGain: false,
-  disableNormalization: false,
 };
 
 describe("Wavetable", () => {

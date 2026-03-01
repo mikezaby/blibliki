@@ -56,7 +56,6 @@ export type IWavetableProps = {
   coarse: number;
   octave: number;
   lowGain: boolean;
-  disableNormalization: boolean;
 };
 
 export const wavetablePropSchema: ModulePropSchema<IWavetableProps> = {
@@ -103,11 +102,8 @@ export const wavetablePropSchema: ModulePropSchema<IWavetableProps> = {
     kind: "boolean",
     label: `Use ${LOW_GAIN}db Gain`,
   },
-  disableNormalization: {
-    kind: "boolean",
-    label: "Disable normalization",
-  },
 };
+
 const NUMBER_PATTERN = /-?\d*\.?\d+(?:e[+-]?\d+)?/gi;
 
 const parseNumberArray = (arraySource: string): number[] => {
@@ -193,7 +189,6 @@ const DEFAULT_PROPS: IWavetableProps = {
   coarse: 0,
   octave: 0,
   lowGain: false,
-  disableNormalization: false,
 };
 
 type WavetableSetterHooks = Pick<
@@ -202,7 +197,6 @@ type WavetableSetterHooks = Pick<
   | "onSetPosition"
   | "onAfterSetTables"
   | "onAfterSetPosition"
-  | "onAfterSetDisableNormalization"
   | "onAfterSetFrequency"
   | "onAfterSetFine"
   | "onAfterSetCoarse"
@@ -261,7 +255,7 @@ export class MonoWavetable
     this.periodicWaveFactory = new WavetablePeriodicWaveFactory({
       audioContext: this.context.audioContext,
       tables: this.props.tables,
-      disableNormalization: this.props.disableNormalization,
+      disableNormalization: false,
     });
 
     this.outputGain = new GainNode(this.context.audioContext, {
@@ -299,14 +293,6 @@ export class MonoWavetable
 
     this.ensurePositionAnimation();
   };
-
-  onAfterSetDisableNormalization: WavetableSetterHooks["onAfterSetDisableNormalization"] =
-    () => {
-      this.periodicWaveFactory.setDisableNormalization(
-        this.props.disableNormalization,
-      );
-      this.applyPeriodicWave();
-    };
 
   onAfterSetFrequency: WavetableSetterHooks["onAfterSetFrequency"] = () => {
     this.updateFrequency();
