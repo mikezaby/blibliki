@@ -11,6 +11,7 @@ import {
   AnyModule,
   ICreateModule,
   ModuleType,
+  ModuleTypeToModuleMapping,
   ModuleTypeToPropsMapping,
   ModuleTypeToStateMapping,
 } from "@/modules";
@@ -45,6 +46,7 @@ export type IModuleConstructor<T extends ModuleType> = Optional<
   "id" | "voiceNo"
 > & {
   audioNodeConstructor?: (context: Context) => AudioNode;
+  parentModule?: ModuleTypeToModuleMapping[T];
 };
 
 export type SetterHooks<P> = {
@@ -71,6 +73,7 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   name: string;
   moduleType: T;
   voiceNo: number;
+  readonly parentModule?: ModuleTypeToModuleMapping[T];
   audioNode: AudioNode | undefined;
   inputs: InputCollection;
   outputs: OutputCollection;
@@ -116,14 +119,22 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
   }
 
   constructor(engineId: string, params: IModuleConstructor<T>) {
-    const { id, name, moduleType, voiceNo, audioNodeConstructor, props } =
-      params;
+    const {
+      id,
+      name,
+      moduleType,
+      voiceNo,
+      audioNodeConstructor,
+      props,
+      parentModule,
+    } = params;
 
     this.id = id ?? uuidv4();
     this.engineId = engineId;
     this.name = name;
     this.moduleType = moduleType;
     this.voiceNo = voiceNo ?? 0;
+    this.parentModule = parentModule;
     this.activeNotes = [];
     this.audioNode = audioNodeConstructor?.(this.context);
     this._props = props;

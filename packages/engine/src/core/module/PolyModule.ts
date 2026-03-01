@@ -6,7 +6,11 @@ import {
   requestAnimationFrame,
 } from "@blibliki/utils";
 import { Engine } from "@/Engine";
-import { ModuleType, ModuleTypeToPropsMapping } from "@/modules";
+import {
+  ModuleType,
+  ModuleTypeToModuleMapping,
+  ModuleTypeToPropsMapping,
+} from "@/modules";
 import {
   IIOSerialize,
   InputCollection,
@@ -290,6 +294,7 @@ export abstract class PolyModule<
         moduleType: this.moduleType,
         voiceNo,
         props: { ...this.props },
+        parentModule: this as unknown as ModuleTypeToModuleMapping[T],
       });
 
       this.audioModules.push(audioModule);

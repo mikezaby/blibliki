@@ -2,7 +2,7 @@ import { Context } from "@blibliki/utils";
 import { describe, it, expect, beforeEach } from "vitest";
 import { Module, SetterHooks } from "@/core/module/Module";
 import { ICreateModule, ModuleType } from "@/modules";
-import { MonoGain } from "@/modules/Gain";
+import Gain, { MonoGain } from "@/modules/Gain";
 import { CustomWorklet, newAudioWorklet } from "@/processors";
 import {
   TestGainModule,
@@ -80,6 +80,30 @@ describe("Module", () => {
         // EXPECTED: Gain should be set immediately, not left at default
         expect(module.audioNode.gain.value).toBe(0.75);
       });
+    });
+  });
+
+  describe("parent module access", () => {
+    it("should expose parent poly module for voice modules", async (ctx) => {
+      const polyGain = new Gain(ctx.engine.id, {
+        name: "polyGain",
+        moduleType: ModuleType.Gain,
+        props: { gain: 1 },
+        voices: 2,
+        monoModuleConstructor: () => {
+          throw new Error("Not used in test");
+        },
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(polyGain.audioModules).toHaveLength(2);
+      expect(polyGain.audioModules[0]!.parentModule).toBe(polyGain);
+      expect(polyGain.audioModules[1]!.parentModule).toBe(polyGain);
+    });
+
+    it("should keep parent poly module undefined for standalone modules", () => {
+      expect(gain.parentModule).toBeUndefined();
     });
   });
 
