@@ -85,6 +85,7 @@ describe("Wavetable", () => {
 
     const monoOscillator = oscillator.audioModules[0]!;
     monoOscillator.start(ctx.context.currentTime);
+    ctx.engine.transport.start(ctx.context.currentTime);
     monoOscillator.plug({ audioModule: inspector, from: "out", to: "in" });
 
     await sleep(50);
@@ -96,6 +97,7 @@ describe("Wavetable", () => {
       position: 1,
     };
     await sleep(50);
+    ctx.engine.transport.stop(ctx.context.currentTime);
 
     const highPositionPeak = inspector.getValues().reduce((max, value) => {
       return Math.max(max, Math.abs(value));
@@ -171,8 +173,10 @@ describe("Wavetable", () => {
     await sleep(10);
     const monoOscillator = oscillator.audioModules[0]!;
     monoOscillator.start(ctx.context.currentTime);
+    ctx.engine.transport.start(ctx.context.currentTime);
     oscillator.props = { position: 1 };
     await sleep(120);
+    ctx.engine.transport.stop(ctx.context.currentTime);
 
     const stateUpdates = updates.filter(
       (update) => typeof update.state?.actualPosition === "number",

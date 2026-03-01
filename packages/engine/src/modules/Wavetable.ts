@@ -17,10 +17,13 @@ import { IModuleConstructor, SetterHooks } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { ModulePropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
+import {
+  DEFAULT_WAVETABLE_TABLES,
+  sanitizeWavetableTables,
+  WavetablePeriodicWaveFactory,
+} from "./WavetablePeriodicWaveFactory";
 
 const LOW_GAIN = -18;
-const MIN_COEFFICIENT_LENGTH = 2;
-const MAX_HARMONICS = 128;
 const POSITION_SMOOTHING_FACTOR = 0.25;
 const POSITION_SMOOTHING_EPSILON = 0.0005;
 const POSITION_MODULATION_SCALE = 0.5;
@@ -178,10 +181,9 @@ export const formatWavetableConfig = (config: IWavetableConfig): string => {
   return JSON.stringify({ tables: config.tables }, null, 2);
 };
 
-const DEFAULT_TABLES: IWavetableTable[] = [
-  { real: [0, 0], imag: [0, 0] },
-  { real: [0, 0], imag: [0, 1] },
-];
+const DEFAULT_TABLES: IWavetableTable[] = DEFAULT_WAVETABLE_TABLES.map(
+  (table) => ({ real: [...table.real], imag: [...table.imag] }),
+);
 
 const DEFAULT_PROPS: IWavetableProps = {
   tables: DEFAULT_TABLES,
@@ -212,79 +214,6 @@ const clamp = (value: number, min: number, max: number): number => {
   return Math.min(max, Math.max(min, value));
 };
 
-const sanitizeCoefficients = (values: number[]): number[] => {
-  const sanitized = values
-    .map((value) => (Number.isFinite(value) ? value : 0))
-    .slice(0, MAX_HARMONICS);
-
-  if (sanitized.length >= MIN_COEFFICIENT_LENGTH) {
-    return sanitized;
-  }
-
-  const padding = Array.from(
-    { length: MIN_COEFFICIENT_LENGTH - sanitized.length },
-    () => 0,
-  );
-
-  return [...sanitized, ...padding];
-};
-
-const normalizeCoefficientPair = (
-  real: number[],
-  imag: number[],
-): { real: number[]; imag: number[] } => {
-  const nextReal = sanitizeCoefficients(real);
-  const nextImag = sanitizeCoefficients(imag);
-  const targetLength = Math.max(nextReal.length, nextImag.length);
-  const realPadding = Array.from(
-    { length: targetLength - nextReal.length },
-    () => 0,
-  );
-  const imagPadding = Array.from(
-    { length: targetLength - nextImag.length },
-    () => 0,
-  );
-
-  return {
-    real: [...nextReal, ...realPadding],
-    imag: [...nextImag, ...imagPadding],
-  };
-};
-
-const sanitizeTable = (table: IWavetableTable): IWavetableTable => {
-  const { real, imag } = normalizeCoefficientPair(table.real, table.imag);
-  return { real, imag };
-};
-
-const sanitizeTables = (tables: IWavetableTable[]): IWavetableTable[] => {
-  if (!tables.length) return DEFAULT_TABLES.map(sanitizeTable);
-
-  return tables.map((table) => sanitizeTable(table));
-};
-
-const blendTables = (
-  from: IWavetableTable,
-  to: IWavetableTable,
-  t: number,
-): IWavetableTable => {
-  const normalizedFrom = sanitizeTable(from);
-  const normalizedTo = sanitizeTable(to);
-  const length = Math.max(normalizedFrom.real.length, normalizedTo.real.length);
-
-  const blend = (fromValues: number[], toValues: number[]) => {
-    return Array.from({ length }, (_, index) => {
-      const fromValue = fromValues[index] ?? 0;
-      const toValue = toValues[index] ?? 0;
-      return fromValue + (toValue - fromValue) * t;
-    });
-  };
-
-  return {
-    real: blend(normalizedFrom.real, normalizedTo.real),
-    imag: blend(normalizedFrom.imag, normalizedTo.imag),
-  };
-};
-
 const transposeFrequency = ({
   frequency,
   coarse,
@@ -311,6 +240,7 @@ export class MonoWavetable
   positionBuffer: Float32Array;
   private smoothedPosition = DEFAULT_PROPS.position;
   private positionAnimationFrame: number | null = null;
+  private periodicWaveFactory: WavetablePeriodicWaveFactory;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Wavetable>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
@@ -328,6 +258,11 @@ export class MonoWavetable
 
     this.smoothedPosition = this.props.position;
     this.positionBuffer = new Float32Array(POSITION_ANALYSER_FFT_SIZE);
+    this.periodicWaveFactory = new WavetablePeriodicWaveFactory({
+      audioContext: this.context.audioContext,
+      tables: this.props.tables,
+      disableNormalization: this.props.disableNormalization,
+    });
 
     this.outputGain = new GainNode(this.context.audioContext, {
       gain: dbToGain(LOW_GAIN),
@@ -343,7 +278,7 @@ export class MonoWavetable
   }
 
   onSetTables: WavetableSetterHooks["onSetTables"] = (tables) => {
-    return sanitizeTables(tables);
+    return sanitizeWavetableTables(tables);
   };
 
   onSetPosition: WavetableSetterHooks["onSetPosition"] = (value) => {
@@ -351,6 +286,7 @@ export class MonoWavetable
   };
 
   onAfterSetTables: WavetableSetterHooks["onAfterSetTables"] = () => {
+    this.periodicWaveFactory.setTables(this.props.tables);
     this.applyPeriodicWave();
   };
 
@@ -366,6 +302,9 @@ export class MonoWavetable
 
   onAfterSetDisableNormalization: WavetableSetterHooks["onAfterSetDisableNormalization"] =
     () => {
+      this.periodicWaveFactory.setDisableNormalization(
+        this.props.disableNormalization,
+      );
       this.applyPeriodicWave();
     };
 
@@ -502,14 +441,9 @@ export class MonoWavetable
   }
 
   private ensurePositionAnimation() {
-    if (this.positionAnimationFrame !== null) return;
-
-    const tick = () => {
+    this.engine.transport.addClockCallback(() => {
       this.updatePosition();
-      this.positionAnimationFrame = requestAnimationFrame(tick);
-    };
-
-    this.positionAnimationFrame = requestAnimationFrame(tick);
+    });
   }
 
   private stopPositionAnimation() {
@@ -523,28 +457,10 @@ export class MonoWavetable
     return clamp(this.smoothedPosition, 0, 1);
   }
 
-  private getInterpolatedTable(position: number): IWavetableTable {
-    const tables = sanitizeTables(this.props.tables);
-    if (tables.length === 1) return tables[0]!;
-
-    const mapped = clamp(position, 0, 1) * (tables.length - 1);
-    const startIndex = Math.floor(mapped);
-    const endIndex = Math.min(startIndex + 1, tables.length - 1);
-    const factor = mapped - startIndex;
-
-    return blendTables(tables[startIndex]!, tables[endIndex]!, factor);
-  }
-
   private applyPeriodicWave() {
-    const processed = this.getInterpolatedTable(this.smoothedPosition);
-    const periodicWave = this.context.audioContext.createPeriodicWave(
-      new Float32Array(processed.real),
-      new Float32Array(processed.imag),
-      {
-        disableNormalization: this.props.disableNormalization,
-      },
+    const periodicWave = this.periodicWaveFactory.getPeriodicWave(
+      this.smoothedPosition,
     );
-
     this.audioNode.setPeriodicWave(periodicWave);
   }
 
