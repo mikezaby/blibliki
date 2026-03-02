@@ -14,12 +14,15 @@ import {
   Text,
 } from "@blibliki/ui";
 import { ChevronDown, ChevronUp, SquarePlus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useAppSelector, useAppDispatch } from "@/hooks";
+import { useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
+import { useAppDispatch } from "@/hooks";
+import type { RootState } from "@/store";
 import { ModuleComponent } from ".";
 import Container from "./Container";
 import { initialize } from "./MidiInput/midiDevicesSlice";
-import { modulesSelector } from "./modulesSlice";
+import { areModulesEqualForMidiMapper } from "./MidiMapper.utils";
+import { modulesSelector, type ModuleProps } from "./modulesSlice";
 
 const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
   const {
@@ -28,7 +31,14 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
   } = props;
 
   const dispatch = useAppDispatch();
-  const modules = useAppSelector((state) => modulesSelector.selectAll(state));
+  const modules = useSelector<RootState, ModuleProps[]>(
+    (state) => modulesSelector.selectAll(state),
+    areModulesEqualForMidiMapper,
+  );
+  const moduleOptions = useMemo(
+    () => modules.map(({ id, name }) => ({ id, name })),
+    [modules],
+  );
 
   const page = pages[activePage];
   const pageMappings = page?.mappings ?? [{}];
@@ -43,14 +53,6 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
   const [expandedMappings, setExpandedMappings] = useState<Set<number>>(
     new Set(),
   );
-  const [lastViewMode, setLastViewMode] = useState(viewMode);
-
-  // Reset expanded mappings during render when viewMode changes
-  // This avoids calling setState in an effect which can cause cascading renders
-  if (viewMode !== lastViewMode) {
-    setExpandedMappings(new Set());
-    setLastViewMode(viewMode);
-  }
 
   useEffect(() => {
     dispatch(initialize());
@@ -396,7 +398,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
                     <OptionSelect
                       label="Select module"
                       value={mapping.moduleId ?? ""}
-                      options={modules}
+                      options={moduleOptions}
                       onChange={(value: string) => {
                         updateMappedModuleId({ id: value, index: i });
                       }}
