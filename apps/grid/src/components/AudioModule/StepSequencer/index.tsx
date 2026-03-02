@@ -82,9 +82,9 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
   } = sequencerProps;
 
   // Extract state values (temporal/runtime data)
-  const currentStep = sequencerState?.currentStep ?? 0;
-  const sequencePosition = sequencerState?.sequencePosition;
-  const isRunning = !!sequencerState?.isRunning;
+  const currentStep = sequencerState.currentStep;
+  const sequencePosition = sequencerState.sequencePosition;
+  const isRunning = sequencerState.isRunning;
 
   const currentPattern = patterns[activePatternNo];
   const currentPage = currentPattern?.pages[activePageNo];
