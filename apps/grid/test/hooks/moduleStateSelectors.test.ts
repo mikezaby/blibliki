@@ -3,6 +3,7 @@ import { ModuleType } from "@blibliki/engine";
 import { describe, expect, it } from "vitest";
 import {
   areModulesEqualIgnoringState,
+  resolveModuleStateForType,
   selectModuleStateById,
 } from "../../src/hooks";
 import type { RootState } from "../../src/store";
@@ -60,5 +61,35 @@ describe("module state selectors", () => {
       isRunning: true,
     });
     expect(selectModuleStateById(rootState, "missing-id")).toBeUndefined();
+  });
+
+  it("returns a stable fallback reference when runtime state is missing", () => {
+    const moduleWithoutRuntimeState = createSerializedModule();
+
+    const first = resolveModuleStateForType(
+      moduleWithoutRuntimeState,
+      ModuleType.StepSequencer,
+    );
+    const second = resolveModuleStateForType(
+      moduleWithoutRuntimeState,
+      ModuleType.StepSequencer,
+    );
+
+    expect(first).toBe(second);
+  });
+
+  it("returns a stable fallback reference for module type mismatch", () => {
+    const stepSequencerModule = createSerializedModule();
+
+    const first = resolveModuleStateForType(
+      stepSequencerModule,
+      ModuleType.Oscillator,
+    );
+    const second = resolveModuleStateForType(
+      stepSequencerModule,
+      ModuleType.Oscillator,
+    );
+
+    expect(first).toBe(second);
   });
 });

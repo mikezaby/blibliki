@@ -1,4 +1,9 @@
-import { Dialog, DialogContent, DialogTitle } from "@blibliki/ui";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@blibliki/ui";
 import { ReactNode } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { close as _close } from "./modalSlice";
@@ -32,6 +37,9 @@ export default function Modal(props: ModalProps) {
     <Dialog open={isOpen} onOpenChange={close}>
       <DialogContent className={className}>
         <DialogTitle className="ui-visually-hidden">{modalName}</DialogTitle>
+        <DialogDescription className="ui-visually-hidden">
+          Modal dialog for {modalName}
+        </DialogDescription>
         {children}
       </DialogContent>
     </Dialog>

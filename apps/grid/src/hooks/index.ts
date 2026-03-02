@@ -103,16 +103,27 @@ export const areModulesEqualIgnoringState = (
 export const selectModuleStateById = (state: RootState, id: string) =>
   modulesSelector.selectById(state, id)?.state;
 
+const EMPTY_MODULE_STATE = Object.freeze({}) as Record<string, never>;
+
+export function resolveModuleStateForType<T extends ModuleType>(
+  audioModule: ModuleProps | undefined,
+  moduleType: T,
+): ModuleTypeToStateMapping[T] {
+  if (audioModule?.moduleType !== moduleType) {
+    return EMPTY_MODULE_STATE as unknown as ModuleTypeToStateMapping[T];
+  }
+
+  return (audioModule.state ??
+    EMPTY_MODULE_STATE) as ModuleTypeToStateMapping[T];
+}
+
 export function useModuleState<T extends ModuleType>(
   id: string,
   moduleType: T,
 ) {
   return useAppSelector((state) => {
     const audioModule = modulesSelector.selectById(state, id);
-    if (audioModule?.moduleType !== moduleType)
-      return {} as ModuleTypeToStateMapping[T];
-
-    return (audioModule.state ?? {}) as ModuleTypeToStateMapping[T];
+    return resolveModuleStateForType(audioModule, moduleType);
   });
 }
 
