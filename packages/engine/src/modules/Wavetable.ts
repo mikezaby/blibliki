@@ -1,28 +1,23 @@
 import { ContextTime } from "@blibliki/transport";
 import { Context, dbToGain } from "@blibliki/utils";
-import {
-  AnalyserNode,
-  GainNode,
-  OscillatorNode,
-} from "@blibliki/utils/web-audio-api";
+import { GainNode } from "@blibliki/utils/web-audio-api";
 import { IModule, Module } from "@/core";
-import { AudioInput } from "@/core/IO/AudioIO";
 import Note from "@/core/Note";
 import { IModuleConstructor, SetterHooks } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { ModulePropSchema } from "@/core/schema";
+import { CustomWorklet, newAudioWorklet } from "@/processors";
 import { ICreateModule, ModuleType } from ".";
 import {
   DEFAULT_WAVETABLE_TABLES,
   sanitizeWavetableTables,
-  WavetablePeriodicWaveFactory,
 } from "./WavetablePeriodicWaveFactory";
 
 const LOW_GAIN = -18;
-const POSITION_SMOOTHING_FACTOR = 0.25;
-const POSITION_SMOOTHING_EPSILON = 0.0005;
 const POSITION_MODULATION_SCALE = 0.5;
-const POSITION_ANALYSER_FFT_SIZE = 32;
+const POSITION_STATE_EPSILON = 0.0005;
+const SET_TABLES_MESSAGE = "setTables";
+const ACTUAL_POSITION_MESSAGE = "actualPosition";
 
 export type IWavetable = IModule<ModuleType.Wavetable>;
 export type IWavetableDefinition = {
@@ -219,27 +214,32 @@ const transposeFrequency = ({
   return frequency * Math.pow(2, coarse / 12 + octave + fine / 12);
 };
 
+type WavetableProcessorMessage = {
+  type: string;
+  value?: unknown;
+};
+
 export class MonoWavetable
   extends Module<ModuleType.Wavetable>
   implements WavetableSetterHooks
 {
-  declare audioNode: OscillatorNode;
-  isStated = false;
-  outputGain: GainNode;
-  detuneGain!: GainNode;
-  positionControlInput!: GainNode;
-  positionAnalyser!: AnalyserNode;
-  positionInputIO!: AudioInput;
-  positionBuffer: Float32Array;
-  private smoothedPosition = DEFAULT_PROPS.position;
+  declare audioNode: AudioWorkletNode;
+  private isStarted = false;
+  private outputGain: GainNode;
+  private detuneGain: GainNode;
+  private positionModulationGain: GainNode;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Wavetable>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
 
-    const audioNodeConstructor = (context: Context) =>
-      new OscillatorNode(context.audioContext, {
-        frequency: transposeFrequency(props),
-      });
+    const audioNodeConstructor = (context: Context) => {
+      const node = newAudioWorklet(context, CustomWorklet.WavetableProcessor);
+      node.parameters.get("frequency")!.value = transposeFrequency(props);
+      node.parameters.get("detune")!.value = 0;
+      node.parameters.get("position")!.value = clamp(props.position, 0, 1);
+      node.parameters.get("active")!.value = 0;
+      return node;
+    };
 
     super(engineId, {
       ...params,
@@ -247,37 +247,39 @@ export class MonoWavetable
       audioNodeConstructor,
     });
 
-    this.smoothedPosition = this.props.position;
-    this.positionBuffer = new Float32Array(POSITION_ANALYSER_FFT_SIZE);
-
     this.outputGain = new GainNode(this.context.audioContext, {
-      gain: dbToGain(LOW_GAIN),
+      gain: props.lowGain ? dbToGain(LOW_GAIN) : 1,
+    });
+    this.detuneGain = new GainNode(this.context.audioContext, {
+      gain: 100,
+    });
+    this.positionModulationGain = new GainNode(this.context.audioContext, {
+      gain: POSITION_MODULATION_SCALE,
     });
 
-    this.applyOutputGain();
-    this.initializeGainDetune();
-    this.initializePositionControlInput();
-    this.applyPeriodicWave();
+    this.audioNode.connect(this.outputGain);
+    this.detuneGain.connect(this.detuneParam);
+    this.positionModulationGain.connect(this.positionParam);
+
+    this.audioNode.port.onmessage = this.onProcessorMessage;
+    this.sendTablesToProcessor(this.props.tables);
     this.updateFrequency();
     this.registerInputs();
     this.registerOutputs();
   }
 
   onSetPosition: WavetableSetterHooks["onSetPosition"] = (value) => {
-    const newValue = clamp(value, 0, 1);
-    this.parentModule?.setActualPosition(newValue, this.voiceNo);
-
-    return newValue;
+    return clamp(value, 0, 1);
   };
 
-  onAfterSetTables: WavetableSetterHooks["onAfterSetTables"] = () => {
-    this.applyPeriodicWave();
+  onAfterSetTables: WavetableSetterHooks["onAfterSetTables"] = (tables) => {
+    this.sendTablesToProcessor(tables);
   };
 
-  onAfterSetPosition: WavetableSetterHooks["onAfterSetPosition"] = (_value) => {
-    if (!this.isStated) {
-      this.applyPeriodicWave();
-      return;
+  onAfterSetPosition: WavetableSetterHooks["onAfterSetPosition"] = (value) => {
+    this.positionParam.value = value;
+    if (!this.isStarted) {
+      this.parentModule?.setActualPosition(value, this.voiceNo);
     }
   };
 
@@ -302,28 +304,17 @@ export class MonoWavetable
   };
 
   start(time: ContextTime) {
-    if (this.isStated) return;
+    if (this.isStarted) return;
 
-    this.isStated = true;
-    this.audioNode.start(time);
-    this.engine.transport.addClockCallback(this.updatePosition);
+    this.activeParam.setValueAtTime(1, time);
+    this.isStarted = true;
   }
 
   stop(time: ContextTime) {
-    if (!this.isStated) return;
+    if (!this.isStarted) return;
 
-    this.audioNode.stop(time);
-    this.rePlugAll(() => {
-      this.audioNode = new OscillatorNode(this.context.audioContext, {
-        frequency: this.finalFrequency,
-      });
-      this.applyOutputGain();
-      this.detuneGain.connect(this.audioNode.detune);
-      this.applyPeriodicWave();
-    });
-
-    this.engine.transport.removeClockCallback(this.updatePosition);
-    this.isStated = false;
+    this.activeParam.setValueAtTime(0, time);
+    this.isStarted = false;
   }
 
   triggerAttack = (note: Note, triggeredAt: ContextTime) => {
@@ -346,94 +337,57 @@ export class MonoWavetable
     this.updateFrequency(triggeredAt);
   }
 
+  override dispose(): void {
+    this.audioNode.port.onmessage = null;
+    super.dispose();
+  }
+
   private get finalFrequency(): number {
     return transposeFrequency(this.props);
   }
 
+  private get frequencyParam() {
+    return this.audioNode.parameters.get("frequency")!;
+  }
+
+  private get detuneParam() {
+    return this.audioNode.parameters.get("detune")!;
+  }
+
+  private get positionParam() {
+    return this.audioNode.parameters.get("position")!;
+  }
+
+  private get activeParam() {
+    return this.audioNode.parameters.get("active")!;
+  }
+
   private updateFrequency(actionAt?: ContextTime) {
     if (actionAt) {
-      this.audioNode.frequency.setValueAtTime(this.finalFrequency, actionAt);
-    } else {
-      this.audioNode.frequency.value = this.finalFrequency;
-    }
-  }
-
-  private initializePositionControlInput() {
-    this.positionControlInput = new GainNode(this.context.audioContext, {
-      gain: 1,
-    });
-    this.positionAnalyser = new AnalyserNode(this.context.audioContext, {
-      fftSize: POSITION_ANALYSER_FFT_SIZE,
-      smoothingTimeConstant: 0,
-    });
-
-    this.positionControlInput.connect(this.positionAnalyser);
-  }
-
-  private hasPositionModulation(): boolean {
-    return this.positionInputIO.connections.length > 0;
-  }
-
-  private readPositionModulation(): number {
-    if (!this.hasPositionModulation()) return 0;
-
-    this.positionAnalyser.getFloatTimeDomainData(
-      this.positionBuffer as Float32Array<ArrayBuffer>,
-    );
-    const sample = this.positionBuffer[this.positionBuffer.length - 1] ?? 0;
-    if (!Number.isFinite(sample)) return 0;
-
-    return sample * POSITION_MODULATION_SCALE;
-  }
-
-  private getCurrentTargetPosition(): number {
-    return clamp(this.props.position + this.readPositionModulation(), 0, 1);
-  }
-
-  private updatePosition = (): boolean => {
-    const nextPosition = this.getCurrentTargetPosition();
-    const delta = nextPosition - this.smoothedPosition;
-
-    if (Math.abs(delta) < POSITION_SMOOTHING_EPSILON) {
-      if (Math.abs(nextPosition - this.smoothedPosition) > 0) {
-        this.smoothedPosition = nextPosition;
-        this.applyPeriodicWave();
-      }
-      return false;
+      this.frequencyParam.setValueAtTime(this.finalFrequency, actionAt);
+      return;
     }
 
-    this.smoothedPosition += delta * POSITION_SMOOTHING_FACTOR;
-    this.applyPeriodicWave();
-    this.parentModule?.setActualPosition(
-      this.getActualPosition(),
-      this.voiceNo,
-    );
-    return true;
+    this.frequencyParam.value = this.finalFrequency;
+  }
+
+  private sendTablesToProcessor(tables: IWavetableTable[]) {
+    this.audioNode.port.postMessage({
+      type: SET_TABLES_MESSAGE,
+      tables: sanitizeWavetableTables(tables),
+    });
+  }
+
+  private onProcessorMessage = (event: MessageEvent<unknown>) => {
+    const data = event.data;
+    if (!data || typeof data !== "object") return;
+
+    const message = data as WavetableProcessorMessage;
+    if (message.type !== ACTUAL_POSITION_MESSAGE) return;
+    if (typeof message.value !== "number") return;
+
+    this.parentModule?.setActualPosition(message.value, this.voiceNo);
   };
-
-  getActualPosition() {
-    return clamp(this.smoothedPosition, 0, 1);
-  }
-
-  private get periodicWaveFactory() {
-    return this.parentModule!.periodicWaveFactory;
-  }
-
-  private applyPeriodicWave() {
-    const periodicWave = this.periodicWaveFactory.getPeriodicWave(
-      this.smoothedPosition,
-    );
-    this.audioNode.setPeriodicWave(periodicWave);
-  }
-
-  private applyOutputGain() {
-    this.audioNode.connect(this.outputGain);
-  }
-
-  private initializeGainDetune() {
-    this.detuneGain = new GainNode(this.context.audioContext, { gain: 100 });
-    this.detuneGain.connect(this.audioNode.detune);
-  }
 
   private registerInputs() {
     this.registerAudioInput({
@@ -441,9 +395,9 @@ export class MonoWavetable
       getAudioNode: () => this.detuneGain,
     });
 
-    this.positionInputIO = this.registerAudioInput({
+    this.registerAudioInput({
       name: "position",
-      getAudioNode: () => this.positionControlInput,
+      getAudioNode: () => this.positionModulationGain,
     });
   }
 
@@ -459,8 +413,6 @@ export default class Wavetable
   extends PolyModule<ModuleType.Wavetable>
   implements PolyWavetableSetterHooks
 {
-  periodicWaveFactory: WavetablePeriodicWaveFactory;
-
   constructor(
     engineId: string,
     params: IPolyModuleConstructor<ModuleType.Wavetable>,
@@ -477,23 +429,14 @@ export default class Wavetable
       monoModuleConstructor,
     });
 
-    this._state = { actualPosition: props.position };
-
-    this.periodicWaveFactory = new WavetablePeriodicWaveFactory({
-      audioContext: this.context.audioContext,
-      tables: this.props.tables,
-      disableNormalization: false,
-    });
+    this._state = { actualPosition: clamp(props.position, 0, 1) };
 
     this.registerInputs();
     this.registerDefaultIOs("out");
   }
 
   onSetTables: PolyWavetableSetterHooks["onSetTables"] = (tables) => {
-    const sanitizedTables = sanitizeWavetableTables(tables);
-    this.periodicWaveFactory.setTables(sanitizedTables);
-
-    return sanitizedTables;
+    return sanitizeWavetableTables(tables);
   };
 
   start(time: ContextTime) {
@@ -512,8 +455,12 @@ export default class Wavetable
     if (voiceNo !== 0) return;
 
     const actualPosition = clamp(position, 0, 1);
-
-    if (this._state.actualPosition === actualPosition) return;
+    if (
+      Math.abs(this._state.actualPosition - actualPosition) <
+      POSITION_STATE_EPSILON
+    ) {
+      return;
+    }
 
     this._state = {
       ...this._state,
@@ -521,10 +468,6 @@ export default class Wavetable
     };
 
     this.triggerPropsUpdate();
-  }
-
-  override dispose() {
-    super.dispose();
   }
 
   private registerInputs() {

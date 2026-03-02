@@ -106,6 +106,44 @@ describe("Wavetable", () => {
     expect(highPositionPeak).toBeGreaterThan(0.01);
   });
 
+  it("updates output on position changes without starting transport", async (ctx) => {
+    const oscillator = new Wavetable(ctx.engine.id, {
+      name: "Wavetable Oscillator",
+      moduleType: ModuleType.Wavetable,
+      props: DEFAULT_PROPS,
+      voices: 1,
+      monoModuleConstructor: () => {
+        throw new Error("Not used in test");
+      },
+    });
+    const inspector = new Inspector(ctx.engine.id, {
+      name: "inspector",
+      moduleType: ModuleType.Inspector,
+      props: {},
+    });
+
+    await sleep(10);
+
+    const monoOscillator = oscillator.audioModules[0]!;
+    monoOscillator.start(ctx.context.currentTime);
+    monoOscillator.plug({ audioModule: inspector, from: "out", to: "in" });
+
+    await sleep(60);
+    const lowPositionPeak = inspector.getValues().reduce((max, value) => {
+      return Math.max(max, Math.abs(value));
+    }, 0);
+
+    oscillator.props = { position: 1 };
+    await sleep(140);
+
+    const highPositionPeak = inspector.getValues().reduce((max, value) => {
+      return Math.max(max, Math.abs(value));
+    }, 0);
+
+    expect(lowPositionPeak).toBeLessThan(0.01);
+    expect(highPositionPeak).toBeGreaterThan(0.01);
+  });
+
   it("updates output when tables are changed during playback", async (ctx) => {
     const oscillator = new Wavetable(ctx.engine.id, {
       name: "Wavetable Oscillator",
@@ -236,6 +274,63 @@ describe("Wavetable", () => {
     expect(
       stateUpdates[stateUpdates.length - 1]?.state?.actualPosition,
     ).toEqual(expect.any(Number));
+  });
+
+  it("publishes smoothed runtime position instead of jumping directly to target", async (ctx) => {
+    const updates: number[] = [];
+    const oscillator = new Wavetable(ctx.engine.id, {
+      name: "Wavetable Oscillator",
+      moduleType: ModuleType.Wavetable,
+      props: DEFAULT_PROPS,
+      voices: 1,
+      monoModuleConstructor: () => {
+        throw new Error("Not used in test");
+      },
+    });
+    const inspector = new Inspector(ctx.engine.id, {
+      name: "inspector",
+      moduleType: ModuleType.Inspector,
+      props: {},
+    });
+
+    ctx.engine.onPropsUpdate((update) => {
+      if (update.id !== oscillator.id) return;
+      if (
+        update.state &&
+        typeof update.state === "object" &&
+        typeof (update.state as { actualPosition?: unknown }).actualPosition ===
+          "number"
+      ) {
+        updates.push(
+          (update.state as { actualPosition: number }).actualPosition,
+        );
+      }
+    });
+
+    await sleep(10);
+
+    const monoOscillator = oscillator.audioModules[0]!;
+    monoOscillator.start(ctx.context.currentTime);
+    monoOscillator.plug({ audioModule: inspector, from: "out", to: "in" });
+
+    await sleep(40);
+    updates.length = 0;
+
+    oscillator.props = { position: 1 };
+    await sleep(80);
+    inspector.getValues();
+
+    const intermediateUpdate = updates.find(
+      (actualPosition) => actualPosition > 0.05 && actualPosition < 0.95,
+    );
+
+    await sleep(180);
+    inspector.getValues();
+
+    const latest = updates[updates.length - 1] ?? 0;
+
+    expect(intermediateUpdate).toBeDefined();
+    expect(latest).toBeGreaterThan(0.95);
   });
 
   describe("wavetable text format", () => {
