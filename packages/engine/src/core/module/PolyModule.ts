@@ -102,6 +102,7 @@ export abstract class PolyModule<
     this.name = name;
     this.moduleType = moduleType;
     this._props = props;
+    this._state = {} as ModuleTypeToStateMapping[T];
 
     this.inputs = new InputCollection(
       this as unknown as PolyModule<ModuleType>,

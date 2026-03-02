@@ -1,8 +1,4 @@
-import {
-  ModuleType,
-  ModuleTypeToPropsMapping,
-  ModuleTypeToStateMapping,
-} from "@blibliki/engine";
+import { ModuleType, ModuleTypeToPropsMapping } from "@blibliki/engine";
 import { ReactNode } from "react";
 import { useAppDispatch } from "@/hooks";
 import Chorus from "./Chorus";
@@ -34,7 +30,6 @@ export type AudioModuleProps<T extends ModuleType> = {
   name: string;
   moduleType: T;
   props: ModuleTypeToPropsMapping[T];
-  state?: ModuleTypeToStateMapping[T];
 };
 
 export type ModuleComponent<T extends ModuleType> = (
@@ -85,7 +80,7 @@ export default function AudioModule<T extends ModuleType>(audioModuleProps: {
 }) {
   const dispatch = useAppDispatch();
 
-  const { id, name, moduleType, props, state } = audioModuleProps.audioModule;
+  const { id, name, moduleType, props } = audioModuleProps.audioModule;
 
   // Direct component lookup from static mapping to avoid "creating components during render" error
   const ComponentFromMapping = COMPONENT_MAPPING[moduleType];
@@ -120,7 +115,6 @@ export default function AudioModule<T extends ModuleType>(audioModuleProps: {
       moduleType={moduleType}
       name={name}
       props={props}
-      state={state}
       updateProp={updateProp}
     />
   );

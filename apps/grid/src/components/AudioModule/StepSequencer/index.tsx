@@ -8,6 +8,7 @@ import {
 } from "@blibliki/engine";
 import { Stack } from "@blibliki/ui";
 import { useState, useCallback } from "react";
+import { useModuleState } from "@/hooks";
 import { ModuleComponent } from "..";
 import Controls from "./Controls";
 import PageNavigator from "./PageNavigator";
@@ -38,12 +39,8 @@ const createDefaultPattern = (name: string): IPattern => ({
 });
 
 const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
-  const {
-    id,
-    updateProp,
-    props: sequencerProps,
-    state: sequencerState,
-  } = props;
+  const { id, updateProp, props: sequencerProps } = props;
+  const sequencerState = useModuleState(id, ModuleType.StepSequencer);
   const [selectedStep, setSelectedStep] = useState<number>(0);
   const [lastConfiguredStep, setLastConfiguredStep] = useState<IStep | null>(
     null,

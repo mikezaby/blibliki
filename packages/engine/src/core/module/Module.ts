@@ -138,6 +138,7 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
     this.activeNotes = [];
     this.audioNode = audioNodeConstructor?.(this.context);
     this._props = props;
+    this._state = {} as ModuleTypeToStateMapping[T];
 
     this.inputs = new InputCollection(this);
     this.outputs = new OutputCollection(this);

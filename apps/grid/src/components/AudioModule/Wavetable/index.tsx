@@ -6,6 +6,7 @@ import {
   exportWavetableScanToWavBytes,
   extractEmbeddedWavetableTablesFromWavBytes,
   extractWavetableTablesFromAudioBuffer,
+  ModuleTypeToPropsMapping,
 } from "@blibliki/engine";
 import {
   Button,
@@ -30,6 +31,7 @@ import type { MarkProps } from "@blibliki/ui";
 import { AudioContext } from "@blibliki/utils/web-audio-api";
 import { Download, Edit2, Plus, Trash2, Upload, Waves } from "lucide-react";
 import { ChangeEvent, useMemo, useRef, useState } from "react";
+import { useModuleState } from "@/hooks";
 import { ModuleComponent } from "..";
 import Container from "../Container";
 import {
@@ -72,13 +74,81 @@ const createDefaultTable = () => ({
 
 type ModalView = "list" | "edit";
 
+const WaveformPreview = ({
+  id,
+  tables,
+}: {
+  id: string;
+  tables: ModuleTypeToPropsMapping[ModuleType.Wavetable]["tables"];
+}) => {
+  const wavetableState = useModuleState(id, ModuleType.Wavetable);
+  const actualPosition = wavetableState.actualPosition;
+
+  const previewWaveforms = useMemo(() => {
+    return buildPreviewWaveforms(tables, PREVIEW_POINT_COUNT);
+  }, [tables]);
+
+  const interpolationState = useMemo(() => {
+    return getInterpolationState(actualPosition, tables.length);
+  }, [actualPosition, tables.length]);
+
+  return (
+    <svg
+      className="h-full w-full"
+      viewBox={`0 0 ${PREVIEW_WIDTH} ${PREVIEW_HEIGHT}`}
+      preserveAspectRatio="none"
+    >
+      {previewWaveforms.map((points, tableIndex) => {
+        const laneHeight = PREVIEW_HEIGHT / tables.length;
+        const centerY = laneHeight * tableIndex + laneHeight / 2;
+        const amplitude = laneHeight * 0.4;
+        const tablePoints = points
+          .map((value, pointIndex) => {
+            const x = (pointIndex / (points.length - 1 || 1)) * PREVIEW_WIDTH;
+            const y = centerY - value * amplitude;
+            return `${x},${y}`;
+          })
+          .join(" ");
+
+        let blend = 0;
+        if (tableIndex === interpolationState.fromIndex) {
+          blend = Math.max(blend, 1 - interpolationState.mix);
+        }
+        if (tableIndex === interpolationState.toIndex) {
+          blend = Math.max(blend, interpolationState.mix);
+        }
+        if (
+          interpolationState.fromIndex === interpolationState.toIndex &&
+          tableIndex === interpolationState.fromIndex
+        ) {
+          blend = 1;
+        }
+
+        const strokeColor =
+          blend > 0
+            ? `rgba(139, 92, 246, ${0.35 + blend * 0.65})`
+            : "rgba(148, 163, 184, 0.35)";
+
+        return (
+          <polyline
+            key={`wave-preview-${tableIndex}`}
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth={blend > 0 ? 1.8 : 1}
+            points={tablePoints}
+          />
+        );
+      })}
+    </svg>
+  );
+};
+
 const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
   const {
+    id,
     updateProp,
-    state,
     props: { tables, position, octave, coarse, fine },
   } = props;
-  const actualPosition = state?.actualPosition ?? position;
 
   const safeTables = useMemo(() => {
     if (tables.length > 0) return tables;
@@ -97,27 +167,9 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
   const [isExportingWav, setIsExportingWav] = useState(false);
   const wavFileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const interpolationState = useMemo(() => {
-    return getInterpolationState(actualPosition, safeTables.length);
-  }, [actualPosition, safeTables.length]);
-
-  const previewWaveforms = useMemo(() => {
-    return buildPreviewWaveforms(safeTables, PREVIEW_POINT_COUNT);
-  }, [safeTables]);
-
   const selectedPresetId = useMemo(() => {
     return getPresetIdByTables(safeTables) ?? CUSTOM_PRESET_ID;
   }, [safeTables]);
-
-  const playbackLabel = useMemo(() => {
-    if (interpolationState.fromIndex === interpolationState.toIndex) {
-      return `Playing step ${interpolationState.fromIndex + 1}`;
-    }
-
-    const fromAmount = Math.round((1 - interpolationState.mix) * 100);
-    const toAmount = Math.round(interpolationState.mix * 100);
-    return `Blend ${interpolationState.fromIndex + 1} (${fromAmount}%) -> ${interpolationState.toIndex + 1} (${toAmount}%)`;
-  }, [interpolationState]);
 
   const setTables = (nextTables: typeof safeTables) => {
     updateProp("tables")(nextTables);
@@ -284,17 +336,6 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                 className="tracking-tight"
               >
                 <p>Wavetable Bank</p>
-              </Text>
-              <Text asChild tone="muted" size="xs">
-                <p>
-                  {safeTables.length} tables • {playbackLabel}
-                </p>
-              </Text>
-              <Text asChild tone="muted" size="xs">
-                <p>
-                  Base {position.toFixed(3)} • Actual{" "}
-                  {actualPosition.toFixed(3)}
-                </p>
               </Text>
             </div>
 
@@ -540,56 +581,7 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
                 radius="md"
                 className="h-44 flex-1 overflow-hidden p-2"
               >
-                <svg
-                  className="h-full w-full"
-                  viewBox={`0 0 ${PREVIEW_WIDTH} ${PREVIEW_HEIGHT}`}
-                  preserveAspectRatio="none"
-                >
-                  {previewWaveforms.map((points, tableIndex) => {
-                    const laneHeight = PREVIEW_HEIGHT / safeTables.length;
-                    const centerY = laneHeight * tableIndex + laneHeight / 2;
-                    const amplitude = laneHeight * 0.4;
-                    const tablePoints = points
-                      .map((value, pointIndex) => {
-                        const x =
-                          (pointIndex / (points.length - 1 || 1)) *
-                          PREVIEW_WIDTH;
-                        const y = centerY - value * amplitude;
-                        return `${x},${y}`;
-                      })
-                      .join(" ");
-
-                    let blend = 0;
-                    if (tableIndex === interpolationState.fromIndex) {
-                      blend = Math.max(blend, 1 - interpolationState.mix);
-                    }
-                    if (tableIndex === interpolationState.toIndex) {
-                      blend = Math.max(blend, interpolationState.mix);
-                    }
-                    if (
-                      interpolationState.fromIndex ===
-                        interpolationState.toIndex &&
-                      tableIndex === interpolationState.fromIndex
-                    ) {
-                      blend = 1;
-                    }
-
-                    const strokeColor =
-                      blend > 0
-                        ? `rgba(139, 92, 246, ${0.35 + blend * 0.65})`
-                        : "rgba(148, 163, 184, 0.35)";
-
-                    return (
-                      <polyline
-                        key={`wave-preview-${tableIndex}`}
-                        fill="none"
-                        stroke={strokeColor}
-                        strokeWidth={blend > 0 ? 1.8 : 1}
-                        points={tablePoints}
-                      />
-                    );
-                  })}
-                </svg>
+                <WaveformPreview id={id} tables={safeTables} />
               </Surface>
 
               <Surface

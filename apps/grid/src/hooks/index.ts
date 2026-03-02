@@ -1,12 +1,17 @@
-import { Engine } from "@blibliki/engine";
+import {
+  Engine,
+  ModuleType,
+  type ModuleTypeToStateMapping,
+} from "@blibliki/engine";
 import { IPatch, Patch } from "@blibliki/models";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { Connection, Edge, EdgeChange, Node, NodeChange } from "@xyflow/react";
 import { getAuth, signInWithCustomToken } from "firebase/auth";
 import { useCallback, useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import type { TypedUseSelectorHook } from "react-redux";
 import { modulesSelector } from "@/components/AudioModule/modulesSlice";
+import type { ModuleProps } from "@/components/AudioModule/modulesSlice";
 import {
   onNodesChange as _onNodesChange,
   onEdgesChange as _onEdgesChange,
@@ -71,14 +76,55 @@ export function usePatch() {
   return { patch, canCreate, canUpdate, canDelete };
 }
 
-export const useAudioModule = (id: string) => {
-  const audioModule = useAppSelector((state) =>
-    modulesSelector.selectById(state, id),
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never;
+
+export type AudioModuleData = DistributiveOmit<ModuleProps, "state">;
+
+const stripModuleRuntimeState = (audioModule: ModuleProps): AudioModuleData => {
+  const { state: _state, ...moduleData } = audioModule;
+  return moduleData;
+};
+
+export const areModulesEqualIgnoringState = (
+  previous: ModuleProps | undefined,
+  next: ModuleProps | undefined,
+): boolean => {
+  if (previous === next) return true;
+  if (!previous || !next) return previous === next;
+
+  const { state: _previousState, ...previousWithoutState } = previous;
+  const { state: _nextState, ...nextWithoutState } = next;
+
+  return shallowEqual(previousWithoutState, nextWithoutState);
+};
+
+export const selectModuleStateById = (state: RootState, id: string) =>
+  modulesSelector.selectById(state, id)?.state;
+
+export function useModuleState<T extends ModuleType>(
+  id: string,
+  moduleType: T,
+) {
+  return useAppSelector((state) => {
+    const audioModule = modulesSelector.selectById(state, id);
+    if (audioModule?.moduleType !== moduleType)
+      return {} as ModuleTypeToStateMapping[T];
+
+    return (audioModule.state ?? {}) as ModuleTypeToStateMapping[T];
+  });
+}
+
+export const useAudioModule = (id: string): AudioModuleData | undefined => {
+  const audioModule = useSelector<RootState, ModuleProps | undefined>(
+    (state) => modulesSelector.selectById(state, id),
+    areModulesEqualIgnoringState,
   );
 
   if (!audioModule) return;
 
-  return audioModule;
+  return stripModuleRuntimeState(audioModule);
 };
 
 export function useGridNodes() {
