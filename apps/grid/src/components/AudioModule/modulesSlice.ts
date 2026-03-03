@@ -161,6 +161,7 @@ type ModuleChanges = ModuleInfoChanges & {
   state?: ModuleSerializedState | object;
 };
 type PlainModuleUpdate = { id: string; changes: ModuleChanges };
+type RequestedModuleChanges = IUpdateModule<ModuleType>["changes"];
 
 const hasOwn = (target: object, key: string) =>
   Object.prototype.hasOwnProperty.call(target, key);
@@ -184,6 +185,23 @@ const splitSerializedModule = (
       state,
     },
   };
+};
+
+const pickRequestedModuleChanges = (
+  serializedModule: ModuleProps,
+  requestedChanges: RequestedModuleChanges,
+): ModuleChanges => {
+  const filteredChanges: ModuleChanges = {};
+  const serializedModuleRecord = serializedModule as Record<string, unknown>;
+  const filteredChangesRecord = filteredChanges as Record<string, unknown>;
+
+  (["name", "props", "voices"] as const).forEach((key) => {
+    if (!hasOwn(requestedChanges as object, key)) return;
+    if (!hasOwn(serializedModuleRecord, key)) return;
+    filteredChangesRecord[key] = serializedModuleRecord[key];
+  });
+
+  return filteredChanges;
 };
 
 export const updatePlainModule =
@@ -221,11 +239,20 @@ export const updatePlainModule =
 
 export const updateModule =
   (update: IUpdateModule<ModuleType>) => (dispatch: AppDispatch) => {
-    const { id, moduleType, ...changes } = Engine.current.updateModule(
-      update,
-    ) as ModuleProps;
-    void moduleType;
-    dispatch(updatePlainModule({ id, changes }));
+    const serializedModule = Engine.current.updateModule(update) as ModuleProps;
+    const changes = pickRequestedModuleChanges(
+      serializedModule,
+      update.changes,
+    );
+
+    if (Object.keys(changes).length === 0) return;
+
+    dispatch(
+      updatePlainModule({
+        id: serializedModule.id,
+        changes,
+      }),
+    );
   };
 
 export const addModule =
