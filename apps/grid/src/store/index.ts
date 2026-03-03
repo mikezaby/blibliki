@@ -1,6 +1,8 @@
 import { configureStore } from "@reduxjs/toolkit";
 import midiDevicesReducer from "@/components/AudioModule/MidiInput/midiDevicesSlice";
 import midiOutputDevicesReducer from "@/components/AudioModule/MidiOutput/midiDevicesSlice";
+import modulePropsReducer from "@/components/AudioModule/modulePropsSlice";
+import moduleStateReducer from "@/components/AudioModule/moduleStateSlice";
 import modulesReducer from "@/components/AudioModule/modulesSlice";
 import gridNodesReducer from "@/components/Grid/gridNodesSlice";
 import modalReducer from "@/components/Modal/modalSlice";
@@ -15,13 +17,15 @@ export const store = configureStore({
     midiDevices: midiDevicesReducer,
     midiOutputDevices: midiOutputDevicesReducer,
     modules: modulesReducer,
+    moduleProps: modulePropsReducer,
+    moduleState: moduleStateReducer,
     modal: modalReducer,
     gridNodes: gridNodesReducer,
     patch: patchReducer,
     devices: devicesReducer,
     notifications: notificationsReducer,
   },
-  devTools: false,
+  devTools: true,
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

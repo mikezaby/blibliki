@@ -72,7 +72,11 @@ export const initialize =
 
     const flushQueuedUpdates = () => {
       scheduledFlush = null;
-      const modulesById = getState().modules.entities;
+      const state = getState();
+      const modulesById = state.modules.entities;
+      const modulePropsById = state.moduleProps.entities;
+      const moduleStateById = state.moduleState.entities;
+
       queue.sweep(Object.keys(modulesById));
       const updates = queue.flush();
 
@@ -93,14 +97,14 @@ export const initialize =
 
         if (
           nextChanges.props !== undefined &&
-          currentModule.props === nextChanges.props
+          modulePropsById[queuedUpdate.id]?.props === nextChanges.props
         ) {
           delete nextChanges.props;
         }
 
         if (
           nextChanges.state !== undefined &&
-          currentModule.state === nextChanges.state
+          moduleStateById[queuedUpdate.id]?.state === nextChanges.state
         ) {
           delete nextChanges.state;
         }

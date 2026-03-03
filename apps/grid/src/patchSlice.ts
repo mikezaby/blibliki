@@ -1,3 +1,4 @@
+import type { IAnyModuleSerialize } from "@blibliki/engine";
 import { IPatch, Patch } from "@blibliki/models";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
@@ -88,9 +89,12 @@ export const save =
     const { asNew } = props;
     const state = getState();
     const { patch: originalPatch } = state.patch;
-    const modules = modulesSelector
-      .selectAll(state)
-      .map(({ state: _, ...module }) => module);
+    const modules = modulesSelector.selectAll(state).flatMap((moduleInfo) => {
+      const moduleProps = state.moduleProps.entities[moduleInfo.id]?.props;
+      if (moduleProps === undefined) return [];
+
+      return [{ ...moduleInfo, props: moduleProps } as IAnyModuleSerialize];
+    });
     const gridNodes = state.gridNodes;
     const bpm = state.global.bpm;
     const config = { bpm, modules, gridNodes };

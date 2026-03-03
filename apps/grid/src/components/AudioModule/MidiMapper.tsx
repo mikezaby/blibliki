@@ -21,8 +21,7 @@ import type { RootState } from "@/store";
 import { ModuleComponent } from ".";
 import Container from "./Container";
 import { initialize } from "./MidiInput/midiDevicesSlice";
-import { areModulesEqualForMidiMapper } from "./MidiMapper.utils";
-import { modulesSelector, type ModuleProps } from "./modulesSlice";
+import { moduleInfoSelector, type ModuleInfo } from "./modulesSlice";
 
 const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
   const {
@@ -31,9 +30,8 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
   } = props;
 
   const dispatch = useAppDispatch();
-  const modules = useSelector<RootState, ModuleProps[]>(
-    (state) => modulesSelector.selectAll(state),
-    areModulesEqualForMidiMapper,
+  const modules = useSelector<RootState, ModuleInfo[]>((state) =>
+    moduleInfoSelector.selectAll(state),
   );
   const moduleOptions = useMemo(
     () => modules.map(({ id, name }) => ({ id, name })),

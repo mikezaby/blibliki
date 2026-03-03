@@ -10,6 +10,8 @@ import { getAuth, signInWithCustomToken } from "firebase/auth";
 import { useCallback, useEffect, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import type { TypedUseSelectorHook } from "react-redux";
+import { modulePropsSelector } from "@/components/AudioModule/modulePropsSlice";
+import { moduleStateSelector } from "@/components/AudioModule/moduleStateSlice";
 import { modulesSelector } from "@/components/AudioModule/modulesSlice";
 import type { ModuleProps } from "@/components/AudioModule/modulesSlice";
 import {
@@ -82,11 +84,6 @@ type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
 
 export type AudioModuleData = DistributiveOmit<ModuleProps, "state">;
 
-const stripModuleRuntimeState = (audioModule: ModuleProps): AudioModuleData => {
-  const { state: _state, ...moduleData } = audioModule;
-  return moduleData;
-};
-
 export const areModulesEqualIgnoringState = (
   previous: ModuleProps | undefined,
   next: ModuleProps | undefined,
@@ -101,12 +98,17 @@ export const areModulesEqualIgnoringState = (
 };
 
 export const selectModuleStateById = (state: RootState, id: string) =>
-  modulesSelector.selectById(state, id)?.state;
+  moduleStateSelector.selectById(state, id)?.state;
 
 const EMPTY_MODULE_STATE = Object.freeze({}) as Record<string, never>;
 
+type ModuleStateCarrier = {
+  moduleType: ModuleType;
+  state?: ModuleProps["state"];
+};
+
 export function resolveModuleStateForType<T extends ModuleType>(
-  audioModule: ModuleProps | undefined,
+  audioModule: ModuleStateCarrier | undefined,
   moduleType: T,
 ): ModuleTypeToStateMapping[T] {
   if (audioModule?.moduleType !== moduleType) {
@@ -122,20 +124,30 @@ export function useModuleState<T extends ModuleType>(
   moduleType: T,
 ) {
   return useAppSelector((state) => {
-    const audioModule = modulesSelector.selectById(state, id);
+    const runtimeState = moduleStateSelector.selectById(state, id)?.state;
+
+    const audioModule = {
+      moduleType,
+      state: runtimeState,
+    };
+
     return resolveModuleStateForType(audioModule, moduleType);
   });
 }
 
 export const useAudioModule = (id: string): AudioModuleData | undefined => {
-  const audioModule = useSelector<RootState, ModuleProps | undefined>(
-    (state) => modulesSelector.selectById(state, id),
-    areModulesEqualIgnoringState,
+  const moduleInfo = useAppSelector((state) =>
+    modulesSelector.selectById(state, id),
   );
+  const props = useAppSelector(
+    (state) => modulePropsSelector.selectById(state, id)?.props,
+  );
+  if (!moduleInfo || !props) return;
 
-  if (!audioModule) return;
-
-  return stripModuleRuntimeState(audioModule);
+  return {
+    ...moduleInfo,
+    props,
+  } as AudioModuleData;
 };
 
 export function useGridNodes() {

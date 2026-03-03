@@ -1,3 +1,4 @@
+import type { IAnyModuleSerialize } from "@blibliki/engine";
 import { Engine } from "@blibliki/engine";
 import { IPatch } from "@blibliki/models";
 import {
@@ -21,6 +22,7 @@ import {
   Download,
   TableOfContents,
 } from "lucide-react";
+import { modulePropsSelector } from "@/components/AudioModule/modulePropsSlice";
 import { modulesSelector } from "@/components/AudioModule/modulesSlice";
 import { open as openModal } from "@/components/Modal/modalSlice";
 import { useAppDispatch, useAppSelector, usePatch } from "@/hooks";
@@ -32,7 +34,17 @@ export default function FileMenu() {
   const { patch, canCreate, canUpdate, canDelete } = usePatch();
   const { bpm } = useAppSelector((state) => state.global);
   const gridNodes = useAppSelector((state) => state.gridNodes);
-  const modules = useAppSelector((state) => modulesSelector.selectAll(state));
+  const modules = useAppSelector((state) =>
+    modulesSelector.selectAll(state).flatMap((moduleInfo) => {
+      const moduleProps = modulePropsSelector.selectById(
+        state,
+        moduleInfo.id,
+      )?.props;
+      if (moduleProps === undefined) return [];
+
+      return [{ ...moduleInfo, props: moduleProps } as IAnyModuleSerialize];
+    }),
+  );
   const navigate = useNavigate();
   const { user } = useUser();
   const { open: openUpload } = useUpload({

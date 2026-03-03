@@ -8,14 +8,27 @@ import {
 } from "@blibliki/engine";
 import { Optional } from "@blibliki/utils";
 import {
-  createSlice,
   createEntityAdapter,
+  createSlice,
   PayloadAction,
-  createSelector,
 } from "@reduxjs/toolkit";
 import { XYPosition } from "@xyflow/react";
 import { addNode } from "@/components/Grid/gridNodesSlice";
 import { AppDispatch, RootState } from "@/store";
+import {
+  addModuleProps,
+  removeAllModuleProps,
+  removeModuleProps,
+  type ModulePropsEntity,
+  updateModuleProps,
+} from "./modulePropsSlice";
+import {
+  addModuleState,
+  removeAllModuleState,
+  removeModuleState,
+  type ModuleStateEntity,
+  updateModuleState,
+} from "./moduleStateSlice";
 
 export type AvailableModuleType = Exclude<
   ModuleType,
@@ -26,10 +39,16 @@ type ModuleInterface = {
   voices?: number;
 } & Omit<IModule<AvailableModuleType>, "id" | "voiceNo">;
 
-// Runtime module type that includes optional state
-export type ModuleProps = IAnyModuleSerialize<AvailableModuleType> & {
+type ModuleSerialized = IAnyModuleSerialize<AvailableModuleType> & {
   state?: ModuleTypeToStateMapping[AvailableModuleType];
 };
+
+// Runtime module type that includes optional state
+export type ModuleProps = ModuleSerialized;
+export type ModuleSerializedProps = ModuleSerialized["props"];
+export type ModuleSerializedState =
+  ModuleTypeToStateMapping[AvailableModuleType];
+export type ModuleInfo = Omit<ModuleSerialized, "props" | "state">;
 
 export const AvailableModules: Record<
   AvailableModuleType,
@@ -111,35 +130,103 @@ export const AvailableModules: Record<
   [ModuleType.Reverb]: { name: "Reverb", moduleType: ModuleType.Reverb },
 };
 
-const modulesAdapter = createEntityAdapter<ModuleProps>({});
+const modulesAdapter = createEntityAdapter<ModuleInfo>({});
 
 export const modulesSlice = createSlice({
   name: "modules",
   initialState: modulesAdapter.getInitialState(),
   reducers: {
-    addModule: (state, action) => modulesAdapter.addOne(state, action),
-    updateModule: (state, update: PayloadAction<IUpdateModule<ModuleType>>) => {
-      const {
-        id,
-        moduleType: _,
-        ...changes
-      } = Engine.current.updateModule(update.payload);
-      return modulesAdapter.updateOne(state, {
-        id,
-        changes,
-      });
-    },
-    removeModule: (state, action) => modulesAdapter.removeOne(state, action),
-    updatePlainModule: (state, action) =>
-      modulesAdapter.updateOne(state, action),
-    removeAllModules: (state) => modulesAdapter.removeAll(state),
+    addModuleInfo: (state, action: PayloadAction<ModuleInfo>) =>
+      modulesAdapter.addOne(state, action.payload),
+    updateModuleInfo: (
+      state,
+      action: PayloadAction<{ id: string; changes: Partial<ModuleInfo> }>,
+    ) => modulesAdapter.updateOne(state, action.payload),
+    removeModuleInfo: (state, action: PayloadAction<string>) =>
+      modulesAdapter.removeOne(state, action.payload),
+    removeAllModuleInfo: (state) => modulesAdapter.removeAll(state),
   },
 });
 
-const { addModule: _addModule } = modulesSlice.actions;
+const {
+  addModuleInfo,
+  updateModuleInfo,
+  removeModuleInfo,
+  removeAllModuleInfo,
+} = modulesSlice.actions;
 
-export const { updateModule, updatePlainModule, removeAllModules } =
-  modulesSlice.actions;
+type ModuleInfoChanges = Partial<Omit<ModuleInfo, "id" | "moduleType">>;
+type ModuleChanges = ModuleInfoChanges & {
+  props?: ModuleSerializedProps | object;
+  state?: ModuleSerializedState | object;
+};
+type PlainModuleUpdate = { id: string; changes: ModuleChanges };
+
+const hasOwn = (target: object, key: string) =>
+  Object.prototype.hasOwnProperty.call(target, key);
+
+const splitSerializedModule = (
+  serializedModule: ModuleProps,
+): {
+  moduleInfo: ModuleInfo;
+  moduleProps: ModulePropsEntity;
+  moduleState: ModuleStateEntity;
+} => {
+  const { props, state, ...moduleInfo } = serializedModule;
+  return {
+    moduleInfo,
+    moduleProps: {
+      id: serializedModule.id,
+      props,
+    },
+    moduleState: {
+      id: serializedModule.id,
+      state,
+    },
+  };
+};
+
+export const updatePlainModule =
+  (update: PlainModuleUpdate) => (dispatch: AppDispatch) => {
+    const { id, changes } = update;
+    const { props, state, ...moduleInfoChanges } = changes;
+
+    if (Object.keys(moduleInfoChanges).length > 0) {
+      dispatch(
+        updateModuleInfo({
+          id,
+          changes: moduleInfoChanges,
+        }),
+      );
+    }
+
+    if (props !== undefined) {
+      dispatch(
+        updateModuleProps({
+          id,
+          changes: { props: props as ModuleSerializedProps },
+        }),
+      );
+    }
+
+    if (hasOwn(changes, "state")) {
+      dispatch(
+        updateModuleState({
+          id,
+          changes: { state: state as ModuleSerializedState | undefined },
+        }),
+      );
+    }
+  };
+
+export const updateModule =
+  (update: IUpdateModule<ModuleType>) => (dispatch: AppDispatch) => {
+    const { id, moduleType, ...changes } = Engine.current.updateModule(
+      update,
+    ) as ModuleProps;
+    void moduleType;
+    dispatch(updatePlainModule({ id, changes }));
+  };
 
 export const addModule =
   (params: { audioModule: ModuleInterface; position?: XYPosition }) =>
@@ -150,9 +237,14 @@ export const addModule =
     const serializedModule = Engine.current.addModule({
       ...audioModule,
       props: { ...defaultProps, ...audioModule.props },
-    });
+    }) as ModuleProps;
 
-    dispatch(_addModule(serializedModule));
+    const { moduleInfo, moduleProps, moduleState } =
+      splitSerializedModule(serializedModule);
+
+    dispatch(addModuleInfo(moduleInfo));
+    dispatch(addModuleProps(moduleProps));
+    dispatch(addModuleState(moduleState));
 
     dispatch(
       addNode({
@@ -179,21 +271,25 @@ export const addNewModule =
 
 export const removeModule =
   (id: string) => (dispatch: AppDispatch, getState: () => RootState) => {
-    const audioModule = modulesSelector.selectById(getState(), id);
-    if (!audioModule) throw Error(`Audio module with id ${id} not exists`);
+    const moduleInfo = moduleInfoSelector.selectById(getState(), id);
+    if (!moduleInfo) throw Error(`Audio module with id ${id} not exists`);
 
     Engine.current.removeModule(id);
-    dispatch(modulesSlice.actions.removeModule(id));
+    dispatch(removeModuleInfo(id));
+    dispatch(removeModuleProps(id));
+    dispatch(removeModuleState(id));
   };
 
-export const modulesSelector = modulesAdapter.getSelectors(
+export const removeAllModules = () => (dispatch: AppDispatch) => {
+  dispatch(removeAllModuleInfo());
+  dispatch(removeAllModuleProps());
+  dispatch(removeAllModuleState());
+};
+
+export const moduleInfoSelector = modulesAdapter.getSelectors(
   (state: RootState) => state.modules,
 );
 
-export const selectAllExceptSelf = createSelector(
-  (state: RootState) => modulesSelector.selectAll(state),
-  (_: RootState, id: string) => id,
-  (modules: ModuleProps[], id: string) => modules.filter((m) => m.id !== id),
-);
+export const modulesSelector = moduleInfoSelector;
 
 export default modulesSlice.reducer;

@@ -2,6 +2,10 @@
 import { ModuleType } from "@blibliki/engine";
 import { describe, expect, it } from "vitest";
 import {
+  moduleInfoSelector,
+  modulesSelector,
+} from "../../src/components/AudioModule/modulesSlice";
+import {
   areModulesEqualIgnoringState,
   resolveModuleStateForType,
   selectModuleStateById,
@@ -50,6 +54,23 @@ describe("module state selectors", () => {
         entities: {
           "seq-1": {
             ...createSerializedModule(),
+          },
+        },
+      },
+      moduleProps: {
+        ids: ["seq-1"],
+        entities: {
+          "seq-1": {
+            id: "seq-1",
+            props: { activePatternNo: 0 },
+          },
+        },
+      },
+      moduleState: {
+        ids: ["seq-1"],
+        entities: {
+          "seq-1": {
+            id: "seq-1",
             state: { currentStep: 6, isRunning: true },
           },
         },
@@ -61,6 +82,99 @@ describe("module state selectors", () => {
       isRunning: true,
     });
     expect(selectModuleStateById(rootState, "missing-id")).toBeUndefined();
+  });
+
+  it("keeps module info stable when only props/state slices change", () => {
+    const modulesState = {
+      ids: ["seq-1"],
+      entities: {
+        "seq-1": createSerializedModule(),
+      },
+    };
+
+    const firstState = {
+      modules: modulesState,
+      moduleProps: {
+        ids: ["seq-1"],
+        entities: {
+          "seq-1": {
+            id: "seq-1",
+            props: { activePatternNo: 0 },
+          },
+        },
+      },
+      moduleState: {
+        ids: ["seq-1"],
+        entities: {
+          "seq-1": {
+            id: "seq-1",
+            state: { currentStep: 0 },
+          },
+        },
+      },
+    } as RootState;
+
+    const secondState = {
+      modules: modulesState,
+      moduleProps: {
+        ids: ["seq-1"],
+        entities: {
+          "seq-1": {
+            id: "seq-1",
+            props: { activePatternNo: 1 },
+          },
+        },
+      },
+      moduleState: {
+        ids: ["seq-1"],
+        entities: {
+          "seq-1": {
+            id: "seq-1",
+            state: { currentStep: 1 },
+          },
+        },
+      },
+    } as RootState;
+
+    expect(moduleInfoSelector.selectById(firstState, "seq-1")).toBe(
+      moduleInfoSelector.selectById(secondState, "seq-1"),
+    );
+  });
+
+  it("returns only module info from modules selectById", () => {
+    const { props: _props, ...moduleInfo } = createSerializedModule();
+    const rootState = {
+      modules: {
+        ids: ["seq-1"],
+        entities: {
+          "seq-1": moduleInfo,
+        },
+      },
+      moduleProps: {
+        ids: ["seq-1"],
+        entities: {
+          "seq-1": {
+            id: "seq-1",
+            props: { activePatternNo: 99 },
+          },
+        },
+      },
+      moduleState: {
+        ids: ["seq-1"],
+        entities: {
+          "seq-1": {
+            id: "seq-1",
+            state: { currentStep: 8 },
+          },
+        },
+      },
+    } as RootState;
+
+    const selected = modulesSelector.selectById(rootState, "seq-1");
+
+    expect(selected).toEqual(moduleInfo);
+    expect(selected && "props" in selected).toBe(false);
+    expect(selected && "state" in selected).toBe(false);
   });
 
   it("returns a stable fallback reference when runtime state is missing", () => {
