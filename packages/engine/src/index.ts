@@ -82,6 +82,7 @@ export type {
   ModuleParams,
   IMidiMapper,
   IMidiMapperProps,
+  IMidiMapperState,
   MidiMapping,
   ILFO,
   ILFOProps,
