@@ -10,6 +10,26 @@ import {
 import { LaunchControlXL3 } from "./controllers/LaunchControlXL3";
 import { findBestMatch } from "./deviceMatcher";
 
+const MIDI_DEBUG_FLAG = "__BLIBLIKI_MIDI_DEBUG__";
+const LAUNCH_CONTROL_DAW_INPUT_NAMES = [
+  "LCXL3 DAW In",
+  "LCXL3 DAW",
+  "Launch Control XL 3 DAW In",
+  "Launch Control XL3 DAW In",
+  "Launch Control XL 3 DAW",
+  "Launch Control XL3 DAW",
+  "Launch Control XL 3",
+] as const;
+const LAUNCH_CONTROL_DAW_OUTPUT_NAMES = [
+  "LCXL3 DAW Out",
+  "LCXL3 DAW",
+  "Launch Control XL 3 DAW Out",
+  "Launch Control XL3 DAW Out",
+  "Launch Control XL 3 DAW",
+  "Launch Control XL3 DAW",
+  "Launch Control XL 3",
+] as const;
+
 type ListenerCallback = (device: MidiInputDevice | MidiOutputDevice) => void;
 type ControllerTransportControls = {
   onStart: () => Promise<void> | void;
@@ -208,6 +228,13 @@ export default class MidiDeviceManager {
     if (!this.midiAccess || this.midiStateChangeListener) return;
 
     this.midiStateChangeListener = (port) => {
+      this.debug("MIDI statechange", {
+        id: port.id,
+        name: port.name,
+        type: port.type,
+        state: port.state,
+      });
+
       if (port.state === "connected") {
         // Device connected
         if (port.type === "input") {
@@ -271,12 +298,24 @@ export default class MidiDeviceManager {
   }
 
   private reconcileLaunchControl() {
-    const inputMatch = this.findInputByFuzzyName("LCXL3 DAW");
-    const outputMatch = this.findOutputByFuzzyName("LCXL3 DAW");
+    const inputMatch = this.findLaunchControlInput();
+    const outputMatch = this.findLaunchControlOutput();
     const input = inputMatch?.device;
     const output = outputMatch?.device;
 
-    if (!(input instanceof MidiInputDevice) || !output) {
+    this.debug("LaunchControl match summary", {
+      inputCandidate: inputMatch?.candidate,
+      inputDevice: input?.name,
+      inputScore: inputMatch?.score,
+      outputCandidate: outputMatch?.candidate,
+      outputDevice: output?.name,
+      outputScore: outputMatch?.score,
+    });
+
+    if (!input || !output) {
+      if (this.launchControl) {
+        this.debug("Disposing LaunchControl due to missing DAW ports");
+      }
       this.disposeLaunchControl();
       return;
     }
@@ -295,10 +334,94 @@ export default class MidiDeviceManager {
       output,
       ...this.controllerTransportControls,
     });
+    this.debug("LaunchControl connected", {
+      input: input.name,
+      output: output.name,
+    });
   }
 
   private disposeLaunchControl() {
+    if (this.launchControl) {
+      this.debug("LaunchControl disposed");
+    }
     this.launchControl?.dispose();
     this.launchControl = undefined;
+  }
+
+  private findLaunchControlInput():
+    | {
+        candidate: string;
+        device: MidiInputDevice;
+        score: number;
+      }
+    | undefined {
+    let bestMatch:
+      | {
+          candidate: string;
+          device: MidiInputDevice;
+          score: number;
+        }
+      | undefined;
+
+    LAUNCH_CONTROL_DAW_INPUT_NAMES.forEach((candidate) => {
+      const match = this.findInputByFuzzyName(candidate, 0.45);
+      if (!match || !(match.device instanceof MidiInputDevice)) return;
+      if (!bestMatch || match.score > bestMatch.score) {
+        bestMatch = {
+          candidate,
+          device: match.device,
+          score: match.score,
+        };
+      }
+    });
+
+    return bestMatch;
+  }
+
+  private findLaunchControlOutput():
+    | {
+        candidate: string;
+        device: MidiOutputDevice;
+        score: number;
+      }
+    | undefined {
+    let bestMatch:
+      | {
+          candidate: string;
+          device: MidiOutputDevice;
+          score: number;
+        }
+      | undefined;
+
+    LAUNCH_CONTROL_DAW_OUTPUT_NAMES.forEach((candidate) => {
+      const match = this.findOutputByFuzzyName(candidate, 0.45);
+      if (!match) return;
+      if (!bestMatch || match.score > bestMatch.score) {
+        bestMatch = {
+          candidate,
+          device: match.device,
+          score: match.score,
+        };
+      }
+    });
+
+    return bestMatch;
+  }
+
+  private debug(message: string, metadata?: Record<string, unknown>) {
+    if (
+      !(globalThis as unknown as Record<string, unknown> | undefined)?.[
+        MIDI_DEBUG_FLAG
+      ]
+    ) {
+      return;
+    }
+
+    if (metadata) {
+      console.debug(`[MidiDeviceManager] ${message}`, metadata);
+      return;
+    }
+
+    console.debug(`[MidiDeviceManager] ${message}`);
   }
 }

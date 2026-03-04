@@ -93,7 +93,7 @@
   - Implement and verify intended button map for DAW mode navigation/page controls.
   - Add tests for each supported command path.
 
-- [ ] **Improve controller matching confidence + telemetry**
+- [x] **Improve controller matching confidence + telemetry**
   - Normalize expected DAW port names for browser/node variation.
   - Add lightweight debug logs behind a flag for match quality and connection transitions.
 
@@ -137,6 +137,11 @@
   - `PageUp`/`PageDown` callbacks
   - `TrackPrev`/`TrackNext` callbacks
   - Engine helpers for advancing/rewinding `MidiMapper.activePage`
+- Improved DAW port matching confidence with expanded normalized candidate names for input/output matching.
+- Added MIDI controller debug telemetry behind `globalThis.__BLIBLIKI_MIDI_DEBUG__` for:
+  - match quality summary
+  - port state transitions
+  - controller connect/dispose lifecycle
 
 ## Validation Commands
 

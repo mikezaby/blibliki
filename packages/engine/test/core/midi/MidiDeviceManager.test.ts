@@ -12,6 +12,8 @@ import type {
 } from "@/core/midi/adapters";
 import { LaunchControlXL3 } from "@/core/midi/controllers/LaunchControlXL3";
 
+const MIDI_DEBUG_FLAG = "__BLIBLIKI_MIDI_DEBUG__";
+
 class FakeInputPort implements IMidiInputPort {
   private listeners = new Set<MidiMessageCallback>();
   private currentState: "connected" | "disconnected";
@@ -159,6 +161,7 @@ describe("MidiDeviceManager", () => {
   });
 
   afterEach(() => {
+    delete (globalThis as Record<string, unknown>)[MIDI_DEBUG_FLAG];
     vi.restoreAllMocks();
   });
 
@@ -217,5 +220,39 @@ describe("MidiDeviceManager", () => {
 
     (manager as any).dispose();
     expect(inputDevice.eventListerCallbacks).toHaveLength(0);
+  });
+
+  it("matches DAW ports exposed with full Node-style names", async () => {
+    const input = new FakeInputPort(
+      "input-1",
+      "Launch Control XL 3:Launch Control XL 3 DAW In 20:0",
+    );
+    const output = new FakeOutputPort(
+      "output-1",
+      "Launch Control XL 3:Launch Control XL 3 DAW Out 20:1",
+    );
+    const access = new FakeMidiAccess([input], [output]);
+    const manager = createManager(access);
+
+    await manager.initialize();
+
+    const inputDevice = manager.findInput("input-1") as MidiInputDevice;
+    expect(inputDevice.eventListerCallbacks).toHaveLength(1);
+  });
+
+  it("logs match quality and lifecycle transitions when MIDI debug flag is enabled", async () => {
+    (globalThis as Record<string, unknown>)[MIDI_DEBUG_FLAG] = true;
+
+    const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
+
+    const input = new FakeInputPort("input-1", "LCXL3 DAW In");
+    const output = new FakeOutputPort("output-1", "LCXL3 DAW Out");
+    const access = new FakeMidiAccess([input], [output]);
+    const manager = createManager(access);
+
+    await manager.initialize();
+    access.disconnectInput("input-1");
+
+    expect(debugSpy).toHaveBeenCalled();
   });
 });
