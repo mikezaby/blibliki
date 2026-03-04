@@ -99,18 +99,18 @@
 
 ### P2: Nice-to-have before public docs
 
-- [ ] **Controller behavior matrix doc**
+- [x] **Controller behavior matrix doc**
   - Human-readable table of supported controls, MIDI channels, and expected behavior.
-- [ ] **Known limitations section in README/docs**
+- [x] **Known limitations section in README/docs**
   - Explicitly call out unsupported controls and fallback behavior.
 
 ## Acceptance Criteria For V1
 
 - [x] Controller can be connected after app start and still becomes fully operational.
 - [x] Controller disconnect does not leave stale listeners/timers or throw runtime errors.
-- [ ] On patch load, mapped values are reflected on Launch Control XL 3 controls without manual interaction.
+- [x] On patch load, mapped values are reflected on Launch Control XL 3 controls without manual interaction.
 - [x] Changing a mapped value in UI updates controller feedback within one render/update cycle.
-- [ ] Incoming CC updates mapped module props and persists mapping value state.
+- [x] Incoming CC updates mapped module props and persists mapping value state.
 - [x] `pnpm tsc`, `pnpm lint`, `pnpm test`, `pnpm format` pass on the branch.
 
 ## Work Log
@@ -142,6 +142,12 @@
   - match quality summary
   - port state transitions
   - controller connect/dispose lifecycle
+- Added controller documentation artifacts:
+  - `docs/launch-control-xl3-daw-v1.md` (behavior matrix + known limitations)
+  - `packages/engine/README.md` (`Controller Support (V1)` and known limitations summary)
+- Expanded `MidiMapper` tests for acceptance criteria:
+  - startup auto-sync feedback on mapper initialization
+  - incoming CC -> mapped prop update + runtime mapping state persistence
 
 ## Validation Commands
 
