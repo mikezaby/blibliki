@@ -26,6 +26,7 @@ describe("LaunchControlXL3", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -112,5 +113,41 @@ describe("LaunchControlXL3", () => {
       RECORD_CONTROL,
       RECORD_STOPPED_COLOR,
     ]);
+  });
+
+  it("removes listeners and clears pending animation timers on dispose", () => {
+    vi.restoreAllMocks();
+    vi.useFakeTimers();
+
+    let inputListener: ((event: MidiEvent) => void) | undefined;
+    const output = {
+      send: vi.fn(),
+    };
+    const input = {
+      addEventListener: vi.fn((listener: (event: MidiEvent) => void) => {
+        inputListener = listener;
+      }),
+      removeEventListener: vi.fn(),
+    };
+
+    const controller = new LaunchControlXL3({
+      input,
+      output,
+      onStart: vi.fn(),
+      onStop: vi.fn(),
+      isPlayingState: () => false,
+    } as any);
+
+    expect(inputListener).toBeDefined();
+
+    output.send.mockClear();
+    (controller as any).dispose();
+    output.send.mockClear();
+
+    vi.advanceTimersByTime(5000);
+
+    expect(input.removeEventListener).toHaveBeenCalledTimes(1);
+    expect(input.removeEventListener).toHaveBeenCalledWith(inputListener);
+    expect(output.send).not.toHaveBeenCalled();
   });
 });

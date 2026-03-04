@@ -270,6 +270,13 @@ class NodeMidiAccess implements IMidiAccess {
     this.pollTimer.unref();
   }
 
+  private stopPolling(): void {
+    if (!this.pollTimer) return;
+
+    clearInterval(this.pollTimer);
+    this.pollTimer = null;
+  }
+
   private scanPorts(emitEvents: boolean): void {
     const nextInputIds = new Set<string>();
     const nextOutputIds = new Set<string>();
@@ -413,6 +420,17 @@ class NodeMidiAccess implements IMidiAccess {
   ): void {
     this.listeners.add(callback);
     this.startPolling();
+  }
+
+  removeEventListener(
+    _event: "statechange",
+    callback: (port: IMidiPort) => void,
+  ): void {
+    this.listeners.delete(callback);
+
+    if (this.listeners.size === 0) {
+      this.stopPolling();
+    }
   }
 }
 

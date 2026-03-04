@@ -1,6 +1,5 @@
 import MidiEvent from "../MidiEvent";
-import MidiOutputDevice from "../MidiOutputDevice";
-import { BaseController } from "./BaseController";
+import { BaseController, ControllerProps } from "./BaseController";
 
 enum Color {
   // ===== GRAYS =====
@@ -233,6 +232,16 @@ const PLAY_CONTROL = 116;
 const RECORD_CONTROL = 118;
 
 export class LaunchControlXL3 extends BaseController {
+  private inputListener?: (event: MidiEvent) => void;
+  private animationDelayTimer?: ReturnType<typeof setTimeout>;
+  private animationStepTimer?: ReturnType<typeof setInterval>;
+  private displayFadeTimer?: ReturnType<typeof setInterval>;
+
+  constructor(props: ControllerProps) {
+    super(props);
+    this.initialize();
+  }
+
   initialize() {
     this.bindTransportControls();
     this.exitDawMode();
@@ -241,12 +250,15 @@ export class LaunchControlXL3 extends BaseController {
   }
 
   private bindTransportControls() {
-    this.input.addEventListener((event) => {
+    this.inputListener = (event) => {
       void this.onMidiEvent(event);
-    });
+    };
+    this.input.addEventListener(this.inputListener);
   }
 
   private async onMidiEvent(event: MidiEvent) {
+    if (this.disposed) return;
+
     const [status, control, value] = event.rawMessage.data;
     if (
       status === undefined ||
@@ -285,6 +297,10 @@ export class LaunchControlXL3 extends BaseController {
   }
 
   animateColors() {
+    if (this.disposed) return;
+
+    this.clearAnimationTimers();
+
     // Define 8 columns - each column has 5 controls (3 encoders + 2 buttons)
     const columns = [
       [
@@ -377,9 +393,13 @@ export class LaunchControlXL3 extends BaseController {
     this.setColor(Control.Record, Color.Gray0);
 
     // Wait 1 second, then start animation
-    setTimeout(() => {
+    this.animationDelayTimer = setTimeout(() => {
+      if (this.disposed) return;
+
       let step = 0;
-      const interval = setInterval(() => {
+      this.animationStepTimer = setInterval(() => {
+        if (this.disposed) return;
+
         columns.forEach((column, col) => {
           const colorIdx = (step + col) % colors.length;
           column.forEach((ctrl) => {
@@ -389,7 +409,7 @@ export class LaunchControlXL3 extends BaseController {
 
         step++;
         if (step >= 24) {
-          clearInterval(interval);
+          this.clearAnimationStepTimer();
           // Set final colors - each column same color
           columns.forEach((column, col) => {
             column.forEach((ctrl) => {
@@ -397,7 +417,7 @@ export class LaunchControlXL3 extends BaseController {
             });
           });
           this.updateTransportColors();
-          sendBigBlibliki(this.output);
+          this.sendBigBlibliki();
         }
       }, 100);
     }, 1000);
@@ -414,47 +434,94 @@ export class LaunchControlXL3 extends BaseController {
   }
 
   setColor(control: Control, color: Color) {
+    if (this.disposed) return;
     this.output.send([176, control, color]);
   }
-}
 
-function sendBigBlibliki(output: MidiOutputDevice) {
-  // Start with screen brightness at 0
-  output.send([0xb6, 0x70, 0x00]); // CC 112 on channel 7, brightness 0
+  override dispose() {
+    if (this.disposed) return;
 
-  // Configure display - arrangement 1 (simple 2-line)
-  output.send([0xf0, 0x00, 0x20, 0x29, 0x02, 0x15, 0x04, 0x35, 0x01, 0xf7]);
+    this.clearAnimationTimers();
 
-  const text = "      Blibliki      ";
-
-  // Set the text
-  output.send([
-    0xf0,
-    0x00,
-    0x20,
-    0x29,
-    0x02,
-    0x15,
-    0x06,
-    0x35,
-    0x00,
-    ...text.split("").map((c) => c.charCodeAt(0)),
-    0xf7,
-  ]);
-
-  // Trigger display
-  output.send([0xf0, 0x00, 0x20, 0x29, 0x02, 0x15, 0x04, 0x35, 0x7f, 0xf7]);
-
-  // Fade in brightness over ~1 second
-  let brightness = 0;
-  const fadeInterval = setInterval(() => {
-    brightness += 8;
-    if (brightness > 127) brightness = 127;
-
-    output.send([0xb6, 0x70, brightness]); // CC 112, channel 7
-
-    if (brightness >= 127) {
-      clearInterval(fadeInterval);
+    if (this.inputListener) {
+      this.input.removeEventListener(this.inputListener);
+      this.inputListener = undefined;
     }
-  }, 60);
+
+    this.exitDawMode();
+    super.dispose();
+  }
+
+  private clearAnimationDelayTimer() {
+    if (this.animationDelayTimer === undefined) return;
+    clearTimeout(this.animationDelayTimer);
+    this.animationDelayTimer = undefined;
+  }
+
+  private clearAnimationStepTimer() {
+    if (this.animationStepTimer === undefined) return;
+    clearInterval(this.animationStepTimer);
+    this.animationStepTimer = undefined;
+  }
+
+  private clearDisplayFadeTimer() {
+    if (this.displayFadeTimer === undefined) return;
+    clearInterval(this.displayFadeTimer);
+    this.displayFadeTimer = undefined;
+  }
+
+  private clearAnimationTimers() {
+    this.clearAnimationDelayTimer();
+    this.clearAnimationStepTimer();
+    this.clearDisplayFadeTimer();
+  }
+
+  private sendBigBlibliki() {
+    if (this.disposed) return;
+
+    // Start with screen brightness at 0
+    this.output.send([0xb6, 0x70, 0x00]); // CC 112 on channel 7, brightness 0
+
+    // Configure display - arrangement 1 (simple 2-line)
+    this.output.send([
+      0xf0, 0x00, 0x20, 0x29, 0x02, 0x15, 0x04, 0x35, 0x01, 0xf7,
+    ]);
+
+    const text = "      Blibliki      ";
+
+    // Set the text
+    this.output.send([
+      0xf0,
+      0x00,
+      0x20,
+      0x29,
+      0x02,
+      0x15,
+      0x06,
+      0x35,
+      0x00,
+      ...text.split("").map((c) => c.charCodeAt(0)),
+      0xf7,
+    ]);
+
+    // Trigger display
+    this.output.send([
+      0xf0, 0x00, 0x20, 0x29, 0x02, 0x15, 0x04, 0x35, 0x7f, 0xf7,
+    ]);
+
+    // Fade in brightness over ~1 second
+    let brightness = 0;
+    this.displayFadeTimer = setInterval(() => {
+      if (this.disposed) return;
+
+      brightness += 8;
+      if (brightness > 127) brightness = 127;
+
+      this.output.send([0xb6, 0x70, brightness]); // CC 112, channel 7
+
+      if (brightness >= 127) {
+        this.clearDisplayFadeTimer();
+      }
+    }, 60);
+  }
 }

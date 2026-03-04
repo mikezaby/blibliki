@@ -63,7 +63,7 @@
 
 ### P0: Required before v1 tag
 
-- [ ] **Hot-plug lifecycle for controller instances**
+- [x] **Hot-plug lifecycle for controller instances**
   - Current issue: controller is instantiated at manager init only.
   - Needed: create/dispose/rebind controller when DAW ports connect/disconnect.
   - Files likely involved:
@@ -71,7 +71,7 @@
     - `packages/engine/src/core/midi/controllers/BaseController.ts`
     - `packages/engine/src/core/midi/controllers/LaunchControlXL3.ts`
 
-- [ ] **Continuous reverse sync when mapped props change**
+- [x] **Continuous reverse sync when mapped props change**
   - Current state: sync occurs on startup and page switches.
   - Needed: push updated mapped values to controller when module props change from UI/automation/load.
   - Files likely involved:
@@ -79,7 +79,7 @@
     - `packages/engine/src/Engine.ts`
     - `apps/grid/src/components/AudioModule/modulesSlice.ts` (if event trigger needed at app boundary)
 
-- [ ] **Controller lifecycle cleanup**
+- [x] **Controller lifecycle cleanup**
   - Current issue: animation/interval timers exist but no explicit dispose path.
   - Needed: ensure timers/listeners are cleared on disconnect/engine dispose.
   - Files likely involved:
@@ -106,12 +106,12 @@
 
 ## Acceptance Criteria For V1
 
-- [ ] Controller can be connected after app start and still becomes fully operational.
-- [ ] Controller disconnect does not leave stale listeners/timers or throw runtime errors.
+- [x] Controller can be connected after app start and still becomes fully operational.
+- [x] Controller disconnect does not leave stale listeners/timers or throw runtime errors.
 - [ ] On patch load, mapped values are reflected on Launch Control XL 3 controls without manual interaction.
-- [ ] Changing a mapped value in UI updates controller feedback within one render/update cycle.
+- [x] Changing a mapped value in UI updates controller feedback within one render/update cycle.
 - [ ] Incoming CC updates mapped module props and persists mapping value state.
-- [ ] `pnpm tsc`, `pnpm lint`, `pnpm test`, `pnpm format` pass on the branch.
+- [x] `pnpm tsc`, `pnpm lint`, `pnpm test`, `pnpm format` pass on the branch.
 
 ## Work Log
 
@@ -121,6 +121,18 @@
 - Added Launch Control XL 3 DAW controller class and tests.
 - Added mapper startup sync + DAW channel-aware CC feedback.
 - Added patch-load-triggered controller sync.
+
+### 2026-03-04
+
+- Added controller hot-plug reconciliation in `MidiDeviceManager` (create/dispose/rebind on input/output statechange).
+- Added explicit controller disposal API and wired engine -> manager disposal.
+- Added LaunchControlXL3 cleanup for input listener and animation/fade timers.
+- Added reverse controller sync trigger for module prop updates in `Engine`.
+- Added tests:
+  - `packages/engine/test/core/Engine.test.ts`
+  - `packages/engine/test/core/midi/MidiDeviceManager.test.ts`
+  - `packages/engine/test/core/midi/LaunchControlXL3.test.ts` (dispose cleanup case)
+  - `packages/engine/test/modules/MidiMapper.test.ts` (reverse sync on update)
 
 ## Validation Commands
 

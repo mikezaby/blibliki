@@ -1,7 +1,7 @@
 import MidiInputDevice from "../MidiInputDevice";
 import MidiOutputDevice from "../MidiOutputDevice";
 
-interface ControllerProps {
+export interface ControllerProps {
   input: MidiInputDevice;
   output: MidiOutputDevice;
   onStart?: () => Promise<void> | void;
@@ -13,6 +13,7 @@ export abstract class BaseController implements ControllerProps {
   input: MidiInputDevice;
   output: MidiOutputDevice;
   isInDawMode = false;
+  protected disposed = false;
   private startCallback?: () => Promise<void> | void;
   private stopCallback?: () => void;
   private isPlayingCallback?: () => boolean;
@@ -23,8 +24,6 @@ export abstract class BaseController implements ControllerProps {
     this.startCallback = props.onStart;
     this.stopCallback = props.onStop;
     this.isPlayingCallback = props.isPlayingState;
-
-    this.initialize();
   }
 
   abstract initialize(): void;
@@ -32,14 +31,21 @@ export abstract class BaseController implements ControllerProps {
   abstract exitDawMode(): void;
 
   async start() {
+    if (this.disposed) return;
     await this.startCallback?.();
   }
 
   stop() {
+    if (this.disposed) return;
     this.stopCallback?.();
   }
 
   protected isPlaying() {
     return this.isPlayingCallback?.() ?? false;
+  }
+
+  dispose() {
+    if (this.disposed) return;
+    this.disposed = true;
   }
 }

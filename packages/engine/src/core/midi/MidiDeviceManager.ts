@@ -2,7 +2,11 @@ import { Context } from "@blibliki/utils";
 import ComputerKeyboardDevice from "./ComputerKeyboardDevice";
 import MidiInputDevice from "./MidiInputDevice";
 import MidiOutputDevice from "./MidiOutputDevice";
-import { createMidiAdapter, type IMidiAccess } from "./adapters";
+import {
+  createMidiAdapter,
+  type IMidiAccess,
+  type IMidiPort,
+} from "./adapters";
 import { LaunchControlXL3 } from "./controllers/LaunchControlXL3";
 import { findBestMatch } from "./deviceMatcher";
 
@@ -21,6 +25,8 @@ export default class MidiDeviceManager {
   private context: Readonly<Context>;
   private controllerTransportControls?: ControllerTransportControls;
   private midiAccess: IMidiAccess | null = null;
+  private launchControl?: LaunchControlXL3;
+  private midiStateChangeListener?: (port: IMidiPort) => void;
   private adapter = createMidiAdapter();
 
   constructor(context: Context, controls?: ControllerTransportControls) {
@@ -31,17 +37,7 @@ export default class MidiDeviceManager {
 
   async initialize() {
     await this.initializeDevices();
-
-    const input = this.findInputByFuzzyName("LCXL3 DAW");
-    const output = this.findOutputByFuzzyName("LCXL3 DAW");
-    if (input && output) {
-      new LaunchControlXL3({
-        input: input.device as MidiInputDevice,
-        output: output.device,
-        ...this.controllerTransportControls,
-      });
-    }
-
+    this.reconcileLaunchControl();
     this.listenChanges();
     this.initialized = true;
   }
@@ -136,6 +132,32 @@ export default class MidiDeviceManager {
     this.listeners.push(callback);
   }
 
+  dispose() {
+    this.disposeLaunchControl();
+
+    if (this.midiAccess && this.midiStateChangeListener) {
+      this.midiAccess.removeEventListener(
+        "statechange",
+        this.midiStateChangeListener,
+      );
+      this.midiStateChangeListener = undefined;
+    }
+
+    this.inputDevices.forEach((device) => {
+      if (device instanceof ComputerKeyboardDevice) return;
+      device.disconnect();
+    });
+    this.outputDevices.forEach((device) => {
+      device.disconnect();
+    });
+
+    this.inputDevices.clear();
+    this.outputDevices.clear();
+    this.listeners = [];
+    this.midiAccess = null;
+    this.initialized = false;
+  }
+
   private async initializeDevices() {
     if (this.initialized) return;
 
@@ -179,9 +201,9 @@ export default class MidiDeviceManager {
   }
 
   private listenChanges() {
-    if (!this.midiAccess) return;
+    if (!this.midiAccess || this.midiStateChangeListener) return;
 
-    this.midiAccess.addEventListener("statechange", (port) => {
+    this.midiStateChangeListener = (port) => {
       if (port.state === "connected") {
         // Device connected
         if (port.type === "input") {
@@ -234,6 +256,45 @@ export default class MidiDeviceManager {
           this.outputDevices.delete(device.id);
         }
       }
+
+      this.reconcileLaunchControl();
+    };
+
+    this.midiAccess.addEventListener(
+      "statechange",
+      this.midiStateChangeListener,
+    );
+  }
+
+  private reconcileLaunchControl() {
+    const inputMatch = this.findInputByFuzzyName("LCXL3 DAW");
+    const outputMatch = this.findOutputByFuzzyName("LCXL3 DAW");
+    const input = inputMatch?.device;
+    const output = outputMatch?.device;
+
+    if (!(input instanceof MidiInputDevice) || !output) {
+      this.disposeLaunchControl();
+      return;
+    }
+
+    const currentLaunchControl = this.launchControl;
+    if (
+      currentLaunchControl?.input.id === input.id &&
+      currentLaunchControl.output.id === output.id
+    ) {
+      return;
+    }
+
+    this.disposeLaunchControl();
+    this.launchControl = new LaunchControlXL3({
+      input,
+      output,
+      ...this.controllerTransportControls,
     });
+  }
+
+  private disposeLaunchControl() {
+    this.launchControl?.dispose();
+    this.launchControl = undefined;
   }
 }

@@ -96,6 +96,10 @@ class WebMidiAccess implements IMidiAccess {
   private midiAccess: MIDIAccess;
   private inputCache = new Map<string, WebMidiInputPort>();
   private outputCache = new Map<string, WebMidiOutputPort>();
+  private stateChangeHandlers = new Map<
+    (port: IMidiPort) => void,
+    (event: MIDIConnectionEvent) => void
+  >();
 
   constructor(midiAccess: MIDIAccess) {
     this.midiAccess = midiAccess;
@@ -123,7 +127,7 @@ class WebMidiAccess implements IMidiAccess {
     event: "statechange",
     callback: (port: IMidiPort) => void,
   ): void {
-    this.midiAccess.addEventListener(event, (e) => {
+    const handler = (e: MIDIConnectionEvent) => {
       const port = e.port;
       if (!port) return;
 
@@ -147,7 +151,21 @@ class WebMidiAccess implements IMidiAccess {
       }
 
       callback(midiPort);
-    });
+    };
+
+    this.stateChangeHandlers.set(callback, handler);
+    this.midiAccess.addEventListener(event, handler);
+  }
+
+  removeEventListener(
+    event: "statechange",
+    callback: (port: IMidiPort) => void,
+  ): void {
+    const handler = this.stateChangeHandlers.get(callback);
+    if (!handler) return;
+
+    this.midiAccess.removeEventListener(event, handler);
+    this.stateChangeHandlers.delete(callback);
   }
 }
 
