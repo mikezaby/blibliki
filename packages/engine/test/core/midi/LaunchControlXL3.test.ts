@@ -5,6 +5,10 @@ import { LaunchControlXL3 } from "@/core/midi/controllers/LaunchControlXL3";
 
 const PLAY_CONTROL = 116;
 const RECORD_CONTROL = 118;
+const PAGE_UP_CONTROL = 106;
+const PAGE_DOWN_CONTROL = 107;
+const TRACK_PREV_CONTROL = 103;
+const TRACK_NEXT_CONTROL = 102;
 
 const PLAY_STOPPED_COLOR = 16;
 const PLAY_PLAYING_COLOR = 101;
@@ -149,5 +153,47 @@ describe("LaunchControlXL3", () => {
     expect(input.removeEventListener).toHaveBeenCalledTimes(1);
     expect(input.removeEventListener).toHaveBeenCalledWith(inputListener);
     expect(output.send).not.toHaveBeenCalled();
+  });
+
+  it("routes navigation controls to controller callbacks", async () => {
+    let inputListener: ((event: MidiEvent) => void) | undefined;
+    const onPageUp = vi.fn();
+    const onPageDown = vi.fn();
+    const onTrackPrev = vi.fn();
+    const onTrackNext = vi.fn();
+    const output = {
+      send: vi.fn(),
+    };
+    const input = {
+      addEventListener: vi.fn((listener: (event: MidiEvent) => void) => {
+        inputListener = listener;
+      }),
+      removeEventListener: vi.fn(),
+    };
+
+    new LaunchControlXL3({
+      input,
+      output,
+      onStart: vi.fn(),
+      onStop: vi.fn(),
+      isPlayingState: () => false,
+      onPageUp,
+      onPageDown,
+      onTrackPrev,
+      onTrackNext,
+    } as any);
+
+    expect(inputListener).toBeDefined();
+
+    inputListener!(transportEvent(PAGE_UP_CONTROL, 127));
+    inputListener!(transportEvent(PAGE_DOWN_CONTROL, 127));
+    inputListener!(transportEvent(TRACK_PREV_CONTROL, 127));
+    inputListener!(transportEvent(TRACK_NEXT_CONTROL, 127));
+    await flushTasks();
+
+    expect(onPageUp).toHaveBeenCalledTimes(1);
+    expect(onPageDown).toHaveBeenCalledTimes(1);
+    expect(onTrackPrev).toHaveBeenCalledTimes(1);
+    expect(onTrackNext).toHaveBeenCalledTimes(1);
   });
 });

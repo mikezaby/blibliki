@@ -7,6 +7,10 @@ export interface ControllerProps {
   onStart?: () => Promise<void> | void;
   onStop?: () => void;
   isPlayingState?: () => boolean;
+  onPageUp?: () => Promise<void> | void;
+  onPageDown?: () => Promise<void> | void;
+  onTrackPrev?: () => Promise<void> | void;
+  onTrackNext?: () => Promise<void> | void;
 }
 
 export abstract class BaseController implements ControllerProps {
@@ -17,6 +21,10 @@ export abstract class BaseController implements ControllerProps {
   private startCallback?: () => Promise<void> | void;
   private stopCallback?: () => void;
   private isPlayingCallback?: () => boolean;
+  private pageUpCallback?: () => Promise<void> | void;
+  private pageDownCallback?: () => Promise<void> | void;
+  private trackPrevCallback?: () => Promise<void> | void;
+  private trackNextCallback?: () => Promise<void> | void;
 
   constructor(props: ControllerProps) {
     this.input = props.input;
@@ -24,6 +32,10 @@ export abstract class BaseController implements ControllerProps {
     this.startCallback = props.onStart;
     this.stopCallback = props.onStop;
     this.isPlayingCallback = props.isPlayingState;
+    this.pageUpCallback = props.onPageUp;
+    this.pageDownCallback = props.onPageDown;
+    this.trackPrevCallback = props.onTrackPrev;
+    this.trackNextCallback = props.onTrackNext;
   }
 
   abstract initialize(): void;
@@ -42,6 +54,26 @@ export abstract class BaseController implements ControllerProps {
 
   protected isPlaying() {
     return this.isPlayingCallback?.() ?? false;
+  }
+
+  protected async pageUp() {
+    if (this.disposed) return;
+    await this.pageUpCallback?.();
+  }
+
+  protected async pageDown() {
+    if (this.disposed) return;
+    await this.pageDownCallback?.();
+  }
+
+  protected async trackPrev() {
+    if (this.disposed) return;
+    await this.trackPrevCallback?.();
+  }
+
+  protected async trackNext() {
+    if (this.disposed) return;
+    await this.trackNextCallback?.();
   }
 
   dispose() {

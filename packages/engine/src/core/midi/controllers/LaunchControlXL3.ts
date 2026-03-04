@@ -230,6 +230,10 @@ enum Control {
 
 const PLAY_CONTROL = 116;
 const RECORD_CONTROL = 118;
+const PAGE_UP_CONTROL = 106;
+const PAGE_DOWN_CONTROL = 107;
+const TRACK_PREV_CONTROL = 103;
+const TRACK_NEXT_CONTROL = 102;
 
 export class LaunchControlXL3 extends BaseController {
   private inputListener?: (event: MidiEvent) => void;
@@ -282,6 +286,26 @@ export class LaunchControlXL3 extends BaseController {
     if (control === RECORD_CONTROL) {
       this.stop();
       this.updateTransportColors();
+      return;
+    }
+
+    if (control === PAGE_UP_CONTROL) {
+      await this.pageUp();
+      return;
+    }
+
+    if (control === PAGE_DOWN_CONTROL) {
+      await this.pageDown();
+      return;
+    }
+
+    if (control === TRACK_PREV_CONTROL) {
+      await this.trackPrev();
+      return;
+    }
+
+    if (control === TRACK_NEXT_CONTROL) {
+      await this.trackNext();
     }
   }
 

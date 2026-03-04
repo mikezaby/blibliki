@@ -15,6 +15,10 @@ type ControllerTransportControls = {
   onStart: () => Promise<void> | void;
   onStop: () => void;
   isPlayingState: () => boolean;
+  onPageUp?: () => Promise<void> | void;
+  onPageDown?: () => Promise<void> | void;
+  onTrackPrev?: () => Promise<void> | void;
+  onTrackNext?: () => Promise<void> | void;
 };
 
 export default class MidiDeviceManager {

@@ -89,7 +89,7 @@
 
 ### P1: Strongly recommended for v1 robustness
 
-- [ ] **Expand transport/control command coverage**
+- [x] **Expand transport/control command coverage**
   - Implement and verify intended button map for DAW mode navigation/page controls.
   - Add tests for each supported command path.
 
@@ -133,6 +133,10 @@
   - `packages/engine/test/core/midi/MidiDeviceManager.test.ts`
   - `packages/engine/test/core/midi/LaunchControlXL3.test.ts` (dispose cleanup case)
   - `packages/engine/test/modules/MidiMapper.test.ts` (reverse sync on update)
+- Added DAW navigation button mapping coverage:
+  - `PageUp`/`PageDown` callbacks
+  - `TrackPrev`/`TrackNext` callbacks
+  - Engine helpers for advancing/rewinding `MidiMapper.activePage`
 
 ## Validation Commands
 

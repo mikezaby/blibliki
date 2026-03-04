@@ -119,6 +119,18 @@ export class Engine {
         this.stop();
       },
       isPlayingState: () => this.state === TransportState.playing,
+      onPageUp: () => {
+        this.nextMidiMapperPage();
+      },
+      onPageDown: () => {
+        this.previousMidiMapperPage();
+      },
+      onTrackPrev: () => {
+        this.previousMidiMapperPage();
+      },
+      onTrackNext: () => {
+        this.nextMidiMapperPage();
+      },
     });
 
     Engine._engines.set(this.id, this);
@@ -235,6 +247,14 @@ export class Engine {
 
       module.syncControllerValues();
     });
+  }
+
+  nextMidiMapperPage() {
+    this.shiftMidiMapperPage(1);
+  }
+
+  previousMidiMapperPage() {
+    this.shiftMidiMapperPage(-1);
   }
 
   dispose() {
@@ -361,4 +381,15 @@ export class Engine {
       module.stop(actionAt);
     });
   };
+
+  private shiftMidiMapperPage(delta: number) {
+    this.modules.forEach((module) => {
+      if (module.moduleType !== ModuleType.MidiMapper) return;
+
+      module.props = {
+        activePage: module.props.activePage + delta,
+      };
+      module.triggerPropsUpdate();
+    });
+  }
 }
