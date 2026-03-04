@@ -220,25 +220,54 @@ class NodeMidiOutputPort implements IMidiOutputPort {
   }
 
   private ensureOpen(): void {
+    if (this._state !== "connected") {
+      return;
+    }
+
     if (!this.isOpen) {
       try {
         this.output.openPort(this.portIndex);
         this.isOpen = true;
         this._state = "connected";
       } catch (err) {
+        this.isOpen = false;
+        this._state = "disconnected";
+        if (this.isInvalidPortError(err)) {
+          return;
+        }
         console.error(`Error opening MIDI output port ${this.portIndex}:`, err);
       }
     }
   }
 
   send(data: number[] | Uint8Array, _timestamp?: number): void {
+    if (this._state !== "connected") {
+      return;
+    }
+
     this.ensureOpen();
+    if (!this.isOpen) {
+      return;
+    }
+
     try {
       const message = Array.isArray(data) ? data : Array.from(data);
       this.output.sendMessage(message);
     } catch (err) {
+      if (this.isInvalidPortError(err)) {
+        this.isOpen = false;
+        this._state = "disconnected";
+        return;
+      }
       console.error(`Error sending MIDI message:`, err);
     }
+  }
+
+  private isInvalidPortError(err: unknown): boolean {
+    return (
+      err instanceof RangeError ||
+      (err instanceof Error && err.message.includes("Invalid MIDI port number"))
+    );
   }
 }
 

@@ -3,6 +3,7 @@ import {
   Module,
   MidiInput,
   SetterHooks,
+  MidiPortState,
   MidiOutputDevice,
 } from "@/core";
 import MidiEvent from "@/core/midi/MidiEvent";
@@ -47,35 +48,7 @@ export default class MidiOutput
       props,
     });
 
-    // Try to find device in order of preference:
-    // 1. By exact ID match
-    // 2. By exact name match
-    // 3. By fuzzy name match (for cross-platform compatibility)
-    let midiDevice =
-      this.props.selectedId &&
-      this.engine.findMidiOutputDevice(this.props.selectedId);
-
-    if (!midiDevice && this.props.selectedName) {
-      midiDevice = this.engine.findMidiOutputDeviceByName(
-        this.props.selectedName,
-      );
-
-      // If exact name match fails, try fuzzy matching
-      if (!midiDevice) {
-        const fuzzyMatch = this.engine.findMidiOutputDeviceByFuzzyName(
-          this.props.selectedName,
-          0.6, // 60% similarity threshold
-        );
-
-        if (fuzzyMatch) {
-          midiDevice = fuzzyMatch.device;
-        }
-      }
-    }
-
-    if (midiDevice) {
-      this.currentDevice = midiDevice;
-    }
+    this.currentDevice = this.resolveSelectedDevice();
 
     this.registerInputs();
   }
@@ -89,7 +62,10 @@ export default class MidiOutput
     }
 
     const midiDevice = this.engine.findMidiOutputDevice(value);
-    if (!midiDevice) return value;
+    if (!this.isConnected(midiDevice)) {
+      this.currentDevice = undefined;
+      return value;
+    }
 
     if (this.props.selectedName !== midiDevice.name) {
       this.props = { selectedName: midiDevice.name };
@@ -102,12 +78,63 @@ export default class MidiOutput
   };
 
   onMidiEvent = (midiEvent: MidiEvent) => {
-    if (!this.currentDevice) return;
+    const midiDevice = this.resolveCurrentDevice();
+    if (!midiDevice) return;
 
     // Send raw MIDI data to hardware
     const rawData = midiEvent.rawMessage.data;
-    this.currentDevice.send(rawData);
+    midiDevice.send(rawData);
   };
+
+  private resolveCurrentDevice() {
+    if (
+      this.currentDevice &&
+      this.isConnected(this.currentDevice) &&
+      this.engine.findMidiOutputDevice(this.currentDevice.id) ===
+        this.currentDevice
+    ) {
+      return this.currentDevice;
+    }
+
+    this.currentDevice = this.resolveSelectedDevice();
+    return this.currentDevice;
+  }
+
+  private resolveSelectedDevice() {
+    const selectedById = this.props.selectedId
+      ? this.engine.findMidiOutputDevice(this.props.selectedId)
+      : undefined;
+
+    if (this.isConnected(selectedById)) {
+      return selectedById;
+    }
+
+    if (!this.props.selectedName) return undefined;
+
+    const selectedByName = this.engine.findMidiOutputDeviceByName(
+      this.props.selectedName,
+    );
+    if (this.isConnected(selectedByName)) {
+      return selectedByName;
+    }
+
+    const fuzzyMatch = this.engine.findMidiOutputDeviceByFuzzyName(
+      this.props.selectedName,
+      0.6,
+    );
+
+    if (this.isConnected(fuzzyMatch?.device)) {
+      return fuzzyMatch.device;
+    }
+
+    return undefined;
+  }
+
+  private isConnected(
+    midiDevice?: MidiOutputDevice | null,
+  ): midiDevice is MidiOutputDevice {
+    return midiDevice?.state === MidiPortState.connected;
+  }
 
   private registerInputs() {
     this.midiInput = this.registerMidiInput({
