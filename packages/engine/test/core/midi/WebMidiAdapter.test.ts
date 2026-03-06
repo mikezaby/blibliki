@@ -53,15 +53,12 @@ describe("WebMidiAdapter", () => {
       }
     });
 
-    const requestMIDIAccess = vi
-      .fn()
-      .mockRejectedValueOnce(createNotAllowedError())
-      .mockResolvedValueOnce(
-        createMockMidiAccess({
-          sysexEnabled: false,
-          outputSend: sendSpy,
-        }),
-      );
+    const requestMIDIAccess = vi.fn().mockResolvedValue(
+      createMockMidiAccess({
+        sysexEnabled: false,
+        outputSend: sendSpy,
+      }),
+    );
 
     Object.defineProperty(globalThis, "navigator", {
       value: { requestMIDIAccess },
@@ -72,8 +69,8 @@ describe("WebMidiAdapter", () => {
     const adapter = new WebMidiAdapter();
     const midiAccess = await adapter.requestMIDIAccess();
     expect(midiAccess).not.toBeNull();
-    expect(requestMIDIAccess).toHaveBeenNthCalledWith(1, { sysex: true });
-    expect(requestMIDIAccess).toHaveBeenNthCalledWith(2);
+    expect(requestMIDIAccess).toHaveBeenCalledTimes(1);
+    expect(requestMIDIAccess).toHaveBeenCalledWith();
 
     const outputs = Array.from(midiAccess!.outputs());
     expect(outputs).toHaveLength(1);

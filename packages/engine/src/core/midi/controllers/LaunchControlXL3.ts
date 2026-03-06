@@ -506,33 +506,6 @@ export class LaunchControlXL3 extends BaseController {
     // Start with screen brightness at 0
     this.output.send([0xb6, 0x70, 0x00]); // CC 112 on channel 7, brightness 0
 
-    // Configure display - arrangement 1 (simple 2-line)
-    this.output.send([
-      0xf0, 0x00, 0x20, 0x29, 0x02, 0x15, 0x04, 0x35, 0x01, 0xf7,
-    ]);
-
-    const text = "      Blibliki      ";
-
-    // Set the text
-    this.output.send([
-      0xf0,
-      0x00,
-      0x20,
-      0x29,
-      0x02,
-      0x15,
-      0x06,
-      0x35,
-      0x00,
-      ...text.split("").map((c) => c.charCodeAt(0)),
-      0xf7,
-    ]);
-
-    // Trigger display
-    this.output.send([
-      0xf0, 0x00, 0x20, 0x29, 0x02, 0x15, 0x04, 0x35, 0x7f, 0xf7,
-    ]);
-
     // Fade in brightness over ~1 second
     let brightness = 0;
     this.displayFadeTimer = setInterval(() => {

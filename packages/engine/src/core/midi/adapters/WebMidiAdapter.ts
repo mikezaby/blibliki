@@ -220,7 +220,7 @@ export default class WebMidiAdapter implements IMidiAdapter {
         return null;
       }
 
-      const midiAccess = await this.requestWithSysexFallback();
+      const midiAccess = await navigator.requestMIDIAccess();
       return new WebMidiAccess(midiAccess);
     } catch (err) {
       console.error("Error enabling Web MIDI API:", err);
@@ -232,35 +232,6 @@ export default class WebMidiAdapter implements IMidiAdapter {
     return (
       typeof navigator !== "undefined" &&
       typeof navigator.requestMIDIAccess === "function"
-    );
-  }
-
-  private async requestWithSysexFallback(): Promise<MIDIAccess> {
-    try {
-      return await navigator.requestMIDIAccess({ sysex: true });
-    } catch (err) {
-      if (!this.isSysexPermissionError(err)) {
-        throw err;
-      }
-      return navigator.requestMIDIAccess();
-    }
-  }
-
-  private isSysexPermissionError(err: unknown): boolean {
-    if (err instanceof DOMException) {
-      return (
-        err.name === "NotAllowedError" ||
-        err.name === "SecurityError" ||
-        err.name === "TypeError"
-      );
-    }
-
-    if (!(err instanceof Error)) return false;
-
-    return (
-      err.name === "NotAllowedError" ||
-      err.name === "SecurityError" ||
-      err.name === "TypeError"
     );
   }
 }

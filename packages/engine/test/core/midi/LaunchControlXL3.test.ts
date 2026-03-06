@@ -196,4 +196,34 @@ describe("LaunchControlXL3", () => {
     expect(onTrackPrev).toHaveBeenCalledTimes(1);
     expect(onTrackNext).toHaveBeenCalledTimes(1);
   });
+
+  it("does not send SysEx messages during startup animation", () => {
+    vi.restoreAllMocks();
+    vi.useFakeTimers();
+
+    const output = {
+      send: vi.fn(),
+    };
+    const input = {
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+
+    new LaunchControlXL3({
+      input,
+      output,
+      onStart: vi.fn(),
+      onStop: vi.fn(),
+      isPlayingState: () => false,
+    } as any);
+
+    vi.advanceTimersByTime(5000);
+
+    const sentMessages = output.send.mock.calls.map((call) => call[0]);
+    const hasSysEx = sentMessages.some(
+      (message) => Array.isArray(message) && message[0] === 0xf0,
+    );
+
+    expect(hasSysEx).toBe(false);
+  });
 });
