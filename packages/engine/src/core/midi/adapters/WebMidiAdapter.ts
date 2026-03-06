@@ -66,9 +66,11 @@ class WebMidiInputPort implements IMidiInputPort {
 
 class WebMidiOutputPort implements IMidiOutputPort {
   private output: MIDIOutput;
+  private sysexEnabled: boolean;
 
-  constructor(output: MIDIOutput) {
+  constructor(output: MIDIOutput, sysexEnabled: boolean) {
     this.output = output;
+    this.sysexEnabled = sysexEnabled;
   }
 
   get id(): string {
@@ -88,12 +90,44 @@ class WebMidiOutputPort implements IMidiOutputPort {
   }
 
   send(data: number[] | Uint8Array, timestamp?: number): void {
-    this.output.send(data, timestamp);
+    const isSysEx = this.isSysExMessage(data);
+    if (isSysEx && !this.sysexEnabled) {
+      return;
+    }
+
+    try {
+      this.output.send(data, timestamp);
+    } catch (err) {
+      if (isSysEx && this.isSysExPermissionError(err)) {
+        return;
+      }
+      throw err;
+    }
+  }
+
+  private isSysExMessage(data: number[] | Uint8Array): boolean {
+    const statusByte = Array.isArray(data) ? data[0] : data.at(0);
+    return statusByte === 0xf0;
+  }
+
+  private isSysExPermissionError(err: unknown): boolean {
+    if (err instanceof DOMException) {
+      return err.name === "NotAllowedError" || err.name === "SecurityError";
+    }
+
+    if (!(err instanceof Error)) return false;
+
+    return (
+      err.name === "NotAllowedError" ||
+      err.name === "SecurityError" ||
+      err.message.includes("System exclusive")
+    );
   }
 }
 
 class WebMidiAccess implements IMidiAccess {
   private midiAccess: MIDIAccess;
+  private sysexEnabled: boolean;
   private inputCache = new Map<string, WebMidiInputPort>();
   private outputCache = new Map<string, WebMidiOutputPort>();
   private stateChangeHandlers = new Map<
@@ -103,6 +137,7 @@ class WebMidiAccess implements IMidiAccess {
 
   constructor(midiAccess: MIDIAccess) {
     this.midiAccess = midiAccess;
+    this.sysexEnabled = midiAccess.sysexEnabled;
   }
 
   *inputs(): IterableIterator<IMidiInputPort> {
@@ -117,7 +152,10 @@ class WebMidiAccess implements IMidiAccess {
   *outputs(): IterableIterator<IMidiOutputPort> {
     for (const [, output] of this.midiAccess.outputs) {
       if (!this.outputCache.has(output.id)) {
-        this.outputCache.set(output.id, new WebMidiOutputPort(output));
+        this.outputCache.set(
+          output.id,
+          new WebMidiOutputPort(output, this.sysexEnabled),
+        );
       }
       yield this.outputCache.get(output.id)!;
     }
@@ -146,7 +184,10 @@ class WebMidiAccess implements IMidiAccess {
       } else {
         const output = port as MIDIOutput;
         if (!this.outputCache.has(output.id)) {
-          this.outputCache.set(output.id, new WebMidiOutputPort(output));
+          this.outputCache.set(
+            output.id,
+            new WebMidiOutputPort(output, this.sysexEnabled),
+          );
         }
       }
 
@@ -179,7 +220,7 @@ export default class WebMidiAdapter implements IMidiAdapter {
         return null;
       }
 
-      const midiAccess = await navigator.requestMIDIAccess();
+      const midiAccess = await this.requestWithSysexFallback();
       return new WebMidiAccess(midiAccess);
     } catch (err) {
       console.error("Error enabling Web MIDI API:", err);
@@ -191,6 +232,35 @@ export default class WebMidiAdapter implements IMidiAdapter {
     return (
       typeof navigator !== "undefined" &&
       typeof navigator.requestMIDIAccess === "function"
+    );
+  }
+
+  private async requestWithSysexFallback(): Promise<MIDIAccess> {
+    try {
+      return await navigator.requestMIDIAccess({ sysex: true });
+    } catch (err) {
+      if (!this.isSysexPermissionError(err)) {
+        throw err;
+      }
+      return navigator.requestMIDIAccess();
+    }
+  }
+
+  private isSysexPermissionError(err: unknown): boolean {
+    if (err instanceof DOMException) {
+      return (
+        err.name === "NotAllowedError" ||
+        err.name === "SecurityError" ||
+        err.name === "TypeError"
+      );
+    }
+
+    if (!(err instanceof Error)) return false;
+
+    return (
+      err.name === "NotAllowedError" ||
+      err.name === "SecurityError" ||
+      err.name === "TypeError"
     );
   }
 }
