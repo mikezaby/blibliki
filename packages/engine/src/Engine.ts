@@ -92,6 +92,7 @@ export class Engine {
     routes.forEach((r) => {
       engine.addRoute(r);
     });
+    engine.syncMidiControllerValues();
 
     return engine;
   }
@@ -145,6 +146,8 @@ export class Engine {
     if (module instanceof PolyModule && params.changes.voices !== undefined) {
       module.voices = params.changes.voices;
     }
+
+    this.syncMidiControllerValues(module.id);
 
     return module.serialize();
   }
@@ -311,6 +314,14 @@ export class Engine {
     virtualMidi.sendMidi(
       MidiEvent.fromNote(noteName, type === "noteOn", this.context.currentTime),
     );
+  }
+
+  private syncMidiControllerValues(moduleId?: string) {
+    this.modules.forEach((module) => {
+      if (module.moduleType !== ModuleType.MidiMapper) return;
+
+      module.syncControllerValues(moduleId);
+    });
   }
 
   // actionAt is context time

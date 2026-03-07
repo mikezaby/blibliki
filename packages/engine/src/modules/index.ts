@@ -28,7 +28,6 @@ import Master, { IMasterProps, masterPropSchema } from "./Master";
 import MidiInput, { IMidiInputProps, midiInputPropSchema } from "./MidiInput";
 import MidiMapper, {
   IMidiMapperProps,
-  IMidiMapperState,
   midiMapperPropSchema,
 } from "./MidiMapper";
 import MidiOutput, {
@@ -130,7 +129,7 @@ export type ModuleTypeToStateMapping = {
   [ModuleType.Constant]: never;
   [ModuleType.Delay]: never;
   [ModuleType.Distortion]: never;
-  [ModuleType.MidiMapper]: IMidiMapperState;
+  [ModuleType.MidiMapper]: never;
   [ModuleType.VirtualMidi]: never;
   [ModuleType.StepSequencer]: IStepSequencerState;
   [ModuleType.VoiceScheduler]: never;
@@ -222,12 +221,7 @@ export type {
   IStepCC,
 } from "./StepSequencer";
 export { Resolution, PlaybackMode, stepPropSchema } from "./StepSequencer";
-export type {
-  IMidiMapper,
-  IMidiMapperProps,
-  IMidiMapperState,
-  MidiMapping,
-} from "./MidiMapper";
+export type { IMidiMapper, IMidiMapperProps, MidiMapping } from "./MidiMapper";
 export { MidiMappingMode } from "./MidiMapper";
 export type { ILFO, ILFOProps } from "./LFO";
 export { LFOWaveform } from "./LFO";

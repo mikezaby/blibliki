@@ -1,17 +1,14 @@
 import { ContextTime } from "@blibliki/transport";
 import { IModule, MidiEvent, MidiOutput, Module, SetterHooks } from "@/core";
 import { ModulePropSchema, NumberProp, PropSchema } from "@/core/schema";
-import { ICreateModule, moduleSchemas, ModuleType } from ".";
+import { ICreateModule, moduleSchemas, ModuleType } from "..";
+import MidiMapperSyncValues from "./MidiMapperSyncValues";
 
 export type IMidiMapper = IModule<ModuleType.MidiMapper>;
 export type IMidiMapperProps = {
   pages: MidiMappingPage[];
   activePage: number;
   globalMappings: MidiMapping<ModuleType>[];
-};
-export type IMidiMapperState = {
-  globalValues?: Record<number, number>;
-  pageValues?: Record<number, Record<number, number>>;
 };
 
 export type MidiMappingPage = {
@@ -58,9 +55,9 @@ export const midiMapperPropSchema: ModulePropSchema<IMidiMapperProps> = {
 };
 
 const DEFAULT_PROPS: IMidiMapperProps = {
-  pages: [{ name: "Page 1", mappings: [{}] }],
+  pages: [{ name: "Page 1", mappings: [{} as MidiMapping<ModuleType>] }],
   activePage: 0,
-  globalMappings: [{}],
+  globalMappings: [{} as MidiMapping<ModuleType>],
 };
 
 function getMidiFromMappedValue({
@@ -101,15 +98,13 @@ type MidiMapperSetterHooks = Pick<
   "onSetActivePage"
 >;
 
-const clampMidi = (value: number) =>
-  Math.round(Math.max(0, Math.min(127, value)));
-
 export default class MidiMapper
   extends Module<ModuleType.MidiMapper>
   implements MidiMapperSetterHooks
 {
   declare audioNode: undefined;
   private _midiOut: MidiOutput; // Will be used to send CC values on page change
+  private readonly syncValues: MidiMapperSyncValues;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.MidiMapper>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
@@ -127,6 +122,12 @@ export default class MidiMapper
     this._midiOut = this.registerMidiOutput({
       name: "midi out",
     });
+    this.syncValues = new MidiMapperSyncValues(this.engine);
+
+    // Defer initial sync so patch-load routes can be connected first.
+    queueMicrotask(() => {
+      this.syncControllerValues();
+    });
   }
 
   onSetActivePage: MidiMapperSetterHooks["onSetActivePage"] = (value) => {
@@ -135,37 +136,22 @@ export default class MidiMapper
       0,
     );
 
-    const newPage = this.props.pages[activePage];
-
-    // Send page CC values to output when changing pages.
-    // Prefer deriving from mapped module props, fallback to runtime state.
-    const now = this.context.currentTime;
-    const state = this.getMapperState();
-    const pageValues = { ...(state.pageValues ?? {}) };
-    const currentPageValues = { ...(pageValues[activePage] ?? {}) };
-
-    newPage?.mappings.forEach((mapping, mappingIndex) => {
-      if (mapping.cc === undefined) return;
-
-      const derivedValue = this.getMidiValueFromMappedModuleProp(mapping);
-      if (derivedValue !== undefined) {
-        currentPageValues[mappingIndex] = derivedValue;
-      }
-
-      const midiValue = derivedValue ?? currentPageValues[mappingIndex];
-      if (midiValue === undefined) return;
-
-      const midiEvent = MidiEvent.fromCC(mapping.cc, midiValue, now);
-      this._midiOut.onMidiEvent(midiEvent);
+    queueMicrotask(() => {
+      this.syncControllerValues();
     });
 
-    pageValues[activePage] = currentPageValues;
-    this.state = {
-      ...state,
-      pageValues,
-    };
-
     return activePage;
+  };
+
+  syncControllerValues = (moduleId?: string) => {
+    const ccValues = this.syncValues.collectCCValues(this.props, moduleId);
+
+    const now = this.context.currentTime;
+
+    ccValues.forEach((value, cc) => {
+      const event = MidiEvent.fromCC(cc, value, now);
+      this._midiOut.onMidiEvent(event);
+    });
   };
 
   handleCC = (event: MidiEvent, triggeredAt: ContextTime) => {
@@ -183,37 +169,6 @@ export default class MidiMapper
     matchingMappings.forEach((mapping) => {
       this.forwardMapping(event, mapping, triggeredAt);
     });
-
-    // Cache mapping values in runtime state if we have matching CCs
-    const ccValue = event.ccValue;
-    if (matchingMappings.length > 0 && ccValue !== undefined) {
-      const state = this.getMapperState();
-      const globalValues = { ...(state.globalValues ?? {}) };
-      const pageValues = { ...(state.pageValues ?? {}) };
-
-      this.props.globalMappings.forEach((mapping, index) => {
-        if (mapping.cc === event.cc) {
-          globalValues[index] = ccValue;
-        }
-      });
-
-      const currentPageValues = {
-        ...(pageValues[this.props.activePage] ?? {}),
-      };
-      activePage.mappings.forEach((mapping, index) => {
-        if (mapping.cc === event.cc) {
-          currentPageValues[index] = ccValue;
-        }
-      });
-
-      pageValues[this.props.activePage] = currentPageValues;
-
-      this.state = {
-        ...state,
-        globalValues,
-        pageValues,
-      };
-    }
   };
 
   forwardMapping = (
@@ -232,7 +187,7 @@ export default class MidiMapper
     let midiValue = event.ccValue;
     if (midiValue === undefined) return;
 
-    const mode = mapping.mode ?? MidiMappingMode.direct;
+    const mode = mapping.mode;
 
     // Toggle mode: only respond to 127 (button press), ignore 0
     if (
@@ -322,97 +277,6 @@ export default class MidiMapper
     mappedModule.props = { [propName]: mappedValue };
     mappedModule.triggerPropsUpdate();
   };
-
-  private getMapperState(): IMidiMapperState {
-    return this.state;
-  }
-
-  private getMidiValueFromMappedModuleProp(
-    mapping: MidiMapping<ModuleType>,
-  ): number | undefined {
-    if (
-      mapping.moduleId === undefined ||
-      mapping.moduleType === undefined ||
-      mapping.propName === undefined
-    ) {
-      return;
-    }
-
-    let mappedModule: ReturnType<typeof this.engine.findModule>;
-    try {
-      mappedModule = this.engine.findModule(mapping.moduleId);
-    } catch {
-      return;
-    }
-
-    const propName = mapping.propName;
-    const moduleSchema = moduleSchemas[mappedModule.moduleType] as Record<
-      string,
-      PropSchema
-    >;
-    const propSchema = moduleSchema[propName];
-    if (!propSchema) return;
-
-    const rawValue = (mappedModule.props as Record<string, unknown>)[propName];
-    const mode = mapping.mode ?? MidiMappingMode.direct;
-
-    switch (propSchema.kind) {
-      case "number": {
-        if (typeof rawValue !== "number") return;
-
-        const min = propSchema.min ?? 0;
-        const max = propSchema.max ?? 1;
-        if (!Number.isFinite(min) || !Number.isFinite(max) || max === min) {
-          return;
-        }
-
-        const normalizedValue = (rawValue - min) / (max - min);
-        const clampedValue = Math.max(0, Math.min(1, normalizedValue));
-        const exp = propSchema.exp ?? 1;
-        let midiValue = Math.pow(clampedValue, 1 / exp) * 127;
-
-        if (mode === MidiMappingMode.directRev) {
-          midiValue = 127 - midiValue;
-        }
-
-        return clampMidi(midiValue);
-      }
-      case "enum": {
-        const optionIndex = propSchema.options.findIndex(
-          (option) => option === rawValue,
-        );
-        if (optionIndex < 0) return;
-
-        if (propSchema.options.length <= 1) {
-          return mode === MidiMappingMode.directRev ? 127 : 0;
-        }
-
-        const normalizedIndex = optionIndex / (propSchema.options.length - 1);
-        let midiValue = normalizedIndex * 127;
-
-        if (mode === MidiMappingMode.directRev) {
-          midiValue = 127 - midiValue;
-        }
-
-        return clampMidi(midiValue);
-      }
-      case "boolean": {
-        if (typeof rawValue !== "boolean") return;
-        let midiValue = rawValue ? 127 : 0;
-
-        if (mode === MidiMappingMode.directRev) {
-          midiValue = 127 - midiValue;
-        }
-
-        return clampMidi(midiValue);
-      }
-      case "string":
-      case "array":
-        return;
-      default:
-        return;
-    }
-  }
 
   private checkAutoAssign(event: MidiEvent) {
     if (event.cc === undefined) return;
