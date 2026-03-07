@@ -170,6 +170,11 @@ export const dispose = () => (dispatch: AppDispatch) => {
   dispatch(setAttributes({ isStarted: false }));
 };
 
+export const reset = () => (dispatch: AppDispatch) => {
+  Engine.current.reset();
+  dispatch(setAttributes({ isStarted: false }));
+};
+
 export const { setAttributes } = globalSlice.actions;
 
 export default globalSlice.reducer;

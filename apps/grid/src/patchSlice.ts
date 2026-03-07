@@ -14,7 +14,7 @@ import {
 import { addNotification } from "@/notificationsSlice";
 import { assertPatchPayloadHasNoUndefined } from "@/patch/patchPayloadValidation";
 import { AppDispatch, RootState } from "@/store";
-import { dispose, setBpm } from "./globalSlice";
+import { reset, setBpm } from "./globalSlice";
 
 type PatchProps = {
   patch: Omit<IPatch, "config">;
@@ -185,7 +185,7 @@ export const destroy =
 export const { setAttributes, setName } = patchSlice.actions;
 
 const clearEngine = () => (dispatch: AppDispatch) => {
-  dispatch(dispose());
+  dispatch(reset());
   dispatch(removeAllModules());
   dispatch(removeAllGridNodes());
 };

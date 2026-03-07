@@ -221,14 +221,18 @@ export class Engine {
     await this.context.resume();
   }
 
-  dispose() {
+  reset() {
     this.stop();
-    this.midiDeviceManager.dispose();
     this.routes.clear();
     this.modules.forEach((module) => {
       module.dispose();
     });
     this.modules.clear();
+  }
+
+  dispose() {
+    this.reset();
+    this.midiDeviceManager.dispose();
   }
 
   serialize(): IEngineSerialize {
