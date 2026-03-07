@@ -1,6 +1,7 @@
 import MidiInputDevice from "../MidiInputDevice";
 import MidiOutputDevice from "../MidiOutputDevice";
 import { calculateSimilarity } from "../deviceMatcher";
+import { LaunchControlXL3 } from "./LaunchControlXL3";
 
 export type MatchedControllerPorts = {
   input: MidiInputDevice;
@@ -234,4 +235,23 @@ export class ControllerMatcherRegistry {
   }
 }
 
-export const controllerMatchers: ControllerMatcherDefinition[] = [];
+export const controllerMatchers: ControllerMatcherDefinition[] = [
+  {
+    id: "launch-control-xl3-daw",
+    klass: LaunchControlXL3,
+    inputCandidateNames: [
+      "LCXL3 DAW",
+      "LCXL3 DAW In",
+      "Launch Control XL 3 DAW",
+      "Launch Control XL3 DAW",
+    ],
+    outputCandidateNames: [
+      "LCXL3 DAW",
+      "LCXL3 DAW Out",
+      "Launch Control XL 3 DAW",
+      "Launch Control XL3 DAW",
+    ],
+    minScore: 0.6,
+    maxInstances: 1,
+  },
+];

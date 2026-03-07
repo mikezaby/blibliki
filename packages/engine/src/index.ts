@@ -28,6 +28,7 @@ export {
   MidiOutputDevice,
   ControllerMatcherRegistry,
   controllerMatchers,
+  LaunchControlXL3,
   MidiPortState,
   Note,
 } from "./core";
