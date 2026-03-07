@@ -35,6 +35,7 @@ class MockInput {
 
 class MockOutput {
   private open = false;
+  private activePort = -1;
 
   getPortCount(): number {
     return outputPortNames.length;
@@ -44,15 +45,29 @@ class MockOutput {
     return outputPortNames[port] ?? "";
   }
 
-  openPort(): void {
+  openPort(port: number): void {
+    if (port < 0 || port >= outputPortNames.length) {
+      throw new RangeError("Invalid MIDI port number");
+    }
+
+    this.activePort = port;
     this.open = true;
   }
 
   closePort(): void {
     this.open = false;
+    this.activePort = -1;
   }
 
-  sendMessage(): void {}
+  sendMessage(): void {
+    if (
+      this.activePort < 0 ||
+      this.activePort >= outputPortNames.length ||
+      !this.open
+    ) {
+      throw new RangeError("Invalid MIDI port number");
+    }
+  }
 
   isPortOpen(): boolean {
     return this.open;
@@ -151,5 +166,26 @@ describe("NodeMidiAdapter hot-plug polling", () => {
       (event) => event.state === "connected",
     );
     expect(reconnectEvent[reconnectEvent.length - 1]).toBe(port);
+  });
+
+  it("does not log invalid output-port errors when device disconnects between polling intervals", async () => {
+    const adapter = new NodeMidiAdapter();
+    const access = await adapter.requestMIDIAccess();
+    expect(access).not.toBeNull();
+    access!.addEventListener("statechange", () => {});
+
+    const outputs = Array.from(access!.outputs());
+    expect(outputs).toHaveLength(1);
+    const output = outputs[0]!;
+
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    outputPortNames = [];
+    output.send([0x90, 60, 127]);
+
+    expect(errorSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining("Error opening MIDI output port"),
+      expect.anything(),
+    );
   });
 });

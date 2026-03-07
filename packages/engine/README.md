@@ -315,6 +315,18 @@ const virtualMidi = engine.addModule({
 });
 ```
 
+## Controller Support (V1)
+
+- Supported hardware profile: Launch Control XL 3 (DAW mode)
+- Full behavior matrix: `../../docs/launch-control-xl3-daw-v1.md`
+
+### Known limitations
+
+- V1 navigation controls are mapped to `MidiMapper` page changes, not track selection.
+- `Track Prev`/`Track Next` currently behave as page navigation aliases.
+- Multi-device generic controller profile management is not part of V1.
+- For telemetry, debug logging is opt-in via `globalThis.__BLIBLIKI_MIDI_DEBUG__`.
+
 ## Development
 
 To contribute to the project:

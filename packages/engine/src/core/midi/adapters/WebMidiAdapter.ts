@@ -66,9 +66,11 @@ class WebMidiInputPort implements IMidiInputPort {
 
 class WebMidiOutputPort implements IMidiOutputPort {
   private output: MIDIOutput;
+  private sysexEnabled: boolean;
 
-  constructor(output: MIDIOutput) {
+  constructor(output: MIDIOutput, sysexEnabled: boolean) {
     this.output = output;
+    this.sysexEnabled = sysexEnabled;
   }
 
   get id(): string {
@@ -88,17 +90,54 @@ class WebMidiOutputPort implements IMidiOutputPort {
   }
 
   send(data: number[] | Uint8Array, timestamp?: number): void {
-    this.output.send(data, timestamp);
+    const isSysEx = this.isSysExMessage(data);
+    if (isSysEx && !this.sysexEnabled) {
+      return;
+    }
+
+    try {
+      this.output.send(data, timestamp);
+    } catch (err) {
+      if (isSysEx && this.isSysExPermissionError(err)) {
+        return;
+      }
+      throw err;
+    }
+  }
+
+  private isSysExMessage(data: number[] | Uint8Array): boolean {
+    const statusByte = Array.isArray(data) ? data[0] : data.at(0);
+    return statusByte === 0xf0;
+  }
+
+  private isSysExPermissionError(err: unknown): boolean {
+    if (err instanceof DOMException) {
+      return err.name === "NotAllowedError" || err.name === "SecurityError";
+    }
+
+    if (!(err instanceof Error)) return false;
+
+    return (
+      err.name === "NotAllowedError" ||
+      err.name === "SecurityError" ||
+      err.message.includes("System exclusive")
+    );
   }
 }
 
 class WebMidiAccess implements IMidiAccess {
   private midiAccess: MIDIAccess;
+  private sysexEnabled: boolean;
   private inputCache = new Map<string, WebMidiInputPort>();
   private outputCache = new Map<string, WebMidiOutputPort>();
+  private stateChangeHandlers = new Map<
+    (port: IMidiPort) => void,
+    (event: MIDIConnectionEvent) => void
+  >();
 
   constructor(midiAccess: MIDIAccess) {
     this.midiAccess = midiAccess;
+    this.sysexEnabled = midiAccess.sysexEnabled;
   }
 
   *inputs(): IterableIterator<IMidiInputPort> {
@@ -113,7 +152,10 @@ class WebMidiAccess implements IMidiAccess {
   *outputs(): IterableIterator<IMidiOutputPort> {
     for (const [, output] of this.midiAccess.outputs) {
       if (!this.outputCache.has(output.id)) {
-        this.outputCache.set(output.id, new WebMidiOutputPort(output));
+        this.outputCache.set(
+          output.id,
+          new WebMidiOutputPort(output, this.sysexEnabled),
+        );
       }
       yield this.outputCache.get(output.id)!;
     }
@@ -123,7 +165,7 @@ class WebMidiAccess implements IMidiAccess {
     event: "statechange",
     callback: (port: IMidiPort) => void,
   ): void {
-    this.midiAccess.addEventListener(event, (e) => {
+    const handler = (e: MIDIConnectionEvent) => {
       const port = e.port;
       if (!port) return;
 
@@ -142,12 +184,29 @@ class WebMidiAccess implements IMidiAccess {
       } else {
         const output = port as MIDIOutput;
         if (!this.outputCache.has(output.id)) {
-          this.outputCache.set(output.id, new WebMidiOutputPort(output));
+          this.outputCache.set(
+            output.id,
+            new WebMidiOutputPort(output, this.sysexEnabled),
+          );
         }
       }
 
       callback(midiPort);
-    });
+    };
+
+    this.stateChangeHandlers.set(callback, handler);
+    this.midiAccess.addEventListener(event, handler);
+  }
+
+  removeEventListener(
+    event: "statechange",
+    callback: (port: IMidiPort) => void,
+  ): void {
+    const handler = this.stateChangeHandlers.get(callback);
+    if (!handler) return;
+
+    this.midiAccess.removeEventListener(event, handler);
+    this.stateChangeHandlers.delete(callback);
   }
 }
 

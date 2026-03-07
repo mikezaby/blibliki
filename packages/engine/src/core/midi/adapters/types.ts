@@ -33,6 +33,10 @@ export interface IMidiAccess {
     event: "statechange",
     callback: (port: IMidiPort) => void,
   ): void;
+  removeEventListener(
+    event: "statechange",
+    callback: (port: IMidiPort) => void,
+  ): void;
 }
 
 export interface IMidiAdapter {
