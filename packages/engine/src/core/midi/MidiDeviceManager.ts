@@ -3,6 +3,10 @@ import ComputerKeyboardDevice from "./ComputerKeyboardDevice";
 import MidiInputDevice from "./MidiInputDevice";
 import MidiOutputDevice from "./MidiOutputDevice";
 import { createMidiAdapter, type IMidiAccess } from "./adapters";
+import {
+  controllerMatchers,
+  ControllerMatcherRegistry,
+} from "./controllers/ControllerMatcher";
 import { findBestMatch } from "./deviceMatcher";
 
 type ListenerCallback = (device: MidiInputDevice | MidiOutputDevice) => void;
@@ -13,19 +17,29 @@ export default class MidiDeviceManager {
   private initialized = false;
   private listeners: ListenerCallback[] = [];
   private context: Readonly<Context>;
+  private controllerMatcherRegistry: ControllerMatcherRegistry;
   private midiAccess: IMidiAccess | null = null;
   private adapter = createMidiAdapter();
 
-  constructor(context: Context) {
+  constructor(context: Context, engineId: string) {
     this.context = context;
+    this.controllerMatcherRegistry = new ControllerMatcherRegistry(
+      engineId,
+      controllerMatchers,
+    );
     this.addComputerKeyboard();
   }
 
   async initialize() {
     await this.initializeDevices();
+    this.reconcileControllers();
 
     this.listenChanges();
     this.initialized = true;
+  }
+
+  dispose() {
+    this.controllerMatcherRegistry.dispose();
   }
 
   find(
@@ -174,6 +188,7 @@ export default class MidiDeviceManager {
             if (input.id === port.id) {
               const device = new MidiInputDevice(input, this.context);
               this.inputDevices.set(device.id, device);
+              this.reconcileControllers();
 
               this.listeners.forEach((listener) => {
                 listener(device);
@@ -190,6 +205,7 @@ export default class MidiDeviceManager {
             if (output.id === port.id) {
               const device = new MidiOutputDevice(output);
               this.outputDevices.set(device.id, device);
+              this.reconcileControllers();
               break;
             }
           }
@@ -203,6 +219,7 @@ export default class MidiDeviceManager {
 
           device.disconnect();
           this.inputDevices.delete(device.id);
+          this.reconcileControllers();
 
           this.listeners.forEach((listener) => {
             listener(device);
@@ -214,8 +231,18 @@ export default class MidiDeviceManager {
 
           device.disconnect();
           this.outputDevices.delete(device.id);
+          this.reconcileControllers();
         }
       }
     });
+  }
+
+  private reconcileControllers() {
+    const inputDevices = Array.from(this.inputDevices.values()).filter(
+      (device): device is MidiInputDevice => device instanceof MidiInputDevice,
+    );
+    const outputDevices = Array.from(this.outputDevices.values());
+
+    this.controllerMatcherRegistry.reconcile(inputDevices, outputDevices);
   }
 }
