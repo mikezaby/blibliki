@@ -1,4 +1,10 @@
-import { BPM, Ticks, TimeSignature, Transport } from "@blibliki/transport";
+import {
+  BPM,
+  ContextTime,
+  TimeSignature,
+  Transport,
+  TransportState,
+} from "@blibliki/transport";
 import {
   assertDefined,
   Context,
@@ -101,10 +107,8 @@ export class Engine {
     this.id = uuidv4();
 
     this.context = context;
-    this.transport = new Transport(this.context, {
-      onStart: this.onStart,
-      onStop: this.onStop,
-    });
+    this.transport = new Transport(this.context);
+    this.transport.addPropertyChangeCallback("state", this.onTransportState);
     this.routes = new Routes(this);
     this.modules = new Map();
     this.midiDeviceManager = new MidiDeviceManager(this.context);
@@ -325,20 +329,21 @@ export class Engine {
   }
 
   // actionAt is context time
-  private onStart = (ticks: Ticks) => {
-    const actionAt = this.transport.getContextTimeAtTicks(ticks);
-
+  private onStart = (actionAt: ContextTime) => {
     this.modules.forEach((module) => {
       module.start(actionAt);
     });
   };
 
   // actionAt is context time
-  private onStop = (ticks: Ticks) => {
-    const actionAt = this.transport.getContextTimeAtTicks(ticks);
-
+  private onStop = (actionAt: ContextTime) => {
     this.modules.forEach((module) => {
       module.stop(actionAt);
     });
+  };
+
+  private onTransportState = (state: TransportState, actionAt: ContextTime) => {
+    if (state === TransportState.playing) this.onStart(actionAt);
+    else this.onStop(actionAt);
   };
 }

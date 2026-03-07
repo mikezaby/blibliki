@@ -40,26 +40,31 @@ export type TransportClockCallback = (
 /**
  * Transport properties that can be observed for changes.
  */
-export type TransportProperty = "bpm" | "timeSignature" | "swingAmount";
+export type TransportProperty =
+  | "bpm"
+  | "timeSignature"
+  | "swingAmount"
+  | "state";
+
+type TransportPropertyValueMap = {
+  bpm: BPM;
+  timeSignature: TimeSignature;
+  swingAmount: NormalRange;
+  state: TransportState;
+};
 
 /**
  * Transport callback that gets invoked when a property changes.
  */
-export type TransportPropertyChangeCallback<T = unknown> = (
-  value: T,
-  contextTime: ContextTime,
-) => void;
+export type TransportPropertyChangeCallback<
+  T extends TransportProperty = TransportProperty,
+> = (value: TransportPropertyValueMap[T], contextTime: ContextTime) => void;
 
 export enum TransportState {
   playing = "playing",
   stopped = "stopped",
   paused = "paused",
 }
-
-export type TransportParams = {
-  onStart: (ticks: ContextTime) => void;
-  onStop: (ticks: ContextTime) => void;
-};
 
 /**
  * This class converts (music) transport time into audio clock time.
@@ -86,18 +91,13 @@ export class Transport {
     TransportPropertyChangeCallback[]
   >();
 
-  private onStartCallback: TransportParams["onStart"];
-  private onStopCallback: TransportParams["onStop"];
-
-  constructor(context: Readonly<Context>, params: TransportParams) {
+  constructor(context: Readonly<Context>) {
     const SCHEDULE_INTERVAL_MS = 20;
     const SCHEDULE_WINDOW_SIZE_MS = 100;
 
     this.context = context;
     this.sourceManager = new SourceManager();
     this.clock = new Clock(this.context, SCHEDULE_WINDOW_SIZE_MS / 1000);
-    this.onStartCallback = params.onStart;
-    this.onStopCallback = params.onStop;
 
     this.scheduler = new Scheduler<SourceEvent>(
       this.generateEvents,
@@ -129,24 +129,41 @@ export class Transport {
     this._clockCallbacks = this._clockCallbacks.filter((c) => c !== callback);
   }
 
-  addPropertyChangeCallback(
-    property: TransportProperty,
-    callback: TransportPropertyChangeCallback,
+  addPropertyChangeCallback<T extends TransportProperty>(
+    property: T,
+    callback: TransportPropertyChangeCallback<T>,
   ) {
     if (!this._propertyChangeCallbacks.has(property)) {
       this._propertyChangeCallbacks.set(property, []);
     }
-    this._propertyChangeCallbacks.get(property)!.push(callback);
+    this._propertyChangeCallbacks
+      .get(property)!
+      .push(callback as TransportPropertyChangeCallback);
   }
 
-  private triggerPropertyChange(property: TransportProperty, value: unknown) {
-    const callbacks = this._propertyChangeCallbacks.get(property);
+  private triggerPropertyChange<T extends TransportProperty>(
+    property: T,
+    value: TransportPropertyValueMap[T],
+    contextTime: ContextTime = this.context.currentTime,
+  ) {
+    const callbacks = this._propertyChangeCallbacks.get(property) as
+      | TransportPropertyChangeCallback<T>[]
+      | undefined;
     if (callbacks) {
-      const contextTime = this.context.currentTime;
       callbacks.forEach((callback) => {
         callback(value, contextTime);
       });
     }
+  }
+
+  private triggerStateChange(
+    previousState: TransportState,
+    actionAt: ContextTime,
+  ) {
+    const nextState = this.state;
+    if (previousState === nextState) return;
+
+    this.triggerPropertyChange("state", nextState, actionAt);
   }
 
   get time() {
@@ -190,12 +207,14 @@ export class Transport {
     if (!this._initialized) throw new Error("Not initialized");
     if (this.clock.isRunning) return;
 
+    const previousState = this.state;
     const clockTime = this.clock.start(actionAt);
     this.timer.start();
 
     const ticks = this.tempo.getTicks(clockTime);
+    const contextTime = this.clock.clockTimeToContextTime(clockTime);
     this.sourceManager.onStart(ticks);
-    this.onStartCallback(ticks);
+    this.triggerStateChange(previousState, contextTime);
   }
 
   /**
@@ -204,13 +223,15 @@ export class Transport {
   stop(actionAt: ContextTime) {
     if (!this._initialized) throw new Error("Not initialized");
 
+    const previousState = this.state;
     const clockTime = this.clock.stop(actionAt);
     this.timer.stop();
 
     const ticks = this.tempo.getTicks(clockTime);
+    const contextTime = this.clock.clockTimeToContextTime(clockTime);
     this.sourceManager.onSilence(ticks);
     this.sourceManager.onStop(ticks);
-    this.onStopCallback(ticks);
+    this.triggerStateChange(previousState, contextTime);
   }
 
   /**
