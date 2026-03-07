@@ -14,7 +14,7 @@ import {
 import { addNotification } from "@/notificationsSlice";
 import { assertPatchPayloadHasNoUndefined } from "@/patch/patchPayloadValidation";
 import { AppDispatch, RootState } from "@/store";
-import { reset, setBpm } from "./globalSlice";
+import { reinitialize } from "./globalSlice";
 
 type PatchProps = {
   patch: Omit<IPatch, "config">;
@@ -46,14 +46,14 @@ export const initialize = () => (dispatch: AppDispatch) => {
 
 export const loadById = (id: string) => async (dispatch: AppDispatch) => {
   if (id === "new") {
-    dispatch(clearEngine());
+    await dispatch(clearEngine());
     dispatch(initialize());
     return;
   }
 
   try {
     const patch = await Patch.find(id);
-    dispatch(load(patch));
+    await dispatch(load(patch));
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
@@ -71,17 +71,19 @@ export const loadById = (id: string) => async (dispatch: AppDispatch) => {
   }
 };
 
-export const load = (patch: Patch | IPatch) => (dispatch: AppDispatch) => {
-  const { id, name, config, userId } = patch;
-  const { bpm, modules, gridNodes } = config;
+export const load =
+  (patch: Patch | IPatch) => async (dispatch: AppDispatch) => {
+    const { id, name, config, userId } = patch;
+    const { bpm, modules, gridNodes } = config;
 
-  dispatch(clearEngine());
-  dispatch(loadModules(modules as ModuleProps[]));
-  dispatch(setGridNodes(gridNodes));
-  dispatch(setBpm(bpm));
+    await dispatch(clearEngine(bpm));
+    dispatch(loadModules(modules as ModuleProps[]));
+    dispatch(setGridNodes(gridNodes));
 
-  dispatch(setAttributes({ patch: { id, name, userId }, status: "succeeded" }));
-};
+    dispatch(
+      setAttributes({ patch: { id, name, userId }, status: "succeeded" }),
+    );
+  };
 
 export const save =
   (props: { userId: string; asNew: boolean }) =>
@@ -163,7 +165,7 @@ export const destroy =
         }),
       );
 
-      dispatch(clearEngine());
+      await dispatch(clearEngine());
       dispatch(initialize());
     } catch (error) {
       const errorMessage =
@@ -184,10 +186,10 @@ export const destroy =
 
 export const { setAttributes, setName } = patchSlice.actions;
 
-const clearEngine = () => (dispatch: AppDispatch) => {
-  dispatch(reset());
+const clearEngine = (bpm?: number) => async (dispatch: AppDispatch) => {
   dispatch(removeAllModules());
   dispatch(removeAllGridNodes());
+  await dispatch(reinitialize(bpm));
 };
 
 const loadModules = (modules: ModuleProps[]) => (dispatch: AppDispatch) => {
