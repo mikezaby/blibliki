@@ -24,6 +24,10 @@ export abstract class BaseController {
     this.engine.stop();
   }
 
+  dispose() {
+    // Optional cleanup in concrete controllers
+  }
+
   abstract onStateChange(state: TransportState, actionAt: ContextTime): void;
 
   protected get transport() {
