@@ -34,7 +34,6 @@ const initialState: PatchProps = {
   patch: { id: "", userId: "", name: "Init patch" },
   status: "idle",
 };
-let latestLoadRequestId = 0;
 
 export const patchSlice = createSlice({
   name: "Patch",
@@ -50,26 +49,13 @@ export const patchSlice = createSlice({
 });
 
 export const loadById = (id: string) => async (dispatch: AppDispatch) => {
-  const loadRequestId = ++latestLoadRequestId;
-
   try {
     await dispatch(clearEngine());
-    const engine = await dispatch(initializeEngine());
-    if (loadRequestId !== latestLoadRequestId) {
-      await disposeEngine(engine);
-      return;
-    }
-
+    await dispatch(initializeEngine());
     const patch = id === "new" ? Patch.build() : await Patch.find(id);
-    if (loadRequestId !== latestLoadRequestId) {
-      await disposeEngine(engine);
-      return;
-    }
 
     dispatch(load(patch));
   } catch (error) {
-    if (loadRequestId !== latestLoadRequestId) return;
-
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
 
@@ -292,7 +278,7 @@ const initializeEngine =
     return engine;
   };
 
-const clearEngine = () => async (dispatch: AppDispatch) => {
+export const clearEngine = () => async (dispatch: AppDispatch) => {
   try {
     await disposeEngine(Engine.current);
   } catch {
