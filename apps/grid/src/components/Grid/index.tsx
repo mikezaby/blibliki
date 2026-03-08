@@ -8,7 +8,7 @@ import {
   Viewport,
   useReactFlow,
 } from "@xyflow/react";
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent } from "react";
 import { useAppDispatch, useGridNodes, usePatch } from "@/hooks";
 import {
   GRID_CANVAS_BACKGROUND,
@@ -74,7 +74,6 @@ export default function Grid() {
 
 function OnViewportChange({ viewport }: { viewport: Viewport }) {
   const dispatch = useAppDispatch();
-  const lastPatchIdRef = useRef<string | null>(null);
   const { patch } = usePatch();
   const { setViewport: setInitialViewport } = useReactFlow();
 
@@ -82,15 +81,13 @@ function OnViewportChange({ viewport }: { viewport: Viewport }) {
     onEnd: (viewport: Viewport) => dispatch(setViewport(viewport)),
   });
 
-  // Set the initial viewport from saved patch
-  useEffect(() => {
-    if (!patch.id) return;
+  const restoreInitialViewport = useEffectEvent(() => {
+    void setInitialViewport(viewport);
+  });
 
-    if (lastPatchIdRef.current !== patch.id) {
-      lastPatchIdRef.current = patch.id;
-      void setInitialViewport(viewport);
-    }
-  }, [viewport, setInitialViewport, patch.id]);
+  useEffect(() => {
+    restoreInitialViewport();
+  }, [patch.id]);
 
   return null;
 }
