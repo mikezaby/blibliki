@@ -52,6 +52,7 @@ export const loadById = (id: string) => async (dispatch: AppDispatch) => {
   try {
     await dispatch(clearEngine());
     await dispatch(initializeEngine());
+
     const patch = id === "new" ? Patch.build() : await Patch.find(id);
 
     dispatch(load(patch));

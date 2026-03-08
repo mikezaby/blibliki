@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 const engineConstructor = vi.fn();
 const initializeFirebaseMock = vi.fn();
+const isFirebaseInitializedMock = vi.fn(() => false);
 
 vi.mock("@/patchSlice", () => ({
   loadById: vi.fn(() => ({ type: "patch/loadById" })),
@@ -43,6 +44,7 @@ vi.mock("@blibliki/engine", async (importOriginal) => {
 
 vi.mock("@blibliki/models", () => ({
   initializeFirebase: initializeFirebaseMock,
+  isFirebaseInitialized: isFirebaseInitializedMock,
 }));
 
 vi.mock("@blibliki/utils", () => ({
@@ -61,24 +63,10 @@ vi.mock("@blibliki/utils/web-audio-api", () => ({
 describe("globalSlice.initialize", () => {
   it("should only initialize firebase and not dispatch engine bootstrap actions", async () => {
     const { initialize } = await import("../../src/globalSlice");
+    initialize();
 
-    const actions: unknown[] = [];
-    const dispatch = vi.fn((action: unknown) => {
-      actions.push(action);
-      return action;
-    });
-    const getState = () =>
-      ({
-        global: {
-          context: { latencyHint: "interactive", lookAhead: 0.05 },
-          bpm: 120,
-        },
-      }) as never;
-
-    await initialize()(dispatch as never, getState);
-
+    expect(isFirebaseInitializedMock).toHaveBeenCalledTimes(1);
     expect(initializeFirebaseMock).toHaveBeenCalledTimes(1);
     expect(engineConstructor).not.toHaveBeenCalled();
-    expect(actions).toHaveLength(0);
   });
 });

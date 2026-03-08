@@ -8,8 +8,12 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { NotificationContainer } from "@/components/Notification";
 import { RouterErrorComponent } from "@/components/RouterErrorComponent";
 import Header from "@/components/layout/Header";
+import { initialize } from "@/globalSlice";
 
 export const Route = createRootRoute({
+  beforeLoad: () => {
+    initialize();
+  },
   component: RootComponent,
   errorComponent: RouterErrorComponent,
 });
