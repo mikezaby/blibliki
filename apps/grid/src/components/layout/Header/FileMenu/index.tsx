@@ -25,26 +25,14 @@ import {
 import { modulePropsSelector } from "@/components/AudioModule/modulePropsSlice";
 import { modulesSelector } from "@/components/AudioModule/modulesSlice";
 import { open as openModal } from "@/components/Modal/modalSlice";
-import { useAppDispatch, useAppSelector, usePatch } from "@/hooks";
+import { useAppDispatch, usePatch } from "@/hooks";
 import useUpload from "@/hooks/useUpload";
 import { destroy, load, save } from "@/patchSlice";
+import { store } from "@/store";
 
 export default function FileMenu() {
   const dispatch = useAppDispatch();
   const { patch, canCreate, canUpdate, canDelete } = usePatch();
-  const { bpm } = useAppSelector((state) => state.global);
-  const gridNodes = useAppSelector((state) => state.gridNodes);
-  const modules = useAppSelector((state) =>
-    modulesSelector.selectAll(state).flatMap((moduleInfo) => {
-      const moduleProps = modulePropsSelector.selectById(
-        state,
-        moduleInfo.id,
-      )?.props;
-      if (moduleProps === undefined) return [];
-
-      return [{ ...moduleInfo, props: moduleProps } as IAnyModuleSerialize];
-    }),
-  );
   const navigate = useNavigate();
   const { user } = useUser();
   const { open: openUpload } = useUpload({
@@ -69,6 +57,19 @@ export default function FileMenu() {
   };
 
   const exportGridJSON = () => {
+    const state = store.getState();
+    const { bpm } = state.global;
+    const gridNodes = state.gridNodes;
+    const modules = modulesSelector.selectAll(state).flatMap((moduleInfo) => {
+      const moduleProps = modulePropsSelector.selectById(
+        state,
+        moduleInfo.id,
+      )?.props;
+      if (moduleProps === undefined) return [];
+
+      return [{ ...moduleInfo, props: moduleProps } as IAnyModuleSerialize];
+    });
+
     const data: IPatch = {
       id: "",
       userId: "",
