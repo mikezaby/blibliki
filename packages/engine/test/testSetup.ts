@@ -39,6 +39,6 @@ beforeEach(async (ctx) => {
 });
 
 afterEach(async (ctx) => {
-  await ctx.context?.close();
   ctx.engine?.dispose();
+  await ctx.context?.close();
 });

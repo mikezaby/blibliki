@@ -9,6 +9,7 @@ import Wavetable, {
   formatWavetableDefinition,
   parseWavetableDefinition,
 } from "@/modules/Wavetable";
+import { getPeak, waitForCondition } from "../utils/waitForCondition";
 
 const DEFAULT_PROPS: IWavetableProps = {
   tables: [
@@ -170,12 +171,8 @@ describe("Wavetable", () => {
     ctx.engine.transport.start(ctx.context.currentTime);
     monoOscillator.plug({ audioModule: inspector, from: "out", to: "in" });
 
-    await sleep(50);
-    const beforePresetChangePeak = inspector
-      .getValues()
-      .reduce((max, value) => {
-        return Math.max(max, Math.abs(value));
-      }, 0);
+    await waitForCondition(() => getPeak(inspector.getValues()) > 0.01);
+    const beforePresetChangePeak = getPeak(inspector.getValues());
 
     oscillator.props = {
       tables: [
@@ -184,12 +181,10 @@ describe("Wavetable", () => {
       ],
     };
 
-    await sleep(70);
+    await waitForCondition(() => getPeak(inspector.getValues()) < 0.01);
     ctx.engine.transport.stop(ctx.context.currentTime);
 
-    const afterPresetChangePeak = inspector.getValues().reduce((max, value) => {
-      return Math.max(max, Math.abs(value));
-    }, 0);
+    const afterPresetChangePeak = getPeak(inspector.getValues());
 
     expect(beforePresetChangePeak).toBeGreaterThan(0.01);
     expect(afterPresetChangePeak).toBeLessThan(0.01);
@@ -317,14 +312,19 @@ describe("Wavetable", () => {
     updates.length = 0;
 
     oscillator.props = { position: 1 };
-    await sleep(80);
+    await waitForCondition(
+      () => updates.some((actualPosition) => actualPosition > 0.05),
+      { timeoutMs: 3000 },
+    );
     inspector.getValues();
 
     const intermediateUpdate = updates.find(
       (actualPosition) => actualPosition > 0.05 && actualPosition < 0.95,
     );
 
-    await sleep(180);
+    await waitForCondition(() => (updates[updates.length - 1] ?? 0) > 0.95, {
+      timeoutMs: 3000,
+    });
     inspector.getValues();
 
     const latest = updates[updates.length - 1] ?? 0;
