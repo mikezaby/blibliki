@@ -3,7 +3,7 @@ import { initializeFirebase } from "@blibliki/models";
 import { Context, requestAnimationFrame } from "@blibliki/utils";
 import { AudioContext } from "@blibliki/utils/web-audio-api";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { initialize as patchInitialize, loadById } from "@/patchSlice";
+import { loadById } from "@/patchSlice";
 import { AppDispatch, RootState } from "@/store";
 import { updatePlainModule } from "./components/AudioModule/modulesSlice";
 import { createEnginePropsUpdateQueue } from "./global/enginePropsUpdateQueue";
@@ -49,7 +49,7 @@ export const globalSlice = createSlice({
 });
 
 export const initialize =
-  (patchId?: string) =>
+  (patchId = "new") =>
   async (dispatch: AppDispatch, getState: () => RootState) => {
     initializeFirebase(firebaseConfig);
 
@@ -61,11 +61,7 @@ export const initialize =
     await engine.initialize();
     engine.bpm = bpm;
 
-    if (patchId) {
-      void dispatch(loadById(patchId));
-    } else {
-      dispatch(patchInitialize());
-    }
+    void dispatch(loadById(patchId));
 
     const queue = createEnginePropsUpdateQueue();
     let scheduledFlush: number | null = null;

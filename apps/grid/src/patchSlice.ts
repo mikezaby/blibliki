@@ -40,19 +40,10 @@ export const patchSlice = createSlice({
   },
 });
 
-export const initialize = () => (dispatch: AppDispatch) => {
-  dispatch(setAttributes(initialState));
-};
-
 export const loadById = (id: string) => async (dispatch: AppDispatch) => {
-  if (id === "new") {
-    dispatch(clearEngine());
-    dispatch(initialize());
-    return;
-  }
-
   try {
-    const patch = await Patch.find(id);
+    dispatch(clearEngine());
+    const patch = id === "new" ? Patch.build() : await Patch.find(id);
     dispatch(load(patch));
   } catch (error) {
     const errorMessage =
@@ -75,7 +66,6 @@ export const load = (patch: Patch | IPatch) => (dispatch: AppDispatch) => {
   const { id, name, config, userId } = patch;
   const { bpm, modules, gridNodes } = config;
 
-  dispatch(clearEngine());
   dispatch(loadModules(modules as ModuleProps[]));
   dispatch(setGridNodes(gridNodes));
   dispatch(setBpm(bpm));
@@ -164,7 +154,6 @@ export const destroy =
       );
 
       dispatch(clearEngine());
-      dispatch(initialize());
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
