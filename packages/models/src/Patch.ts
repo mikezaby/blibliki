@@ -5,6 +5,7 @@ import {
   IRoute,
 } from "@blibliki/engine";
 import { AnyObject, Optional, pick } from "@blibliki/utils";
+import { merge } from "es-toolkit";
 import {
   collection,
   addDoc,
@@ -65,11 +66,34 @@ export type IConfig = {
   gridNodes: IGridNodes;
 };
 
+const DEFAULT_PATCH_NAME = "Init patch";
+const DEFAULT_BPM = 120;
+const DEFAULT_VIEWPORT: Viewport = { x: 0, y: 0, zoom: 1 };
+const DEFAULT_PATCH: IPatch = {
+  id: "",
+  name: DEFAULT_PATCH_NAME,
+  userId: "",
+  config: {
+    bpm: DEFAULT_BPM,
+    modules: [],
+    gridNodes: {
+      nodes: [],
+      edges: [],
+      viewport: DEFAULT_VIEWPORT,
+    },
+  },
+};
+
 export default class Patch implements IPatch {
   id!: string;
   name!: string;
   userId!: string;
   config!: IConfig;
+
+  static build(data: Partial<IPatch> = {}): Patch {
+    const patchData = merge(merge({}, DEFAULT_PATCH), data);
+    return new Patch(patchData);
+  }
 
   static async find(id: string): Promise<Patch> {
     const db = getDb();
