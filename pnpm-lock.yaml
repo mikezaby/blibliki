@@ -291,6 +291,9 @@ importers:
       '@blibliki/utils':
         specifier: workspace:^
         version: link:../utils
+      es-toolkit:
+        specifier: 1.44.0
+        version: 1.44.0
       firebase:
         specifier: 12.8.0
         version: 12.8.0
