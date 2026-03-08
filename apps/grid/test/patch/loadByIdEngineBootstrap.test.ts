@@ -28,7 +28,10 @@ vi.mock("@blibliki/engine", async (importOriginal) => {
 
     id = "engine-1";
     bpm = 120;
-    transport = { state: "stopped" as const };
+    transport = {
+      state: "stopped" as const,
+      addPropertyChangeCallback: vi.fn(),
+    };
     context = { close: vi.fn(async () => undefined) };
 
     constructor(_context: unknown) {

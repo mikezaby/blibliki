@@ -1,8 +1,4 @@
-import {
-  Engine,
-  TransportState,
-  type IAnyModuleSerialize,
-} from "@blibliki/engine";
+import { Engine, type IAnyModuleSerialize } from "@blibliki/engine";
 import { IPatch, Patch } from "@blibliki/models";
 import { Context, requestAnimationFrame } from "@blibliki/utils";
 import { AudioContext } from "@blibliki/utils/web-audio-api";
@@ -22,7 +18,11 @@ import { addNotification } from "@/notificationsSlice";
 import { assertPatchPayloadHasNoUndefined } from "@/patch/patchPayloadValidation";
 import { AppDispatch, RootState } from "@/store";
 import { createEnginePropsUpdateQueue } from "./global/enginePropsUpdateQueue";
-import { setAttributes as setGlobalAttributes, setBpm } from "./globalSlice";
+import {
+  bindTransportState,
+  setAttributes as setGlobalAttributes,
+  setBpm,
+} from "./globalSlice";
 
 type PatchProps = {
   patch: Omit<IPatch, "config">;
@@ -267,11 +267,12 @@ const initializeEngine =
       scheduledFlush = requestAnimationFrame(flushQueuedUpdates);
     });
 
+    dispatch(bindTransportState(engine));
+
     dispatch(
       setGlobalAttributes({
         engineId: engine.id,
         isInitialized: true,
-        isStarted: engine.transport.state === TransportState.playing,
         bpm: engine.bpm,
       }),
     );

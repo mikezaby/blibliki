@@ -1,7 +1,7 @@
-import { Engine } from "@blibliki/engine";
+import { Engine, TransportState } from "@blibliki/engine";
 import { initializeFirebase, isFirebaseInitialized } from "@blibliki/models";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { AppDispatch } from "@/store";
+import type { AppDispatch } from "@/store";
 
 type IContext = {
   latencyHint: "interactive" | "playback";
@@ -48,14 +48,29 @@ export const initialize = () => {
   initializeFirebase(firebaseConfig);
 };
 
-export const start = () => async (dispatch: AppDispatch) => {
+const isStartedFromTransportState = (state: TransportState) =>
+  state === TransportState.playing;
+
+export const bindTransportState =
+  (engine: Engine) => (dispatch: AppDispatch) => {
+    const onTransportStateChange = (state: TransportState) => {
+      dispatch(
+        setAttributes({
+          isStarted: isStartedFromTransportState(state),
+        }),
+      );
+    };
+
+    engine.transport.addPropertyChangeCallback("state", onTransportStateChange);
+    onTransportStateChange(engine.transport.state);
+  };
+
+export const start = () => async () => {
   await Engine.current.start();
-  dispatch(setAttributes({ isStarted: true }));
 };
 
-export const stop = () => (dispatch: AppDispatch) => {
+export const stop = () => () => {
   Engine.current.stop();
-  dispatch(setAttributes({ isStarted: false }));
 };
 
 export const setBpm = (bpm: number) => (dispatch: AppDispatch) => {
