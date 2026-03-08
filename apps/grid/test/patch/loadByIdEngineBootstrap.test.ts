@@ -1,9 +1,8 @@
 // @vitest-environment node
-import { Engine } from "@blibliki/engine";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { loadById } from "../../src/patchSlice";
 
-const { patchBuildMock } = vi.hoisted(() => ({
+const { patchBuildMock, engineDisposeMock } = vi.hoisted(() => ({
   patchBuildMock: vi.fn(() => ({
     id: "",
     name: "Init patch",
@@ -18,6 +17,60 @@ const { patchBuildMock } = vi.hoisted(() => ({
       },
     },
   })),
+  engineDisposeMock: vi.fn(),
+}));
+
+vi.mock("@blibliki/engine", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@blibliki/engine")>();
+
+  class Engine {
+    static instance: Engine | null = null;
+
+    id = "engine-1";
+    bpm = 120;
+    transport = { state: "stopped" as const };
+    context = { close: vi.fn(async () => undefined) };
+
+    constructor(_context: unknown) {
+      Engine.instance = this;
+    }
+
+    async initialize(): Promise<void> {}
+
+    onPropsUpdate(): void {}
+
+    dispose(): void {
+      engineDisposeMock();
+    }
+
+    static get current() {
+      if (Engine.instance) return Engine.instance;
+      return {
+        dispose: engineDisposeMock,
+        context: { close: vi.fn(async () => undefined) },
+        bpm: 120,
+      } as unknown as Engine;
+    }
+  }
+
+  return {
+    ...actual,
+    Engine,
+    TransportState: { playing: "playing" },
+  };
+});
+
+vi.mock("@blibliki/utils", () => ({
+  Context: class {
+    constructor(_audioContext?: unknown) {}
+  },
+  requestAnimationFrame: (_callback: () => void) => 1,
+}));
+
+vi.mock("@blibliki/utils/web-audio-api", () => ({
+  AudioContext: class {
+    constructor(_contextConf?: unknown) {}
+  },
 }));
 
 vi.mock("@blibliki/models", () => ({
@@ -33,20 +86,11 @@ type DispatchedAction = {
 };
 
 describe("patchSlice.loadById", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("should bootstrap engine lifecycle state when loading a new patch", async () => {
-    const dispose = vi.fn();
-    let bpm = 120;
-
-    vi.spyOn(Engine, "current", "get").mockReturnValue({
-      dispose,
-      get bpm() {
-        return bpm;
-      },
-      set bpm(value: number) {
-        bpm = value;
-      },
-    } as unknown as Engine);
-
     const actions: DispatchedAction[] = [];
     const getState = () =>
       ({
