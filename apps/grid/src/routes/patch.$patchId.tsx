@@ -1,20 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
 import Grid from "@/components/Grid";
-import { useAppDispatch } from "@/hooks";
+import { initialize } from "@/globalSlice";
 import { loadById } from "@/patchSlice";
+import { store } from "@/store";
 
 export const Route = createFileRoute("/patch/$patchId")({
+  loader: async ({ params }) => {
+    initialize();
+    await store.dispatch(loadById(params.patchId));
+  },
   component: PatchPage,
 });
 
 function PatchPage() {
-  const { patchId } = Route.useParams();
-  const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    void dispatch(loadById(patchId));
-  }, [dispatch, patchId]);
-
   return <Grid />;
 }

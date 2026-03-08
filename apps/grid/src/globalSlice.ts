@@ -1,5 +1,5 @@
 import { Engine } from "@blibliki/engine";
-import { initializeFirebase } from "@blibliki/models";
+import { initializeFirebase, isFirebaseInitialized } from "@blibliki/models";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AppDispatch } from "@/store";
 
@@ -43,7 +43,8 @@ export const globalSlice = createSlice({
   },
 });
 
-export const initialize = () => () => {
+export const initialize = () => {
+  if (isFirebaseInitialized()) return;
   initializeFirebase(firebaseConfig);
 };
 
@@ -62,7 +63,7 @@ export const setBpm = (bpm: number) => (dispatch: AppDispatch) => {
   dispatch(setAttributes({ bpm }));
 };
 
-export const dispose = () => (dispatch: AppDispatch) => {
+export const dispose = () => async (dispatch: AppDispatch) => {
   return disposeCurrentEngine().finally(() => {
     dispatch(
       setAttributes({ engineId: "", isInitialized: false, isStarted: false }),

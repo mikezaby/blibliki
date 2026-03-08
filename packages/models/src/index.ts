@@ -1,4 +1,4 @@
-export { initializeFirebase, getApp, getDb } from "./db";
+export { isFirebaseInitialized, initializeFirebase, getApp, getDb } from "./db";
 export type { FirebaseConfig } from "./db";
 
 export type { IPatch, IConfig } from "./Patch";

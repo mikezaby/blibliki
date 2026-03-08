@@ -14,6 +14,8 @@ let firebaseConfig: FirebaseConfig | undefined;
 let app: FirebaseApp | undefined;
 let db: Firestore | undefined;
 
+export const isFirebaseInitialized = () => !!firebaseConfig && !!app && !!db;
+
 export const initializeFirebase = (config: FirebaseConfig) => {
   firebaseConfig = config;
   app = initializeApp(firebaseConfig);
