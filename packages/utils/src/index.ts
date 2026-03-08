@@ -1,7 +1,6 @@
 export { deterministicId } from "./deterministicId";
 export { isTextInputLikeTarget } from "./isTextInputLikeTarget";
 export type { AtLeast, Optional, AnyObject, EmptyObject } from "./types";
-export { deepmerge } from "deepmerge-ts";
 export { oscilloscope } from "./oscilloscope";
 
 export function assertNever(value: never, message?: string): never {

@@ -54,7 +54,6 @@
   },
   "dependencies": {
     "crypto-js": "^4.2.0",
-    "deepmerge-ts": "^7.1.5",
     "es-toolkit": "1.44.0",
     "node-web-audio-api": "1.0.7"
   }
