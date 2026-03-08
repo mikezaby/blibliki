@@ -1,11 +1,18 @@
-import type { IAnyModuleSerialize } from "@blibliki/engine";
+import {
+  Engine,
+  TransportState,
+  type IAnyModuleSerialize,
+} from "@blibliki/engine";
 import { IPatch, Patch } from "@blibliki/models";
+import { Context, requestAnimationFrame } from "@blibliki/utils";
+import { AudioContext } from "@blibliki/utils/web-audio-api";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
   addModule,
   ModuleProps,
   modulesSelector,
   removeAllModules,
+  updatePlainModule,
 } from "@/components/AudioModule/modulesSlice";
 import {
   removeAllGridNodes,
@@ -14,7 +21,8 @@ import {
 import { addNotification } from "@/notificationsSlice";
 import { assertPatchPayloadHasNoUndefined } from "@/patch/patchPayloadValidation";
 import { AppDispatch, RootState } from "@/store";
-import { dispose, setBpm } from "./globalSlice";
+import { createEnginePropsUpdateQueue } from "./global/enginePropsUpdateQueue";
+import { setAttributes as setGlobalAttributes, setBpm } from "./globalSlice";
 
 type PatchProps = {
   patch: Omit<IPatch, "config">;
@@ -26,6 +34,7 @@ const initialState: PatchProps = {
   patch: { id: "", userId: "", name: "Init patch" },
   status: "idle",
 };
+let latestLoadRequestId = 0;
 
 export const patchSlice = createSlice({
   name: "Patch",
@@ -41,11 +50,26 @@ export const patchSlice = createSlice({
 });
 
 export const loadById = (id: string) => async (dispatch: AppDispatch) => {
+  const loadRequestId = ++latestLoadRequestId;
+
   try {
-    dispatch(clearEngine());
+    await dispatch(clearEngine());
+    const engine = await dispatch(initializeEngine());
+    if (loadRequestId !== latestLoadRequestId) {
+      await disposeEngine(engine);
+      return;
+    }
+
     const patch = id === "new" ? Patch.build() : await Patch.find(id);
+    if (loadRequestId !== latestLoadRequestId) {
+      await disposeEngine(engine);
+      return;
+    }
+
     dispatch(load(patch));
   } catch (error) {
+    if (loadRequestId !== latestLoadRequestId) return;
+
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
 
@@ -153,7 +177,7 @@ export const destroy =
         }),
       );
 
-      dispatch(clearEngine());
+      await dispatch(clearEngine());
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
@@ -173,10 +197,126 @@ export const destroy =
 
 export const { setAttributes, setName } = patchSlice.actions;
 
-const clearEngine = () => (dispatch: AppDispatch) => {
-  dispatch(dispose());
+const initializeEngine =
+  () => async (dispatch: AppDispatch, getState: () => RootState) => {
+    const { context: contextConf, bpm } = getState().global;
+
+    const audioContext = new AudioContext(contextConf);
+    const context = new Context(audioContext);
+    const engine = new Engine(context);
+    await engine.initialize();
+    engine.bpm = bpm;
+
+    const queue = createEnginePropsUpdateQueue();
+    let scheduledFlush: number | null = null;
+
+    const flushQueuedUpdates = () => {
+      scheduledFlush = null;
+      const state = getState();
+      const modulesById = state.modules.entities;
+      const modulePropsById = state.moduleProps.entities;
+      const moduleStateById = state.moduleState.entities;
+
+      queue.sweep(Object.keys(modulesById));
+      const updates = queue.flush();
+
+      updates.forEach((queuedUpdate) => {
+        const currentModule = modulesById[queuedUpdate.id];
+        if (!currentModule) return;
+
+        const nextChanges = {
+          ...queuedUpdate.changes,
+        };
+
+        if (
+          nextChanges.name !== undefined &&
+          currentModule.name === nextChanges.name
+        ) {
+          delete nextChanges.name;
+        }
+
+        if (
+          nextChanges.props !== undefined &&
+          modulePropsById[queuedUpdate.id]?.props === nextChanges.props
+        ) {
+          delete nextChanges.props;
+        }
+
+        if (
+          nextChanges.state !== undefined &&
+          moduleStateById[queuedUpdate.id]?.state === nextChanges.state
+        ) {
+          delete nextChanges.state;
+        }
+
+        if (
+          nextChanges.voices !== undefined &&
+          "voices" in currentModule &&
+          currentModule.voices === nextChanges.voices
+        ) {
+          delete nextChanges.voices;
+        }
+
+        if (Object.keys(nextChanges).length === 0) return;
+        dispatch(
+          updatePlainModule({
+            id: queuedUpdate.id,
+            changes: nextChanges,
+          }),
+        );
+      });
+    };
+
+    engine.onPropsUpdate((update) => {
+      const enqueued = queue.enqueue({
+        id: update.id,
+        name: update.name,
+        props: update.props,
+        state: update.state,
+        voices: "voices" in update ? update.voices : undefined,
+      });
+
+      if (!enqueued || scheduledFlush !== null) return;
+      scheduledFlush = requestAnimationFrame(flushQueuedUpdates);
+    });
+
+    dispatch(
+      setGlobalAttributes({
+        engineId: engine.id,
+        isInitialized: true,
+        isStarted: engine.transport.state === TransportState.playing,
+        bpm: engine.bpm,
+      }),
+    );
+
+    return engine;
+  };
+
+const clearEngine = () => async (dispatch: AppDispatch) => {
+  try {
+    await disposeEngine(Engine.current);
+  } catch {
+    // No engine initialized yet.
+  }
+  dispatch(
+    setGlobalAttributes({
+      engineId: "",
+      isInitialized: false,
+      isStarted: false,
+    }),
+  );
   dispatch(removeAllModules());
   dispatch(removeAllGridNodes());
+};
+
+const disposeEngine = async (engine: Engine) => {
+  engine.dispose();
+
+  try {
+    await engine.context.close();
+  } catch {
+    // Context may already be closed or unavailable in mocked environments.
+  }
 };
 
 const loadModules = (modules: ModuleProps[]) => (dispatch: AppDispatch) => {

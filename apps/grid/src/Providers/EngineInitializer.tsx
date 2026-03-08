@@ -6,10 +6,10 @@ export default function EngineInitializer() {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    void dispatch(initialize());
+    dispatch(initialize());
 
     return () => {
-      dispatch(dispose());
+      void dispatch(dispose());
     };
   }, [dispatch]);
 
