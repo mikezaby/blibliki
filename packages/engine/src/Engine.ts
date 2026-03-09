@@ -111,7 +111,7 @@ export class Engine {
     this.transport.addPropertyChangeCallback("state", this.onTransportState);
     this.routes = new Routes(this);
     this.modules = new Map();
-    this.midiDeviceManager = new MidiDeviceManager(this.context);
+    this.midiDeviceManager = new MidiDeviceManager(this.context, this.id);
 
     Engine._engines.set(this.id, this);
     Engine._currentId = this.id;
@@ -223,6 +223,7 @@ export class Engine {
 
   dispose() {
     this.stop();
+    this.midiDeviceManager.dispose();
     this.routes.clear();
     this.modules.forEach((module) => {
       module.dispose();

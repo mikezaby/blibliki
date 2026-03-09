@@ -22,6 +22,15 @@ export type { IMidiDevice } from "./midi/BaseMidiDevice";
 export { default as MidiInputDevice } from "./midi/MidiInputDevice";
 export type { IMidiInput, EventListerCallback } from "./midi/MidiInputDevice";
 export { default as MidiOutputDevice } from "./midi/MidiOutputDevice";
+export {
+  ControllerMatcherRegistry,
+  controllerMatchers,
+} from "./midi/controllers/ControllerMatcher";
+export type {
+  ControllerMatcherDefinition,
+  MatchedControllerPorts,
+} from "./midi/controllers/ControllerMatcher";
+export { LaunchControlXL3 } from "./midi/controllers/LaunchControlXL3";
 // Legacy export for backwards compatibility
 export { default as MidiDevice } from "./midi/MidiInputDevice";
 export { default as MidiEvent, MidiEventType } from "./midi/MidiEvent";

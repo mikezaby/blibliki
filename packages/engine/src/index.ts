@@ -19,11 +19,16 @@ export type {
   INote,
   SetterHooks,
   StateSetterHooks,
+  ControllerMatcherDefinition,
+  MatchedControllerPorts,
 } from "./core";
 export {
   MidiDevice,
   MidiInputDevice,
   MidiOutputDevice,
+  ControllerMatcherRegistry,
+  controllerMatchers,
+  LaunchControlXL3,
   MidiPortState,
   Note,
 } from "./core";
