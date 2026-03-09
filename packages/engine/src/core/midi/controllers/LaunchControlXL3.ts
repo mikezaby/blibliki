@@ -3,160 +3,6 @@ import MidiEvent from "../MidiEvent";
 import { BaseController } from "./BaseController";
 import type { MatchedControllerPorts } from "./ControllerMatcher";
 
-enum Color {
-  // ===== GRAYS =====
-  Gray0 = 0,
-  Gray1 = 1,
-  Gray2 = 2,
-  Gray3 = 3,
-  Gray4 = 70,
-  Gray5 = 71,
-  Gray6 = 91,
-  Gray7 = 103,
-  Gray8 = 115,
-  Gray9 = 116,
-  Gray10 = 117,
-  Gray11 = 118,
-  Gray12 = 119,
-
-  // ===== REDS =====
-  Red0 = 4,
-  Red1 = 5,
-  Red2 = 6,
-  Red3 = 7,
-  Red4 = 72,
-  Red5 = 106,
-  Red6 = 120,
-
-  // ===== ORANGES =====
-  Orange0 = 8,
-  Orange1 = 9,
-  Orange2 = 10,
-  Orange3 = 11,
-  Orange4 = 84,
-  Orange5 = 96,
-  Orange6 = 107,
-  Orange7 = 108,
-  Orange8 = 121,
-  Orange9 = 126,
-
-  // ===== YELLOWS =====
-  Yellow0 = 12,
-  Yellow1 = 13,
-  Yellow2 = 14,
-  Yellow3 = 15,
-  Yellow4 = 73,
-  Yellow5 = 74,
-  Yellow6 = 75,
-  Yellow7 = 85,
-  Yellow8 = 97,
-  Yellow9 = 98,
-  Yellow10 = 99,
-  Yellow11 = 109,
-  Yellow12 = 113,
-  Yellow13 = 124,
-  Yellow14 = 125,
-
-  // ===== GREENS =====
-  Green0 = 16,
-  Green1 = 17,
-  Green2 = 18,
-  Green3 = 19,
-  Green4 = 20,
-  Green5 = 21,
-  Green6 = 22,
-  Green7 = 23,
-  Green8 = 64,
-  Green9 = 65,
-  Green10 = 76,
-  Green11 = 86,
-  Green12 = 87,
-  Green13 = 88,
-  Green14 = 89,
-  Green15 = 101,
-  Green16 = 102,
-  Green17 = 110,
-  Green18 = 111,
-  Green19 = 114,
-  Green20 = 122,
-  Green21 = 123,
-
-  // ===== TEALS =====
-  Teal0 = 24,
-  Teal1 = 25,
-  Teal2 = 26,
-  Teal3 = 27,
-  Teal4 = 28,
-  Teal5 = 29,
-  Teal6 = 30,
-  Teal7 = 31,
-  Teal8 = 68,
-  Teal9 = 69,
-
-  // ===== CYANS =====
-  Cyan0 = 32,
-  Cyan1 = 33,
-  Cyan2 = 34,
-  Cyan3 = 35,
-  Cyan4 = 36,
-  Cyan5 = 37,
-  Cyan6 = 38,
-  Cyan7 = 39,
-  Cyan8 = 66,
-  Cyan9 = 67,
-  Cyan10 = 77,
-  Cyan11 = 78,
-  Cyan12 = 90,
-
-  // ===== BLUES =====
-  Blue0 = 40,
-  Blue1 = 41,
-  Blue2 = 42,
-  Blue3 = 43,
-  Blue4 = 79,
-  Blue5 = 92,
-
-  // ===== INDIGOS =====
-  Indigo0 = 44,
-  Indigo1 = 45,
-  Indigo2 = 46,
-  Indigo3 = 47,
-  Indigo4 = 104,
-  Indigo5 = 112,
-
-  // ===== PURPLES =====
-  Purple0 = 48,
-  Purple1 = 49,
-  Purple2 = 50,
-  Purple3 = 51,
-  Purple4 = 80,
-  Purple5 = 81,
-  Purple6 = 93,
-
-  // ===== PINKS =====
-  Pink0 = 52,
-  Pink1 = 53,
-  Pink2 = 54,
-  Pink3 = 55,
-  Pink4 = 56,
-  Pink5 = 57,
-  Pink6 = 58,
-  Pink7 = 59,
-  Pink8 = 82,
-  Pink9 = 94,
-  Pink10 = 95,
-
-  // ===== BROWNS =====
-  Brown0 = 60,
-  Brown1 = 61,
-  Brown2 = 62,
-  Brown3 = 63,
-  Brown4 = 83,
-  Brown5 = 100,
-  Brown6 = 105,
-  Brown7 = 127,
-}
-
 enum Control {
   // ===== ENCODERS =====
   Encoder0_0 = 13,
@@ -230,10 +76,20 @@ enum Control {
   Mode = 104,
 }
 
+const VALUE_CONTROL_MIN = 5;
+const VALUE_CONTROL_MAX = 36;
+const PLAY_STOPPED_COLOR = 16;
+const PLAY_PLAYING_COLOR = 101;
+const RECORD_STOPPED_COLOR = 4;
+const RECORD_PLAYING_COLOR = 120;
+
+const VALUE_COLOR_RAMP = [41, 42, 43, 21, 20, 19, 13] as const;
+
 export class LaunchControlXL3 extends BaseController {
   constructor(engineId: string, ports: MatchedControllerPorts) {
     super(engineId, ports);
     this.sendBigBlibliki();
+    this.updateTransportColors();
   }
 
   enterDawMode(): void {
@@ -261,7 +117,10 @@ export class LaunchControlXL3 extends BaseController {
         this.stop();
         break;
       default:
-        this.setColor(event.cc, event.ccValue);
+        this.setColor(
+          event.cc,
+          this.colorForControlValue(event.cc, event.ccValue),
+        );
     }
   };
 
@@ -277,7 +136,7 @@ export class LaunchControlXL3 extends BaseController {
     else if (cc === 63 || cc === 112) code = 0xb6;
     else code = 0xb0;
 
-    this.setColor(cc, value);
+    this.setColor(cc, this.colorForControlValue(cc, value));
 
     return [code, cc, value];
   };
@@ -286,18 +145,31 @@ export class LaunchControlXL3 extends BaseController {
     if (this.disposed) return;
 
     if (this.isPlaying()) {
-      this.setColor(Control.Play, Color.Green15);
-      this.setColor(Control.Record, Color.Red6);
+      this.setColor(Control.Play, PLAY_PLAYING_COLOR);
+      this.setColor(Control.Record, RECORD_PLAYING_COLOR);
       return;
     }
 
-    this.setColor(Control.Play, Color.Green0);
-    this.setColor(Control.Record, Color.Red0);
+    this.setColor(Control.Play, PLAY_STOPPED_COLOR);
+    this.setColor(Control.Record, RECORD_STOPPED_COLOR);
   }
 
-  private setColor(control: Control, color: Color) {
+  private setColor(control: number, color: number) {
     if (this.disposed) return;
     this.output.directSend([176, control, color]);
+  }
+
+  private colorForControlValue(control: number, value: number): number {
+    if (control < VALUE_CONTROL_MIN || control > VALUE_CONTROL_MAX) {
+      return value;
+    }
+
+    const clampedValue = Math.max(0, Math.min(127, value));
+    const index = Math.round(
+      (clampedValue / 127) * (VALUE_COLOR_RAMP.length - 1),
+    );
+
+    return VALUE_COLOR_RAMP[index]!;
   }
 
   private sendBigBlibliki() {
