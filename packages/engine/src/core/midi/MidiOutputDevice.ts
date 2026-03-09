@@ -2,6 +2,8 @@ import BaseMidiDevice from "./BaseMidiDevice";
 import type { IMidiOutputPort } from "./adapters";
 
 export default class MidiOutputDevice extends BaseMidiDevice<IMidiOutputPort> {
+  eventDataMutator?: (event: number[] | Uint8Array) => number[] | Uint8Array;
+
   constructor(output: IMidiOutputPort) {
     super(output);
     this.connect();
@@ -18,6 +20,14 @@ export default class MidiOutputDevice extends BaseMidiDevice<IMidiOutputPort> {
   }
 
   send(data: number[] | Uint8Array, timestamp?: number) {
+    if (this.eventDataMutator) {
+      this.directSend(this.eventDataMutator(data), timestamp);
+    } else {
+      this.directSend(data, timestamp);
+    }
+  }
+
+  directSend(data: number[] | Uint8Array, timestamp?: number) {
     this.midiPort.send(data, timestamp);
   }
 }

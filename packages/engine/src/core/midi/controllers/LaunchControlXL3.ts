@@ -69,19 +69,10 @@ enum Control {
   Record = 118,
 }
 
-const PLAY_CONTROL = 116;
-const RECORD_CONTROL = 118;
-
 export class LaunchControlXL3 extends BaseController {
-  private inputListener?: (event: MidiEvent) => void;
-
   constructor(engineId: string, ports: MatchedControllerPorts) {
     super(engineId, ports);
-    this.initialize();
-  }
-
-  onStateChange(_state: TransportState, _actionAt: ContextTime): void {
-    this.updateTransportColors();
+    this.sendBigBlibliki();
   }
 
   enterDawMode(): void {
@@ -94,61 +85,41 @@ export class LaunchControlXL3 extends BaseController {
     this.isInDawMode = false;
   }
 
-  override dispose() {
-    if (this.disposed) return;
-
-    if (this.inputListener) {
-      this.input.removeEventListener(this.inputListener);
-      this.inputListener = undefined;
-    }
-
-    this.exitDawMode();
-    super.dispose();
+  onStateChange(_state: TransportState, _actionAt: ContextTime): void {
+    this.updateTransportColors();
   }
 
-  private initialize() {
-    this.bindTransportControls();
-    this.exitDawMode();
-    this.enterDawMode();
-    this.sendBigBlibliki();
-  }
+  protected onMidiEvent = (event: MidiEvent) => {
+    if (event.cc === undefined || event.ccValue === undefined) return;
 
-  private bindTransportControls() {
-    this.inputListener = (event) => {
-      this.onMidiEvent(event);
-    };
-    this.input.addEventListener(this.inputListener);
-  }
-
-  private onMidiEvent(event: MidiEvent) {
-    if (this.disposed) return;
-
-    const [status, control, value] = event.rawMessage.data;
-    if (
-      status === undefined ||
-      control === undefined ||
-      value === undefined ||
-      value === 0
-    ) {
-      return;
+    switch (event.cc as Control) {
+      case Control.Play:
+        this.start();
+        break;
+      case Control.Record:
+        this.stop();
+        break;
+      default:
+        this.setColor(event.cc, event.ccValue);
     }
+  };
 
-    const messageType = status & 0xf0;
-    const isButtonEvent = messageType === 0x90 || messageType === 0xb0;
-    if (!isButtonEvent) return;
+  protected eventDataMutator = (
+    data: number[] | Uint8Array,
+  ): number[] | Uint8Array => {
+    const [_, cc, value] = data;
+    if (cc === undefined || value === undefined) return data;
 
-    if (control === PLAY_CONTROL) {
-      this.start();
-      this.updateTransportColors();
-      return;
-    }
+    let code: number;
 
-    if (control === RECORD_CONTROL) {
-      this.stop();
-      this.updateTransportColors();
-      return;
-    }
-  }
+    if (cc >= 5 && cc <= 36) code = 0xbf;
+    else if (cc === 63 || cc === 112) code = 0xb6;
+    else code = 0xb0;
+
+    this.setColor(cc, value);
+
+    return [code, cc, value];
+  };
 
   private updateTransportColors() {
     if (this.disposed) return;
@@ -165,7 +136,7 @@ export class LaunchControlXL3 extends BaseController {
 
   private setColor(control: Control, color: Color) {
     if (this.disposed) return;
-    this.output.send([176, control, color]);
+    this.output.directSend([176, control, color]);
   }
 
   private sendBigBlibliki() {
