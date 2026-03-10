@@ -79,6 +79,7 @@ export class MonoDistortion
     this.waveshaper = audioContext.createWaveShaper();
     this.filter = audioContext.createBiquadFilter();
     this.wetDryMixer = new WetDryMixer(this.context);
+    this.initializeDistortionCurve();
 
     // Configure filter
     this.filter.type = "lowpass";
@@ -99,7 +100,6 @@ export class MonoDistortion
 
     // Apply initial parameters
     this.updateInputGain(props.drive);
-    this.updateDistortionCurve(props.drive);
     this.filter.frequency.value = props.tone;
     this.wetDryMixer.setMix(props.mix);
 
@@ -115,27 +115,24 @@ export class MonoDistortion
     });
   }
 
-  private generateDistortionCurve(drive: number): Float32Array | null {
+  private generateDistortionCurve(): Float32Array<ArrayBuffer> {
     const samples = 65536; // High resolution for smooth distortion
     const buffer = new ArrayBuffer(samples * Float32Array.BYTES_PER_ELEMENT);
-    const curve: Float32Array = new Float32Array(buffer) as Float32Array;
+    const curve: Float32Array<ArrayBuffer> = new Float32Array(buffer);
 
     for (let i = 0; i < samples; i++) {
       // Map sample index to input range [-1, 1]
       const x = (i * 2) / samples - 1;
 
-      // Apply tanh waveshaping with drive scaling
-      // Higher drive values push more of the signal into saturation
-      const driven = x * drive;
-      curve[i] = Math.tanh(driven);
+      curve[i] = Math.tanh(x);
     }
 
     return curve;
   }
 
-  private updateDistortionCurve(drive: number): void {
-    // @ts-expect-error - TypeScript strict mode issue with Float32Array<ArrayBufferLike> vs Float32Array<ArrayBuffer>
-    this.waveshaper.curve = this.generateDistortionCurve(drive);
+  private initializeDistortionCurve(): void {
+    // node-web-audio-api (used in tests) throws when assigning curve more than once.
+    this.waveshaper.curve = this.generateDistortionCurve();
   }
 
   private updateInputGain(drive: number): void {
@@ -148,7 +145,6 @@ export class MonoDistortion
     value,
   ) => {
     this.updateInputGain(value);
-    this.updateDistortionCurve(value);
   };
 
   onAfterSetTone: SetterHooks<IDistortionProps>["onAfterSetTone"] = (value) => {
