@@ -18,6 +18,16 @@ describe("Grid background visibility", () => {
     expect(themeSource).toContain('"var(--grid-canvas-pattern)"');
   });
 
+  it("tracks cursor position through React Flow pane events without wrapping the canvas", () => {
+    const source = readFileSync(gridSourcePath, "utf8");
+
+    expect(source).toContain("onPaneMouseMove={handleCanvasMouseMove}");
+    expect(source).toContain("onPaneMouseLeave={handleCanvasMouseLeave}");
+    expect(source).not.toContain(
+      "<div\n          onMouseMove={handleCanvasMouseMove}",
+    );
+  });
+
   it("keeps dark-mode canvas visibly lighter with stronger pattern contrast", () => {
     const stylesSource = readFileSync(appStylesPath, "utf8");
 

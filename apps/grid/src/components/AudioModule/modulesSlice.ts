@@ -281,6 +281,8 @@ export const addModule =
         data: {},
       }),
     );
+
+    return serializedModule.id;
   };
 
 export const addNewModule =

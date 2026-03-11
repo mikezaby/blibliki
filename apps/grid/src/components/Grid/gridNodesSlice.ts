@@ -49,6 +49,18 @@ export const gridNodesSlice = createSlice({
     addNode: (state, action: PayloadAction<Node>) => {
       state.nodes.push(action.payload);
     },
+    selectOnlyNodes: (state, action: PayloadAction<string[]>) => {
+      const selectedIds = new Set(action.payload);
+
+      state.nodes = state.nodes.map((node) => ({
+        ...node,
+        selected: selectedIds.has(node.id),
+      }));
+      state.edges = state.edges.map((edge) => ({
+        ...edge,
+        selected: false,
+      }));
+    },
     onEdgesChange: (state, action: PayloadAction<EdgeChange[]>) => {
       const changes = action.payload;
       state.edges = applyEdgeChanges(changes, state.edges);
@@ -75,6 +87,7 @@ export const {
   setGridNodes,
   removeAllGridNodes,
   addNode,
+  selectOnlyNodes,
   onEdgesChange,
   onConnect,
   setViewport,

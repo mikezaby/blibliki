@@ -4,18 +4,32 @@ import {
   Controls,
   Background,
   BackgroundVariant,
+  XYPosition,
   useOnViewportChange,
   Viewport,
   useReactFlow,
 } from "@xyflow/react";
-import { useEffect, useEffectEvent } from "react";
+import {
+  type MouseEvent as ReactMouseEvent,
+  useEffect,
+  useEffectEvent,
+  useRef,
+} from "react";
 import { useAppDispatch, useGridNodes, usePatch } from "@/hooks";
+import { store } from "@/store";
 import {
   GRID_CANVAS_BACKGROUND,
   GRID_CANVAS_PATTERN,
 } from "@/theme/gridCanvas";
 import AudioModules from "./AudioModules";
 import { NodeTypes } from "./AudioNode";
+import {
+  buildGridClipboardSnapshot,
+  pasteGridClipboardSnapshot,
+  readGridClipboardSnapshotFromDataTransfer,
+  writeGridClipboardSnapshotToDataTransfer,
+} from "./clipboard";
+import { shouldHandleGridClipboardTarget } from "./gridClipboardShortcut";
 import { setViewport } from "./gridNodesSlice";
 import useDrag from "./useDrag";
 
@@ -24,6 +38,7 @@ const DEFAULT_REACT_FLOW_PROPS = {
 };
 
 export default function Grid() {
+  const { screenToFlowPosition } = useReactFlow();
   const {
     nodes,
     edges,
@@ -34,6 +49,61 @@ export default function Grid() {
     isValidConnection,
   } = useGridNodes();
   const { onDrop, onDragOver } = useDrag();
+  const dispatch = useAppDispatch();
+  const lastPointerPositionRef = useRef<XYPosition | null>(null);
+  const pasteIterationRef = useRef(0);
+
+  const handleWindowCopy = useEffectEvent((event: ClipboardEvent) => {
+    if (!shouldHandleGridClipboardTarget(event.target)) return;
+    if (!event.clipboardData) return;
+
+    const snapshot = buildGridClipboardSnapshot(store.getState());
+    if (!snapshot) return;
+
+    event.preventDefault();
+    writeGridClipboardSnapshotToDataTransfer(event.clipboardData, snapshot);
+    pasteIterationRef.current = 0;
+  });
+
+  const handleWindowPaste = useEffectEvent((event: ClipboardEvent) => {
+    if (!shouldHandleGridClipboardTarget(event.target)) return;
+    if (!event.clipboardData) return;
+
+    const snapshot = readGridClipboardSnapshotFromDataTransfer(
+      event.clipboardData,
+    );
+    if (!snapshot) return;
+
+    event.preventDefault();
+    pasteIterationRef.current += 1;
+    dispatch(
+      pasteGridClipboardSnapshot(snapshot, {
+        anchorPosition: lastPointerPositionRef.current ?? undefined,
+        pasteIteration: pasteIterationRef.current,
+      }),
+    );
+  });
+
+  const handleCanvasMouseMove = (event: ReactMouseEvent) => {
+    lastPointerPositionRef.current = screenToFlowPosition({
+      x: event.clientX,
+      y: event.clientY,
+    });
+  };
+
+  const handleCanvasMouseLeave = () => {
+    lastPointerPositionRef.current = null;
+  };
+
+  useEffect(() => {
+    window.addEventListener("copy", handleWindowCopy);
+    window.addEventListener("paste", handleWindowPaste);
+
+    return () => {
+      window.removeEventListener("copy", handleWindowCopy);
+      window.removeEventListener("paste", handleWindowPaste);
+    };
+  }, []);
 
   return (
     <Surface
@@ -54,6 +124,8 @@ export default function Grid() {
           minZoom={0.1}
           onDrop={onDrop}
           onDragOver={onDragOver}
+          onPaneMouseMove={handleCanvasMouseMove}
+          onPaneMouseLeave={handleCanvasMouseLeave}
           isValidConnection={isValidConnection}
           proOptions={DEFAULT_REACT_FLOW_PROPS}
         >
