@@ -221,7 +221,12 @@ export type {
   IStepCC,
 } from "./StepSequencer";
 export { Resolution, PlaybackMode, stepPropSchema } from "./StepSequencer";
-export type { IMidiMapper, IMidiMapperProps, MidiMapping } from "./MidiMapper";
+export type {
+  IMidiMapper,
+  IMidiMapperProps,
+  MidiMapping,
+  MidiMappingTrack,
+} from "./MidiMapper";
 export { MidiMappingMode } from "./MidiMapper";
 export type { ILFO, ILFOProps } from "./LFO";
 export { LFOWaveform } from "./LFO";

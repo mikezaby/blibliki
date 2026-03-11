@@ -90,10 +90,10 @@ describe("MidiMapper", () => {
       name: "midi mapper",
       moduleType: ModuleType.MidiMapper,
       props: {
-        activePage: 0,
-        pages: [
+        activeTrack: 0,
+        tracks: [
           {
-            name: "Page 1",
+            name: "Track 1",
             mappings: [
               {
                 cc: 21,
@@ -119,12 +119,12 @@ describe("MidiMapper", () => {
     expect(gainModule.moduleType).toBe(ModuleType.Gain);
     expect((gainModule as any).props.gain).toBe(2);
 
-    const persistedMapping = midiMapper.props.pages[0]?.mappings[0];
+    const persistedMapping = midiMapper.props.tracks[0]?.mappings[0];
     expect(persistedMapping).toBeDefined();
     expect("value" in (persistedMapping ?? {})).toBe(false);
   });
 
-  it("restores page CC feedback from mapped module props on page switch", async (ctx) => {
+  it("restores track CC feedback from mapped module props on track switch", async (ctx) => {
     const gain = ctx.engine.addModule({
       name: "gain",
       moduleType: ModuleType.Gain,
@@ -135,11 +135,11 @@ describe("MidiMapper", () => {
       name: "midi mapper",
       moduleType: ModuleType.MidiMapper,
       props: {
-        activePage: 0,
-        pages: [
-          { name: "Page 1", mappings: [{} as MidiMapping<ModuleType>] },
+        activeTrack: 0,
+        tracks: [
+          { name: "Track 1", mappings: [{} as MidiMapping<ModuleType>] },
           {
-            name: "Page 2",
+            name: "Track 2",
             mappings: [
               {
                 cc: 22,
@@ -172,7 +172,7 @@ describe("MidiMapper", () => {
     await flushMicrotasks();
     sentEvents.length = 0;
 
-    midiMapper.props = { activePage: 1 };
+    midiMapper.props = { activeTrack: 1 };
     await flushMicrotasks();
 
     const matchingEvents = sentEvents.filter((event) => event.cc === 22);
@@ -191,11 +191,11 @@ describe("MidiMapper", () => {
       name: "Mapper",
       moduleType: ModuleType.MidiMapper,
       props: {
-        activePage: 0,
+        activeTrack: 0,
         globalMappings: [],
-        pages: [
+        tracks: [
           {
-            name: "Page 1",
+            name: "Track 1",
             mappings: [
               {
                 cc: 13,

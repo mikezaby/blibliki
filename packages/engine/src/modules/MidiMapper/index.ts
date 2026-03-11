@@ -6,12 +6,12 @@ import MidiMapperSyncValues from "./MidiMapperSyncValues";
 
 export type IMidiMapper = IModule<ModuleType.MidiMapper>;
 export type IMidiMapperProps = {
-  pages: MidiMappingPage[];
-  activePage: number;
+  tracks: MidiMappingTrack[];
+  activeTrack: number;
   globalMappings: MidiMapping<ModuleType>[];
 };
 
-export type MidiMappingPage = {
+export type MidiMappingTrack = {
   name?: string;
   mappings: MidiMapping<ModuleType>[];
 };
@@ -37,13 +37,13 @@ export type MidiMapping<T extends ModuleType> = {
 };
 
 export const midiMapperPropSchema: ModulePropSchema<IMidiMapperProps> = {
-  pages: {
+  tracks: {
     kind: "array",
-    label: "Midi mapping pages",
+    label: "Midi mapping tracks",
   },
-  activePage: {
+  activeTrack: {
     kind: "number",
-    label: "Active page",
+    label: "Active track",
     min: 0,
     max: 100,
     step: 1,
@@ -55,8 +55,8 @@ export const midiMapperPropSchema: ModulePropSchema<IMidiMapperProps> = {
 };
 
 const DEFAULT_PROPS: IMidiMapperProps = {
-  pages: [{ name: "Page 1", mappings: [{} as MidiMapping<ModuleType>] }],
-  activePage: 0,
+  tracks: [{ name: "Track 1", mappings: [{} as MidiMapping<ModuleType>] }],
+  activeTrack: 0,
   globalMappings: [{} as MidiMapping<ModuleType>],
 };
 
@@ -95,7 +95,7 @@ function getMidiFromMappedValue({
 
 type MidiMapperSetterHooks = Pick<
   SetterHooks<IMidiMapperProps>,
-  "onSetActivePage"
+  "onSetActiveTrack"
 >;
 
 export default class MidiMapper
@@ -103,7 +103,7 @@ export default class MidiMapper
   implements MidiMapperSetterHooks
 {
   declare audioNode: undefined;
-  private _midiOut: MidiOutput; // Will be used to send CC values on page change
+  private _midiOut: MidiOutput; // Will be used to send CC values on track change
   private readonly syncValues: MidiMapperSyncValues;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.MidiMapper>) {
@@ -130,9 +130,9 @@ export default class MidiMapper
     });
   }
 
-  onSetActivePage: MidiMapperSetterHooks["onSetActivePage"] = (value) => {
-    const activePage = Math.max(
-      Math.min(value, this.props.pages.length - 1),
+  onSetActiveTrack: MidiMapperSetterHooks["onSetActiveTrack"] = (value) => {
+    const activeTrack = Math.max(
+      Math.min(value, this.props.tracks.length - 1),
       0,
     );
 
@@ -140,7 +140,7 @@ export default class MidiMapper
       this.syncControllerValues();
     });
 
-    return activePage;
+    return activeTrack;
   };
 
   syncControllerValues = (moduleId?: string) => {
@@ -157,12 +157,12 @@ export default class MidiMapper
   handleCC = (event: MidiEvent, triggeredAt: ContextTime) => {
     this.checkAutoAssign(event);
 
-    const activePage = this.props.pages[this.props.activePage];
-    if (!activePage) return;
+    const activeTrack = this.props.tracks[this.props.activeTrack];
+    if (!activeTrack) return;
 
     const matchingMappings = [
       ...this.props.globalMappings.filter((m) => m.cc === event.cc),
-      ...activePage.mappings.filter((m) => m.cc === event.cc),
+      ...activeTrack.mappings.filter((m) => m.cc === event.cc),
     ];
 
     // Forward all matching mappings
@@ -281,17 +281,17 @@ export default class MidiMapper
   private checkAutoAssign(event: MidiEvent) {
     if (event.cc === undefined) return;
 
-    const activePage = this.props.pages[this.props.activePage];
-    if (!activePage) return;
+    const activeTrack = this.props.tracks[this.props.activeTrack];
+    if (!activeTrack) return;
 
     const hasGlobalAutoAssign = this.props.globalMappings.some(
       ({ autoAssign }) => autoAssign,
     );
-    const hasPageAutoAssign = activePage.mappings.some(
+    const hasTrackAutoAssign = activeTrack.mappings.some(
       ({ autoAssign }) => autoAssign,
     );
 
-    if (!hasGlobalAutoAssign && !hasPageAutoAssign) return;
+    if (!hasGlobalAutoAssign && !hasTrackAutoAssign) return;
 
     // Update global mappings if needed
     const updatedGlobalMappings = hasGlobalAutoAssign
@@ -306,9 +306,9 @@ export default class MidiMapper
         })
       : this.props.globalMappings;
 
-    // Update page mappings if needed
-    const updatedPageMappings = hasPageAutoAssign
-      ? activePage.mappings.map((mapping) => {
+    // Update track mappings if needed
+    const updatedTrackMappings = hasTrackAutoAssign
+      ? activeTrack.mappings.map((mapping) => {
           if (!mapping.autoAssign) return mapping;
 
           return {
@@ -317,15 +317,18 @@ export default class MidiMapper
             autoAssign: false,
           };
         })
-      : activePage.mappings;
+      : activeTrack.mappings;
 
-    const updatedPages = this.props.pages.map((page, index) =>
-      index === this.props.activePage
-        ? { ...page, mappings: updatedPageMappings }
-        : page,
+    const updatedTracks = this.props.tracks.map((track, index) =>
+      index === this.props.activeTrack
+        ? { ...track, mappings: updatedTrackMappings }
+        : track,
     );
 
-    this.props = { pages: updatedPages, globalMappings: updatedGlobalMappings };
+    this.props = {
+      tracks: updatedTracks,
+      globalMappings: updatedGlobalMappings,
+    };
     this.triggerPropsUpdate();
   }
 }

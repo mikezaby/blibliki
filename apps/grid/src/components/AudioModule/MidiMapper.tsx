@@ -26,7 +26,7 @@ import { moduleInfoSelector, type ModuleInfo } from "./modulesSlice";
 const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
   const {
     updateProp,
-    props: { pages, activePage, globalMappings },
+    props: { tracks, activeTrack, globalMappings },
   } = props;
 
   const dispatch = useAppDispatch();
@@ -38,14 +38,14 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
     [modules],
   );
 
-  const page = pages[activePage];
-  const pageMappings = page?.mappings ?? [{}];
+  const track = tracks[activeTrack];
+  const trackMappings = track?.mappings ?? [{}];
 
-  // Track whether we're viewing global or page-specific mappings
-  const [viewMode, setViewMode] = useState<"page" | "global">("page");
+  // Track whether we're viewing global or track-specific mappings
+  const [viewMode, setViewMode] = useState<"track" | "global">("track");
 
   // Get the active mappings based on view mode
-  const mappings = viewMode === "global" ? globalMappings : pageMappings;
+  const mappings = viewMode === "global" ? globalMappings : trackMappings;
 
   // Track which mappings have expanded settings
   const [expandedMappings, setExpandedMappings] = useState<Set<number>>(
@@ -68,34 +68,34 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
     });
   };
 
-  const onAddPage = () => {
-    const newPages = [
-      ...pages,
-      { name: `Page ${pages.length + 1}`, mappings: [{}] },
+  const onAddTrack = () => {
+    const newTracks = [
+      ...tracks,
+      { name: `Track ${tracks.length + 1}`, mappings: [{}] },
     ];
-    updateProp("pages")(newPages);
+    updateProp("tracks")(newTracks);
   };
 
-  const onRemovePage = (pageIndex: number) => {
-    if (pages.length <= 1) return; // Keep at least one page
+  const onRemoveTrack = (trackIndex: number) => {
+    if (tracks.length <= 1) return; // Keep at least one track
 
-    const newPages = pages.filter((_, index) => index !== pageIndex);
-    const newActivePage =
-      activePage >= newPages.length ? newPages.length - 1 : activePage;
+    const newTracks = tracks.filter((_, index) => index !== trackIndex);
+    const newActiveTrack =
+      activeTrack >= newTracks.length ? newTracks.length - 1 : activeTrack;
 
-    updateProp("pages")(newPages);
-    updateProp("activePage")(newActivePage);
+    updateProp("tracks")(newTracks);
+    updateProp("activeTrack")(newActiveTrack);
   };
 
-  const onUpdatePageName = (pageIndex: number, name: string) => {
-    const newPages = pages.map((page, index) =>
-      index === pageIndex ? { ...page, name } : page,
+  const onUpdateTrackName = (trackIndex: number, name: string) => {
+    const newTracks = tracks.map((track, index) =>
+      index === trackIndex ? { ...track, name } : track,
     );
-    updateProp("pages")(newPages);
+    updateProp("tracks")(newTracks);
   };
 
-  const onSwitchPage = (pageIndex: number) => {
-    updateProp("activePage")(pageIndex);
+  const onSwitchTrack = (trackIndex: number) => {
+    updateProp("activeTrack")(trackIndex);
   };
 
   const onAdd = () => {
@@ -108,10 +108,10 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
     if (viewMode === "global") {
       updateProp("globalMappings")(updatedMappings);
     } else {
-      const newPages = pages.map((page, index) =>
-        index === activePage ? { ...page, mappings: updatedMappings } : page,
+      const newTracks = tracks.map((track, index) =>
+        index === activeTrack ? { ...track, mappings: updatedMappings } : track,
       );
-      updateProp("pages")(newPages);
+      updateProp("tracks")(newTracks);
     }
   };
 
@@ -219,16 +219,16 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
 
   return (
     <Container direction="column" className="gap-6">
-      {/* Page Navigation */}
+      {/* Track Navigation */}
       <Surface tone="subtle" border="subtle" radius="lg" className="p-4">
         <Stack gap={3}>
           <Stack direction="row" align="center" justify="between">
             <Text asChild size="sm" weight="semibold">
-              <h3>Page Navigation</h3>
+              <h3>Track Navigation</h3>
             </Text>
             <Text asChild tone="muted" size="xs">
               <span>
-                {activePage + 1} / {pages.length}
+                {activeTrack + 1} / {tracks.length}
               </span>
             </Text>
           </Stack>
@@ -237,9 +237,9 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
             <Button
               variant="outlined"
               size="sm"
-              disabled={activePage === 0}
+              disabled={activeTrack === 0}
               onClick={() => {
-                onSwitchPage(activePage - 1);
+                onSwitchTrack(activeTrack - 1);
               }}
               className="flex-1"
             >
@@ -248,23 +248,23 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
             <Button
               variant="outlined"
               size="sm"
-              disabled={activePage === pages.length - 1}
+              disabled={activeTrack === tracks.length - 1}
               onClick={() => {
-                onSwitchPage(activePage + 1);
+                onSwitchTrack(activeTrack + 1);
               }}
               className="flex-1"
             >
               {"Next →"}
             </Button>
-            <Button size="sm" onClick={onAddPage}>
+            <Button size="sm" onClick={onAddTrack}>
               <SquarePlus className="w-4 h-4" />
-              New Page
+              New Track
             </Button>
           </Stack>
         </Stack>
       </Surface>
 
-      {/* Page Settings */}
+      {/* Track Settings */}
       <Surface
         tone="subtle"
         border="subtle"
@@ -273,26 +273,28 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
       >
         <Stack gap={3}>
           <Text asChild size="sm" weight="semibold">
-            <h3>Page Settings</h3>
+            <h3>Track Settings</h3>
           </Text>
 
           <Stack direction="row" align="center" gap={4} className="flex-wrap">
             <Stack direction="row" align="center" gap={2} className="flex-1">
-              <Label className="min-w-fit text-sm font-medium">Page Name</Label>
+              <Label className="min-w-fit text-sm font-medium">
+                Track Name
+              </Label>
               <Input
                 className="flex-1"
-                value={page?.name ?? `Page ${activePage}`}
+                value={track?.name ?? `Track ${activeTrack + 1}`}
                 onChange={(e) => {
-                  onUpdatePageName(activePage, e.currentTarget.value);
+                  onUpdateTrackName(activeTrack, e.currentTarget.value);
                 }}
               />
             </Stack>
             <Button
               color="error"
               size="sm"
-              disabled={pages.length <= 1}
+              disabled={tracks.length <= 1}
               onClick={() => {
-                onRemovePage(activePage);
+                onRemoveTrack(activeTrack);
               }}
             >
               <Trash2 className="w-4 h-4" />
@@ -311,14 +313,14 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
 
           <Stack direction="row" gap={2}>
             <Button
-              variant={viewMode === "page" ? "contained" : "outlined"}
+              variant={viewMode === "track" ? "contained" : "outlined"}
               size="sm"
               onClick={() => {
-                setViewMode("page");
+                setViewMode("track");
               }}
               className="flex-1"
             >
-              Page Mappings
+              Track Mappings
             </Button>
             <Button
               variant={viewMode === "global" ? "contained" : "outlined"}
@@ -332,9 +334,9 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
             </Button>
           </Stack>
           <Text tone="muted" size="xs">
-            {viewMode === "page"
-              ? "These mappings apply only to the current page"
-              : "These mappings are available on all pages"}
+            {viewMode === "track"
+              ? "These mappings apply only to the current track"
+              : "These mappings are available on all tracks"}
           </Text>
         </Stack>
       </Surface>
@@ -348,7 +350,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
           className="px-1"
         >
           <Text asChild size="sm" weight="semibold">
-            <h3>{viewMode === "global" ? "Global " : "Page "}MIDI Mappings</h3>
+            <h3>{viewMode === "global" ? "Global " : "Track "}MIDI Mappings</h3>
           </Text>
           <Text asChild tone="muted" size="xs">
             <span>
@@ -364,7 +366,7 @@ const MidiMapper: ModuleComponent<ModuleType.MidiMapper> = (props) => {
 
             return (
               <Surface
-                key={`${viewMode}-${activePage}-${i}`}
+                key={`${viewMode}-${activeTrack}-${i}`}
                 tone="raised"
                 border="subtle"
                 radius="lg"

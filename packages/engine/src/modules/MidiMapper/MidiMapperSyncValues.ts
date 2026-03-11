@@ -15,7 +15,7 @@ export default class MidiMapperSyncValues {
     props: IMidiMapperProps,
     moduleId?: string,
   ): Map<number, number> {
-    const activePage = props.pages[props.activePage];
+    const activeTrack = props.tracks[props.activeTrack];
     const ccValues = new Map<number, number>();
 
     props.globalMappings.forEach((mapping) => {
@@ -26,7 +26,7 @@ export default class MidiMapperSyncValues {
       ccValues.set(mapping.cc, value);
     });
 
-    activePage?.mappings.forEach((mapping) => {
+    activeTrack?.mappings.forEach((mapping) => {
       if (moduleId && moduleId !== mapping.moduleId) return;
 
       const value = this.getValue(mapping);
