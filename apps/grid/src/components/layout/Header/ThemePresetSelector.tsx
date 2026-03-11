@@ -26,9 +26,7 @@ export default function ThemePresetSelector() {
           aria-label="Theme preset"
         >
           <SwatchBook className="w-4 h-4" />
-          <span className="grid-header__theme-label">
-            {selectedPreset.label}
-          </span>
+          {selectedPreset.label}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56 p-1">

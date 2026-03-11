@@ -15,31 +15,17 @@ const SupportedModules = Object.values(AvailableModules)
   .map(({ moduleType }) => moduleType)
   .sort();
 
-const COMPACT_VIEWPORT_MEDIA_QUERY = "(max-width: 767px)";
-
-type PanelState = "auto" | "open" | "closed";
-
-const isCompactViewport = () => {
-  if (typeof window === "undefined") return false;
-
-  return window.matchMedia(COMPACT_VIEWPORT_MEDIA_QUERY).matches;
-};
+const PANEL_BASE_CLASS =
+  "absolute top-12 left-0 z-10 flex h-[calc(100vh-3rem)] w-47.25 flex-col border-r border-b transition-transform duration-300 ease-in-out";
+const PANEL_VISIBLE_CLASS = "translate-x-0";
+const PANEL_HIDDEN_CLASS = "-translate-x-[189px]";
 
 export default function AudioModules() {
-  const [panelState, setPanelState] = useState<PanelState>("auto");
+  const [visible, setVisible] = useState<boolean>(true);
   const { onDragStart } = useDrag();
 
-  const visible =
-    panelState === "open" || (panelState === "auto" && !isCompactViewport());
-
   const onClick = () => {
-    setPanelState((currentState) => {
-      const currentVisibility =
-        currentState === "open" ||
-        (currentState === "auto" && !isCompactViewport());
-
-      return currentVisibility ? "closed" : "open";
-    });
+    setVisible(!visible);
   };
 
   return (
@@ -49,8 +35,9 @@ export default function AudioModules() {
       radius="none"
       shadow="xl"
       asChild
-      className="audio-modules-panel"
-      data-panel-state={panelState}
+      className={`${PANEL_BASE_CLASS} ${
+        visible ? PANEL_VISIBLE_CLASS : PANEL_HIDDEN_CLASS
+      }`}
     >
       <aside>
         <Stack direction="row" align="center" gap={2} className="p-4">
@@ -74,7 +61,7 @@ export default function AudioModules() {
           }
           variant="contained"
           color="neutral"
-          className="audio-modules-panel-toggle rounded-none rounded-br-md"
+          className="absolute left-47.25 top-0 h-13 w-13 rounded-none rounded-br-md"
           onClick={onClick}
         />
 

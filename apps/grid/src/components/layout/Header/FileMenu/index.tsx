@@ -105,7 +105,7 @@ export default function FileMenu() {
       <DropdownMenuTrigger asChild>
         <Button variant="text" color="neutral" size="sm" className="h-10 px-3">
           <TableOfContents className="w-4 h-4" />
-          <span className="grid-header__file-label">File</span>
+          File
         </Button>
       </DropdownMenuTrigger>
 
