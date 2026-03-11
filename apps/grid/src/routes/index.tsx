@@ -1,10 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import Grid from "@/components/Grid";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
-  component: Home,
+  beforeLoad: () =>
+    redirect({
+      to: "/patch/$patchId",
+      params: { patchId: "new" },
+    }),
 });
-
-function Home() {
-  return <Grid />;
-}
