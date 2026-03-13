@@ -48,7 +48,7 @@ Current limitations:
 - There is no Pi-specific patch authoring mode in Grid yet.
 - There is no Pi display runtime yet.
 - Local editing on the Pi is not defined yet.
-- Existing `MidiMapper.activeTrack` is not enough by itself for the planned two-track moving window.
+- Existing `MidiMapper.activeTrack` is not enough by itself for the planned focused-track plus page-navigation model.
 
 ## V1 Product Contract
 
@@ -114,7 +114,7 @@ Graph-derived tracks would make the Pi UI fragile and ambiguous. The Pi needs a 
 
 ### Why not "MidiMapper track only"
 
-`MidiMapper` provides the right control backbone, but by itself it is too thin for LCD rendering and future local editing. The Pi needs a richer layer that says not only "what CC maps where" but also "what this track is", "what the player should see", and "what the controller window means".
+`MidiMapper` provides the right control backbone, but by itself it is too thin for LCD rendering and future local editing. The Pi needs a richer layer that says not only "what CC maps where" but also "what this track is", "what the player should see", and "what the current page means".
 
 ## Controller Contract
 
@@ -125,17 +125,21 @@ The Novation Launch Control XL3 should be treated as the primary performance sur
 The XL3 has three rows of eight encoders. The planned mapping is:
 
 - Row 1: always-global
-- Row 2: first track in the current two-track window
-- Row 3: second track in the current two-track window
+- Row 2: upper function block for the currently focused track
+- Row 3: lower function block for the currently focused track
 
-The track window is sliding, not paged in groups of two:
+The controller should use a focused-track model with fixed functional pages:
 
-- Start: `Track 1` + `Track 2`
-- Next: `Track 2` + `Track 3`
-- Next: `Track 3` + `Track 4`
-- Continue until the end of the track list
+- `Track Prev/Next`: change the focused track
+- `Page Up/Down`: change the active page
 
-This model should be mirrored by the LCD so the instrument always presents one global layer and two focused tracks.
+The page contract for `v1` should be fixed:
+
+- Page 1: `Source` / `Amp`
+- Page 2: `Filter` / `Mod`
+- Page 3: `FX A` / `FX B`
+
+This model should be mirrored by the LCD so the instrument always presents one focused track, one active page, and one always-visible global row.
 
 ### Global encoder contract
 
@@ -158,7 +162,8 @@ The display should not try to behave like a tiny version of Grid. It should inst
 
 - What patch is currently loaded?
 - What is the current tempo and transport state?
-- Which two tracks are currently in focus?
+- Which track is currently in focus?
+- Which page is currently active?
 - What are the labels and current values for the visible global and track controls?
 - What is changing right now?
 
@@ -183,9 +188,10 @@ Likely elements:
 - Device status
 - Tempo
 - Transport/play state
+- Focused track name
+- Active page name
 - Global row labels and values
-- Two visible track names
-- Visible parameter labels and values for those tracks
+- Visible parameter labels and values for the current page
 - A clear highlight for the most recently touched control
 
 Potential additions if they fit cleanly:
@@ -240,7 +246,8 @@ Recommended direction:
 3. A Pi state adapter exposes the currently relevant performance state:
    - patch info
    - transport state
-   - visible track window
+   - focused track
+   - active page
    - global and track slot labels
    - current values
    - recent interaction focus
@@ -300,9 +307,9 @@ This section summarizes the likely gaps implied by the current design.
 ### Engine / mapping layer
 
 - Reuse `MidiMapper` track logic as the control backbone
-- Introduce a concept of a sliding two-track controller window
-- Define how controller navigation updates that window
-- Keep controller feedback synchronized with the currently visible tracks
+- Introduce a concept of focused-track page navigation
+- Define how controller navigation updates focused track and active page
+- Keep controller feedback synchronized with the current page of the current track
 
 ### Pi runtime
 
@@ -345,9 +352,10 @@ The initial implementation should be tested at three levels:
 
 ### Engine/controller tests
 
-- Sliding two-track window behavior
-- Controller feedback updates when window changes
-- Global row stability across track navigation
+- Focused track navigation behavior
+- Page navigation behavior
+- Controller feedback updates when track or page changes
+- Global row stability across track and page navigation
 - Sync behavior between `MidiMapper` values and controller state
 
 ### Pi runtime / LCD tests
@@ -373,7 +381,7 @@ The initial implementation should be tested at three levels:
 - Add one starting template
 - Define `1 global + up to 8 tracks`
 - Implement fixed global slots for `Tempo` and `Main Volume`
-- Bind XL3 encoder rows to `global + two-track sliding window`
+- Bind XL3 encoder rows to `global + focused-track fixed pages`
 - Render LCD performance dashboard
 
 ### Phase 2: Richer performance system
@@ -402,7 +410,7 @@ These are recommendations made during brainstorming and accepted as the current 
 - Keep Grid in the loop early
 - Treat `track` as an explicit performance concept
 - Reuse `MidiMapper` as the routing backbone
-- Use a fixed global row plus a sliding two-track controller window
+- Use a fixed global row plus a focused-track fixed-page controller model
 - Start with a performance dashboard, not local editing
 - Favor compact DSI displays and design the LCD with a monochrome mindset
 
@@ -412,14 +420,14 @@ The following questions should be revisited in later sessions so context is not 
 
 1. What exactly is the first `Pi patcher` template?
 2. Which six non-fixed global slots should the first template expose?
-3. Should every track use the same eight slot semantics, or can tracks vary by template?
+3. What are the exact eight slot definitions for each functional block?
 4. What should the first LCD layout actually look like in pixels and zones?
 5. Should the dashboard be landscape-only?
 6. What rendering stack should drive the LCD UI on the Pi?
 7. What should the startup experience be on the Pi beyond auto-loading the assigned patch?
 8. Do faders get a `v1` role such as track volume, sends, or macros?
 9. Do buttons get a `v1` role such as mute, solo, select, page, or shift behavior?
-10. How should the sliding two-track window be represented relative to existing `MidiMapper.activeTrack` behavior?
+10. How should focused-track page navigation be represented relative to existing `MidiMapper.activeTrack` behavior?
 11. How should Pi-specific metadata be stored in the patch model and validated in Grid?
 12. What exact information should the LCD show when a control is touched?
 13. Are simple meters worth the space in `v1`, or should the first dashboard stay purely symbolic and textual?
