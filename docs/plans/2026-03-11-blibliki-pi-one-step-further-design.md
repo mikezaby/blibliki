@@ -154,6 +154,108 @@ This creates consistency where it matters while leaving room for template specia
 
 Faders and buttons are not yet defined as core `v1` interactions. They should be left available for later template-specific behavior unless a strong `v1` use case emerges.
 
+## First Template Direction
+
+The first `Pi patcher` template should be a generic `8-track` performance instrument. It is not intended to validate one narrow musical use case. It is intended to validate the Pi authoring model, the controller contract, the LCD dashboard, and the broader idea that Grid can author an instrument-oriented patch for the Pi.
+
+This first template should assume:
+
+- Up to `8` tracks
+- `1` global layer
+- Fixed focused-track pages
+- One source profile per track
+- Grid remains responsible for deep source and graph authoring
+
+The first template should not try to solve every kind of source workflow. It only needs enough range to prove that the profile system works and that the Pi can feel like a coherent instrument.
+
+## Source Block
+
+The `Source` block for `v1` should be intentionally conservative. The source type is chosen in Grid, not on the Pi, and the Pi `Source` page only controls the already-selected source. This keeps the first prototype focused on performance rather than dynamic graph mutation. It also avoids designing around source types that do not exist yet, such as `FM` and `Sampler`.
+
+The `Source` page itself should always expose `8` fixed slot positions, but the meaning of those slots depends on the selected source profile. Some source types may not need all eight controls in `v1`, and that is acceptable. Unused slots should remain explicitly inactive on both the controller and LCD rather than being filled with weak or arbitrary controls.
+
+## Source Profiles Instead Of Single Modules
+
+The `Source` concept in `Pi patcher` should not be limited to a single engine module. That would make simple source types like `Noise` or `Wavetable` fit naturally, but it would block an important real-world case very early: a traditional subtractive voice built from multiple oscillators.
+
+For that reason, `v1` should introduce a Pi-level `source profile` concept above the raw engine graph. A source profile is a named performance abstraction for a track. It defines what the player sees on the `Source` page and how those eight source slots map onto one or more underlying modules.
+
+Examples:
+
+- `Osc` profile = one oscillator module
+- `3-Osc` profile = three oscillator modules plus supporting mix structure
+- `Noise` profile = one noise generator plus optional supporting source-shaping modules
+- `Wavetable` profile = one wavetable module
+
+This approach gives `Blibliki pi` enough expressive power to feel like a real instrument without forcing a new engine abstraction immediately. Long term, if one profile such as `3-Osc` becomes central enough, it can later be promoted into a first-class engine module or macro abstraction.
+
+## Initial Source Profiles
+
+The first template should define exactly these source profiles:
+
+- `Osc`
+- `3-Osc`
+- `Noise`
+- `Wavetable`
+
+This is enough to validate the profile system without spreading `v1` too thin. `FM` and `Sampler` can be added later after they exist in the engine.
+
+## Common Source Slot Contract
+
+`Pi patcher` should define `source profile families`. In `v1`, `Osc`, `3-Osc`, and `Wavetable` belong to the same family because they share important pitched-source actions such as `octave`, `coarse`, and `fine`.
+
+Those actions should live in fixed slot positions across that family whenever possible. This gives the instrument stronger physical memory: the player learns where pitch-related controls live and can move between these source types without relearning the page.
+
+The internal behavior can still differ. For example, `3-Osc` may distribute tuning behavior across multiple oscillators, while `Wavetable` may apply the same slots to a single wavetable voice.
+
+`Noise` can remain outside that family, because it does not naturally share the same pitched-source model. A future `Sampler` should also be allowed to define a different layout if its useful controls are fundamentally different.
+
+The common-family contract for `v1` should stay intentionally small:
+
+- `Octave`
+- `Coarse`
+- `Fine`
+
+These common slots are fixed within compatible source families, not globally across every possible future source profile.
+
+## 3-Osc As A Macro Instrument
+
+`3-Osc` should not be exposed as direct editing of three separate oscillators on the Pi. That would consume the available slots too quickly and produce a cramped, technical workflow. The better `v1` design is to treat `3-Osc` as a macro subtractive voice.
+
+The player should control musical behaviors such as detune spread, interval relationships, blend, and support-oscillator roles, not the full internal graph. This still allows traditional subtractive behaviors such as stacked detune, fifth-up or fifth-down voicing, octave layering, or using the third oscillator as a bass enhancer.
+
+This matches the broader Pi strategy: Grid remains the place for deep structure, while the Pi exposes a focused performance layer.
+
+## Macro Depth By Profile
+
+Not every source profile should have the same abstraction depth. In `v1`, only `3-Osc` needs to behave as a strongly macro-oriented source. `Osc` and `Wavetable` should stay much closer to their underlying engine module props, because the existing module models already map cleanly to a source page.
+
+This means Pi patcher should allow source profiles with different internal mapping strategies while still fitting the same outer `8-slot` controller contract:
+
+- some profiles are mostly direct wrappers around one module
+- some profiles are curated performance abstractions over multiple modules
+
+That flexibility is important because it lets the instrument stay simple where the engine already provides a clean model, while still supporting more complex source designs when the musical workflow demands it.
+
+## Noise As A Curated Source Profile
+
+`Noise` should not be limited to a bare one-parameter wrapper around the current `Noise` module. That would make the `Source` page too thin and waste most of the available control surface.
+
+For `v1`, `Noise` should be allowed to behave as a small curated source profile that may include supporting modules around the core noise generator, as long as the result still reads as one coherent source identity. In practice, that means the profile can expose controls such as `noise type` plus a few source-shaping macros like `color`, `texture`, `motion`, or `stereo behavior`, even if those macros are implemented through additional helper modules in the underlying graph.
+
+The important boundary is that the `Source` page must stay about source character, not spill into other blocks. `Level` belongs to `Amp`, general filter shaping belongs to `Filter`, and ambience belongs to `FX`.
+
+## First-Pass Source Profile Maps
+
+The first-pass source profile maps for the initial template should be:
+
+- `Osc` = `Wave`, `unused`, `Octave`, `Coarse`, `Fine`, `unused`, `unused`, `unused`
+- `3-Osc` = `Shape`, `Stack Mode`, `Octave`, `Coarse`, `Fine`, `Spread`, `Blend`, `Sub Role`
+- `Noise` = `Type`, `Color`, `Texture`, `unused`, `unused`, `Motion`, `Stereo`, `unused`
+- `Wavetable` = `Table`, `Position`, `Octave`, `Coarse`, `Fine`, `unused`, `unused`, `unused`
+
+These are not final labels or final parameter mappings, but they are strong enough to anchor the template, LCD layout, and authoring model.
+
 ## LCD Dashboard
 
 The first LCD milestone is a performance dashboard.
@@ -280,7 +382,14 @@ type PiGlobalSlot = {
 type PiTrack = {
   id: string;
   name: string;
-  slots: PiTrackSlot[];
+  sourceProfileId: string;
+  pages: Record<string, PiTrackPage>;
+};
+
+type PiTrackPage = {
+  id: string;
+  upper: PiTrackSlot[];
+  lower: PiTrackSlot[];
 };
 
 type PiTrackSlot = {
@@ -301,6 +410,7 @@ This section summarizes the likely gaps implied by the current design.
 - Add `Pi patcher` mode or patch metadata
 - Add template support
 - Add Pi-specific validation
+- Add source profile authoring and mapping metadata
 - Add authoring UI for global slots and track slots
 - Add LCD-friendly labels and preview metadata
 
@@ -333,6 +443,7 @@ Examples:
 - Reject more than `8` tracks
 - Require exactly `1` global layer
 - Require `Tempo` and `Main Volume` in fixed global slots
+- Validate source profile ids and page contracts
 - Validate track slot labels and mappings
 - Validate template requirements
 - Warn when a template declares slots that are not fully mapped
@@ -347,6 +458,7 @@ The initial implementation should be tested at three levels:
 
 - Template creation and selection
 - Pi patch validation rules
+- Source profile selection and serialization
 - Track/global slot assignment rules
 - Serialization of Pi patch metadata
 
@@ -356,6 +468,7 @@ The initial implementation should be tested at three levels:
 - Page navigation behavior
 - Controller feedback updates when track or page changes
 - Global row stability across track and page navigation
+- Source page label/value updates when the focused track changes
 - Sync behavior between `MidiMapper` values and controller state
 
 ### Pi runtime / LCD tests
@@ -378,9 +491,10 @@ The initial implementation should be tested at three levels:
 ### Phase 1: Pi patcher performance instrument
 
 - Add `Pi patcher` mode in Grid
-- Add one starting template
+- Add one starting generic `8-track` template
 - Define `1 global + up to 8 tracks`
 - Implement fixed global slots for `Tempo` and `Main Volume`
+- Implement initial source profiles: `Osc`, `3-Osc`, `Noise`, `Wavetable`
 - Bind XL3 encoder rows to `global + focused-track fixed pages`
 - Render LCD performance dashboard
 
@@ -411,6 +525,7 @@ These are recommendations made during brainstorming and accepted as the current 
 - Treat `track` as an explicit performance concept
 - Reuse `MidiMapper` as the routing backbone
 - Use a fixed global row plus a focused-track fixed-page controller model
+- Treat `Source` as a profile abstraction rather than always a single engine module
 - Start with a performance dashboard, not local editing
 - Favor compact DSI displays and design the LCD with a monochrome mindset
 
@@ -418,9 +533,9 @@ These are recommendations made during brainstorming and accepted as the current 
 
 The following questions should be revisited in later sessions so context is not lost:
 
-1. What exactly is the first `Pi patcher` template?
+1. Should the first generic `8-track` template stay role-neutral, or suggest track archetypes?
 2. Which six non-fixed global slots should the first template expose?
-3. What are the exact eight slot definitions for each functional block?
+3. What are the exact slot definitions for `Amp`, `Filter`, `Mod`, `FX A`, and `FX B`?
 4. What should the first LCD layout actually look like in pixels and zones?
 5. Should the dashboard be landscape-only?
 6. What rendering stack should drive the LCD UI on the Pi?
@@ -429,10 +544,11 @@ The following questions should be revisited in later sessions so context is not 
 9. Do buttons get a `v1` role such as mute, solo, select, page, or shift behavior?
 10. How should focused-track page navigation be represented relative to existing `MidiMapper.activeTrack` behavior?
 11. How should Pi-specific metadata be stored in the patch model and validated in Grid?
-12. What exact information should the LCD show when a control is touched?
-13. Are simple meters worth the space in `v1`, or should the first dashboard stay purely symbolic and textual?
-14. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
-15. When local editing arrives, what is the smallest useful editing action to support first?
+12. What exact parameter mappings and inactive-slot behavior should each source profile use?
+13. What exact information should the LCD show when a control is touched?
+14. Are simple meters worth the space in `v1`, or should the first dashboard stay purely symbolic and textual?
+15. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
+16. When local editing arrives, what is the smallest useful editing action to support first?
 
 ## Purchase Research Notes
 
