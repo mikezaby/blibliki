@@ -160,9 +160,31 @@ This model should be mirrored by the LCD so the instrument always presents one f
 The first pass should use a hybrid standard:
 
 - Fixed across all Pi patcher patches: `Tempo`, `Main Volume`
-- First-template defaults for the other `6` slots: `Swing`, `Master Filter Cutoff`, `Master Filter Resonance`, `Reverb Send`, `Delay Send`, `Macro 1`
+- First-template defaults for the other slots: `Swing`, `Master Filter Cutoff`, `Master Filter Resonance`, `Reverb Send`, `Delay Send`, one intentionally inactive slot, with `Main Volume` fixed at the final encoder position
 
-This creates consistency where it matters while leaving room for template specialization later. The first template should treat these six controls as a patch-wide performance strip rather than deep editing controls. They are strong defaults for `v1`, not a permanent universal law. `Macro 1` intentionally preserves one flexible escape hatch for later experimentation without changing the row layout.
+This creates consistency where it matters while leaving room for template specialization later. The first template should treat these controls as a patch-wide performance strip rather than deep editing controls. The exact first-pass order should be:
+
+1. `Tempo`
+2. `Swing`
+3. `Master Filter Cutoff`
+4. `Master Filter Resonance`
+5. `Reverb Send`
+6. `Delay Send`
+7. `inactive`
+8. `Main Volume`
+
+The row should stay absolutely stable across all pages and tracks in `v1`.
+
+The first-pass LCD abbreviations for that row should be:
+
+1. `BPM`
+2. `SWG`
+3. `MCF`
+4. `MRQ`
+5. `REV`
+6. `DLY`
+7. `---`
+8. `VOL`
 
 #### Fader layer
 
@@ -303,6 +325,38 @@ Startup values should be edited in a slot-oriented way:
 - through the same conceptual slot structure that exists on the instrument
 
 At this stage, the exact storage representation of missing or inactive values does not need to be locked. What matters in the design is that `Pi patcher` owns the startup state and that the editing UI mirrors the same structure the player will later use on the hardware.
+
+### Track Identity And Naming
+
+Track identity in `v1` should be fixed by position. The eight tracks are not reorderable in the first version. They are stable positions in the instrument: `Track 1` through `Track 8`.
+
+The user can still give each track a musical name, but that name should be additive rather than replacing the structural identity of the track. In practice:
+
+- every track always shows its ordinal label
+- an optional custom name can be appended after it
+- example: `Track 1: Pad`
+
+If the user does not provide a custom name, the track remains simply `Track 1`. The same combined label should be used consistently in Pi patcher and on the LCD.
+
+### Patch And Blank-Track States
+
+The patch itself should always have a name. In `v1`, that name should always exist, and the default should be `Untitled`.
+
+The template name does not need to appear on the `v1` LCD. Template selection is an authoring concern, not part of the live-performance context the player needs during use.
+
+Blank tracks should remain visible as real tracks even before they are configured. If a track has no source profile assigned yet, it should still exist as a normal track slot. Its page slots can remain inactive, but the track itself should not disappear.
+
+When such a track is focused:
+
+- the normal combined track label remains visible
+- a small `Unassigned` status cue can make the state explicit
+
+For `v1`, track state should stay simple:
+
+- assigned
+- unassigned
+
+No separate enabled/disabled flag is needed.
 
 ## Track Page Blocks
 
@@ -524,7 +578,6 @@ The display should not try to behave like a tiny version of Grid. It should inst
 - Which track is currently in focus?
 - Which page is currently active?
 - What are the labels and current values for the visible global and track controls?
-- What is changing right now?
 
 #### Visual direction
 
@@ -562,13 +615,15 @@ Band content:
 - Full global row labels and values
 - Full upper-row labels and values for the current page
 - Full lower-row labels and values for the current page
-- A clear highlight for the most recently touched control
 
 Value rendering rules:
 
 - Prefer formatted musical values over raw engine/debug values
 - Show every visible slot at once; do not collapse to only the touched control
 - Each slot should aim to show a label, a formatted value, and later a small visual encoder indicator
+- Values and encoder visuals should update in place
+- No separate focus popup or enlarged value area is needed in `v1`
+- Every slot, including inactive ones, should reserve the same visual footprint
 
 Explicit `v1` omissions:
 
@@ -649,7 +704,6 @@ This keeps the system lightweight and closer to embedded-instrument behavior.
    - active page
    - global and track slot labels
    - current values
-   - recent interaction focus
 5. The LCD renderer consumes that state and paints the dashboard.
 
 This split matters because the display should render an intentional performance model, not reverse-engineer the raw engine graph on every frame.
@@ -792,7 +846,7 @@ The initial implementation should be tested at three levels:
 - Patch load with Pi metadata
 - State adapter output for the dashboard
 - Correct labels and values for visible rows
-- Focus updates when controls are touched
+- In-place value updates when controls are touched
 - Graceful behavior when a track slot mapping is invalid or missing
 
 ### Phased Roadmap
@@ -809,7 +863,7 @@ The initial implementation should be tested at three levels:
 - Add a dedicated `Pi patcher` authoring surface
 - Add one starting generic `8-track` template
 - Define `1 global + up to 8 tracks`
-- Implement the fixed global row with `Tempo`, `Main Volume`, `Swing`, `Master Filter Cutoff`, `Master Filter Resonance`, `Reverb Send`, `Delay Send`, and `Macro 1`
+- Implement the fixed global row with `Tempo`, `Swing`, `Master Filter Cutoff`, `Master Filter Resonance`, `Reverb Send`, `Delay Send`, an intentionally inactive slot, and `Main Volume`
 - Implement initial source profiles: `Osc`, `3-Osc`, `Noise`, `Wavetable`
 - Implement fixed fader mapping to the final gain stage of all `8` tracks
 - Implement transport/navigation buttons for `Play/Stop`, `Track Prev/Next`, and `Page Prev/Next`
@@ -864,9 +918,8 @@ The following questions should be revisited in later sessions so context is not 
 5. What exact schema should the Pi patcher document use, and how should it compile into an engine patch?
 6. What exact parameter mappings and inactive-slot behavior should each source profile use?
 7. How should named modulation target presets be authored and stored in Pi patcher?
-8. What exact information should the LCD show when a control is touched?
-9. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
-10. When local editing arrives, what is the smallest useful editing action to support first?
+8. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
+9. When local editing arrives, what is the smallest useful editing action to support first?
 
 ## Purchase Research Notes
 
