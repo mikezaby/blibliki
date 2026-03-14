@@ -918,8 +918,9 @@ The following questions should be revisited in later sessions so context is not 
 5. What exact schema should the Pi patcher document use, and how should it compile into an engine patch?
 6. What exact parameter mappings and inactive-slot behavior should each source profile use?
 7. How should named modulation target presets be authored and stored in Pi patcher?
-8. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
-9. When local editing arrives, what is the smallest useful editing action to support first?
+8. How should sequencing work across tracks, and how should the instrument balance built-in sequencing such as `StepSequencer` against external input like a MIDI keyboard?
+9. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
+10. When local editing arrives, what is the smallest useful editing action to support first?
 
 ## Purchase Research Notes
 
