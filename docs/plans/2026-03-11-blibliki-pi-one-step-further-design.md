@@ -433,23 +433,40 @@ The goal is hardware feel, not general-purpose touchscreen feel.
 
 #### V1 dashboard content
 
-Likely elements:
+A companion ASCII sketch lives in `docs/plans/2026-03-11-blibliki-pi-one-step-further-display-ascii.md` so the current layout direction can be reviewed quickly without opening a graphics tool.
+
+The first LCD layout should be `landscape-only` and use a `header + 3 bands` structure that mirrors the controller:
+
+- Header
+- Global band
+- Upper track-page band
+- Lower track-page band
+
+Header content:
 
 - Patch name
-- Device status
-- Tempo
-- Transport/play state
 - Focused track name
 - Active page name
-- Global row labels and values
-- Visible parameter labels and values for the current page
+- Play/stop state
+
+Band content:
+
+- Full global row labels and values
+- Full upper-row labels and values for the current page
+- Full lower-row labels and values for the current page
 - A clear highlight for the most recently touched control
 
-Potential additions if they fit cleanly:
+Value rendering rules:
 
-- Simple meters
-- Clock or bar/beat display
-- Selected template name
+- Prefer formatted musical values over raw engine/debug values
+- Show every visible slot at once; do not collapse to only the touched control
+- Each slot should aim to show a label, a formatted value, and later a small visual encoder indicator
+
+Explicit `v1` omissions:
+
+- No visual meters
+- No transport position display
+- No duplicated BPM in the header because tempo already lives in the global row
 
 ### Display Hardware Direction
 
@@ -465,10 +482,16 @@ The current recommendation is to prefer `DSI` first and treat touch support as o
 
 #### Candidate panels to evaluate
 
-- `Raspberry Pi Touch Display 2` (`5"`, DSI) as the strongest "official and supported" candidate
-- `Waveshare 3.5inch DSI LCD (H)` as a more compact alternative
+- `Raspberry Pi Touch Display 2` (`5"`, DSI) as the strongest first prototype display because it is official, Pi 5-friendly, and gives more room while the LCD layout is still evolving
+- `Waveshare 3.5inch DSI LCD (H)` as the stronger compactness-oriented option and a likely later fit check against the desired final hardware size
 
 An HDMI screen is acceptable only if DSI creates unexpected software or integration problems.
+
+#### Prototype recommendation
+
+For early experimentation, the safest first buy is the `Raspberry Pi Touch Display 2`. It should reduce integration risk while the software and enclosure ideas are still fluid.
+
+If the project later moves down to `3.5"`, the UI should adapt without major redesign by keeping the same `landscape` layout model, visible control count, and overall screen structure. The adaptation should mostly be a typography, spacing, and label-shortening pass rather than a new UI concept.
 
 #### Hardware selection criteria
 
@@ -492,6 +515,20 @@ Recommended direction:
 - Keep the UI rendering layer separate from the audio engine runtime
 - Design the state model so later features can add browsing and minor editing without rewriting the whole screen stack
 
+#### No-desktop display path
+
+The current direction should avoid `X11`, `Wayland`, and browser-kiosk stacks. The Pi should treat the LCD as a normal Linux display driven by the kernel, while the UI process renders through `DRM/KMS`.
+
+Recommended first-pass operating model:
+
+- `Raspberry Pi OS Lite`
+- LCD connected over `DSI`
+- Boot directly into appliance services
+- A dedicated display process rendering through `DRM/KMS`
+- `packages/pi` or a sibling runtime process publishing dashboard state to that display process
+
+This keeps the system lightweight and closer to embedded-instrument behavior.
+
 #### Working architectural split
 
 1. Grid authors a `Pi patcher` patch and stores Pi-specific metadata.
@@ -507,6 +544,10 @@ Recommended direction:
 4. The LCD renderer consumes that state and paints the dashboard.
 
 This split matters because the display should render an intentional performance model, not reverse-engineer the raw engine graph on every frame.
+
+#### Display implementation direction
+
+The exact UI toolkit is not locked yet, but the architecture should assume a dedicated display process rather than rendering inside the main Node runtime. That keeps the no-desktop path realistic and leaves room for implementation in a lower-level UI stack if needed.
 
 ### Conceptual Pi Patcher Data Layer
 
@@ -688,8 +729,8 @@ These are recommendations made during brainstorming and accepted as the current 
 The following questions should be revisited in later sessions so context is not lost:
 
 1. What should the first LCD layout actually look like in pixels and zones?
-2. Should the dashboard be landscape-only?
-3. What rendering stack should drive the LCD UI on the Pi?
+2. What display-process stack should drive the LCD UI on the Pi without `X11` or `Wayland`?
+3. Should that display process be built with something like `Rust + Slint + LinuxKMS`, `C/C++ + LVGL + DRM/KMS`, or another no-desktop stack?
 4. What should the startup experience be on the Pi beyond auto-loading the assigned patch?
 5. Do faders get a `v1` role such as track volume, sends, or macros?
 6. Do buttons get a `v1` role such as mute, solo, select, page, or shift behavior?
@@ -698,9 +739,8 @@ The following questions should be revisited in later sessions so context is not 
 9. What exact parameter mappings and inactive-slot behavior should each source profile use?
 10. How should named modulation target presets be authored and stored in Grid?
 11. What exact information should the LCD show when a control is touched?
-12. Are simple meters worth the space in `v1`, or should the first dashboard stay purely symbolic and textual?
-13. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
-14. When local editing arrives, what is the smallest useful editing action to support first?
+12. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
+13. When local editing arrives, what is the smallest useful editing action to support first?
 
 ## Purchase Research Notes
 
