@@ -374,7 +374,34 @@ The `Mod` page should be shared across all source profiles in the first template
 
 ### FX A / FX B
 
-Design pending. This section will define the Page 3 effect blocks, including whether they behave as fixed groups, interchangeable slots, or some hybrid.
+The `FX` page should be compact and performance-oriented. In `v1`, each track should support `4` effect slots total, arranged across the two halves of Page 3. `FX A` should host `2` compact effect slots and `FX B` should host `2` compact effect slots. Each compact effect gets `4` controls, so the full page still uses the entire `16-control` surface while allowing four effects per track.
+
+The slots should be fixed by position, not by role. Grid decides which effect type is loaded into each slot, and the Pi only edits the loaded effect. This follows the same pattern used for `Source`.
+
+For `v1`, the allowed effect pool should be:
+
+- `Reverb`
+- `Delay`
+- `Chorus`
+- `Distortion`
+
+Each of these effects must fit a curated `4-control` performance map, even if the underlying module exposes more parameters internally. Extra effect detail can remain in Grid.
+
+The physical packing should be:
+
+- `FX A`, left effect = slots `1-4`
+- `FX A`, right effect = slots `5-8`
+- `FX B`, left effect = slots `1-4`
+- `FX B`, right effect = slots `5-8`
+
+Whenever an effect has `Mix`, it should live in the `4th` slot of that compact effect map. That gives the entire FX system a stable muscle-memory convention.
+
+First-pass effect performance maps:
+
+- `Delay` = `Time`, `Sync`, `Feedback`, `Mix`
+- `Reverb` = `Type`, `Decay`, `PreDelay`, `Mix`
+- `Chorus` = `Rate`, `Depth`, `Feedback`, `Mix`
+- `Distortion` = `Drive`, `Tone`, `unused`, `Mix`
 
 ## Display And Hardware
 
@@ -661,21 +688,20 @@ These are recommendations made during brainstorming and accepted as the current 
 The following questions should be revisited in later sessions so context is not lost:
 
 1. Which six non-fixed global slots should the first template expose?
-2. What are the exact slot definitions for `FX A` and `FX B`?
-3. What should the first LCD layout actually look like in pixels and zones?
-4. Should the dashboard be landscape-only?
-5. What rendering stack should drive the LCD UI on the Pi?
-6. What should the startup experience be on the Pi beyond auto-loading the assigned patch?
-7. Do faders get a `v1` role such as track volume, sends, or macros?
-8. Do buttons get a `v1` role such as mute, solo, select, page, or shift behavior?
-9. How should focused-track page navigation be represented relative to existing `MidiMapper.activeTrack` behavior?
-10. How should Pi-specific metadata be stored in the patch model and validated in Grid?
-11. What exact parameter mappings and inactive-slot behavior should each source profile use?
-12. How should named modulation target presets be authored and stored in Grid?
-13. What exact information should the LCD show when a control is touched?
-14. Are simple meters worth the space in `v1`, or should the first dashboard stay purely symbolic and textual?
-15. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
-16. When local editing arrives, what is the smallest useful editing action to support first?
+2. What should the first LCD layout actually look like in pixels and zones?
+3. Should the dashboard be landscape-only?
+4. What rendering stack should drive the LCD UI on the Pi?
+5. What should the startup experience be on the Pi beyond auto-loading the assigned patch?
+6. Do faders get a `v1` role such as track volume, sends, or macros?
+7. Do buttons get a `v1` role such as mute, solo, select, page, or shift behavior?
+8. How should focused-track page navigation be represented relative to existing `MidiMapper.activeTrack` behavior?
+9. How should Pi-specific metadata be stored in the patch model and validated in Grid?
+10. What exact parameter mappings and inactive-slot behavior should each source profile use?
+11. How should named modulation target presets be authored and stored in Grid?
+12. What exact information should the LCD show when a control is touched?
+13. Are simple meters worth the space in `v1`, or should the first dashboard stay purely symbolic and textual?
+14. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
+15. When local editing arrives, what is the smallest useful editing action to support first?
 
 ## Purchase Research Notes
 
