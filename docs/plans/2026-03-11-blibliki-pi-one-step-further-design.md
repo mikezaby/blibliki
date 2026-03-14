@@ -342,7 +342,35 @@ This page should be shared across all source profiles in the first template. Eve
 
 ### Mod
 
-Design pending. This section will define the `Mod` half of Page 2, including LFO-related behavior and any broader modulation strategy for `v1`.
+The `Mod` half of Page 2 should be an `LFO-oriented modulation block`, not a full modulation matrix editor. In `v1`, each track should have up to `4` available LFO slots, but the Pi should edit only one selected LFO at a time.
+
+For `v1`, the first-pass `Mod` layout should be:
+
+- `LFO Select`
+- `Targets`
+- `Waveform`
+- `Freq`
+- `Offset`
+- `Amount`
+- `Sync`
+- `Phase`
+
+`LFO Select` chooses which of the four available LFO slots is currently being edited. `Freq` should be a smart rate control: when `Sync` is off it controls frequency in `Hz`, and when `Sync` is on it controls musical division. This already matches the broad direction of the current engine LFO behavior.
+
+`Targets` should not mean a free-form target picker on the Pi. Instead, the data model should support a real modulation matrix underneath, while the Pi surface chooses a named destination preset for the currently selected LFO. That keeps the architecture open for a deeper modulation system later without turning the first Pi UI into a matrix editor.
+
+Example target presets:
+
+- `Off`
+- `Pitch`
+- `Filter`
+- `Pitch + Filter`
+- `Pan`
+- `FX Mix`
+- `Custom 1`
+- `Custom 2`
+
+The `Mod` page should be shared across all source profiles in the first template. Targets can differ per track, but the page structure should stay stable.
 
 ### FX A / FX B
 
@@ -633,7 +661,7 @@ These are recommendations made during brainstorming and accepted as the current 
 The following questions should be revisited in later sessions so context is not lost:
 
 1. Which six non-fixed global slots should the first template expose?
-2. What are the exact slot definitions for `Mod`, `FX A`, and `FX B`?
+2. What are the exact slot definitions for `FX A` and `FX B`?
 3. What should the first LCD layout actually look like in pixels and zones?
 4. Should the dashboard be landscape-only?
 5. What rendering stack should drive the LCD UI on the Pi?
@@ -643,10 +671,11 @@ The following questions should be revisited in later sessions so context is not 
 9. How should focused-track page navigation be represented relative to existing `MidiMapper.activeTrack` behavior?
 10. How should Pi-specific metadata be stored in the patch model and validated in Grid?
 11. What exact parameter mappings and inactive-slot behavior should each source profile use?
-12. What exact information should the LCD show when a control is touched?
-13. Are simple meters worth the space in `v1`, or should the first dashboard stay purely symbolic and textual?
-14. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
-15. When local editing arrives, what is the smallest useful editing action to support first?
+12. How should named modulation target presets be authored and stored in Grid?
+13. What exact information should the LCD show when a control is touched?
+14. Are simple meters worth the space in `v1`, or should the first dashboard stay purely symbolic and textual?
+15. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
+16. When local editing arrives, what is the smallest useful editing action to support first?
 
 ## Purchase Research Notes
 
