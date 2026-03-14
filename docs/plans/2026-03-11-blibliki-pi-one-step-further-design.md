@@ -160,9 +160,9 @@ This model should be mirrored by the LCD so the instrument always presents one f
 The first pass should use a hybrid standard:
 
 - Fixed across all Pi patcher patches: `Tempo`, `Main Volume`
-- Template-defined: the other `6` global encoder slots
+- First-template defaults for the other `6` slots: `Swing`, `Master Filter Cutoff`, `Master Filter Resonance`, `Reverb Send`, `Delay Send`, `Macro 1`
 
-This creates consistency where it matters while leaving room for template specialization later.
+This creates consistency where it matters while leaving room for template specialization later. The first template should treat these six controls as a patch-wide performance strip rather than deep editing controls. They are strong defaults for `v1`, not a permanent universal law. `Macro 1` intentionally preserves one flexible escape hatch for later experimentation without changing the row layout.
 
 #### Faders and buttons
 
@@ -206,7 +206,7 @@ The fixed page contract for `v1` is:
 - Page 2: `Filter` / `Mod`
 - Page 3: `FX A` / `FX B`
 
-The detailed design work currently exists only for `Source`. The other blocks remain intentionally open and should be filled in later under their dedicated sections.
+The detailed design work is now defined for all six blocks at a first-pass level. Later sessions should refine labels, exact parameter mappings, authoring UX in Grid, and LCD presentation.
 
 ### Source
 
@@ -646,7 +646,7 @@ The initial implementation should be tested at three levels:
 - Add `Pi patcher` mode in Grid
 - Add one starting generic `8-track` template
 - Define `1 global + up to 8 tracks`
-- Implement fixed global slots for `Tempo` and `Main Volume`
+- Implement the fixed global row with `Tempo`, `Main Volume`, `Swing`, `Master Filter Cutoff`, `Master Filter Resonance`, `Reverb Send`, `Delay Send`, and `Macro 1`
 - Implement initial source profiles: `Osc`, `3-Osc`, `Noise`, `Wavetable`
 - Bind XL3 encoder rows to `global + focused-track fixed pages`
 - Render LCD performance dashboard
@@ -687,21 +687,20 @@ These are recommendations made during brainstorming and accepted as the current 
 
 The following questions should be revisited in later sessions so context is not lost:
 
-1. Which six non-fixed global slots should the first template expose?
-2. What should the first LCD layout actually look like in pixels and zones?
-3. Should the dashboard be landscape-only?
-4. What rendering stack should drive the LCD UI on the Pi?
-5. What should the startup experience be on the Pi beyond auto-loading the assigned patch?
-6. Do faders get a `v1` role such as track volume, sends, or macros?
-7. Do buttons get a `v1` role such as mute, solo, select, page, or shift behavior?
-8. How should focused-track page navigation be represented relative to existing `MidiMapper.activeTrack` behavior?
-9. How should Pi-specific metadata be stored in the patch model and validated in Grid?
-10. What exact parameter mappings and inactive-slot behavior should each source profile use?
-11. How should named modulation target presets be authored and stored in Grid?
-12. What exact information should the LCD show when a control is touched?
-13. Are simple meters worth the space in `v1`, or should the first dashboard stay purely symbolic and textual?
-14. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
-15. When local editing arrives, what is the smallest useful editing action to support first?
+1. What should the first LCD layout actually look like in pixels and zones?
+2. Should the dashboard be landscape-only?
+3. What rendering stack should drive the LCD UI on the Pi?
+4. What should the startup experience be on the Pi beyond auto-loading the assigned patch?
+5. Do faders get a `v1` role such as track volume, sends, or macros?
+6. Do buttons get a `v1` role such as mute, solo, select, page, or shift behavior?
+7. How should focused-track page navigation be represented relative to existing `MidiMapper.activeTrack` behavior?
+8. How should Pi-specific metadata be stored in the patch model and validated in Grid?
+9. What exact parameter mappings and inactive-slot behavior should each source profile use?
+10. How should named modulation target presets be authored and stored in Grid?
+11. What exact information should the LCD show when a control is touched?
+12. Are simple meters worth the space in `v1`, or should the first dashboard stay purely symbolic and textual?
+13. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
+14. When local editing arrives, what is the smallest useful editing action to support first?
 
 ## Purchase Research Notes
 
