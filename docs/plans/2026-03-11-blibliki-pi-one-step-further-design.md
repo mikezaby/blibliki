@@ -300,7 +300,26 @@ These are not final labels or final parameter mappings, but they are strong enou
 
 ### Amp
 
-Design pending. This section will define the `Amp` half of Page 1, including level, envelope behavior, and any other amplitude-related controls that belong on the performance surface.
+The `Amp` half of Page 1 should behave like an expressive amplitude block rather than a minimal utility section. Its job is to define how a track speaks, how it sits in space, and how it responds to playing dynamics.
+
+For `v1`, the first-pass `Amp` layout should be:
+
+- `Level`
+- `Attack`
+- `Decay`
+- `Sustain`
+- `Release`
+- `Pan`
+- `Retrigger`
+- `Velocity`
+
+The first five controls establish the expected amplitude-envelope workflow and give the track an immediately familiar synth voice shape. `Pan` is worth including because it adds clear musical placement without leaking into `FX`.
+
+`Retrigger` is also an important control because it changes how the envelope behaves under repeated note attacks, which strongly affects playing feel. It should allow the user to choose whether the envelope restarts from zero on each attack or continues from the current level.
+
+`Velocity` is a strong final slot because it makes tracks feel more performance-sensitive instead of static. It gives the player a way to decide whether a track behaves dynamically or more like a fixed-level machine.
+
+The `Amp` page should be shared across all source profiles in the first template. This is one of the few blocks that should stay stable whether the track uses `Osc`, `3-Osc`, `Noise`, or `Wavetable`.
 
 ### Filter
 
@@ -599,7 +618,7 @@ These are recommendations made during brainstorming and accepted as the current 
 The following questions should be revisited in later sessions so context is not lost:
 
 1. Which six non-fixed global slots should the first template expose?
-2. What are the exact slot definitions for `Amp`, `Filter`, `Mod`, `FX A`, and `FX B`?
+2. What are the exact slot definitions for `Filter`, `Mod`, `FX A`, and `FX B`?
 3. What should the first LCD layout actually look like in pixels and zones?
 4. Should the dashboard be landscape-only?
 5. What rendering stack should drive the LCD UI on the Pi?
