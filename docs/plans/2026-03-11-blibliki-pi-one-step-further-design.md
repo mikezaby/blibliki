@@ -323,7 +323,22 @@ The `Amp` page should be shared across all source profiles in the first template
 
 ### Filter
 
-Design pending. This section will define the `Filter` half of Page 2, including core filter props and any filter-envelope decisions that belong on the Pi.
+The `Filter` half of Page 2 should assume one main filter identity per track, even if the underlying Grid patch is more complex. The Pi should expose one clear filter block, not multiple competing filter layers. That keeps the page understandable and gives the player one stable place to shape the tone of a track.
+
+For `v1`, the first-pass `Filter` layout should be:
+
+- `Cutoff`
+- `Resonance`
+- `Type`
+- `Amount`
+- `Attack`
+- `Decay`
+- `Sustain`
+- `Release`
+
+This is intentionally a mostly direct filter page. It should expose the familiar synth concepts first, rather than hiding them behind broad macros. `Cutoff`, `Resonance`, and `Type` establish the main filter identity. `Amount` defines how strongly the filter envelope affects the cutoff, and the remaining four slots give the track a dedicated filter envelope.
+
+This page should be shared across all source profiles in the first template. Even if `Osc`, `3-Osc`, `Noise`, and `Wavetable` use the filter differently under the hood, the Pi should keep one stable filter page contract across all of them.
 
 ### Mod
 
@@ -618,7 +633,7 @@ These are recommendations made during brainstorming and accepted as the current 
 The following questions should be revisited in later sessions so context is not lost:
 
 1. Which six non-fixed global slots should the first template expose?
-2. What are the exact slot definitions for `Filter`, `Mod`, `FX A`, and `FX B`?
+2. What are the exact slot definitions for `Mod`, `FX A`, and `FX B`?
 3. What should the first LCD layout actually look like in pixels and zones?
 4. Should the dashboard be landscape-only?
 5. What rendering stack should drive the LCD UI on the Pi?
