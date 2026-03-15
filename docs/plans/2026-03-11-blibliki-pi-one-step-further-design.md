@@ -292,6 +292,46 @@ For `v1`, the output relationship should stay simple:
 
 No generated Grid artifact is needed in `v1`.
 
+### Pi Patcher Schema Direction
+
+The Pi patcher document should be position-first in `v1`. This is the strongest fit for the product because the instrument itself is already defined by stable physical positions:
+
+- `8` global slots
+- `8` tracks
+- fixed page blocks
+- `8` slots per block
+- a `16-step` sequencer surface
+
+The document should mirror that reality instead of describing everything abstractly and then rebuilding positional meaning later.
+
+At the top level, the document should therefore contain:
+
+- a fixed `globals` array
+- a fixed `tracks` array
+
+Tracks should remain fixed positions `1` through `8`, not dynamic records. Each track should contain the minimum information needed to generate and drive the instrument:
+
+- an optional custom name
+- a `noteSource`
+- a `midiChannel`
+- explicit named page blocks
+- `stepSequencer` data when the track uses internal sequencing
+
+The page blocks should remain explicit rather than abstracted behind another page layer:
+
+- `source`
+- `amp`
+- `filter`
+- `mod`
+- `fxA`
+- `fxB`
+
+This is clearer because the page contract is already fixed by design.
+
+The same slot concept should be reused across globals and track blocks. A slot should act as the bridge between hardware/LCD and the generated engine patch. It should represent what the player sees and controls, not duplicate the full engine module definition.
+
+Slot bindings should point to semantic targets defined by the Pi patcher template/compiler rather than raw engine module IDs. In many cases those semantic targets will map to one engine prop, and in some cases they may expand into macro behavior. The document does not need to care which. That keeps the schema stable even when one visible control maps to more than one low-level engine detail.
+
 ### First Pi Patcher Workflow
 
 The first Pi patcher workflow should begin with `template creation`, not with free patch construction. In `v1`, there should be exactly `one` template available, but the model should allow more templates later.
