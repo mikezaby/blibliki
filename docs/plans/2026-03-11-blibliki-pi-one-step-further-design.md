@@ -1052,6 +1052,17 @@ The following questions should be revisited in later sessions so context is not 
 8. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
 9. When local editing arrives, what is the smallest useful editing action to support first?
 
+### Prototype Gate
+
+The next sessions should prioritize answering the remaining crucial questions rather than expanding the design indefinitely. Once those questions are answered at a practical level, the project should move into prototyping.
+
+The key rule is:
+
+- resolve the minimum remaining design blockers
+- start prototyping immediately after that
+
+`Blibliki pi` should now bias toward learning through implementation, not endless design expansion.
+
 ## Purchase Research Notes
 
 Because the display choice will affect both hardware packaging and rendering constraints, the screen decision should be verified before implementation work starts.
