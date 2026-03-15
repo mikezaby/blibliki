@@ -565,6 +565,88 @@ First-pass effect performance maps:
 - `Chorus` = `Rate`, `Depth`, `Feedback`, `Mix`
 - `Distortion` = `Drive`, `Tone`, `unused`, `Mix`
 
+### Sequencing
+
+Sequencing in `v1` should be track-local and explicit. Each track should choose one exclusive note source:
+
+- `StepSequencer`
+- `External MIDI`
+
+A track should not combine both in the first version. If a track uses internal sequencing, it should own one local `StepSequencer`. If a track uses external input, it should listen on its assigned MIDI channel.
+
+External MIDI routing should not depend on the focused track. Every track should always be able to receive MIDI independently, and channel assignment is the correct mechanism for that. The default channel mapping should follow track number:
+
+- `Track 1` starts on channel `1`
+- `Track 2` starts on channel `2`
+- and so on through `Track 8`
+
+The user should still be able to change that channel in Pi patcher to avoid conflicts with external systems.
+
+For Pi patcher and hardware, the sequencer model should be intentionally narrow:
+
+- `1` pattern per sequenced track
+- `4` fixed pages per track
+- `16` steps per page
+- up to `8` note slots per step
+
+This gives each sequenced track a practical `64-step` range without adding pattern-management complexity to the first hardware workflow. The underlying `StepSequencer` module can keep broader capabilities such as extra patterns or step CC messages, but Pi patcher should not expose them in `v1`. The product should only surface the model the hardware actually supports.
+
+#### Seq Edit Mode
+
+Sequencer editing should not be folded into the normal `Source / Amp`, `Filter / Mod`, and `FX` performance pages. It should have its own temporary `Seq Edit` mode for tracks whose note source is `StepSequencer`.
+
+Entry and exit should use:
+
+- `Shift + Page Next`
+
+This overrides the earlier assumption that `Shift` would not exist in `v1`. In sequencing, `Shift` now has one justified job.
+
+Inside `Seq Edit`:
+
+- the `16` Launch Control XL3 channel buttons should represent steps `1-16`
+- pressing a channel button selects that step, like clicking a step in the Grid sequencer UI
+- the button LEDs should show step state:
+  - `off` = empty step
+  - `dim` = programmed step
+  - `bright` = current playhead
+  - distinct selected-state color = currently selected step
+
+`Play/Stop` should continue to control transport normally. While in `Seq Edit`, `Page Prev/Next` should navigate sequencer pages rather than synth pages.
+
+#### Seq Edit Encoder Layout
+
+In `Seq Edit`, the encoder rows should be repurposed to match the current step editor model:
+
+- Row 1 = step and sequence controls
+- Row 2 = velocity for note slots `1-8`
+- Row 3 = pitch for note slots `1-8`
+
+The first-pass Row 1 layout should be:
+
+1. `Active`
+2. `Probability`
+3. `Duration`
+4. `Microtime`
+5. `Resolution`
+6. `Playback Mode`
+7. `inactive`
+8. `Loop Length`
+
+Important behavior:
+
+- `Active` follows the current component behavior: it enables or mutes the step without clearing its notes
+- `Loop Length` should define how many of the fixed `4` pages are active, giving a natural `1` to `4` bar loop length
+- page selection itself should happen with the `Page Prev/Next` buttons, so no dedicated page-select encoder is needed in `v1`
+
+Rows 2 and 3 should mirror each other one-to-one:
+
+- Row 3 pitch encoder `n` edits note slot `n`
+- Row 2 velocity encoder `n` edits the velocity for that same note slot
+
+Pitch entry should be chromatic in `v1`, not scale-aware. Each note-slot encoder should step through `OFF` and then concrete note names. Velocity should remain per-note, not reduced to one shared step-level velocity control.
+
+`Ratchet` is a strong candidate for a future `Seq Edit` control, but it should remain out of `v1`.
+
 ## Display And Hardware
 
 ### LCD Dashboard
@@ -840,6 +922,11 @@ The initial implementation should be tested at three levels:
 - Fixed fader mapping to final track gain modules
 - Source page label/value updates when the focused track changes
 - Sync behavior between `MidiMapper` values and controller state
+- Per-track note-source routing
+- MIDI channel routing for external-input tracks
+- `Seq Edit` entry and exit behavior
+- Step-button LED state updates for empty, programmed, selected, and playhead states
+- Row remapping while in `Seq Edit`
 
 #### Pi runtime / LCD tests
 
@@ -867,6 +954,9 @@ The initial implementation should be tested at three levels:
 - Implement initial source profiles: `Osc`, `3-Osc`, `Noise`, `Wavetable`
 - Implement fixed fader mapping to the final gain stage of all `8` tracks
 - Implement transport/navigation buttons for `Play/Stop`, `Track Prev/Next`, and `Page Prev/Next`
+- Implement per-track exclusive note source selection: `StepSequencer` or `External MIDI`
+- Implement default editable MIDI channel assignment for external-input tracks
+- Implement `Seq Edit` mode with `Shift + Page Next`, `16` step buttons, fixed `4-page` loop structure, and note-slot editing on encoder rows
 - Generate an engine patch from the Pi patcher document
 - Bind XL3 encoder rows to `global + focused-track fixed pages`
 - Render LCD performance dashboard
@@ -898,12 +988,13 @@ These are recommendations made during brainstorming and accepted as the current 
 - Reuse `MidiMapper` as the routing backbone
 - Use a fixed global row plus a focused-track fixed-page controller model
 - Use a permanent `8`-fader mixer layer mapped to final track gains
-- Keep buttons narrow: `Play/Stop`, `Track Prev/Next`, `Page Prev/Next`, no `Shift` in `v1`
+- Keep buttons narrow: `Play/Stop`, `Track Prev/Next`, `Page Prev/Next`, with `Shift` introduced only to enter and exit `Seq Edit`
 - Let `MidiMapper.activeTrack` be the focused Pi track and keep `activePage` in the Pi controller/UI layer
 - Treat `Source` as a profile abstraction rather than always a single engine module
 - Keep the first generic template role-neutral and initialize all `8` tracks immediately
 - Use a single fixed template in `v1` with editable content inside a fixed structure
 - Treat the Pi patcher document as the source of truth and the engine patch as a generated artifact
+- Use per-track exclusive note sources, with sequencer editing constrained to the hardware-supported model
 - Start with a performance dashboard, not local editing
 - Favor compact DSI displays and design the LCD with a monochrome mindset
 
@@ -918,9 +1009,8 @@ The following questions should be revisited in later sessions so context is not 
 5. What exact schema should the Pi patcher document use, and how should it compile into an engine patch?
 6. What exact parameter mappings and inactive-slot behavior should each source profile use?
 7. How should named modulation target presets be authored and stored in Pi patcher?
-8. How should sequencing work across tracks, and how should the instrument balance built-in sequencing such as `StepSequencer` against external input like a MIDI keyboard?
-9. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
-10. When local editing arrives, what is the smallest useful editing action to support first?
+8. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
+9. When local editing arrives, what is the smallest useful editing action to support first?
 
 ## Purchase Research Notes
 
