@@ -35,4 +35,13 @@ describe("InstrumentEditor", () => {
     expect(screen.getByText("Voice 1")).toBeTruthy();
     expect(screen.queryByText("Voice 2")).toBeNull();
   });
+
+  it("shows the sequencer loop length control", async () => {
+    render(<InstrumentEditor instrumentId="new" />);
+
+    expect((await screen.findAllByText("Loop Length")).length).toBeGreaterThan(
+      0,
+    );
+    expect(screen.getAllByText("1-4").length).toBeGreaterThan(0);
+  });
 });

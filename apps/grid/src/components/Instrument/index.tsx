@@ -59,6 +59,13 @@ const NOTE_SOURCE_OPTIONS = [
   { value: "externalMidi", name: "External MIDI" },
 ] as const;
 
+const LOOP_LENGTH_OPTIONS = [
+  { value: 1, name: "1-1" },
+  { value: 2, name: "1-2" },
+  { value: 3, name: "1-3" },
+  { value: 4, name: "1-4" },
+] as const;
+
 export default function InstrumentEditor({
   instrumentId,
 }: InstrumentEditorProps) {
@@ -539,6 +546,24 @@ export default function InstrumentEditor({
               </CardHeader>
               <CardContent>
                 <Stack gap={4}>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <Stack gap={2}>
+                      <Label>Loop Length</Label>
+                      <OptionSelect
+                        value={track.stepSequencer!.loopLength}
+                        options={LOOP_LENGTH_OPTIONS}
+                        onChange={(value) => {
+                          updateDocument((current) => {
+                            const next = structuredClone(current);
+                            next.tracks[activeTrack]!.stepSequencer!.loopLength =
+                              value;
+                            return next;
+                          });
+                        }}
+                      />
+                    </Stack>
+                  </div>
+
                   <Stack direction="row" gap={2}>
                     {track.stepSequencer?.pages.map((page, index) => (
                       <Button
