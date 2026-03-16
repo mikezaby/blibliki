@@ -21,6 +21,7 @@ import type {
   TrackPages,
 } from "./types";
 import {
+  PI_DEFAULT_TRACK_VOICES,
   PI_HARDWARE_PROFILE_ID,
   PI_PAGE_SLOT_COUNT,
   INSTRUMENT_VERSION,
@@ -109,25 +110,44 @@ const createInactiveSlot = (
     initialValue: null,
   });
 
-const createStep = (): StepConfig => ({
+const createEmptyStepNote = () => ({
+  pitch: null,
+  velocity: 100,
+});
+
+const normalizeVoices = (voices: number) =>
+  Math.min(PI_STEP_NOTE_COUNT, Math.max(1, Math.trunc(voices || 0)));
+
+const normalizeStepNotes = (
+  notes: StepConfig["notes"],
+  voices: number,
+): StepConfig["notes"] => {
+  const nextVoices = normalizeVoices(voices);
+  const next = notes.slice(0, nextVoices);
+  while (next.length < nextVoices) {
+    next.push(createEmptyStepNote());
+  }
+  return next;
+};
+
+const createStep = (voices: number): StepConfig => ({
   active: false,
   probability: 100,
   duration: "1/16",
   microtimeOffset: 0,
-  notes: Array.from({ length: PI_STEP_NOTE_COUNT }, () => ({
-    pitch: null,
-    velocity: 100,
-  })),
+  notes: Array.from({ length: normalizeVoices(voices) }, createEmptyStepNote),
 });
 
-const createStepPage = (pageNo: number): StepPageConfig => ({
+const createStepPage = (pageNo: number, voices: number): StepPageConfig => ({
   name: `Page ${pageNo}`,
-  steps: Array.from({ length: PI_STEP_COUNT }, createStep),
+  steps: Array.from({ length: PI_STEP_COUNT }, () => createStep(voices)),
 });
 
-export const createDefaultStepSequencerConfig = (): StepSequencerConfig => ({
+export const createDefaultStepSequencerConfig = (
+  voices = PI_DEFAULT_TRACK_VOICES,
+): StepSequencerConfig => ({
   pages: Array.from({ length: PI_STEP_PAGE_COUNT }, (_, index) =>
-    createStepPage(index + 1),
+    createStepPage(index + 1, voices),
   ),
   loopLength: 4,
   resolution: Resolution.sixteenth,
@@ -568,12 +588,13 @@ export const createDefaultTrack = (trackNo: number): TrackConfig => {
   const effectSlots = createDefaultEffectSlots();
   return {
     name: undefined,
+    voices: PI_DEFAULT_TRACK_VOICES,
     noteSource: "stepSequencer",
     midiChannel: trackNo,
     sourceProfileId: "unassigned",
     effectSlots,
     pages: createTrackPages("unassigned", effectSlots),
-    stepSequencer: createDefaultStepSequencerConfig(),
+    stepSequencer: createDefaultStepSequencerConfig(PI_DEFAULT_TRACK_VOICES),
   };
 };
 
@@ -624,6 +645,24 @@ export const withTrackEffectType = (
     ...next.pages,
     ...fxPages,
   };
+  return next;
+};
+
+export const withTrackVoices = (
+  track: TrackConfig,
+  voices: number,
+): TrackConfig => {
+  const next = structuredClone(track);
+  next.voices = normalizeVoices(voices);
+
+  if (next.stepSequencer) {
+    next.stepSequencer.pages.forEach((page) => {
+      page.steps.forEach((step) => {
+        step.notes = normalizeStepNotes(step.notes, next.voices);
+      });
+    });
+  }
+
   return next;
 };
 

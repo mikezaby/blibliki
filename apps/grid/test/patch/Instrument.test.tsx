@@ -24,10 +24,15 @@ vi.mock("@blibliki/models", () => ({
 }));
 
 describe("InstrumentEditor", () => {
-  it("renders a new document without select item value errors", async () => {
+  it("renders a new document with track voices and matching sequencer notes", async () => {
     render(<InstrumentEditor instrumentId="new" />);
 
     expect(await screen.findByText("Track Setup")).toBeTruthy();
+    expect((screen.getByLabelText("Voices") as HTMLInputElement).value).toBe(
+      "1",
+    );
     expect(screen.getByText("FX Slot 1")).toBeTruthy();
+    expect(screen.getByText("Voice 1")).toBeTruthy();
+    expect(screen.queryByText("Voice 2")).toBeNull();
   });
 });

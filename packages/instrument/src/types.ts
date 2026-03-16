@@ -18,6 +18,7 @@ export const PI_PAGE_SLOT_COUNT = 8;
 export const PI_STEP_PAGE_COUNT = 4;
 export const PI_STEP_COUNT = 16;
 export const PI_STEP_NOTE_COUNT = 8;
+export const PI_DEFAULT_TRACK_VOICES = 1;
 
 export type InstrumentControlValue = number | string | boolean | null;
 
@@ -81,6 +82,7 @@ export type TrackPages = {
 
 export type TrackConfig = {
   name?: string;
+  voices: number;
   noteSource: TrackNoteSource;
   midiChannel: number;
   sourceProfileId: SourceProfileId;

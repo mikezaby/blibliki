@@ -1,9 +1,11 @@
 import {
   compileInstrumentDocument,
   createDefaultInstrumentDocument,
+  createDefaultStepSequencerConfig,
   TRACK_PAGE_BLOCKS,
   withTrackEffectType,
   withTrackSourceProfile,
+  withTrackVoices,
   type InstrumentDocument,
   type SessionControlSpec,
   type SlotConfig,
@@ -366,6 +368,27 @@ export default function InstrumentEditor({
                   />
                 </Stack>
                 <Stack gap={2}>
+                  <Label htmlFor="track-voices">Voices</Label>
+                  <Input
+                    id="track-voices"
+                    aria-label="Voices"
+                    type="number"
+                    min={1}
+                    max={8}
+                    value={track.voices}
+                    onChange={(event) => {
+                      updateDocument((current) => {
+                        const next = structuredClone(current);
+                        next.tracks[activeTrack] = withTrackVoices(
+                          next.tracks[activeTrack]!,
+                          Number(event.target.value),
+                        );
+                        return next;
+                      });
+                    }}
+                  />
+                </Stack>
+                <Stack gap={2}>
                   <Label>Note Source</Label>
                   <OptionSelect
                     value={track.noteSource}
@@ -379,7 +402,9 @@ export default function InstrumentEditor({
                           !next.tracks[activeTrack]!.stepSequencer
                         ) {
                           next.tracks[activeTrack]!.stepSequencer =
-                            createDefaultInstrumentDocument().tracks[0]!.stepSequencer;
+                            createDefaultStepSequencerConfig(
+                              next.tracks[activeTrack]!.voices,
+                            );
                         }
                         return next;
                       });

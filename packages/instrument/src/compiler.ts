@@ -27,7 +27,7 @@ import type {
   TrackConfig,
   TrackRuntimeMetadata,
 } from "./types";
-import { PI_TRACK_COUNT } from "./types";
+import { PI_STEP_NOTE_COUNT, PI_TRACK_COUNT } from "./types";
 
 type CompileContext = {
   modules: IAnyModuleSerialize[];
@@ -72,6 +72,9 @@ const createRoute = (
   source: { moduleId: sourceModuleId, ioName: sourceIo },
   destination: { moduleId: destinationModuleId, ioName: destinationIo },
 });
+
+const getTrackVoices = (track: TrackConfig) =>
+  Math.min(PI_STEP_NOTE_COUNT, Math.max(1, Math.trunc(track.voices || 0)));
 
 const namespacedTrackTarget = (trackIndex: number, target: string) =>
   target.replace(/^track\./, `track.${trackIndex}.`);
@@ -407,7 +410,7 @@ const compileTrackSource = ({
 }) => {
   const prefix = `track-${trackIndex + 1}`;
   const slots = track.pages.source;
-  const voices = 8;
+  const voices = getTrackVoices(track);
 
   switch (track.sourceProfileId) {
     case "unassigned":
@@ -922,6 +925,7 @@ const compileTrack = (
   const panId = `${prefix}-pan`;
   const finalGainId = `${prefix}-final-gain`;
   const lfoId = `${prefix}-lfo-1`;
+  const voices = getTrackVoices(track);
 
   if (track.noteSource === "stepSequencer") {
     pushModule(context, {
@@ -959,7 +963,7 @@ const compileTrack = (
     id: ampEnvId,
     name: `${prefix} Amp Envelope`,
     moduleType: ModuleType.Envelope,
-    voices: 8,
+    voices,
     props: {
       attack: getSlotValue(track.pages.amp[1]!, 0.1),
       decay: getSlotValue(track.pages.amp[2]!, 0.1),
@@ -973,7 +977,7 @@ const compileTrack = (
     id: ampGainId,
     name: `${prefix} Amp`,
     moduleType: ModuleType.Gain,
-    voices: 8,
+    voices,
     props: {
       gain: getSlotValue(track.pages.amp[0]!, 0.8),
     },
@@ -983,7 +987,7 @@ const compileTrack = (
     id: filterEnvId,
     name: `${prefix} Filter Envelope`,
     moduleType: ModuleType.Envelope,
-    voices: 8,
+    voices,
     props: {
       attack: getSlotValue(track.pages.filter[4]!, 0.05),
       decay: getSlotValue(track.pages.filter[5]!, 0.2),
@@ -997,7 +1001,7 @@ const compileTrack = (
     id: filterId,
     name: `${prefix} Filter`,
     moduleType: ModuleType.Filter,
-    voices: 8,
+    voices,
     props: {
       cutoff: getSlotValue(track.pages.filter[0]!, 12000),
       Q: getSlotValue(track.pages.filter[1]!, 1),
@@ -1010,7 +1014,7 @@ const compileTrack = (
     id: panId,
     name: `${prefix} Pan`,
     moduleType: ModuleType.StereoPanner,
-    voices: 8,
+    voices,
     props: {
       pan: getSlotValue(track.pages.amp[5]!, 0),
     },
@@ -1265,7 +1269,7 @@ const compileTrack = (
           id: moduleId,
           name: `${prefix} Distortion ${effectIndex + 1}`,
           moduleType: ModuleType.Distortion,
-          voices: 8,
+          voices,
           props: {
             drive: getSlotValue(page[baseIndex]!, 2),
             tone: getSlotValue(page[baseIndex + 1]!, 8000),
@@ -1625,6 +1629,14 @@ export const validateInstrumentDocument = (
   });
 
   document.tracks.forEach((track, trackIndex) => {
+    const voices = getTrackVoices(track);
+
+    if (track.voices !== voices) {
+      errors.push(
+        `Track ${trackIndex + 1} voices must be between 1 and ${PI_STEP_NOTE_COUNT}`,
+      );
+    }
+
     if (track.effectSlots.length !== 4) {
       errors.push(`Track ${trackIndex + 1} must define exactly 4 effect slots`);
     }
@@ -1640,9 +1652,9 @@ export const validateInstrumentDocument = (
           );
         }
         page.steps.forEach((step, stepIndex) => {
-          if (step.notes.length !== 8) {
+          if (step.notes.length !== voices) {
             errors.push(
-              `Track ${trackIndex + 1} page ${pageIndex + 1} step ${stepIndex + 1} must define 8 notes`,
+              `Track ${trackIndex + 1} page ${pageIndex + 1} step ${stepIndex + 1} must define ${voices} notes`,
             );
           }
         });
