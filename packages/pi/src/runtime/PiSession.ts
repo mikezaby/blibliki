@@ -368,10 +368,10 @@ export class PiSession {
 
     const velocityIndex = ENCODER_ROW_UPPER.indexOf(cc);
     if (velocityIndex >= 0) {
-      step.notes[velocityIndex]!.velocity = Math.max(
-        1,
-        Math.round(midiToRange(value, 1, 127)),
-      );
+      const note = step.notes[velocityIndex];
+      if (!note) return;
+
+      note.velocity = Math.max(1, Math.round(midiToRange(value, 1, 127)));
       this.refreshTrackStepSequencer(this.state.activeTrack);
       this.pushDisplayState();
       return;
@@ -379,7 +379,10 @@ export class PiSession {
 
     const pitchIndex = ENCODER_ROW_LOWER.indexOf(cc);
     if (pitchIndex >= 0) {
-      step.notes[pitchIndex]!.pitch = midiToPitch(value);
+      const note = step.notes[pitchIndex];
+      if (!note) return;
+
+      note.pitch = midiToPitch(value);
       this.refreshTrackStepSequencer(this.state.activeTrack);
       this.pushDisplayState();
     }
