@@ -1,7 +1,18 @@
 import { ContextTime, TransportState } from "@blibliki/transport";
+import { inRange } from "es-toolkit";
 import MidiEvent from "../MidiEvent";
 import { BaseController } from "./BaseController";
 import type { MatchedControllerPorts } from "./ControllerMatcher";
+
+enum Color {
+  Gray0 = 119,
+  Gray1 = 3,
+  Gray2 = 2,
+  Gray3 = 118,
+  Gray4 = 1,
+  Gray5 = 117,
+  Gray6 = 0,
+}
 
 enum Control {
   // ===== ENCODERS =====
@@ -76,14 +87,18 @@ enum Control {
   Mode = 104,
 }
 
-const VALUE_CONTROL_MIN = 5;
-const VALUE_CONTROL_MAX = 36;
 const PLAY_STOPPED_COLOR = 16;
 const PLAY_PLAYING_COLOR = 101;
-const RECORD_STOPPED_COLOR = 4;
-const RECORD_PLAYING_COLOR = 120;
 
-const VALUE_COLOR_RAMP = [41, 42, 43, 21, 20, 19, 13] as const;
+const VALUE_COLOR_RAMP = [
+  Color.Gray6,
+  Color.Gray5,
+  Color.Gray4,
+  Color.Gray3,
+  Color.Gray2,
+  Color.Gray1,
+  Color.Gray0,
+] as const;
 
 export class LaunchControlXL3 extends BaseController {
   constructor(engineId: string, ports: MatchedControllerPorts) {
@@ -116,11 +131,10 @@ export class LaunchControlXL3 extends BaseController {
         }
         break;
       }
+      case Control.Record:
+        break;
       default:
-        this.setColor(
-          event.cc,
-          this.colorForControlValue(event.cc, event.ccValue),
-        );
+        this.setColor(event.cc, this.getColor(event.cc, event.ccValue));
     }
   };
 
@@ -136,7 +150,7 @@ export class LaunchControlXL3 extends BaseController {
     else if (cc === 63 || cc === 112) code = 0xb6;
     else code = 0xb0;
 
-    this.setColor(cc, this.colorForControlValue(cc, value));
+    this.setColor(cc, this.getColor(cc, value));
 
     return [code, cc, value];
   };
@@ -148,28 +162,23 @@ export class LaunchControlXL3 extends BaseController {
       Control.Play,
       this.isPlaying ? PLAY_PLAYING_COLOR : PLAY_STOPPED_COLOR,
     );
-    this.setColor(
-      Control.Record,
-      this.isPlaying ? RECORD_PLAYING_COLOR : RECORD_STOPPED_COLOR,
-    );
   }
 
   private setColor(control: number, color: number) {
-    if (this.disposed) return;
     this.output.directSend([176, control, color]);
   }
 
-  private colorForControlValue(control: number, value: number): number {
-    if (control < VALUE_CONTROL_MIN || control > VALUE_CONTROL_MAX) {
-      return value;
+  private getColor(cc: number, value: number): number {
+    if (inRange(cc, Control.Encoder0_0, Control.Encoder2_7 + 1)) {
+      const clampedValue = Math.max(0, Math.min(127, value));
+      const index = Math.round(
+        (clampedValue / 127) * (VALUE_COLOR_RAMP.length - 1),
+      );
+
+      return VALUE_COLOR_RAMP[index]!;
+    } else {
+      return value === 127 ? Color.Gray1 : Color.Gray5;
     }
-
-    const clampedValue = Math.max(0, Math.min(127, value));
-    const index = Math.round(
-      (clampedValue / 127) * (VALUE_COLOR_RAMP.length - 1),
-    );
-
-    return VALUE_COLOR_RAMP[index]!;
   }
 
   private sendBigBlibliki() {
