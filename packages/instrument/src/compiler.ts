@@ -18,9 +18,9 @@ import {
 } from "@blibliki/engine";
 import type {
   BindingTransform,
-  PiPatcherCompileResult,
-  PiPatcherDocument,
-  PiControlValue,
+  InstrumentCompileResult,
+  InstrumentDocument,
+  InstrumentControlValue,
   ResolvedBinding,
   SessionControlSpec,
   SlotConfig,
@@ -133,8 +133,8 @@ const toControlSpec = (
 
 const getSlotValue = (
   slot: SlotConfig,
-  fallback: PiControlValue,
-): PiControlValue => slot.initialValue ?? fallback;
+  fallback: InstrumentControlValue,
+): InstrumentControlValue => slot.initialValue ?? fallback;
 
 const pushModule = (context: CompileContext, seed: ModuleSeed) => {
   context.modules.push(createModule(seed));
@@ -226,7 +226,7 @@ const addTransportBinding = (
 
 const compileGlobalBlock = (
   context: CompileContext,
-  document: PiPatcherDocument,
+  document: InstrumentDocument,
 ) => {
   const masterFilterId = "global-master-filter";
   const globalReverbId = "global-reverb";
@@ -1607,8 +1607,8 @@ const compileTrack = (
   });
 };
 
-export const validatePiPatcherDocument = (
-  document: PiPatcherDocument,
+export const validateInstrumentDocument = (
+  document: InstrumentDocument,
 ): string[] => {
   const errors: string[] = [];
 
@@ -1653,10 +1653,10 @@ export const validatePiPatcherDocument = (
   return errors;
 };
 
-export const compilePiPatcherDocument = (
-  document: PiPatcherDocument,
-): PiPatcherCompileResult => {
-  const errors = validatePiPatcherDocument(document);
+export const compileInstrumentDocument = (
+  document: InstrumentDocument,
+): InstrumentCompileResult => {
+  const errors = validateInstrumentDocument(document);
   if (errors.length) {
     throw new Error(errors.join("\n"));
   }

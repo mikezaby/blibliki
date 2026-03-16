@@ -14,12 +14,12 @@ import {
 } from "@blibliki/engine";
 import {
   TRACK_PAGE_BLOCKS,
-  type PiControlValue,
-  type PiPatcherCompileResult,
+  type InstrumentControlValue,
+  type InstrumentCompileResult,
   type SessionControlSpec,
   type StepPageConfig,
   type SlotConfig,
-} from "@blibliki/pi-patcher";
+} from "@blibliki/instrument";
 import { DisplayBridge } from "./DisplayBridge.js";
 import type { PiDisplayCell, PiDisplayState } from "./PiDisplayState.js";
 import { PiLaunchControlXL3 } from "./PiLaunchControlXL3.js";
@@ -50,7 +50,7 @@ type SessionState = {
   seqEdit: boolean;
   selectedSeqPage: number;
   selectedStep: number;
-  sessionValues: Record<string, PiControlValue>;
+  sessionValues: Record<string, InstrumentControlValue>;
 };
 
 const sessionRegistry = new Map<string, PiSession>();
@@ -97,12 +97,12 @@ export function getPiSessionByEngineId(engineId: string) {
 export class PiSession {
   private readonly engineId: string;
   private readonly engine: Engine;
-  private readonly compiled: PiPatcherCompileResult;
+  private readonly compiled: InstrumentCompileResult;
   private readonly display: DisplayBridge;
   private output: MidiOutputDevice | null = null;
   private readonly state: SessionState;
 
-  constructor(engine: Engine, compiled: PiPatcherCompileResult) {
+  constructor(engine: Engine, compiled: InstrumentCompileResult) {
     this.engine = engine;
     this.engineId = engine.id;
     this.compiled = compiled;
@@ -526,7 +526,7 @@ export class PiSession {
         const firstTarget = binding.targets[0];
         if (!firstTarget) return formatValue(slot.initialValue);
         const module = this.engine.findModule(firstTarget.moduleId);
-        const props = module.props as Record<string, PiControlValue>;
+        const props = module.props as Record<string, InstrumentControlValue>;
         return formatValue(props[firstTarget.propName] ?? slot.initialValue);
       }
     }
@@ -573,7 +573,7 @@ const midiToRange = (value: number, min: number, max: number) =>
 const controlValueFromMidi = (
   control: SessionControlSpec,
   midiValue: number,
-): PiControlValue => {
+): InstrumentControlValue => {
   switch (control.kind) {
     case "boolean":
       return midiValue >= 64;
@@ -602,7 +602,7 @@ const controlValueFromMidi = (
 };
 
 const applyTransform = (
-  value: PiControlValue,
+  value: InstrumentControlValue,
   transform?: { type: string } & Record<string, unknown>,
 ) => {
   if (!transform || transform.type === "identity") return value;
@@ -610,7 +610,9 @@ const applyTransform = (
     return value * (transform.scale as number) + (transform.offset as number);
   }
   if (transform.type === "enumMap") {
-    return (transform.map as Record<string, PiControlValue>)[String(value)];
+    return (transform.map as Record<string, InstrumentControlValue>)[
+      String(value)
+    ];
   }
   if (transform.type === "booleanMap") {
     return value ? transform.trueValue : transform.falseValue;
@@ -618,7 +620,7 @@ const applyTransform = (
   return value;
 };
 
-const formatValue = (value: PiControlValue | undefined) => {
+const formatValue = (value: InstrumentControlValue | undefined) => {
   if (value === undefined || value === null || value === "") return "---";
   if (typeof value === "number") {
     return Number.isInteger(value) ? `${value}` : value.toFixed(2);

@@ -73,8 +73,11 @@ export default function Header() {
             </Link>
           </Button>
           <Button asChild variant="text" color="neutral" size="sm">
-            <Link to="/pi-patch/$piPatchId" params={{ piPatchId: "new" }}>
-              <span>Pi Patcher</span>
+            <Link
+              to="/instrument/$instrumentId"
+              params={{ instrumentId: "new" }}
+            >
+              <span>Instrument</span>
             </Link>
           </Button>
         </SignedIn>

@@ -17,7 +17,7 @@ export type IDevice = {
   token: string;
   name: string;
   patchId: string | null;
-  piPatchId: string | null;
+  instrumentId: string | null;
   userId: string;
 };
 
@@ -26,7 +26,7 @@ export default class Device implements IDevice {
   token!: string;
   name!: string;
   patchId!: string | null;
-  piPatchId!: string | null;
+  instrumentId!: string | null;
   userId!: string;
 
   static async find(id: string): Promise<Device> {
@@ -91,10 +91,15 @@ export default class Device implements IDevice {
   }
 
   constructor(props: Optional<IDevice, "id">) {
+    const legacyInstrumentId = (
+      props as Optional<IDevice, "id"> & { piPatchId?: string | null }
+    ).piPatchId;
+
     Object.assign(
       this,
-      pick(props, ["id", "token", "name", "patchId", "piPatchId", "userId"]),
+      pick(props, ["id", "token", "name", "patchId", "userId"]),
     );
+    this.instrumentId = props.instrumentId ?? legacyInstrumentId ?? null;
   }
 
   async save(): Promise<void> {
@@ -131,7 +136,7 @@ export default class Device implements IDevice {
       token: this.token,
       name: this.name,
       patchId: this.patchId,
-      piPatchId: this.piPatchId,
+      instrumentId: this.instrumentId,
       userId: this.userId,
     };
   }

@@ -9,7 +9,7 @@ import type {
 } from "@blibliki/engine";
 import type { Division } from "@blibliki/transport";
 
-export const PI_PATCHER_VERSION = "0.1.0";
+export const INSTRUMENT_VERSION = "0.1.0";
 export const PI_TEMPLATE_ID = "pi-8-track-v1";
 export const PI_HARDWARE_PROFILE_ID = "launch-control-xl3-v1";
 export const PI_TRACK_COUNT = 8;
@@ -19,7 +19,7 @@ export const PI_STEP_PAGE_COUNT = 4;
 export const PI_STEP_COUNT = 16;
 export const PI_STEP_NOTE_COUNT = 8;
 
-export type PiControlValue = number | string | boolean | null;
+export type InstrumentControlValue = number | string | boolean | null;
 
 export type PageBlockId = "source" | "amp" | "filter" | "mod" | "fxA" | "fxB";
 export type TrackNoteSource = "stepSequencer" | "externalMidi";
@@ -37,7 +37,7 @@ export type SlotConfig = {
   label: string;
   displayLabel?: string;
   target?: string;
-  initialValue?: PiControlValue;
+  initialValue?: InstrumentControlValue;
 };
 
 export type EffectSlotConfig = {
@@ -93,7 +93,7 @@ export type GlobalBlock = {
   slots: SlotConfig[];
 };
 
-export type PiPatcherDocument = {
+export type InstrumentDocument = {
   version: string;
   name: string;
   templateId: string;
@@ -114,11 +114,11 @@ export type SessionControlSpec =
 export type BindingTransform =
   | { type: "identity" }
   | { type: "linear"; scale: number; offset: number }
-  | { type: "enumMap"; map: Record<string, PiControlValue> }
+  | { type: "enumMap"; map: Record<string, InstrumentControlValue> }
   | {
       type: "booleanMap";
-      trueValue: PiControlValue;
-      falseValue: PiControlValue;
+      trueValue: InstrumentControlValue;
+      falseValue: InstrumentControlValue;
     };
 
 export type ModuleBindingTarget = {
@@ -154,8 +154,8 @@ export type TrackRuntimeMetadata = {
   effectSlots: EffectSlotConfig[];
 };
 
-export type PiPatcherCompileResult = {
-  document: PiPatcherDocument;
+export type InstrumentCompileResult = {
+  document: InstrumentDocument;
   engine: IEngineSerialize;
   bindings: Record<string, ResolvedBinding>;
   tracks: TrackRuntimeMetadata[];

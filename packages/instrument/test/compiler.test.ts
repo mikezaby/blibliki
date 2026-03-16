@@ -1,21 +1,21 @@
 import { describe, expect, it } from "vitest";
 import {
-  compilePiPatcherDocument,
-  createDefaultPiPatcherDocument,
-  validatePiPatcherDocument,
+  compileInstrumentDocument,
+  createDefaultInstrumentDocument,
+  validateInstrumentDocument,
   withTrackEffectType,
   withTrackSourceProfile,
 } from "../src/index";
 
-describe("@blibliki/pi-patcher", () => {
+describe("@blibliki/instrument", () => {
   it("creates a valid default document", () => {
-    const document = createDefaultPiPatcherDocument();
-    expect(validatePiPatcherDocument(document)).toEqual([]);
+    const document = createDefaultInstrumentDocument();
+    expect(validateInstrumentDocument(document)).toEqual([]);
     expect(document.tracks).toHaveLength(8);
   });
 
   it("compiles deterministic global and track module ids", () => {
-    const base = createDefaultPiPatcherDocument();
+    const base = createDefaultInstrumentDocument();
     const track = base.tracks[0];
     if (!track) {
       throw new Error("Expected default document to include track 1");
@@ -24,7 +24,7 @@ describe("@blibliki/pi-patcher", () => {
     base.tracks[0] = withTrackSourceProfile(track, "osc");
     base.tracks[0] = withTrackEffectType(base.tracks[0], 0, "delay");
 
-    const compiled = compilePiPatcherDocument(base);
+    const compiled = compileInstrumentDocument(base);
     const moduleIds = compiled.engine.modules.map((module) => module.id);
 
     expect(moduleIds).toContain("global-master-filter");
@@ -34,7 +34,7 @@ describe("@blibliki/pi-patcher", () => {
   });
 
   it("produces semantic bindings for global, source, and fx controls", () => {
-    const base = createDefaultPiPatcherDocument();
+    const base = createDefaultInstrumentDocument();
     const track = base.tracks[0];
     if (!track) {
       throw new Error("Expected default document to include track 1");
@@ -43,7 +43,7 @@ describe("@blibliki/pi-patcher", () => {
     base.tracks[0] = withTrackSourceProfile(track, "osc");
     base.tracks[0] = withTrackEffectType(base.tracks[0], 0, "delay");
 
-    const compiled = compilePiPatcherDocument(base);
+    const compiled = compileInstrumentDocument(base);
 
     expect(compiled.bindings["global.bpm"]).toMatchObject({
       kind: "transport",
@@ -58,9 +58,9 @@ describe("@blibliki/pi-patcher", () => {
   });
 
   it("fails validation when a track count is invalid", () => {
-    const document = createDefaultPiPatcherDocument();
+    const document = createDefaultInstrumentDocument();
     document.tracks = document.tracks.slice(0, 1);
-    expect(validatePiPatcherDocument(document)).toContain(
+    expect(validateInstrumentDocument(document)).toContain(
       "Expected 8 tracks, received 1",
     );
   });

@@ -1,14 +1,14 @@
-import { PiPatch } from "@blibliki/models";
 import {
-  compilePiPatcherDocument,
-  createDefaultPiPatcherDocument,
+  compileInstrumentDocument,
+  createDefaultInstrumentDocument,
   TRACK_PAGE_BLOCKS,
   withTrackEffectType,
   withTrackSourceProfile,
-  type PiPatcherDocument,
+  type InstrumentDocument,
   type SessionControlSpec,
   type SlotConfig,
-} from "@blibliki/pi-patcher";
+} from "@blibliki/instrument";
+import { Instrument as InstrumentModel } from "@blibliki/models";
 import {
   Badge,
   Button,
@@ -29,8 +29,8 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Save, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-type PiPatcherProps = {
-  piPatchId: string;
+type InstrumentEditorProps = {
+  instrumentId: string;
 };
 
 type SaveState = "idle" | "loading" | "error";
@@ -57,10 +57,12 @@ const NOTE_SOURCE_OPTIONS = [
   { value: "externalMidi", name: "External MIDI" },
 ] as const;
 
-export default function PiPatcher({ piPatchId }: PiPatcherProps) {
+export default function InstrumentEditor({
+  instrumentId,
+}: InstrumentEditorProps) {
   const navigate = useNavigate();
   const { user } = useUser();
-  const [document, setDocument] = useState<PiPatcherDocument | null>(null);
+  const [document, setDocument] = useState<InstrumentDocument | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -75,17 +77,19 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
     const load = async () => {
       try {
         setLoadError(null);
-        if (piPatchId === "new") {
-          if (!cancelled) setDocument(createDefaultPiPatcherDocument());
+        if (instrumentId === "new") {
+          if (!cancelled) setDocument(createDefaultInstrumentDocument());
           return;
         }
 
-        const patch = await PiPatch.find(piPatchId);
-        if (!cancelled) setDocument(patch.document);
+        const instrument = await InstrumentModel.find(instrumentId);
+        if (!cancelled) setDocument(instrument.document);
       } catch (error) {
         if (!cancelled) {
           setLoadError(
-            error instanceof Error ? error.message : "Failed to load Pi patch",
+            error instanceof Error
+              ? error.message
+              : "Failed to load instrument",
           );
         }
       }
@@ -95,14 +99,14 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
     return () => {
       cancelled = true;
     };
-  }, [piPatchId]);
+  }, [instrumentId]);
 
   const compiled = useMemo(() => {
     if (!document) return null;
 
     try {
       return {
-        result: compilePiPatcherDocument(document),
+        result: compileInstrumentDocument(document),
         error: null,
       };
     } catch (error) {
@@ -117,7 +121,7 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
   const pageBlocks = TRACK_PAGE_BLOCKS[activePage];
 
   const updateDocument = (
-    updater: (current: PiPatcherDocument) => PiPatcherDocument,
+    updater: (current: InstrumentDocument) => InstrumentDocument,
   ) => {
     setDocument((current) => (current ? updater(current) : current));
   };
@@ -134,7 +138,7 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
   };
 
   const updateTrackSlot = (
-    blockId: keyof PiPatcherDocument["tracks"][number]["pages"],
+    blockId: keyof InstrumentDocument["tracks"][number]["pages"],
     slotIndex: number,
     initialValue: SlotConfig["initialValue"],
   ) => {
@@ -153,19 +157,19 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
     setSaveError(null);
 
     try {
-      const patch = new PiPatch({
-        id: piPatchId === "new" ? undefined : piPatchId,
+      const instrument = new InstrumentModel({
+        id: instrumentId === "new" ? undefined : instrumentId,
         name: document.name,
         userId: user.id,
         document,
       });
-      await patch.save();
+      await instrument.save();
       setSaveState("idle");
 
-      if (piPatchId === "new") {
+      if (instrumentId === "new") {
         await navigate({
-          to: "/pi-patch/$piPatchId",
-          params: { piPatchId: patch.id },
+          to: "/instrument/$instrumentId",
+          params: { instrumentId: instrument.id },
         });
       }
     } catch (error) {
@@ -175,15 +179,15 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
   };
 
   const handleDelete = async () => {
-    if (piPatchId === "new") return;
-    if (!confirm("Delete this Pi patch?")) return;
+    if (instrumentId === "new") return;
+    if (!confirm("Delete this instrument?")) return;
 
     try {
-      const patch = await PiPatch.find(piPatchId);
-      await patch.delete();
+      const instrument = await InstrumentModel.find(instrumentId);
+      await instrument.delete();
       await navigate({
-        to: "/pi-patch/$piPatchId",
-        params: { piPatchId: "new" },
+        to: "/instrument/$instrumentId",
+        params: { instrumentId: "new" },
       });
     } catch (error) {
       setSaveState("error");
@@ -202,7 +206,7 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
   if (!document || !track || !pageBlocks) {
     return (
       <Surface tone="canvas" className="min-h-screen p-8">
-        <Text tone="muted">Loading Pi patcher…</Text>
+        <Text tone="muted">Loading instrument…</Text>
       </Surface>
     );
   }
@@ -217,10 +221,10 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
         <Stack direction="row" align="center" justify="between" gap={4}>
           <Stack gap={1}>
             <Text asChild weight="semibold" className="text-3xl">
-              <h1>Pi Patcher</h1>
+              <h1>Instrument</h1>
             </Text>
             <Text tone="muted">
-              Prototype authoring surface for the Pi instrument document
+              Prototype authoring surface for the instrument document
             </Text>
           </Stack>
 
@@ -240,7 +244,7 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
               <Save className="h-4 w-4 mr-2" />
               Save
             </Button>
-            {piPatchId !== "new" && (
+            {instrumentId !== "new" && (
               <Button
                 variant="outlined"
                 color="error"
@@ -375,7 +379,7 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
                           !next.tracks[activeTrack]!.stepSequencer
                         ) {
                           next.tracks[activeTrack]!.stepSequencer =
-                            createDefaultPiPatcherDocument().tracks[0]!.stepSequencer;
+                            createDefaultInstrumentDocument().tracks[0]!.stepSequencer;
                         }
                         return next;
                       });
@@ -699,7 +703,7 @@ function resolveTrackBinding(
   bindings:
     | Record<
         string,
-        ReturnType<typeof compilePiPatcherDocument>["bindings"][string]
+        ReturnType<typeof compileInstrumentDocument>["bindings"][string]
       >
     | undefined,
   trackIndex: number,

@@ -10,8 +10,8 @@ import type {
   EffectType,
   GlobalBlock,
   PageBlockId,
-  PiControlValue,
-  PiPatcherDocument,
+  InstrumentControlValue,
+  InstrumentDocument,
   SlotConfig,
   SourceProfileId,
   StepConfig,
@@ -23,7 +23,7 @@ import type {
 import {
   PI_HARDWARE_PROFILE_ID,
   PI_PAGE_SLOT_COUNT,
-  PI_PATCHER_VERSION,
+  INSTRUMENT_VERSION,
   PI_STEP_COUNT,
   PI_STEP_NOTE_COUNT,
   PI_STEP_PAGE_COUNT,
@@ -315,7 +315,12 @@ const EFFECT_SLOT_TARGETS: Record<
 
 const EFFECT_SLOT_DEFAULTS: Record<
   EffectType,
-  [PiControlValue, PiControlValue, PiControlValue, PiControlValue]
+  [
+    InstrumentControlValue,
+    InstrumentControlValue,
+    InstrumentControlValue,
+    InstrumentControlValue,
+  ]
 > = {
   delay: [250, false, 0.3, 0.3],
   reverb: [ReverbType.room, 1.5, 0, 0.25],
@@ -578,10 +583,10 @@ export const createDefaultGlobalBlock = (): GlobalBlock => ({
   ),
 });
 
-export const createDefaultPiPatcherDocument = (
+export const createDefaultInstrumentDocument = (
   name = "Untitled",
-): PiPatcherDocument => ({
-  version: PI_PATCHER_VERSION,
+): InstrumentDocument => ({
+  version: INSTRUMENT_VERSION,
   name,
   templateId: PI_TEMPLATE_ID,
   hardwareProfileId: PI_HARDWARE_PROFILE_ID,

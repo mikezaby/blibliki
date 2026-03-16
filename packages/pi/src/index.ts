@@ -1,6 +1,11 @@
 import { Context, Engine } from "@blibliki/engine";
-import { Device, initializeFirebase, Patch, PiPatch } from "@blibliki/models";
-import { compilePiPatcherDocument } from "@blibliki/pi-patcher";
+import { compileInstrumentDocument } from "@blibliki/instrument";
+import {
+  Device,
+  initializeFirebase,
+  Patch,
+  Instrument,
+} from "@blibliki/models";
 import {
   fetchFirebaseConfig,
   getDefaultGridUrl,
@@ -133,13 +138,13 @@ export async function main(options?: { gridUrl?: string }): Promise<void> {
   }
 
   if (!device.patchId) {
-    if (!device.piPatchId) {
-      throw Error("Device: patch not configured");
+    if (!device.instrumentId) {
+      throw Error("Device: patch or instrument not configured");
     }
   }
 
-  const engine = device.piPatchId
-    ? await bootPiPatch(device.piPatchId)
+  const engine = device.instrumentId
+    ? await bootInstrument(device.instrumentId)
     : await bootLegacyPatch(device.patchId!);
   await engine.start();
 }
@@ -149,9 +154,9 @@ async function bootLegacyPatch(patchId: string) {
   return Engine.load(patch.engineSerialize());
 }
 
-async function bootPiPatch(piPatchId: string) {
-  const piPatch = await PiPatch.find(piPatchId);
-  const compiled = compilePiPatcherDocument(piPatch.document);
+async function bootInstrument(instrumentId: string) {
+  const instrument = await Instrument.find(instrumentId);
+  const compiled = compileInstrumentDocument(instrument.document);
 
   const engine = new Engine(new Context());
   const session = new PiSession(engine, compiled);

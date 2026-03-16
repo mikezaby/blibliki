@@ -2,9 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Build the first end-to-end Blibliki Pi prototype loop: author a constrained Pi patch in Grid, compile it into an engine patch, assign it to a device, boot it in `packages/pi`, drive it from Launch Control XL3, and render a real display state stream for the LCD process.
+**Goal:** Build the first end-to-end Blibliki Pi prototype loop: author a constrained Instrument in Grid, compile it into an engine patch, assign it to a device, boot it in `packages/pi`, drive it from Launch Control XL3, and render a real display state stream for the LCD process.
 
-**Architecture:** The Pi patcher document is the source of truth. A new shared `@blibliki/pi-patcher` package owns the document schema, defaults, semantic slot bindings, first template, first hardware profile, and compiler. Grid edits and saves that document, the Pi runtime recompiles it locally at boot, and the controller/display layers consume the compiler’s semantic binding output rather than inferring behavior from a free graph.
+**Architecture:** The instrument document is the source of truth. A new shared `@blibliki/instrument` package owns the document schema, defaults, semantic slot bindings, first template, first hardware profile, and compiler. Grid edits and saves that document, the Pi runtime recompiles it locally at boot, and the controller/display layers consume the compiler’s semantic binding output rather than inferring behavior from a free graph.
 
 **Tech Stack:** TypeScript, pnpm workspaces, `@blibliki/engine`, `@blibliki/models`, React + TanStack Router in `apps/grid`, Node runtime in `packages/pi`, child-process display bridge, Vitest.
 
@@ -12,10 +12,10 @@
 
 This plan assumes you are starting from the current uncommitted prototype work already present in the repository. The following areas have partial code and should be treated as a starting point, not as completed implementation:
 
-- New package scaffold: `packages/pi-patcher/`
-- New model: `packages/models/src/PiPatch.ts`
+- New package scaffold: `packages/instrument/`
+- New model: `packages/models/src/Instrument.ts`
 - Device persistence change: `packages/models/src/Device.ts`
-- Grid authoring route and UI: `apps/grid/src/routes/pi-patch.$piPatchId.tsx`, `apps/grid/src/components/PiPatcher/`
+- Grid authoring route and UI: `apps/grid/src/routes/instrument.$instrumentId.tsx`, `apps/grid/src/components/Instrument/`
 - Pi runtime/session scaffolding: `packages/pi/src/runtime/`
 - Pi boot-path changes: `packages/pi/src/index.ts`
 - MIDI channel getters: `packages/engine/src/core/midi/Message.ts`, `packages/engine/src/core/midi/MidiEvent.ts`
@@ -34,29 +34,29 @@ The current worktree is intentionally incomplete and does **not** compile yet. T
 
 Implement in this order:
 
-1. Stabilize `@blibliki/pi-patcher`
+1. Stabilize `@blibliki/instrument`
 2. Repair `@blibliki/models`
 3. Repair Grid authoring integration
 4. Repair Pi runtime/controller/display integration
 5. Run full verification
 
-Do not work ahead of the dependency chain. If `packages/pi-patcher` is broken, do not debug Grid or Pi runtime first.
+Do not work ahead of the dependency chain. If `packages/instrument` is broken, do not debug Grid or Pi runtime first.
 
-## Task 1: Stabilize `@blibliki/pi-patcher`
+## Task 1: Stabilize `@blibliki/instrument`
 
 **Files:**
-- Review: `packages/pi-patcher/src/types.ts`
-- Review: `packages/pi-patcher/src/defaults.ts`
-- Review: `packages/pi-patcher/src/compiler.ts`
-- Review: `packages/pi-patcher/src/index.ts`
-- Review: `packages/pi-patcher/test/compiler.test.ts`
+- Review: `packages/instrument/src/types.ts`
+- Review: `packages/instrument/src/defaults.ts`
+- Review: `packages/instrument/src/compiler.ts`
+- Review: `packages/instrument/src/index.ts`
+- Review: `packages/instrument/test/compiler.test.ts`
 - Reference: `packages/engine/src/index.ts`
 - Reference: `packages/engine/src/modules/index.ts`
 - Reference: `packages/transport/src/index.ts`
 
 **Step 1: Write or update failing shared-package tests**
 
-Use `packages/pi-patcher/test/compiler.test.ts` to cover exactly these prototype guarantees:
+Use `packages/instrument/test/compiler.test.ts` to cover exactly these prototype guarantees:
 
 - default document validates
 - document has `8` tracks and `8` global slots
@@ -71,8 +71,8 @@ Add one test per guarantee. Keep the test names explicit.
 Run:
 
 ```bash
-pnpm -C packages/pi-patcher test
-pnpm -C packages/pi-patcher tsc
+pnpm -C packages/instrument test
+pnpm -C packages/instrument tsc
 ```
 
 Expected:
@@ -99,7 +99,7 @@ Prefer fixing the shared package imports first. Only widen engine exports if the
 
 Ensure these shapes are coherent:
 
-- `PiPatcherDocument`
+- `InstrumentDocument`
 - `TrackConfig`
 - `SlotConfig`
 - `StepSequencerConfig`
@@ -156,9 +156,9 @@ The partial compiler currently has unused imports and a `never`-ish narrowing pr
 Run:
 
 ```bash
-pnpm -C packages/pi-patcher test
-pnpm -C packages/pi-patcher tsc
-pnpm -C packages/pi-patcher lint
+pnpm -C packages/instrument test
+pnpm -C packages/instrument tsc
+pnpm -C packages/instrument lint
 ```
 
 Expected:
@@ -172,25 +172,25 @@ Expected:
 Run:
 
 ```bash
-pnpm -C packages/pi-patcher build
+pnpm -C packages/instrument build
 ```
 
 Expected:
 
-- `packages/pi-patcher/dist/` exists
+- `packages/instrument/dist/` exists
 - `dist/index.d.ts` exists
 
 **Step 10: Commit**
 
 ```bash
-git add packages/pi-patcher
-git commit -m "feat: add pi patcher shared package foundation"
+git add packages/instrument
+git commit -m "feat: add instrument shared package foundation"
 ```
 
 ## Task 2: Repair `@blibliki/models`
 
 **Files:**
-- Modify: `packages/models/src/PiPatch.ts`
+- Modify: `packages/models/src/Instrument.ts`
 - Modify: `packages/models/src/Device.ts`
 - Modify: `packages/models/src/index.ts`
 - Modify: `packages/models/package.json`
@@ -203,10 +203,10 @@ If `packages/models` already has a test pattern, follow it. If not, add a narrow
 
 Minimum behaviors to verify:
 
-- `PiPatch` model can be constructed
-- `Device` accepts `piPatchId`
+- `Instrument` model can be constructed
+- `Device` accepts `instrumentId`
 - legacy `patchId` still exists
-- `packages/models` public exports expose `PiPatch`
+- `packages/models` public exports expose `Instrument`
 
 **Step 2: Run the model typecheck**
 
@@ -218,16 +218,16 @@ pnpm -C packages/models tsc
 
 Expected:
 
-- failures now come from actual model code, not missing `@blibliki/pi-patcher` declarations
+- failures now come from actual model code, not missing `@blibliki/instrument` declarations
 
 **Step 3: Fix package/model integration**
 
 Make sure:
 
-- `packages/models` resolves `@blibliki/pi-patcher` cleanly
-- `PiPatch` follows the same persistence conventions as `Patch`
+- `packages/models` resolves `@blibliki/instrument` cleanly
+- `Instrument` follows the same persistence conventions as `Patch`
 - the public exports in `packages/models/src/index.ts` are correct
-- `Device` keeps backward compatibility by preferring `piPatchId` without removing `patchId`
+- `Device` keeps backward compatibility by preferring `instrumentId` without removing `patchId`
 
 **Step 4: Build and verify**
 
@@ -249,20 +249,20 @@ Expected:
 
 ```bash
 git add packages/models
-git commit -m "feat: add pi patch persistence models"
+git commit -m "feat: add instrument persistence models"
 ```
 
-## Task 3: Repair Grid Pi Patcher Integration
+## Task 3: Repair Grid Instrument Integration
 
 **Files:**
-- Modify: `apps/grid/src/routes/pi-patch.$piPatchId.tsx`
-- Modify: `apps/grid/src/components/PiPatcher/index.tsx`
+- Modify: `apps/grid/src/routes/instrument.$instrumentId.tsx`
+- Modify: `apps/grid/src/components/Instrument/index.tsx`
 - Modify: `apps/grid/src/components/layout/Header/index.tsx`
 - Modify: `apps/grid/src/components/Devices/DeviceModal.tsx`
 - Modify: `apps/grid/src/components/Devices/index.tsx`
 - Modify: `apps/grid/src/hooks/index.ts`
 - Modify: `apps/grid/src/routeTree.gen.ts` if route generation requires it
-- Test: `apps/grid/test/patch/piPatchModelBuild.test.ts`
+- Test: `apps/grid/test/patch/instrumentModelBuild.test.ts`
 - Reference: `apps/grid/src/routes/patch.$patchId.tsx`
 - Reference: `apps/grid/src/hooks/index.ts`
 
@@ -270,8 +270,8 @@ git commit -m "feat: add pi patch persistence models"
 
 At minimum cover:
 
-- creating a default Pi patch document
-- saving/loading a Pi patch model
+- creating a default Instrument document
+- saving/loading an Instrument model
 - editing focused track/page slot values
 - editing sequencer page/step data
 - invalid document does not compile or save
@@ -283,7 +283,7 @@ Keep tests narrow and model-driven where possible. Avoid broad UI snapshot tests
 Run:
 
 ```bash
-pnpm -C apps/grid test test/patch/piPatchModelBuild.test.ts
+pnpm -C apps/grid test test/patch/instrumentModelBuild.test.ts
 pnpm -C apps/grid tsc
 ```
 
@@ -293,7 +293,7 @@ Expected:
 
 **Step 3: Fix package typing first**
 
-If Grid reports missing declarations for `@blibliki/models` or `@blibliki/pi-patcher`, do not add fake `declare module` shims. Fix the upstream package build/output chain instead.
+If Grid reports missing declarations for `@blibliki/models` or `@blibliki/instrument`, do not add fake `declare module` shims. Fix the upstream package build/output chain instead.
 
 If needed, rebuild packages before rerunning Grid:
 
@@ -301,7 +301,7 @@ If needed, rebuild packages before rerunning Grid:
 pnpm build:packages
 ```
 
-**Step 4: Fix `PiPatcher` component typing and state flow**
+**Step 4: Fix `InstrumentEditor` component typing and state flow**
 
 Repair:
 
@@ -330,20 +330,20 @@ Do not add graph editing or deep modulation UI.
 
 Ensure `DeviceModal` and the device list can:
 
-- assign a `piPatchId`
+- assign a `instrumentId`
 - preserve legacy `patchId`
-- show Pi patch assignment clearly
+- show Instrument assignment clearly
 
 **Step 6: Verify route integration**
 
-Make sure `/pi-patch/$piPatchId` is reachable and linked from the header.
+Make sure `/instrument/$instrumentId` is reachable and linked from the header.
 
 **Step 7: Re-run targeted checks**
 
 Run:
 
 ```bash
-pnpm -C apps/grid test test/patch/piPatchModelBuild.test.ts
+pnpm -C apps/grid test test/patch/instrumentModelBuild.test.ts
 pnpm -C apps/grid tsc
 pnpm -C apps/grid lint
 ```
@@ -358,7 +358,7 @@ Expected:
 
 ```bash
 git add apps/grid
-git commit -m "feat: add grid pi patcher authoring flow"
+git commit -m "feat: add grid instrument authoring flow"
 ```
 
 ## Task 4: Repair Pi Runtime Integration
@@ -382,7 +382,7 @@ git commit -m "feat: add grid pi patcher authoring flow"
 
 If `packages/pi` has no test harness yet, add a narrow smoke test or a typed runtime fixture around:
 
-- `piPatchId` precedence over `patchId`
+- `instrumentId` precedence over `patchId`
 - display snapshot generation
 - focused track/page state
 - seq-edit mode toggle
@@ -452,9 +452,9 @@ Do not add extra button languages beyond what the design doc already settled.
 
 In `packages/pi/src/index.ts`:
 
-- prefer `device.piPatchId`
+- prefer `device.instrumentId`
 - fall back to legacy `patchId`
-- compile the Pi patch document locally
+- compile the Instrument document locally
 - initialize engine
 - add compiled modules/routes
 - start session/controller/display
@@ -550,11 +550,11 @@ If any command fails:
 
 Validate this path manually:
 
-1. Create a Pi patch in Grid
+1. Create a Instrument in Grid
 2. Save it
 3. Assign it to a device
 4. Start `packages/pi`
-5. Confirm it prefers `piPatchId`
+5. Confirm it prefers `instrumentId`
 6. Confirm the engine loads compiled modules/routes
 7. Confirm Launch Control XL3 input changes session state
 8. Confirm display snapshots update
@@ -572,14 +572,14 @@ git commit -m "feat: complete blibliki pi prototype vertical slice"
 
 The current prototype branch already contains useful scaffolding, but these are the known likely trouble spots to inspect first:
 
-- `packages/pi-patcher/src/compiler.ts`
+- `packages/instrument/src/compiler.ts`
   - wrong or mixed semantic binding keys
   - imports that are not actually exported by `@blibliki/engine`
   - likely prop-name drift against real engine module schemas
-- `packages/pi-patcher/src/defaults.ts`
+- `packages/instrument/src/defaults.ts`
   - `Division` vs `Resolution` mismatch
   - effect slot targets probably need disambiguation by FX slot index or position
-- `apps/grid/src/components/PiPatcher/index.tsx`
+- `apps/grid/src/components/Instrument/index.tsx`
   - many implicit `any` callbacks
   - binding lookup logic depends on whichever target contract you finalize
 - `packages/pi/src/runtime/PiSession.ts`

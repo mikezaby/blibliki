@@ -17,8 +17,8 @@ import { saveDevice } from "@/devicesSlice";
 import {
   useAppDispatch,
   useAppSelector,
+  useInstruments,
   usePatches,
-  usePiPatches,
 } from "@/hooks";
 
 type DeviceModalProps = {
@@ -36,13 +36,13 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
   const dispatch = useAppDispatch();
   const { user } = useUser();
   const patches = usePatches();
-  const piPatches = usePiPatches();
+  const instruments = useInstruments();
 
   const [formData, setFormData] = useState({
     token: device?.token ?? "",
     name: device?.name ?? "",
     patchId: device?.patchId ?? "",
-    piPatchId: device?.piPatchId ?? "",
+    instrumentId: device?.instrumentId ?? "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -72,7 +72,7 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
           token: formData.token,
           name: formData.name,
           patchId: formData.patchId || null,
-          piPatchId: formData.piPatchId || null,
+          instrumentId: formData.instrumentId || null,
           userId: user.id,
         }),
       );
@@ -165,17 +165,17 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
         </Stack>
 
         <Stack gap={2}>
-          <Label htmlFor="piPatchId">Assigned Pi Patch</Label>
+          <Label htmlFor="instrumentId">Assigned Instrument</Label>
           <OptionSelect
-            label="Select Pi patch"
-            value={formData.piPatchId}
-            options={piPatches}
+            label="Select instrument"
+            value={formData.instrumentId}
+            options={instruments}
             onChange={(value: string) => {
-              setFormData({ ...formData, piPatchId: value });
+              setFormData({ ...formData, instrumentId: value });
             }}
           />
           <Text tone="muted" size="xs">
-            Pi patches are compiled locally on boot and take precedence over
+            Instruments are compiled locally on boot and take precedence over
             legacy patch assignment
           </Text>
         </Stack>
