@@ -448,6 +448,12 @@ Prototype controller rules to implement:
 
 Do not add extra button languages beyond what the design doc already settled.
 
+Important prototype constraint:
+
+- keep all `8` final track gains present while the fader layer is fixed one-to-one
+- defer the optimization where `sourceProfileId: "unassigned"` makes a track truly compiler-disabled and skips source/fx/amp/filter initialization
+- revisit that optimization only after the mixer/fader contract supports sparse or disabled tracks explicitly
+
 **Step 6: Repair engine boot path**
 
 In `packages/pi/src/index.ts`:
