@@ -31,6 +31,8 @@ export {
   LaunchControlXL3,
   MidiPortState,
   Note,
+  MidiEvent,
+  MidiEventType,
 } from "./core";
 
 export { TransportState } from "@blibliki/transport";

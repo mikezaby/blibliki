@@ -1,8 +1,13 @@
-import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import {
+  spawn,
+  type ChildProcessByStdio,
+} from "node:child_process";
+import type { Writable } from "node:stream";
+import { fileURLToPath } from "node:url";
 import type { PiDisplayState } from "./PiDisplayState.js";
 
 export class DisplayBridge {
-  private child: ChildProcessWithoutNullStreams | null = null;
+  private child: ChildProcessByStdio<Writable, null, null> | null = null;
 
   start() {
     if (this.child) return;
@@ -15,7 +20,9 @@ export class DisplayBridge {
       return;
     }
 
-    const childScript = new URL("../displayChild.js", import.meta.url);
+    const childScript = fileURLToPath(
+      new URL("../displayChild.js", import.meta.url),
+    );
     this.child = spawn(process.execPath, [childScript], {
       stdio: ["pipe", "inherit", "inherit"],
     });

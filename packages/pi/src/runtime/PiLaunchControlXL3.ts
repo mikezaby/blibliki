@@ -1,4 +1,9 @@
-import { Engine, type MatchedControllerPorts, type MidiEvent } from "@blibliki/engine";
+import {
+  Engine,
+  TransportState,
+  type MatchedControllerPorts,
+  type MidiEvent,
+} from "@blibliki/engine";
 import { getPiSessionByEngineId } from "./PiSession.js";
 
 const PLAY = 116;
@@ -76,7 +81,7 @@ export class PiLaunchControlXL3 {
 
   private refreshTransport() {
     const engine = Engine.getById(this.engineId);
-    const isPlaying = engine.state === "playing";
+    const isPlaying = engine.state === TransportState.playing;
     this.output.directSend([176, PLAY, isPlaying ? PLAY_PLAYING_COLOR : PLAY_STOPPED_COLOR]);
     this.output.directSend([176, RECORD, isPlaying ? RECORD_ACTIVE_COLOR : RECORD_IDLE_COLOR]);
   }

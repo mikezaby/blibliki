@@ -1,19 +1,23 @@
 import {
   Engine,
   MidiEventType,
+  PlaybackMode,
+  Resolution,
+  TransportState,
   controllerMatchers,
   type ControllerMatcherDefinition,
+  type IPage,
+  type IStep,
   type MidiEvent,
   type MidiOutputDevice,
-  type ModuleType,
+  ModuleType,
 } from "@blibliki/engine";
 import {
   TRACK_PAGE_BLOCKS,
-  compilePiPatcherDocument,
   type PiControlValue,
   type PiPatcherCompileResult,
-  type ResolvedBinding,
   type SessionControlSpec,
+  type StepPageConfig,
   type SlotConfig,
 } from "@blibliki/pi-patcher";
 import { DisplayBridge } from "./DisplayBridge.js";
@@ -138,7 +142,7 @@ export class PiSession {
   }
 
   toggleTransport() {
-    if (this.engine.state === "playing") {
+    if (this.engine.state === TransportState.playing) {
       this.engine.stop();
     } else {
       void this.engine.start();
@@ -243,7 +247,7 @@ export class PiSession {
         ? slot.target
         : slot.target.replace(/^track\./, `track.${trackIndex}.`);
     const binding = this.compiled.bindings[bindingKey];
-    if (!binding || binding.kind !== "session") return;
+    if (binding?.kind !== "session") return;
 
     this.state.sessionValues[binding.sessionKey] = slot.initialValue ?? null;
   }
@@ -321,17 +325,17 @@ export class PiSession {
           step.probability = Math.round(midiToRange(value, 0, 100));
           break;
         case 2:
-          step.duration = midiToDuration(value);
+          step.duration = midiToStepDuration(value);
           break;
         case 3:
           step.microtimeOffset = Math.round(midiToRange(value, -100, 100));
           break;
         case 4:
-          track.stepSequencer.resolution = midiToDuration(value);
+          track.stepSequencer.resolution = midiToResolution(value);
           break;
         case 5:
           track.stepSequencer.playbackMode =
-            value >= 64 ? "oneShot" : "loop";
+            value >= 64 ? PlaybackMode.oneShot : PlaybackMode.loop;
           break;
         case 7:
           track.stepSequencer.loopLength = Math.max(1, Math.round(midiToRange(value, 1, 4)));
@@ -367,7 +371,7 @@ export class PiSession {
 
     const stepSequencer = this.compiled.document.tracks[trackIndex]!.stepSequencer!;
     module.props = {
-      patterns: [{ name: "A", pages: stepSequencer.pages }],
+      patterns: [{ name: "A", pages: toEnginePages(stepSequencer.pages) }],
       resolution: stepSequencer.resolution,
       playbackMode: stepSequencer.playbackMode,
     };
@@ -438,7 +442,8 @@ export class PiSession {
           ? `Track ${this.state.activeTrack + 1}: ${track.name}`
           : `Track ${this.state.activeTrack + 1}`,
         pageName: ["Src/Amp", "Flt/Mod", "FX A/B"][this.state.activePage]!,
-        transport: this.engine.state === "playing" ? "PLAY" : "STOP",
+        transport:
+          this.engine.state === TransportState.playing ? "PLAY" : "STOP",
       },
       globals: document.globalBlock.slots.map((slot) => this.toCell(slot)),
       upper: {
@@ -475,14 +480,14 @@ export class PiSession {
 
   private formatSlotValue(slot: SlotConfig, trackIndex?: number): string {
     if (!slot.active) return "---";
-    if (!slot.target) return `${slot.initialValue ?? ""}`;
+    if (!slot.target) return formatValue(slot.initialValue);
 
     const bindingKey =
       trackIndex === undefined
         ? slot.target
         : slot.target.replace(/^track\./, `track.${trackIndex}.`);
     const binding = this.compiled.bindings[bindingKey];
-    if (!binding) return `${slot.initialValue ?? ""}`;
+    if (!binding) return formatValue(slot.initialValue);
 
     switch (binding.kind) {
       case "transport":
@@ -549,12 +554,14 @@ const controlValueFromMidi = (control: SessionControlSpec, midiValue: number): P
       return control.options[index]!;
     }
     case "number": {
+      const min = control.min ?? 0;
+      const max = control.max ?? 1;
       const normalized = midiValue / 127;
       const curved = control.exp ? Math.pow(normalized, control.exp) : normalized;
-      const rawValue = control.min + curved * (control.max - control.min);
+      const rawValue = min + curved * (max - min);
       if (control.step) {
-        const steps = Math.round((rawValue - control.min) / control.step);
-        return control.min + steps * control.step;
+        const steps = Math.round((rawValue - min) / control.step);
+        return min + steps * control.step;
       }
       return rawValue;
     }
@@ -598,7 +605,39 @@ const midiToPitch = (value: number) => {
   return `${name}${octave}`;
 };
 
-const midiToDuration = (value: number) => {
-  const values = ["1/16", "1/8", "1/4", "1/2", "1"] as const;
+const midiToStepDuration = (value: number): IStep["duration"] => {
+  const values: IStep["duration"][] = ["1/16", "1/8", "1/4", "1/2", "1"];
   return values[Math.min(values.length - 1, Math.floor((value / 127) * values.length))]!;
+};
+
+const midiToResolution = (value: number): Resolution => {
+  const values = [
+    Resolution.sixteenth,
+    Resolution.eighth,
+    Resolution.quarter,
+  ];
+  return values[Math.min(values.length - 1, Math.floor((value / 127) * values.length))]!;
+};
+
+const toEnginePages = (pages: StepPageConfig[]): IPage[] => {
+  return pages.map((page: StepPageConfig) => ({
+    name: page.name,
+    steps: page.steps.map((step): IStep => ({
+      active: step.active,
+      probability: step.probability,
+      microtimeOffset: step.microtimeOffset,
+      duration: step.duration,
+      ccMessages: [],
+      notes: step.notes.flatMap((note) =>
+        note.pitch
+          ? [
+              {
+                note: note.pitch,
+                velocity: note.velocity,
+              },
+            ]
+          : [],
+      ),
+    })),
+  }));
 };
