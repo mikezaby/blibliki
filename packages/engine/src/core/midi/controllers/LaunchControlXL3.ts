@@ -110,12 +110,12 @@ export class LaunchControlXL3 extends BaseController {
     if (event.cc === undefined || event.ccValue === undefined) return;
 
     switch (event.cc as Control) {
-      case Control.Play:
-        this.start();
+      case Control.Play: {
+        if (event.ccValue === 127) {
+          this.toggle();
+        }
         break;
-      case Control.Record:
-        this.stop();
-        break;
+      }
       default:
         this.setColor(
           event.cc,
@@ -144,14 +144,14 @@ export class LaunchControlXL3 extends BaseController {
   private updateTransportColors() {
     if (this.disposed) return;
 
-    if (this.isPlaying()) {
-      this.setColor(Control.Play, PLAY_PLAYING_COLOR);
-      this.setColor(Control.Record, RECORD_PLAYING_COLOR);
-      return;
-    }
-
-    this.setColor(Control.Play, PLAY_STOPPED_COLOR);
-    this.setColor(Control.Record, RECORD_STOPPED_COLOR);
+    this.setColor(
+      Control.Play,
+      this.isPlaying ? PLAY_PLAYING_COLOR : PLAY_STOPPED_COLOR,
+    );
+    this.setColor(
+      Control.Record,
+      this.isPlaying ? RECORD_PLAYING_COLOR : RECORD_STOPPED_COLOR,
+    );
   }
 
   private setColor(control: number, color: number) {

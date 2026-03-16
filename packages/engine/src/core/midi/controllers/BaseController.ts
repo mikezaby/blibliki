@@ -43,7 +43,15 @@ export abstract class BaseController {
     this.engine.stop();
   }
 
-  protected isPlaying() {
+  toggle() {
+    if (this.isPlaying) {
+      this.stop();
+    } else {
+      this.start();
+    }
+  }
+
+  protected get isPlaying() {
     return this.transport.state === TransportState.playing;
   }
 
