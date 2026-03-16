@@ -34,6 +34,7 @@ type PiPatcherProps = {
 };
 
 type SaveState = "idle" | "loading" | "error";
+const INACTIVE_EFFECT_OPTION = "__inactive__";
 
 const SOURCE_PROFILE_OPTIONS = [
   { value: "unassigned", name: "Unassigned" },
@@ -44,7 +45,7 @@ const SOURCE_PROFILE_OPTIONS = [
 ] as const;
 
 const EFFECT_OPTIONS = [
-  { value: "", name: "Inactive" },
+  { value: INACTIVE_EFFECT_OPTION, name: "Inactive" },
   { value: "reverb", name: "Reverb" },
   { value: "delay", name: "Delay" },
   { value: "chorus", name: "Chorus" },
@@ -423,7 +424,7 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
                   <Stack key={effectSlot.slotId} gap={2}>
                     <Label>FX Slot {effectIndex + 1}</Label>
                     <OptionSelect
-                      value={effectSlot.effectType ?? ""}
+                      value={effectSlot.effectType ?? INACTIVE_EFFECT_OPTION}
                       options={EFFECT_OPTIONS}
                       onChange={(value) => {
                         updateDocument((current) => {
@@ -431,7 +432,7 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
                           next.tracks[activeTrack] = withTrackEffectType(
                             next.tracks[activeTrack]!,
                             effectIndex,
-                            value === "" ? null : value,
+                            value === INACTIVE_EFFECT_OPTION ? null : value,
                           );
                           return next;
                         });
