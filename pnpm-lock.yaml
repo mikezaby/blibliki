@@ -90,6 +90,9 @@ importers:
       '@blibliki/models':
         specifier: workspace:^
         version: link:../../packages/models
+      '@blibliki/pi-patcher':
+        specifier: workspace:^
+        version: link:../../packages/pi-patcher
       '@blibliki/ui':
         specifier: workspace:^
         version: link:../../packages/ui

@@ -18,6 +18,7 @@
   "dependencies": {
     "@blibliki/engine": "workspace:^",
     "@blibliki/models": "workspace:^",
+    "@blibliki/pi-patcher": "workspace:^",
     "@blibliki/ui": "workspace:^",
     "@blibliki/utils": "workspace:^",
     "@clerk/clerk-react": "5.60.0",

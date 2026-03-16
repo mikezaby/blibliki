@@ -773,7 +773,10 @@ function ControlInput({
       return (
         <OptionSelect
           value={(slot.initialValue as string | undefined) ?? control.options[0]}
-          options={control.options}
+          options={control.options.map((option) => ({
+            name: option.toString(),
+            value: option,
+          }))}
           onChange={(value) => {
             onChange(value);
           }}
