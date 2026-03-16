@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as InstrumentsRouteImport } from './routes/instruments'
 import { Route as DevicesRouteImport } from './routes/devices'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PatchPatchIdRouteImport } from './routes/patch.$patchId'
 import { Route as InstrumentsInstrumentIdRouteImport } from './routes/instruments.$instrumentId'
 
+const InstrumentsRoute = InstrumentsRouteImport.update({
+  id: '/instruments',
+  path: '/instruments',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DevicesRoute = DevicesRouteImport.update({
   id: '/devices',
   path: '/devices',
@@ -30,20 +36,22 @@ const PatchPatchIdRoute = PatchPatchIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const InstrumentsInstrumentIdRoute = InstrumentsInstrumentIdRouteImport.update({
-  id: '/instruments/$instrumentId',
-  path: '/instruments/$instrumentId',
-  getParentRoute: () => rootRouteImport,
+  id: '/$instrumentId',
+  path: '/$instrumentId',
+  getParentRoute: () => InstrumentsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/devices': typeof DevicesRoute
+  '/instruments': typeof InstrumentsRouteWithChildren
   '/instruments/$instrumentId': typeof InstrumentsInstrumentIdRoute
   '/patch/$patchId': typeof PatchPatchIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/devices': typeof DevicesRoute
+  '/instruments': typeof InstrumentsRouteWithChildren
   '/instruments/$instrumentId': typeof InstrumentsInstrumentIdRoute
   '/patch/$patchId': typeof PatchPatchIdRoute
 }
@@ -51,18 +59,30 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/devices': typeof DevicesRoute
+  '/instruments': typeof InstrumentsRouteWithChildren
   '/instruments/$instrumentId': typeof InstrumentsInstrumentIdRoute
   '/patch/$patchId': typeof PatchPatchIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/devices' | '/instruments/$instrumentId' | '/patch/$patchId'
+  fullPaths:
+    | '/'
+    | '/devices'
+    | '/instruments'
+    | '/instruments/$instrumentId'
+    | '/patch/$patchId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/devices' | '/instruments/$instrumentId' | '/patch/$patchId'
+  to:
+    | '/'
+    | '/devices'
+    | '/instruments'
+    | '/instruments/$instrumentId'
+    | '/patch/$patchId'
   id:
     | '__root__'
     | '/'
     | '/devices'
+    | '/instruments'
     | '/instruments/$instrumentId'
     | '/patch/$patchId'
   fileRoutesById: FileRoutesById
@@ -70,12 +90,19 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DevicesRoute: typeof DevicesRoute
-  InstrumentsInstrumentIdRoute: typeof InstrumentsInstrumentIdRoute
+  InstrumentsRoute: typeof InstrumentsRouteWithChildren
   PatchPatchIdRoute: typeof PatchPatchIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/instruments': {
+      id: '/instruments'
+      path: '/instruments'
+      fullPath: '/instruments'
+      preLoaderRoute: typeof InstrumentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/devices': {
       id: '/devices'
       path: '/devices'
@@ -99,18 +126,30 @@ declare module '@tanstack/react-router' {
     }
     '/instruments/$instrumentId': {
       id: '/instruments/$instrumentId'
-      path: '/instruments/$instrumentId'
+      path: '/$instrumentId'
       fullPath: '/instruments/$instrumentId'
       preLoaderRoute: typeof InstrumentsInstrumentIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof InstrumentsRoute
     }
   }
 }
 
+interface InstrumentsRouteChildren {
+  InstrumentsInstrumentIdRoute: typeof InstrumentsInstrumentIdRoute
+}
+
+const InstrumentsRouteChildren: InstrumentsRouteChildren = {
+  InstrumentsInstrumentIdRoute: InstrumentsInstrumentIdRoute,
+}
+
+const InstrumentsRouteWithChildren = InstrumentsRoute._addFileChildren(
+  InstrumentsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DevicesRoute: DevicesRoute,
-  InstrumentsInstrumentIdRoute: InstrumentsInstrumentIdRoute,
+  InstrumentsRoute: InstrumentsRouteWithChildren,
   PatchPatchIdRoute: PatchPatchIdRoute,
 }
 export const routeTree = rootRouteImport

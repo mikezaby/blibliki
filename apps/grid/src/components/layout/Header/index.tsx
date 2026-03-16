@@ -73,11 +73,8 @@ export default function Header() {
             </Link>
           </Button>
           <Button asChild variant="text" color="neutral" size="sm">
-            <Link
-              to="/instruments/$instrumentId"
-              params={{ instrumentId: "new" }}
-            >
-              <span>Instrument</span>
+            <Link to="/instruments">
+              <span>Instruments</span>
             </Link>
           </Button>
         </SignedIn>
