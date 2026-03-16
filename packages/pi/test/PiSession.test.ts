@@ -57,3 +57,28 @@ test("ignores seq-edit encoders beyond the authored track voice count", () => {
   const notes = document.tracks[0]?.stepSequencer?.pages[0]?.steps[0]?.notes;
   assert.equal(notes?.length, 1);
 });
+
+test("does not crash when controller output attaches before note source modules are loaded", () => {
+  const document = createDefaultInstrumentDocument();
+  const compiled = compileInstrumentDocument(document);
+  const output = {
+    directSend() {},
+  };
+  const engine = {
+    id: "engine-test",
+    state: TransportState.stopped,
+    bpm: 120,
+    transport: { swingAmount: 0 },
+    midiDeviceManager: { inputDevices: new Map() },
+    onPropsUpdate() {},
+    modules: new Map(),
+    findModule(_id: string) {
+      throw new Error("The module with id track-1-note-source is not exists");
+    },
+  } as unknown as Engine;
+  const session = new PiSession(engine, compiled);
+
+  assert.doesNotThrow(() => {
+    session.attachControllerOutput(output as never);
+  });
+});

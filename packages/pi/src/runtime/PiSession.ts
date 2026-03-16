@@ -539,6 +539,9 @@ export class PiSession {
     const noteSourceModuleId =
       this.compiled.tracks[this.state.activeTrack]?.noteSourceModuleId;
     if (!noteSourceModuleId) return this.state.selectedStep + 1;
+    if (!this.engine.modules.has(noteSourceModuleId))
+      return this.state.selectedStep + 1;
+
     const module = this.engine.findModule(noteSourceModuleId);
     if (module.moduleType !== ModuleType.StepSequencer)
       return this.state.selectedStep + 1;
