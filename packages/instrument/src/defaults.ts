@@ -571,8 +571,8 @@ export const createEffectSlotConfig = (
 });
 
 export const createDefaultEffectSlots = (): EffectSlotConfig[] =>
-  ["distortion", "chorus", "delay", "reverb"].map((effectType, index) =>
-    createEffectSlotConfig(effectType, index),
+  (["distortion", "chorus", "delay", "reverb"] as EffectType[]).map(
+    (effectType, index) => createEffectSlotConfig(effectType, index),
   );
 
 export const createTrackPages = (
