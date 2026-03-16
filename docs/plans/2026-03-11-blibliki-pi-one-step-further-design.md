@@ -306,7 +306,7 @@ The document should mirror that reality instead of describing everything abstrac
 
 At the top level, the document should therefore contain:
 
-- a fixed `globals` array
+- one patch-level `globalBlock`
 - a fixed `tracks` array
 
 Tracks should remain fixed positions `1` through `8`, not dynamic records. Each track should contain the minimum information needed to generate and drive the instrument:
@@ -328,9 +328,47 @@ The page blocks should remain explicit rather than abstracted behind another pag
 
 This is clearer because the page contract is already fixed by design.
 
-The same slot concept should be reused across globals and track blocks. A slot should act as the bridge between hardware/LCD and the generated engine patch. It should represent what the player sees and controls, not duplicate the full engine module definition.
+The same slot concept should be reused across the `globalBlock` and track blocks. A slot should act as the bridge between hardware/LCD and the generated engine patch. It should represent what the player sees and controls, not duplicate the full engine module definition.
 
 Slot bindings should point to semantic targets defined by the Pi patcher template/compiler rather than raw engine module IDs. In many cases those semantic targets will map to one engine prop, and in some cases they may expand into macro behavior. The document does not need to care which. That keeps the schema stable even when one visible control maps to more than one low-level engine detail.
+
+### Block Model And Hardware Profiles
+
+The Pi patcher document should not be implicitly tied to the Launch Control XL3, even though `LaunchControlXL3 + Pi LCD` is the first target. The correct boundary is:
+
+- the Pi patcher document defines an abstract instrument
+- a `hardwareProfile` defines how a specific controller and display expose that instrument
+
+In `v1`, the instrument should be built from typed blocks rather than one generic metadata blob. The important block types are already clear from the design:
+
+- one patch-level `global` block
+- per-track `source`
+- per-track `amp`
+- per-track `filter`
+- per-track `mod`
+- per-track `fx`
+- per-track `sequencer` when needed
+
+Tracks should own their blocks directly. There is no need for a central block registry in `v1`.
+
+Blocks should define semantic slots, not physical positions. The `hardwareProfile` should decide which physical controls and LCD positions expose which block slots for a given controller/display target.
+
+Each Pi patcher document should select exactly one `hardwareProfile` by id rather than embedding a custom mapping object. This keeps authoring, validation, and compilation deterministic while still leaving room for different controller/display targets later.
+
+### Top-Level Pi Patcher Schema
+
+The top-level Pi patcher document should stay explicit and fixed in `v1`. It should not be a generic blocks array. The document should contain:
+
+- `version`
+- `name`
+- `templateId`
+- `hardwareProfileId`
+- `globalBlock`
+- `tracks`
+
+`templateId` should remain explicit even though there is only one template in `v1`. `hardwareProfileId` should also remain explicit even if `LaunchControlXL3 + Pi LCD` is the only real target at first.
+
+`tracks` should be stored as an array validated to length `8`, not a strict tuple type. This keeps the instrument’s fixed-track contract intact while avoiding awkward implementation constraints.
 
 ### First Pi Patcher Workflow
 
@@ -844,49 +882,127 @@ That keeps the constrained Pi workflow separate from the freeform Grid editor.
 
 The exact UI toolkit is not locked yet, but the architecture should assume a dedicated display process rather than rendering inside the main Node runtime. That keeps the no-desktop path realistic and leaves room for implementation in a lower-level UI stack if needed.
 
-### Conceptual Pi Patcher Data Layer
+### Display Runtime Decision
 
-The exact schema is not decided yet, but the shape should look roughly like this:
+The display runtime stack should remain a prototype-validated decision rather than a fully frozen architecture choice. The first candidate to validate should be `Rust + Slint + LinuxKMS`, because it aligns well with the no-desktop requirement and gives a modern native path for a compact graphical LCD UI.
+
+The design should not yet claim that this is the final production stack. It should instead state that the display runtime is pending prototype validation, with `Rust + Slint + LinuxKMS` as the first spike target.
+
+The recommended integration model for `v1` is conservative:
+
+- keep the existing Pi runtime in `Node/TypeScript`
+- run the LCD as a separate Rust display process
+- communicate through a small local interface
+
+If the Rust display spike works well and later reveals a strong need for tighter integration, `napi-rs` can be investigated as a secondary path. It should be considered a possible future optimization, not a required part of the first prototype architecture.
+
+### Engine Compiler Direction
+
+The engine compiler should follow the same typed-block structure as the Pi patcher document. The recommended organization for `v1` is:
+
+- block compilers
+- track compiler
+- patch compiler
+
+Each block compiler should return a small composable patch fragment rather than mutating one global builder invisibly. That fragment should stay minimal:
+
+- created modules
+- created routes
+- `audioIn?`
+- `audioOut?`
+- `midiIn?`
+- `midiOut?`
+- resolved bindings
+
+The track compiler should then assemble those fragments into one predictable signal skeleton. In `v1`, every track should compile to the same overall structure:
+
+- `note source`
+- `source`
+- `amp`
+- `filter`
+- `fx chain`
+- `final track gain`
+
+The first compiler step of every track should be the note-source block, which answers whether that track is driven by `StepSequencer` or `External MIDI`.
+
+### Global Block Compilation
+
+The `global` block should compile into real shared engine structures rather than staying a thin metadata layer. In `v1`, the global compiler should create at least:
+
+- tempo binding
+- swing binding
+- one patch-level master filter block
+- one patch-level global reverb module
+- one patch-level global delay module
+- master output level control
+
+These patch-level structures should remain separate from each track’s own filter and FX blocks. `REV` and `DLY` should control the shared global reverb and delay modules directly. `MCF` and `MRQ` should control one patch-level master filter. `SWG` should compile as transport-level behavior.
+
+### Final Patch Skeleton
+
+The generated engine patch should have one stable overall structure in `v1`.
+
+Each track should compile independently through its own fixed track skeleton and end at a dedicated final track gain module. Those final track gains should then mix into one shared patch-level master chain.
+
+The first-pass master-chain order should be:
+
+- `track mix`
+- `master filter`
+- `global reverb and delay`
+- `master volume`
+- `output`
+
+In `v1`, the compiler should generate this full global structure as part of the fixed template rather than treating it as optional.
+
+### Binding Resolution Boundary
+
+The binding layer between Pi patcher, hardware mapping, and the generated engine patch should stay semantic. The authored document should not directly depend on generated module ids or raw engine prop names, and the hardware profile should not need to know those details either.
+
+Both sides should talk in terms of semantic slot targets such as:
+
+- `track.filter.cutoff`
+- `track.amp.attack`
+- `global.masterFilter.resonance`
+
+The compiler then resolves those semantic targets into concrete generated module bindings. For many slots, the resolution will be simple: one semantic target maps to one module id and one prop name. In future macro cases, one semantic target may map to several low-level engine props. The important point is that neither the Pi patcher document nor the hardware profile needs to change when that internal engine mapping evolves.
+
+### Current Pi Patcher Schema Shape
+
+The document shape should now be thought of more concretely:
 
 ```ts
-type PiPatcherConfig = {
-  templateId: string;
-  globals: PiGlobalSlot[];
-  tracks: PiTrack[];
-  ui: {
-    displayMode: "dashboard";
-    visualTheme: "mono-contrast";
-  };
-};
-
-type PiGlobalSlot = {
-  slot: number;
-  label: string;
-  fixed?: boolean;
-  mapping: unknown;
-};
-
-type PiTrack = {
-  id: string;
+type PiPatcherDocument = {
+  version: string;
   name: string;
-  sourceProfileId: string | null;
-  pages: Record<string, PiTrackPage>;
+  templateId: string;
+  hardwareProfileId: string;
+  globalBlock: GlobalBlock;
+  tracks: TrackConfig[]; // validated to length 8
 };
 
-type PiTrackPage = {
-  id: string;
-  upper: PiTrackSlot[];
-  lower: PiTrackSlot[];
-};
-
-type PiTrackSlot = {
-  slot: number;
-  label: string;
-  mapping: unknown;
+type TrackConfig = {
+  name?: string;
+  noteSource: "stepSequencer" | "externalMidi";
+  midiChannel: number;
+  pages: {
+    source: SlotConfig[]; // 8
+    amp: SlotConfig[]; // 8
+    filter: SlotConfig[]; // 8
+    mod: SlotConfig[]; // 8
+    fxA: SlotConfig[]; // 8
+    fxB: SlotConfig[]; // 8
+  };
+  stepSequencer?: StepSequencerConfig;
 };
 ```
 
-This is not a final API. It is a direction: Pi patcher needs its own explicit instrument-authoring schema that can be validated independently and compiled into an engine patch for runtime use.
+This is still not a final API. The exact field-level shapes for `SlotConfig` and `StepSequencerConfig` remain intentionally open for prototype work. What is now fixed is the document direction:
+
+- top-level explicit sections
+- one patch-level global block
+- eight fixed track slots
+- semantic slot relationships instead of raw engine-module references
+- one hardware profile id per document
 
 ### Required Engine And Runtime Extensions
 
@@ -896,6 +1012,8 @@ This section summarizes the likely gaps implied by the current design.
 
 - Add a dedicated `Pi patcher` authoring surface or route
 - Add template support
+- Add typed block authoring
+- Add hardware profile selection by id
 - Add Pi-specific validation
 - Add source profile authoring and mapping metadata
 - Add authoring UI for global slots and track slots
@@ -908,6 +1026,10 @@ This section summarizes the likely gaps implied by the current design.
 - Introduce a concept of focused-track page navigation
 - Define how controller navigation updates focused track and active page
 - Keep controller feedback synchronized with the current page of the current track
+- Add typed block compilers, track compiler, and patch compiler
+- Generate deterministic module ids
+- Resolve semantic slot targets into concrete generated bindings
+- Compile a fixed global block and fixed track skeleton
 
 #### Pi runtime
 
@@ -921,6 +1043,7 @@ This section summarizes the likely gaps implied by the current design.
 - Render the dashboard
 - Handle focus changes from controller interaction
 - Stay decoupled enough to support later local browsing/editing
+- Validate `Rust + Slint + LinuxKMS` as the first no-desktop spike
 
 ## Validation And Delivery
 
@@ -1035,22 +1158,25 @@ These are recommendations made during brainstorming and accepted as the current 
 - Use a single fixed template in `v1` with editable content inside a fixed structure
 - Treat the Pi patcher document as the source of truth and the engine patch as a generated artifact
 - Use per-track exclusive note sources, with sequencer editing constrained to the hardware-supported model
+- Use typed blocks plus one explicit hardware profile id per document
+- Compile through block compilers, track compiler, and patch compiler
+- Keep bindings semantic and let the compiler resolve them into engine props
 - Start with a performance dashboard, not local editing
 - Favor compact DSI displays and design the LCD with a monochrome mindset
+- Treat `Rust + Slint + LinuxKMS` as the first display-stack spike, not yet a final production commitment
 
 ## Open Questions For Next Session
 
 The following questions should be revisited in later sessions so context is not lost:
 
 1. What should the first LCD layout actually look like in pixels and zones?
-2. What display-process stack should drive the LCD UI on the Pi without `X11` or `Wayland`?
-3. Should that display process be built with something like `Rust + Slint + LinuxKMS`, `C/C++ + LVGL + DRM/KMS`, or another no-desktop stack?
+2. What exact field-level shape should `SlotConfig` use?
+3. What exact field-level shape should `StepSequencerConfig` use?
 4. What should the startup experience be on the Pi beyond auto-loading the assigned patch?
-5. What exact schema should the Pi patcher document use, and how should it compile into an engine patch?
-6. What exact parameter mappings and inactive-slot behavior should each source profile use?
-7. How should named modulation target presets be authored and stored in Pi patcher?
-8. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
-9. When local editing arrives, what is the smallest useful editing action to support first?
+5. What exact parameter mappings and inactive-slot behavior should each source profile use?
+6. How should named modulation target presets be authored and stored in Pi patcher?
+7. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
+8. When local editing arrives, what is the smallest useful editing action to support first?
 
 ### Prototype Gate
 
