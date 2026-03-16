@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@blibliki/engine": "workspace:^",
+    "@blibliki/pi-patcher": "workspace:^",
     "@blibliki/utils": "workspace:^",
     "es-toolkit": "1.44.0",
     "firebase": "12.8.0"

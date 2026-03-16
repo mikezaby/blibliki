@@ -17,6 +17,7 @@ export type IDevice = {
   token: string;
   name: string;
   patchId: string | null;
+  piPatchId: string | null;
   userId: string;
 };
 
@@ -25,6 +26,7 @@ export default class Device implements IDevice {
   token!: string;
   name!: string;
   patchId!: string | null;
+  piPatchId!: string | null;
   userId!: string;
 
   static async find(id: string): Promise<Device> {
@@ -91,7 +93,7 @@ export default class Device implements IDevice {
   constructor(props: Optional<IDevice, "id">) {
     Object.assign(
       this,
-      pick(props, ["id", "token", "name", "patchId", "userId"]),
+      pick(props, ["id", "token", "name", "patchId", "piPatchId", "userId"]),
     );
   }
 
@@ -129,6 +131,7 @@ export default class Device implements IDevice {
       token: this.token,
       name: this.name,
       patchId: this.patchId,
+      piPatchId: this.piPatchId,
       userId: this.userId,
     };
   }

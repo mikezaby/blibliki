@@ -1,10 +1,7 @@
 {
-  "name": "@blibliki/pi",
-  "version": "0.9.0",
+  "name": "@blibliki/pi-patcher",
+  "version": "0.1.0",
   "type": "module",
-  "bin": {
-    "blibliki-pi": "./dist/cli.js"
-  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -20,22 +17,19 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "start": "NODE_ENV=development tsx src/cli.ts",
-    "lint": "eslint src",
+    "lint": "eslint src test",
     "tsc": "tsc --noEmit",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "bump": "npm version patch",
-    "release": "pnpm run build && pnpm publish --access public"
-  },
-  "devDependencies": {
-    "@types/audioworklet": "catalog:web-audio",
-    "@types/node": "25.1.0"
+    "test": "vitest run"
   },
   "dependencies": {
     "@blibliki/engine": "workspace:^",
-    "@blibliki/models": "workspace:^",
-    "@blibliki/pi-patcher": "workspace:^",
+    "@blibliki/transport": "workspace:^",
     "@blibliki/utils": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/audioworklet": "catalog:web-audio",
+    "vitest": "catalog:test"
   }
 }

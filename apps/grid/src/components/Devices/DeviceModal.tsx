@@ -14,7 +14,7 @@ import { Cpu, Save } from "lucide-react";
 import { useState } from "react";
 import Modal, { close as closeModal } from "@/components/Modal";
 import { saveDevice } from "@/devicesSlice";
-import { useAppDispatch, useAppSelector, usePatches } from "@/hooks";
+import { useAppDispatch, useAppSelector, usePatches, usePiPatches } from "@/hooks";
 
 type DeviceModalProps = {
   deviceId: string;
@@ -31,11 +31,13 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
   const dispatch = useAppDispatch();
   const { user } = useUser();
   const patches = usePatches();
+  const piPatches = usePiPatches();
 
   const [formData, setFormData] = useState({
     token: device?.token ?? "",
     name: device?.name ?? "",
     patchId: device?.patchId ?? "",
+    piPatchId: device?.piPatchId ?? "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -65,6 +67,7 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
           token: formData.token,
           name: formData.name,
           patchId: formData.patchId || null,
+          piPatchId: formData.piPatchId || null,
           userId: user.id,
         }),
       );
@@ -153,6 +156,21 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
           />
           <Text tone="muted" size="xs">
             This patch will be auto-loaded when the device starts
+          </Text>
+        </Stack>
+
+        <Stack gap={2}>
+          <Label htmlFor="piPatchId">Assigned Pi Patch</Label>
+          <OptionSelect
+            label="Select Pi patch"
+            value={formData.piPatchId}
+            options={piPatches}
+            onChange={(value: string) => {
+              setFormData({ ...formData, piPatchId: value });
+            }}
+          />
+          <Text tone="muted" size="xs">
+            Pi patches are compiled locally on boot and take precedence over legacy patch assignment
           </Text>
         </Stack>
       </Stack>

@@ -1,5 +1,11 @@
-import { Engine } from "@blibliki/engine";
-import { Device, initializeFirebase, Patch } from "@blibliki/models";
+import { Context, Engine } from "@blibliki/engine";
+import { compilePiPatcherDocument } from "@blibliki/pi-patcher";
+import {
+  Device,
+  initializeFirebase,
+  Patch,
+  PiPatch,
+} from "@blibliki/models";
 import {
   fetchFirebaseConfig,
   getDefaultGridUrl,
@@ -12,6 +18,7 @@ import {
   getConfig,
 } from "./config.js";
 import { promptForUserId } from "./prompt.js";
+import { PiSession } from "./runtime/PiSession.js";
 
 export { loadOrCreateConfig, getConfigPath, updateConfig, getConfig };
 export {
@@ -131,13 +138,42 @@ export async function main(options?: { gridUrl?: string }): Promise<void> {
   }
 
   if (!device.patchId) {
-    throw Error("Device: patch not configured");
+    if (!device.piPatchId) {
+      throw Error("Device: patch not configured");
+    }
   }
 
-  const patch = await Patch.find(device.patchId);
-
-  const engine = await Engine.load(patch.engineSerialize());
+  const engine = device.piPatchId
+    ? await bootPiPatch(device.piPatchId)
+    : await bootLegacyPatch(device.patchId!);
   await engine.start();
+}
+
+async function bootLegacyPatch(patchId: string) {
+  const patch = await Patch.find(patchId);
+  return Engine.load(patch.engineSerialize());
+}
+
+async function bootPiPatch(piPatchId: string) {
+  const piPatch = await PiPatch.find(piPatchId);
+  const compiled = compilePiPatcherDocument(piPatch.document);
+
+  const engine = new Engine(new Context());
+  const session = new PiSession(engine, compiled);
+
+  await engine.initialize();
+  engine.timeSignature = compiled.engine.timeSignature;
+  engine.bpm = compiled.engine.bpm;
+
+  compiled.engine.modules.forEach((module) => {
+    engine.addModule(module as never);
+  });
+  compiled.engine.routes.forEach((route) => {
+    engine.addRoute(route);
+  });
+
+  session.start();
+  return engine;
 }
 
 /**

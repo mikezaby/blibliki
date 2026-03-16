@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as DevicesRouteImport } from './routes/devices'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PiPatchPiPatchIdRouteImport } from './routes/pi-patch.$piPatchId'
 import { Route as PatchPatchIdRouteImport } from './routes/patch.$patchId'
 
 const DevicesRoute = DevicesRouteImport.update({
@@ -23,6 +24,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PiPatchPiPatchIdRoute = PiPatchPiPatchIdRouteImport.update({
+  id: '/pi-patch/$piPatchId',
+  path: '/pi-patch/$piPatchId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PatchPatchIdRoute = PatchPatchIdRouteImport.update({
   id: '/patch/$patchId',
   path: '/patch/$patchId',
@@ -33,30 +39,34 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/devices': typeof DevicesRoute
   '/patch/$patchId': typeof PatchPatchIdRoute
+  '/pi-patch/$piPatchId': typeof PiPatchPiPatchIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/devices': typeof DevicesRoute
   '/patch/$patchId': typeof PatchPatchIdRoute
+  '/pi-patch/$piPatchId': typeof PiPatchPiPatchIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/devices': typeof DevicesRoute
   '/patch/$patchId': typeof PatchPatchIdRoute
+  '/pi-patch/$piPatchId': typeof PiPatchPiPatchIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/devices' | '/patch/$patchId'
+  fullPaths: '/' | '/devices' | '/patch/$patchId' | '/pi-patch/$piPatchId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/devices' | '/patch/$patchId'
-  id: '__root__' | '/' | '/devices' | '/patch/$patchId'
+  to: '/' | '/devices' | '/patch/$patchId' | '/pi-patch/$piPatchId'
+  id: '__root__' | '/' | '/devices' | '/patch/$patchId' | '/pi-patch/$piPatchId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DevicesRoute: typeof DevicesRoute
   PatchPatchIdRoute: typeof PatchPatchIdRoute
+  PiPatchPiPatchIdRoute: typeof PiPatchPiPatchIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pi-patch/$piPatchId': {
+      id: '/pi-patch/$piPatchId'
+      path: '/pi-patch/$piPatchId'
+      fullPath: '/pi-patch/$piPatchId'
+      preLoaderRoute: typeof PiPatchPiPatchIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/patch/$patchId': {
       id: '/patch/$patchId'
       path: '/patch/$patchId'
@@ -89,6 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DevicesRoute: DevicesRoute,
   PatchPatchIdRoute: PatchPatchIdRoute,
+  PiPatchPiPatchIdRoute: PiPatchPiPatchIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
