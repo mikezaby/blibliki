@@ -13,9 +13,12 @@ import {
   ModuleType,
 } from "@blibliki/engine";
 import {
+  buildInstrumentMidiMapperProps,
+  INSTRUMENT_MIDI_MAPPER_ID,
   TRACK_PAGE_BLOCKS,
   type InstrumentControlValue,
   type InstrumentCompileResult,
+  type ModuleBinding,
   type SessionControlSpec,
   type StepPageConfig,
   type SlotConfig,
@@ -124,6 +127,7 @@ export class PiSession {
 
   start() {
     this.display.start();
+    this.syncMidiMapper();
     this.engine.onPropsUpdate(() => {
       this.pushDisplayState();
       this.refreshStepLights();
@@ -163,6 +167,7 @@ export class PiSession {
       this.state.activeTrack =
         (this.state.activeTrack + this.compiled.document.tracks.length - 1) %
         this.compiled.document.tracks.length;
+      this.syncMidiMapper();
       this.pushDisplayState();
       this.refreshStepLights();
       return;
@@ -171,6 +176,7 @@ export class PiSession {
     if (cc === TRACK_NEXT && value === 127) {
       this.state.activeTrack =
         (this.state.activeTrack + 1) % this.compiled.document.tracks.length;
+      this.syncMidiMapper();
       this.pushDisplayState();
       this.refreshStepLights();
       return;
@@ -188,6 +194,7 @@ export class PiSession {
         this.state.selectedSeqPage = (this.state.selectedSeqPage + 3) % 4;
       } else {
         this.state.activePage = (this.state.activePage + 2) % 3;
+        this.syncMidiMapper();
       }
       this.pushDisplayState();
       this.refreshStepLights();
@@ -199,16 +206,10 @@ export class PiSession {
         this.state.selectedSeqPage = (this.state.selectedSeqPage + 1) % 4;
       } else {
         this.state.activePage = (this.state.activePage + 1) % 3;
+        this.syncMidiMapper();
       }
       this.pushDisplayState();
       this.refreshStepLights();
-      return;
-    }
-
-    const faderIndex = FADERS.indexOf(cc);
-    if (faderIndex >= 0) {
-      this.setTrackFinalGain(faderIndex, midiToRange(value, 0, 1));
-      this.pushDisplayState();
       return;
     }
 
@@ -293,11 +294,20 @@ export class PiSession {
   }
 
   private applyPerformanceEncoder(cc: number, value: number) {
+    const faderIndex = FADERS.indexOf(cc);
+    if (faderIndex >= 0) {
+      if (!this.hasMidiMapper()) {
+        this.setTrackFinalGain(faderIndex, midiToRange(value, 0, 1));
+        this.pushDisplayState();
+      }
+      return;
+    }
+
     const globalIndex = ENCODER_ROW_GLOBAL.indexOf(cc);
     if (globalIndex >= 0) {
       const slot = this.compiled.document.globalBlock.slots[globalIndex];
       if (!slot) return;
-      this.applySlot(slot, value);
+      this.applyPerformanceSlot(slot, value);
       return;
     }
 
@@ -305,7 +315,7 @@ export class PiSession {
     const track = this.compiled.document.tracks[this.state.activeTrack]!;
     const upperIndex = ENCODER_ROW_UPPER.indexOf(cc);
     if (upperIndex >= 0) {
-      this.applySlot(
+      this.applyPerformanceSlot(
         track.pages[upperBlock][upperIndex]!,
         value,
         this.state.activeTrack,
@@ -315,13 +325,25 @@ export class PiSession {
 
     const lowerIndex = ENCODER_ROW_LOWER.indexOf(cc);
     if (lowerIndex >= 0) {
-      this.applySlot(
+      this.applyPerformanceSlot(
         track.pages[lowerBlock][lowerIndex]!,
         value,
         this.state.activeTrack,
       );
       return;
     }
+  }
+
+  private applyPerformanceSlot(
+    slot: SlotConfig,
+    midiValue: number,
+    trackIndex?: number,
+  ) {
+    const binding = this.resolveSlotBinding(slot, trackIndex);
+    if (!binding) return;
+    if (isMidiMapperHandledBinding(binding) && this.hasMidiMapper()) return;
+
+    this.applySlot(slot, midiValue, trackIndex);
   }
 
   private applySeqEditEncoder(cc: number, value: number) {
@@ -450,6 +472,51 @@ export class PiSession {
 
     slot.initialValue = nextValue;
     this.pushDisplayState();
+  }
+
+  private hasMidiMapper() {
+    try {
+      const module = this.engine.findModule(INSTRUMENT_MIDI_MAPPER_ID);
+      return module.moduleType === ModuleType.MidiMapper;
+    } catch {
+      return false;
+    }
+  }
+
+  private syncMidiMapper() {
+    let module: ReturnType<Engine["findModule"]>;
+    try {
+      module = this.engine.findModule(INSTRUMENT_MIDI_MAPPER_ID);
+    } catch {
+      return;
+    }
+    if (module.moduleType !== ModuleType.MidiMapper) return;
+
+    const props = buildInstrumentMidiMapperProps(
+      this.compiled,
+      this.state.activePage,
+      this.state.activeTrack,
+    );
+
+    module.props = props;
+    module.triggerPropsUpdate();
+
+    const syncControllerValues = (
+      module as ReturnType<Engine["findModule"]> & {
+        syncControllerValues?: () => void;
+      }
+    ).syncControllerValues;
+    syncControllerValues?.call(module);
+  }
+
+  private resolveSlotBinding(slot: SlotConfig, trackIndex?: number) {
+    if (!slot.active || !slot.target) return;
+
+    const bindingKey =
+      trackIndex === undefined
+        ? slot.target
+        : slot.target.replace(/^track\./, `track.${trackIndex}.`);
+    return this.compiled.bindings[bindingKey];
   }
 
   private pushDisplayState() {
@@ -624,6 +691,14 @@ const applyTransform = (
     return value ? transform.trueValue : transform.falseValue;
   }
   return value;
+};
+
+const isMidiMapperHandledBinding = (
+  binding: InstrumentCompileResult["bindings"][string] | undefined,
+): binding is ModuleBinding => {
+  if (binding?.kind !== "module") return false;
+  if (binding.targets.length !== 1) return false;
+  return binding.targets[0]?.transform === undefined;
 };
 
 const formatValue = (value: InstrumentControlValue | undefined) => {

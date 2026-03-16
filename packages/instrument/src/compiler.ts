@@ -16,6 +16,13 @@ import {
   DelayTimeMode,
   NoiseType,
 } from "@blibliki/engine";
+import {
+  buildInstrumentMidiMapperProps,
+  INSTRUMENT_CONTROLLER_NAME,
+  INSTRUMENT_MIDI_IN_ID,
+  INSTRUMENT_MIDI_MAPPER_ID,
+  INSTRUMENT_MIDI_OUT_ID,
+} from "./midiMapper";
 import type {
   BindingTransform,
   InstrumentCompileResult,
@@ -1614,6 +1621,64 @@ const compileTrack = (
   });
 };
 
+const compileControllerMidiLoop = (
+  context: CompileContext,
+  document: InstrumentDocument,
+) => {
+  const midiMapperProps = buildInstrumentMidiMapperProps(
+    {
+      document,
+      bindings: context.bindings,
+    },
+    0,
+    0,
+  );
+
+  pushModule(context, {
+    id: INSTRUMENT_MIDI_IN_ID,
+    name: "Instrument MIDI In",
+    moduleType: ModuleType.MidiInput,
+    props: {
+      selectedName: INSTRUMENT_CONTROLLER_NAME,
+      selectedId: undefined,
+    },
+  });
+
+  pushModule(context, {
+    id: INSTRUMENT_MIDI_MAPPER_ID,
+    name: "Instrument MIDI Mapper",
+    moduleType: ModuleType.MidiMapper,
+    props: midiMapperProps as unknown as Record<string, unknown>,
+  });
+
+  pushModule(context, {
+    id: INSTRUMENT_MIDI_OUT_ID,
+    name: "Instrument MIDI Out",
+    moduleType: ModuleType.MidiOutput,
+    props: {
+      selectedName: INSTRUMENT_CONTROLLER_NAME,
+      selectedId: undefined,
+    },
+  });
+
+  pushRoute(
+    context,
+    "instrument-route-midi-in-mapper",
+    INSTRUMENT_MIDI_IN_ID,
+    "midi out",
+    INSTRUMENT_MIDI_MAPPER_ID,
+    "midi in",
+  );
+  pushRoute(
+    context,
+    "instrument-route-mapper-midi-out",
+    INSTRUMENT_MIDI_MAPPER_ID,
+    "midi out",
+    INSTRUMENT_MIDI_OUT_ID,
+    "midi in",
+  );
+};
+
 export const validateInstrumentDocument = (
   document: InstrumentDocument,
 ): string[] => {
@@ -1688,6 +1753,7 @@ export const compileInstrumentDocument = (
   document.tracks.forEach((track, trackIndex) => {
     compileTrack(context, track, trackIndex);
   });
+  compileControllerMidiLoop(context, document);
 
   return {
     document: structuredClone(document),

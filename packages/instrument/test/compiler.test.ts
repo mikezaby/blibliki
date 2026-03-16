@@ -1,3 +1,4 @@
+import { ModuleType } from "@blibliki/engine";
 import { describe, expect, it } from "vitest";
 import {
   compileInstrumentDocument,
@@ -36,9 +37,67 @@ describe("@blibliki/instrument", () => {
     const moduleIds = compiled.engine.modules.map((module) => module.id);
 
     expect(moduleIds).toContain("global-master-filter");
+    expect(moduleIds).toContain("instrument-midi-in");
+    expect(moduleIds).toContain("instrument-midi-mapper");
+    expect(moduleIds).toContain("instrument-midi-out");
     expect(moduleIds).toContain("track-1-note-source");
     expect(moduleIds).toContain("track-1-source-osc");
     expect(moduleIds).toContain("track-1-fx-1");
+  });
+
+  it("compiles a controller midi loop for instrument mode", () => {
+    const document = createDefaultInstrumentDocument();
+    const compiled = compileInstrumentDocument(document);
+
+    const midiIn = compiled.engine.modules.find(
+      (module) => module.id === "instrument-midi-in",
+    );
+    const midiMapper = compiled.engine.modules.find(
+      (module) => module.id === "instrument-midi-mapper",
+    );
+    const midiOut = compiled.engine.modules.find(
+      (module) => module.id === "instrument-midi-out",
+    );
+
+    expect(midiIn).toMatchObject({
+      moduleType: ModuleType.MidiInput,
+      props: {
+        selectedName: "LCXL3 DAW",
+      },
+    });
+    expect(midiMapper).toMatchObject({
+      moduleType: ModuleType.MidiMapper,
+      props: {
+        activeTrack: 0,
+      },
+    });
+    expect(midiOut).toMatchObject({
+      moduleType: ModuleType.MidiOutput,
+      props: {
+        selectedName: "LCXL3 DAW",
+      },
+    });
+
+    expect(compiled.engine.routes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "instrument-route-midi-in-mapper",
+          source: { moduleId: "instrument-midi-in", ioName: "midi out" },
+          destination: {
+            moduleId: "instrument-midi-mapper",
+            ioName: "midi in",
+          },
+        }),
+        expect.objectContaining({
+          id: "instrument-route-mapper-midi-out",
+          source: {
+            moduleId: "instrument-midi-mapper",
+            ioName: "midi out",
+          },
+          destination: { moduleId: "instrument-midi-out", ioName: "midi in" },
+        }),
+      ]),
+    );
   });
 
   it("produces semantic bindings for global, source, and fx controls", () => {
@@ -92,8 +151,9 @@ describe("@blibliki/instrument", () => {
       stepSequencerTrack,
       "osc",
     );
-    const stepSequencerCompiled =
-      compileInstrumentDocument(stepSequencerDocument);
+    const stepSequencerCompiled = compileInstrumentDocument(
+      stepSequencerDocument,
+    );
     const stepSequencerRoute = stepSequencerCompiled.engine.routes.find(
       (route) => route.id === "track-1-route-note-source-source",
     );
@@ -111,7 +171,8 @@ describe("@blibliki/instrument", () => {
       "osc",
     );
     externalMidiDocument.tracks[0].noteSource = "externalMidi";
-    const externalMidiCompiled = compileInstrumentDocument(externalMidiDocument);
+    const externalMidiCompiled =
+      compileInstrumentDocument(externalMidiDocument);
     const externalMidiRoute = externalMidiCompiled.engine.routes.find(
       (route) => route.id === "track-1-route-note-source-source",
     );
