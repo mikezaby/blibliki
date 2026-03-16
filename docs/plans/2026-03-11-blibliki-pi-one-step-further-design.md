@@ -13,7 +13,7 @@ This document captures the current product direction for that next step. It is i
 ## Document Map
 
 - Product Foundation
-- Pi Patcher Model
+- Instrument Model
 - Track Page Blocks
 - Display And Hardware
 - Runtime Architecture
@@ -69,9 +69,9 @@ The first serious milestone should be a performance dashboard, not a full local 
 #### Confirmed scope
 
 - Grid remains required for patch authoring and setup.
-- A new constrained Pi patcher authoring surface will be added in the Grid app.
-- That authoring surface will be called `Pi patcher`.
-- `Pi patcher` patches will support `1 global` layer plus up to `8 tracks`.
+- A new constrained instrument authoring surface will be added in the Grid app.
+- That authoring surface will be called `Instrument`.
+- `Instrument` documents will support `1 global` layer plus up to `8 tracks`.
 - The LCD starts as a performance dashboard.
 - The implementation should be extendable toward browsing and minor local editing later.
 
@@ -83,15 +83,15 @@ The first serious milestone should be a performance dashboard, not a full local 
 - Rendering the full engine graph on the LCD
 - Unlimited track counts
 
-## Pi Patcher Model
+## Instrument Model
 
-### Pi Patcher In Grid
+### Instrument In Grid
 
-`Pi patcher` should live inside the Grid app ecosystem, but it should not be squeezed into the current freeform Grid patch document model.
+`instrument` should live inside the Grid app ecosystem, but it should not be squeezed into the current freeform Grid patch document model.
 
-Instead, it should have its own constrained authoring surface and its own document model. That document should generate an engine patch for runtime use. This keeps Pi patcher in the same product and infrastructure world without forcing it into the same storage and authoring shape as the freeform graph editor.
+Instead, it should have its own constrained authoring surface and its own document model. That document should generate an engine patch for runtime use. This keeps instrument in the same product and infrastructure world without forcing it into the same storage and authoring shape as the freeform graph editor.
 
-The first version of `Pi patcher` should include:
+The first version of `instrument` should include:
 
 - At least one starting template
 - Pi-specific validation rules
@@ -107,7 +107,7 @@ This is the most gradual path:
 - It preserves the value of the current Grid app and infrastructure.
 - It reuses the existing engine and patch runtime.
 - It avoids making the already-bloated Grid patch document even fatter.
-- It gives Pi patcher room to become a proper constrained instrument authoring system.
+- It gives instrument room to become a proper constrained instrument authoring system.
 
 ### Track Model
 
@@ -159,7 +159,7 @@ This model should be mirrored by the LCD so the instrument always presents one f
 
 The first pass should use a hybrid standard:
 
-- Fixed across all Pi patcher patches: `Tempo`, `Main Volume`
+- Fixed across all instrument patches: `Tempo`, `Main Volume`
 - First-template defaults for the other slots: `Swing`, `Master Filter Cutoff`, `Master Filter Resonance`, `Reverb Send`, `Delay Send`, one intentionally inactive slot, with `Main Volume` fixed at the final encoder position
 
 This creates consistency where it matters while leaving room for template specialization later. The first template should treat these controls as a patch-wide performance strip rather than deep editing controls. The exact first-pass order should be:
@@ -219,13 +219,13 @@ Both track and page navigation should wrap around at the ends. `Shift` should no
 The focused-track and page system should build directly on existing `MidiMapper` concepts where possible:
 
 - `MidiMapper.activeTrack` should become the practical meaning of the focused Pi track
-- `activePage` should live in the Pi patcher controller/UI layer
+- `activePage` should live in the instrument controller/UI layer
 
 The encoder rows and LCD both follow the combined state of `activeTrack + activePage`. The faders do not participate in that focus model because they remain permanently mapped to all eight final track gains.
 
 ### First Template Direction
 
-The first `Pi patcher` template should be a generic `8-track` performance instrument. It is not intended to validate one narrow musical use case. It is intended to validate the Pi authoring model, the controller contract, the LCD dashboard, and the broader idea that Grid can author an instrument-oriented patch for the Pi.
+The first `instrument` template should be a generic `8-track` performance instrument. It is not intended to validate one narrow musical use case. It is intended to validate the Pi authoring model, the controller contract, the LCD dashboard, and the broader idea that Grid can author an instrument-oriented patch for the Pi.
 
 This first template should assume:
 
@@ -233,13 +233,13 @@ This first template should assume:
 - `1` global layer
 - Fixed focused-track pages
 - One source profile per track
-- Pi patcher remains responsible for constrained instrument authoring while the generated engine patch remains the runtime artifact
+- instrument remains responsible for constrained instrument authoring while the generated engine patch remains the runtime artifact
 
 The first template should not try to solve every kind of source workflow. It only needs enough range to prove that the profile system works and that the Pi can feel like a coherent instrument.
 
 ### First Template Initialization
 
-The first generic `Pi patcher` template should stay role-neutral. It should not suggest musical archetypes such as bass, lead, or pad, because that would make the starting point feel less blank than intended. If users want a more guided starting point, that should come from separate starter patches or future curated templates, not from the base template itself.
+The first generic `instrument` template should stay role-neutral. It should not suggest musical archetypes such as bass, lead, or pad, because that would make the starting point feel less blank than intended. If users want a more guided starting point, that should come from separate starter patches or future curated templates, not from the base template itself.
 
 For that reason, the template should be created with all `8` tracks generated immediately. This keeps the controller and LCD contract stable from the first moment and avoids making the instrument model depend on track creation state.
 
@@ -249,11 +249,11 @@ Those `8` tracks should begin in a truly blank state:
 - the fixed pages exist structurally
 - no source profile is assigned yet
 
-A track becomes meaningful only when the user selects a source profile in Pi patcher and starts defining its pages and mappings. The template should provide the frame of the instrument, not pre-decide its content.
+A track becomes meaningful only when the user selects a source profile in instrument and starts defining its pages and mappings. The template should provide the frame of the instrument, not pre-decide its content.
 
-### Pi Patcher As Constrained Authoring
+### Instrument As Constrained Authoring
 
-`Pi patcher` should let the user perform a defined set of musical actions, not arbitrary engine-patch editing. It should be a constrained authoring system built around template rules.
+`instrument` should let the user perform a defined set of musical actions, not arbitrary engine-patch editing. It should be a constrained authoring system built around template rules.
 
 In `v1`, those actions should include:
 
@@ -263,11 +263,11 @@ In `v1`, those actions should include:
 - naming tracks
 - setting initial values for globals and page slots
 
-From those constrained choices, `Pi patcher` should generate the corresponding engine patch structure. This is why the conversion is one-way: a Pi patcher document can generate a valid engine patch, but a generic Grid patch cannot be loaded into Pi patcher because it does not guarantee the required template structure.
+From those constrained choices, `Instrument` should generate the corresponding engine patch structure. This is why the conversion is one-way: an instrument document can generate a valid engine patch, but a generic Grid patch cannot be loaded into `Instrument` because it does not guarantee the required template structure.
 
-### Pi Patcher Document Ownership
+### Instrument Document Ownership
 
-The `Pi patcher` document should be the source of truth for Pi-instrument authoring. It should own:
+The `Instrument` document should be the source of truth for Pi-instrument authoring. It should own:
 
 - the chosen template
 - track names
@@ -279,22 +279,22 @@ The `Pi patcher` document should be the source of truth for Pi-instrument author
 
 The generated `engine patch` should be treated as a derived artifact. Its job is to run the instrument, not to serve as the primary authored model.
 
-This means `Pi patcher` should not be embedded into the already-bloated stored Grid patch model. The cleaner long-term split is:
+This means `Instrument` should not be embedded into the already-bloated stored Grid patch model. The cleaner long-term split is:
 
 - `engine patch` as pure runtime graph data
 - `grid patch` as freeform graph-editor data
-- `pi patcher document` as constrained instrument-authoring data
+- `instrument document` as constrained instrument-authoring data
 
 For `v1`, the output relationship should stay simple:
 
-- `Pi patcher document` in
+- `instrument document` in
 - `engine patch` out
 
 No generated Grid artifact is needed in `v1`.
 
-### Pi Patcher Schema Direction
+### Instrument Schema Direction
 
-The Pi patcher document should be position-first in `v1`. This is the strongest fit for the product because the instrument itself is already defined by stable physical positions:
+The instrument document should be position-first in `v1`. This is the strongest fit for the product because the instrument itself is already defined by stable physical positions:
 
 - `8` global slots
 - `8` tracks
@@ -330,13 +330,13 @@ This is clearer because the page contract is already fixed by design.
 
 The same slot concept should be reused across the `globalBlock` and track blocks. A slot should act as the bridge between hardware/LCD and the generated engine patch. It should represent what the player sees and controls, not duplicate the full engine module definition.
 
-Slot bindings should point to semantic targets defined by the Pi patcher template/compiler rather than raw engine module IDs. In many cases those semantic targets will map to one engine prop, and in some cases they may expand into macro behavior. The document does not need to care which. That keeps the schema stable even when one visible control maps to more than one low-level engine detail.
+Slot bindings should point to semantic targets defined by the instrument template/compiler rather than raw engine module IDs. In many cases those semantic targets will map to one engine prop, and in some cases they may expand into macro behavior. The document does not need to care which. That keeps the schema stable even when one visible control maps to more than one low-level engine detail.
 
 ### Block Model And Hardware Profiles
 
-The Pi patcher document should not be implicitly tied to the Launch Control XL3, even though `LaunchControlXL3 + Pi LCD` is the first target. The correct boundary is:
+The instrument document should not be implicitly tied to the Launch Control XL3, even though `LaunchControlXL3 + Pi LCD` is the first target. The correct boundary is:
 
-- the Pi patcher document defines an abstract instrument
+- the instrument document defines an abstract instrument
 - a `hardwareProfile` defines how a specific controller and display expose that instrument
 
 In `v1`, the instrument should be built from typed blocks rather than one generic metadata blob. The important block types are already clear from the design:
@@ -353,11 +353,11 @@ Tracks should own their blocks directly. There is no need for a central block re
 
 Blocks should define semantic slots, not physical positions. The `hardwareProfile` should decide which physical controls and LCD positions expose which block slots for a given controller/display target.
 
-Each Pi patcher document should select exactly one `hardwareProfile` by id rather than embedding a custom mapping object. This keeps authoring, validation, and compilation deterministic while still leaving room for different controller/display targets later.
+Each instrument document should select exactly one `hardwareProfile` by id rather than embedding a custom mapping object. This keeps authoring, validation, and compilation deterministic while still leaving room for different controller/display targets later.
 
-### Top-Level Pi Patcher Schema
+### Top-Level Instrument Schema
 
-The top-level Pi patcher document should stay explicit and fixed in `v1`. It should not be a generic blocks array. The document should contain:
+The top-level instrument document should stay explicit and fixed in `v1`. It should not be a generic blocks array. The document should contain:
 
 - `version`
 - `name`
@@ -370,9 +370,9 @@ The top-level Pi patcher document should stay explicit and fixed in `v1`. It sho
 
 `tracks` should be stored as an array validated to length `8`, not a strict tuple type. This keeps the instrument’s fixed-track contract intact while avoiding awkward implementation constraints.
 
-### First Pi Patcher Workflow
+### First Instrument Workflow
 
-The first Pi patcher workflow should begin with `template creation`, not with free patch construction. In `v1`, there should be exactly `one` template available, but the model should allow more templates later.
+The first instrument workflow should begin with `template creation`, not with free patch construction. In `v1`, there should be exactly `one` template available, but the model should allow more templates later.
 
 Once the template is chosen, the structure should already be fixed:
 
@@ -394,7 +394,7 @@ The template is the instrument chassis, and the user fills it with musical conte
 
 ### Initial State Editing
 
-The `Pi patcher` document should own the initial playable state of the instrument, but the authoring experience for that state should stay aligned with the hardware rather than exposing a low-level property table.
+The `instrument` document should own the initial playable state of the instrument, but the authoring experience for that state should stay aligned with the hardware rather than exposing a low-level property table.
 
 Startup values should be edited in a slot-oriented way:
 
@@ -402,7 +402,7 @@ Startup values should be edited in a slot-oriented way:
 - through the focused track pages
 - through the same conceptual slot structure that exists on the instrument
 
-At this stage, the exact storage representation of missing or inactive values does not need to be locked. What matters in the design is that `Pi patcher` owns the startup state and that the editing UI mirrors the same structure the player will later use on the hardware.
+At this stage, the exact storage representation of missing or inactive values does not need to be locked. What matters in the design is that `instrument` owns the startup state and that the editing UI mirrors the same structure the player will later use on the hardware.
 
 ### Track Identity And Naming
 
@@ -414,7 +414,7 @@ The user can still give each track a musical name, but that name should be addit
 - an optional custom name can be appended after it
 - example: `Track 1: Pad`
 
-If the user does not provide a custom name, the track remains simply `Track 1`. The same combined label should be used consistently in Pi patcher and on the LCD.
+If the user does not provide a custom name, the track remains simply `Track 1`. The same combined label should be used consistently in instrument and on the LCD.
 
 ### Patch And Blank-Track States
 
@@ -446,19 +446,19 @@ The fixed page contract for `v1` is:
 - Page 2: `Filter` / `Mod`
 - Page 3: `FX A` / `FX B`
 
-The detailed design work is now defined for all six blocks at a first-pass level. Later sessions should refine labels, exact parameter mappings, authoring UX in Pi patcher, and LCD presentation.
+The detailed design work is now defined for all six blocks at a first-pass level. Later sessions should refine labels, exact parameter mappings, authoring UX in instrument, and LCD presentation.
 
 ### Source
 
 #### Source Block
 
-The `Source` block for `v1` should be intentionally conservative. The source type is chosen in Pi patcher, not on the Pi, and the Pi `Source` page only controls the already-selected source. This keeps the first prototype focused on performance rather than dynamic graph mutation. It also avoids designing around source types that do not exist yet, such as `FM` and `Sampler`.
+The `Source` block for `v1` should be intentionally conservative. The source type is chosen in instrument, not on the Pi, and the Pi `Source` page only controls the already-selected source. This keeps the first prototype focused on performance rather than dynamic graph mutation. It also avoids designing around source types that do not exist yet, such as `FM` and `Sampler`.
 
 The `Source` page itself should always expose `8` fixed slot positions, but the meaning of those slots depends on the selected source profile. Some source types may not need all eight controls in `v1`, and that is acceptable. Unused slots should remain explicitly inactive on both the controller and LCD rather than being filled with weak or arbitrary controls.
 
 #### Source Profiles Instead Of Single Modules
 
-The `Source` concept in `Pi patcher` should not be limited to a single engine module. That would make simple source types like `Noise` or `Wavetable` fit naturally, but it would block an important real-world case very early: a traditional subtractive voice built from multiple oscillators.
+The `Source` concept in `instrument` should not be limited to a single engine module. That would make simple source types like `Noise` or `Wavetable` fit naturally, but it would block an important real-world case very early: a traditional subtractive voice built from multiple oscillators.
 
 For that reason, `v1` should introduce a Pi-level `source profile` concept above the raw engine graph. A source profile is a named performance abstraction for a track. It defines what the player sees on the `Source` page and how those eight source slots map onto one or more underlying modules.
 
@@ -484,7 +484,7 @@ This is enough to validate the profile system without spreading `v1` too thin. `
 
 #### Common Source Slot Contract
 
-`Pi patcher` should define `source profile families`. In `v1`, `Osc`, `3-Osc`, and `Wavetable` belong to the same family because they share important pitched-source actions such as `octave`, `coarse`, and `fine`.
+`instrument` should define `source profile families`. In `v1`, `Osc`, `3-Osc`, and `Wavetable` belong to the same family because they share important pitched-source actions such as `octave`, `coarse`, and `fine`.
 
 Those actions should live in fixed slot positions across that family whenever possible. This gives the instrument stronger physical memory: the player learns where pitch-related controls live and can move between these source types without relearning the page.
 
@@ -512,7 +512,7 @@ This matches the broader Pi strategy: Grid remains the place for deep structure,
 
 Not every source profile should have the same abstraction depth. In `v1`, only `3-Osc` needs to behave as a strongly macro-oriented source. `Osc` and `Wavetable` should stay much closer to their underlying engine module props, because the existing module models already map cleanly to a source page.
 
-This means Pi patcher should allow source profiles with different internal mapping strategies while still fitting the same outer `8-slot` controller contract:
+This means instrument should allow source profiles with different internal mapping strategies while still fitting the same outer `8-slot` controller contract:
 
 - some profiles are mostly direct wrappers around one module
 - some profiles are curated performance abstractions over multiple modules
@@ -625,7 +625,7 @@ For `v1`, the allowed effect pool should be:
 - `Chorus`
 - `Distortion`
 
-Each of these effects must fit a curated `4-control` performance map, even if the underlying module exposes more parameters internally. Extra effect detail can remain in Pi patcher authoring rather than on the hardware surface.
+Each of these effects must fit a curated `4-control` performance map, even if the underlying module exposes more parameters internally. Extra effect detail can remain in instrument authoring rather than on the hardware surface.
 
 The physical packing should be:
 
@@ -658,16 +658,16 @@ External MIDI routing should not depend on the focused track. Every track should
 - `Track 2` starts on channel `2`
 - and so on through `Track 8`
 
-The user should still be able to change that channel in Pi patcher to avoid conflicts with external systems.
+The user should still be able to change that channel in instrument to avoid conflicts with external systems.
 
-For Pi patcher and hardware, the sequencer model should be intentionally narrow:
+For instrument and hardware, the sequencer model should be intentionally narrow:
 
 - `1` pattern per sequenced track
 - `4` fixed pages per track
 - `16` steps per page
 - up to `8` note slots per step
 
-This gives each sequenced track a practical `64-step` range without adding pattern-management complexity to the first hardware workflow. The underlying `StepSequencer` module can keep broader capabilities such as extra patterns or step CC messages, but Pi patcher should not expose them in `v1`. The product should only surface the model the hardware actually supports.
+This gives each sequenced track a practical `64-step` range without adding pattern-management complexity to the first hardware workflow. The underlying `StepSequencer` module can keep broader capabilities such as extra patterns or step CC messages, but instrument should not expose them in `v1`. The product should only surface the model the hardware actually supports.
 
 #### Seq Edit Mode
 
@@ -854,8 +854,8 @@ This keeps the system lightweight and closer to embedded-instrument behavior.
 
 #### Working architectural split
 
-1. The user authors a `Pi patcher` document.
-2. `Pi patcher` generates a valid `engine patch`.
+1. The user authors a `instrument` document.
+2. `instrument` generates a valid `engine patch`.
 3. Pi runtime loads that engine patch and starts the instrument.
 4. A Pi state adapter exposes the currently relevant performance state:
    - patch info
@@ -872,7 +872,7 @@ This split matters because the display should render an intentional performance 
 
 The authoring and runtime relationship should be:
 
-- `Pi patcher document` = source of truth for the instrument
+- `instrument document` = source of truth for the instrument
 - `engine patch` = generated runtime artifact
 - no generated Grid artifact in `v1`
 
@@ -898,7 +898,7 @@ If the Rust display spike works well and later reveals a strong need for tighter
 
 ### Engine Compiler Direction
 
-The engine compiler should follow the same typed-block structure as the Pi patcher document. The recommended organization for `v1` is:
+The engine compiler should follow the same typed-block structure as the instrument document. The recommended organization for `v1` is:
 
 - block compilers
 - track compiler
@@ -956,7 +956,7 @@ In `v1`, the compiler should generate this full global structure as part of the 
 
 ### Binding Resolution Boundary
 
-The binding layer between Pi patcher, hardware mapping, and the generated engine patch should stay semantic. The authored document should not directly depend on generated module ids or raw engine prop names, and the hardware profile should not need to know those details either.
+The binding layer between instrument, hardware mapping, and the generated engine patch should stay semantic. The authored document should not directly depend on generated module ids or raw engine prop names, and the hardware profile should not need to know those details either.
 
 Both sides should talk in terms of semantic slot targets such as:
 
@@ -964,14 +964,14 @@ Both sides should talk in terms of semantic slot targets such as:
 - `track.amp.attack`
 - `global.masterFilter.resonance`
 
-The compiler then resolves those semantic targets into concrete generated module bindings. For many slots, the resolution will be simple: one semantic target maps to one module id and one prop name. In future macro cases, one semantic target may map to several low-level engine props. The important point is that neither the Pi patcher document nor the hardware profile needs to change when that internal engine mapping evolves.
+The compiler then resolves those semantic targets into concrete generated module bindings. For many slots, the resolution will be simple: one semantic target maps to one module id and one prop name. In future macro cases, one semantic target may map to several low-level engine props. The important point is that neither the instrument document nor the hardware profile needs to change when that internal engine mapping evolves.
 
-### Current Pi Patcher Schema Shape
+### Current Instrument Schema Shape
 
 The document shape should now be thought of more concretely:
 
 ```ts
-type PiPatcherDocument = {
+type InstrumentDocument = {
   version: string;
   name: string;
   templateId: string;
@@ -1010,7 +1010,7 @@ This section summarizes the likely gaps implied by the current design.
 
 #### Grid
 
-- Add a dedicated `Pi patcher` authoring surface or route
+- Add a dedicated `instrument` authoring surface or route
 - Add template support
 - Add typed block authoring
 - Add hardware profile selection by id
@@ -1018,7 +1018,7 @@ This section summarizes the likely gaps implied by the current design.
 - Add source profile authoring and mapping metadata
 - Add authoring UI for global slots and track slots
 - Add LCD-friendly labels and preview metadata
-- Generate an engine patch from the Pi patcher document
+- Generate an engine patch from the instrument document
 
 #### Engine / mapping layer
 
@@ -1034,7 +1034,7 @@ This section summarizes the likely gaps implied by the current design.
 #### Pi runtime
 
 - Load the generated engine patch
-- Bind controller state to the Pi patcher instrument model
+- Bind controller state to the instrument instrument model
 - Expose performance state for the LCD renderer
 - Start reliably as an appliance-like runtime
 
@@ -1049,7 +1049,7 @@ This section summarizes the likely gaps implied by the current design.
 
 ### Validation And Failure Modes
 
-`Pi patcher` needs explicit validation because the instrument workflow depends on predictable structure.
+`instrument` needs explicit validation because the instrument workflow depends on predictable structure.
 
 Examples:
 
@@ -1070,11 +1070,11 @@ The initial implementation should be tested at three levels:
 #### Grid authoring tests
 
 - Template creation and selection
-- Pi patch validation rules
+- Instrument validation rules
 - Source profile selection and serialization
 - Track/global slot assignment rules
-- Serialization of the Pi patcher document
-- Engine-patch generation from Pi patcher input
+- Serialization of the instrument document
+- Engine-patch generation from instrument input
 
 #### Engine/controller tests
 
@@ -1104,13 +1104,13 @@ The initial implementation should be tested at three levels:
 #### Phase 0: Current state
 
 - Pi loads assigned patches from Grid
-- No dedicated Pi patcher authoring document
+- No dedicated instrument authoring document
 - No LCD runtime
 - Controller support exists but is generic relative to the desired instrument UX
 
-#### Phase 1: Pi patcher performance instrument
+#### Phase 1: instrument performance instrument
 
-- Add a dedicated `Pi patcher` authoring surface
+- Add a dedicated `instrument` authoring surface
 - Add one starting generic `8-track` template
 - Define `1 global + up to 8 tracks`
 - Implement the fixed global row with `Tempo`, `Swing`, `Master Filter Cutoff`, `Master Filter Resonance`, `Reverb Send`, `Delay Send`, an intentionally inactive slot, and `Main Volume`
@@ -1120,7 +1120,7 @@ The initial implementation should be tested at three levels:
 - Implement per-track exclusive note source selection: `StepSequencer` or `External MIDI`
 - Implement default editable MIDI channel assignment for external-input tracks
 - Implement `Seq Edit` mode with `Shift + Page Next`, `16` step buttons, fixed `4-page` loop structure, and note-slot editing on encoder rows
-- Generate an engine patch from the Pi patcher document
+- Generate an engine patch from the instrument document
 - Bind XL3 encoder rows to `global + focused-track fixed pages`
 - Render LCD performance dashboard
 
@@ -1145,7 +1145,7 @@ Grid remains the deep setup tool, but the Pi becomes a more complete instrument 
 
 These are recommendations made during brainstorming and accepted as the current working direction:
 
-- Treat `Pi patcher` as a constrained authoring system, not a free graph editor
+- Treat `instrument` as a constrained authoring system, not a free graph editor
 - Keep Grid in the loop early
 - Treat `track` as an explicit performance concept
 - Reuse `MidiMapper` as the routing backbone
@@ -1156,7 +1156,7 @@ These are recommendations made during brainstorming and accepted as the current 
 - Treat `Source` as a profile abstraction rather than always a single engine module
 - Keep the first generic template role-neutral and initialize all `8` tracks immediately
 - Use a single fixed template in `v1` with editable content inside a fixed structure
-- Treat the Pi patcher document as the source of truth and the engine patch as a generated artifact
+- Treat the instrument document as the source of truth and the engine patch as a generated artifact
 - Use per-track exclusive note sources, with sequencer editing constrained to the hardware-supported model
 - Use typed blocks plus one explicit hardware profile id per document
 - Compile through block compilers, track compiler, and patch compiler
@@ -1174,7 +1174,7 @@ The following questions should be revisited in later sessions so context is not 
 3. What exact field-level shape should `StepSequencerConfig` use?
 4. What should the startup experience be on the Pi beyond auto-loading the assigned patch?
 5. What exact parameter mappings and inactive-slot behavior should each source profile use?
-6. How should named modulation target presets be authored and stored in Pi patcher?
+6. How should named modulation target presets be authored and stored in instrument?
 7. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
 8. When local editing arrives, what is the smallest useful editing action to support first?
 
