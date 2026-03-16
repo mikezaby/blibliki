@@ -1,10 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import Instruments from "@/components/Instruments";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/instruments")({
-  component: InstrumentsPage,
+  component: InstrumentsLayout,
 });
 
-function InstrumentsPage() {
-  return <Instruments />;
+function InstrumentsLayout() {
+  return <Outlet />;
 }
