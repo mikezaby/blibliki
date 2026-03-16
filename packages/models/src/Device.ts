@@ -91,15 +91,10 @@ export default class Device implements IDevice {
   }
 
   constructor(props: Optional<IDevice, "id">) {
-    const legacyInstrumentId = (
-      props as Optional<IDevice, "id"> & { piPatchId?: string | null }
-    ).piPatchId;
-
     Object.assign(
       this,
-      pick(props, ["id", "token", "name", "patchId", "userId"]),
+      pick(props, ["id", "token", "name", "patchId", "instrumentId", "userId"]),
     );
-    this.instrumentId = props.instrumentId ?? legacyInstrumentId ?? null;
   }
 
   async save(): Promise<void> {
