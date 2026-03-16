@@ -65,6 +65,44 @@ describe("@blibliki/instrument", () => {
     });
   });
 
+  it("uses the correct note-source midi output name for compiled routes", () => {
+    const stepSequencerDocument = createDefaultInstrumentDocument();
+    const stepSequencerTrack = stepSequencerDocument.tracks[0];
+    if (!stepSequencerTrack) {
+      throw new Error("Expected default document to include track 1");
+    }
+
+    stepSequencerDocument.tracks[0] = withTrackSourceProfile(
+      stepSequencerTrack,
+      "osc",
+    );
+    const stepSequencerCompiled =
+      compileInstrumentDocument(stepSequencerDocument);
+    const stepSequencerRoute = stepSequencerCompiled.engine.routes.find(
+      (route) => route.id === "track-1-route-note-source-source",
+    );
+
+    expect(stepSequencerRoute?.source.ioName).toBe("midi");
+
+    const externalMidiDocument = createDefaultInstrumentDocument();
+    const externalMidiTrack = externalMidiDocument.tracks[0];
+    if (!externalMidiTrack) {
+      throw new Error("Expected default document to include track 1");
+    }
+
+    externalMidiDocument.tracks[0] = withTrackSourceProfile(
+      externalMidiTrack,
+      "osc",
+    );
+    externalMidiDocument.tracks[0].noteSource = "externalMidi";
+    const externalMidiCompiled = compileInstrumentDocument(externalMidiDocument);
+    const externalMidiRoute = externalMidiCompiled.engine.routes.find(
+      (route) => route.id === "track-1-route-note-source-source",
+    );
+
+    expect(externalMidiRoute?.source.ioName).toBe("midi out");
+  });
+
   it("fails validation when a track count is invalid", () => {
     const document = createDefaultInstrumentDocument();
     document.tracks = document.tracks.slice(0, 1);

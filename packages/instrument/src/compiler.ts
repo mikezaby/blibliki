@@ -1340,11 +1340,14 @@ const compileTrack = (
     "in",
   );
 
+  const noteSourceMidiOutName =
+    track.noteSource === "stepSequencer" ? "midi" : "midi out";
+
   pushRoute(
     context,
     `${prefix}-route-note-source-source`,
     noteSourceModuleId,
-    "midi out",
+    noteSourceMidiOutName,
     ampEnvId,
     "midi in",
   );
@@ -1352,7 +1355,7 @@ const compileTrack = (
     context,
     `${prefix}-route-note-source-filter-env`,
     noteSourceModuleId,
-    "midi out",
+    noteSourceMidiOutName,
     filterEnvId,
     "midi in",
   );
@@ -1373,7 +1376,7 @@ const compileTrack = (
       context,
       `${prefix}-route-note-source-primary`,
       noteSourceModuleId,
-      "midi out",
+      noteSourceMidiOutName,
       midiTargetPrefix,
       "midi in",
     );
@@ -1383,7 +1386,7 @@ const compileTrack = (
       context,
       `${prefix}-route-note-source-3osc-2`,
       noteSourceModuleId,
-      "midi out",
+      noteSourceMidiOutName,
       `${prefix}-source-3osc-2`,
       "midi in",
     );
@@ -1391,7 +1394,7 @@ const compileTrack = (
       context,
       `${prefix}-route-note-source-3osc-3`,
       noteSourceModuleId,
-      "midi out",
+      noteSourceMidiOutName,
       `${prefix}-source-3osc-3`,
       "midi in",
     );
