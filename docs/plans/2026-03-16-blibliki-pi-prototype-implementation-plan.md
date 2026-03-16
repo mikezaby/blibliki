@@ -4,6 +4,8 @@
 
 **Goal:** Build the first end-to-end Blibliki Pi prototype loop: author a constrained Instrument in Grid, compile it into an engine patch, assign it to a device, boot it in `packages/pi`, drive it from Launch Control XL3, and render a real display state stream for the LCD process.
 
+**Per-task QA handoff:** at the end of every implementation task, include concrete manual test scenarios that verify the expected behavior works. Do not finish a task only with a change summary; always provide explicit checks the user can run next.
+
 **Architecture:** The instrument document is the source of truth. A new shared `@blibliki/instrument` package owns the document schema, defaults, semantic slot bindings, first template, first hardware profile, and compiler. Grid edits and saves that document, the Pi runtime recompiles it locally at boot, and the controller/display layers consume the compiler’s semantic binding output rather than inferring behavior from a free graph.
 
 **Tech Stack:** TypeScript, pnpm workspaces, `@blibliki/engine`, `@blibliki/models`, React + TanStack Router in `apps/grid`, Node runtime in `packages/pi`, child-process display bridge, Vitest.
