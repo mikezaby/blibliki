@@ -18,7 +18,7 @@ import {
   getConfig,
 } from "./config.js";
 import { promptForUserId } from "./prompt.js";
-import { PiSession } from "./runtime/PiSession.js";
+import { installPiControllerMatcher, PiSession } from "./runtime/PiSession.js";
 
 export { loadOrCreateConfig, getConfigPath, updateConfig, getConfig };
 export {
@@ -158,8 +158,32 @@ async function bootInstrument(instrumentId: string) {
   const instrument = await Instrument.find(instrumentId);
   const compiled = compileInstrumentDocument(instrument.document);
 
-  const engine = new Engine(new Context());
-  const session = new PiSession(engine, compiled);
+  const { engine } = await createInstrumentRuntime(compiled);
+  return engine;
+}
+
+type InstrumentRuntimeDeps = {
+  installMatcher?: typeof installPiControllerMatcher;
+  ContextClass?: typeof Context;
+  EngineClass?: typeof Engine;
+  SessionClass?: typeof PiSession;
+};
+
+export async function createInstrumentRuntime(
+  compiled: ReturnType<typeof compileInstrumentDocument>,
+  deps: InstrumentRuntimeDeps = {},
+) {
+  const {
+    installMatcher = installPiControllerMatcher,
+    ContextClass = Context,
+    EngineClass = Engine,
+    SessionClass = PiSession,
+  } = deps;
+
+  installMatcher();
+
+  const engine = new EngineClass(new ContextClass());
+  const session = new SessionClass(engine, compiled);
 
   await engine.initialize();
   engine.timeSignature = compiled.engine.timeSignature;
@@ -173,7 +197,8 @@ async function bootInstrument(instrumentId: string) {
   });
 
   session.start();
-  return engine;
+
+  return { engine, session };
 }
 
 /**
