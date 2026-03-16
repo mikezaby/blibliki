@@ -44,4 +44,11 @@ export default class Message {
         return "unknown";
     }
   }
+
+  get channel(): number | undefined {
+    const statusByte = this.data[0];
+    if (statusByte === undefined) return undefined;
+
+    return statusByte & 0x0f;
+  }
 }

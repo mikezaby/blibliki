@@ -67,6 +67,10 @@ export default class MidiEvent {
     return this.message.dataBytes[1];
   }
 
+  get channel(): number | undefined {
+    return this.message.channel;
+  }
+
   defineNotes() {
     if (!this.isNote) return;
     if (this.note) return;

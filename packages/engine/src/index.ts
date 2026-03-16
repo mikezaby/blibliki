@@ -31,6 +31,8 @@ export {
   LaunchControlXL3,
   MidiPortState,
   Note,
+  MidiEvent,
+  MidiEventType,
 } from "./core";
 
 export { TransportState } from "@blibliki/transport";
@@ -63,6 +65,7 @@ export {
   stepPropSchema,
   NoiseType,
   DelayTimeMode,
+  ReverbType,
   parseWavetableDefinition,
   formatWavetableDefinition,
   parseWavetableConfig,
