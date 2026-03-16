@@ -9,8 +9,7 @@ import {
   Text,
 } from "@blibliki/ui";
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/clerk-react";
-import { Link } from "@tanstack/react-router";
-import { Cpu, LogIn, Play, Square } from "lucide-react";
+import { LogIn, Play, Square } from "lucide-react";
 import { ChangeEvent, useCallback, useEffect } from "react";
 import { start, stop, setBpm } from "@/globalSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
@@ -65,19 +64,6 @@ export default function Header() {
 
       <Stack direction="row" align="center" gap={2}>
         <FileMenu />
-        <SignedIn>
-          <Button asChild variant="text" color="neutral" size="sm">
-            <Link to="/devices">
-              <Cpu className="w-4 h-4" />
-              <span>Devices</span>
-            </Link>
-          </Button>
-          <Button asChild variant="text" color="neutral" size="sm">
-            <Link to="/instruments">
-              <span>Instruments</span>
-            </Link>
-          </Button>
-        </SignedIn>
       </Stack>
 
       <Stack direction="row" align="center" gap={3} className="ml-6 min-w-70">
