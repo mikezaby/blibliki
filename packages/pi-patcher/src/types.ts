@@ -4,8 +4,10 @@ import type {
   NumberProp,
   EnumProp,
   BooleanProp,
+  Resolution,
+  PlaybackMode,
 } from "@blibliki/engine";
-import type { Division, PlaybackMode } from "@blibliki/transport";
+import type { Division } from "@blibliki/transport";
 
 export const PI_PATCHER_VERSION = "0.1.0";
 export const PI_TEMPLATE_ID = "pi-8-track-v1";
@@ -59,7 +61,7 @@ export type StepPageConfig = {
 export type StepSequencerConfig = {
   pages: StepPageConfig[];
   loopLength: number;
-  resolution: Division;
+  resolution: Resolution;
   playbackMode: PlaybackMode;
 };
 
@@ -96,7 +98,7 @@ export type PiPatcherDocument = {
 };
 
 export type NumberControlSpec = NumberProp & { kind: "number" };
-export type EnumControlSpec = EnumProp<string> & { kind: "enum" };
+export type EnumControlSpec = EnumProp<string | number> & { kind: "enum" };
 export type BooleanControlSpec = BooleanProp & { kind: "boolean" };
 
 export type SessionControlSpec =

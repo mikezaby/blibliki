@@ -4,7 +4,6 @@ import {
   LFOWaveform,
   OscillatorWave,
   ReverbType,
-  DelayTimeMode,
 } from "@blibliki/engine";
 import type {
   EffectSlotConfig,
@@ -20,9 +19,8 @@ import type {
   StepSequencerConfig,
   TrackConfig,
   TrackPages,
-} from "@/types";
+} from "./types";
 import {
-  PI_GLOBAL_SLOT_COUNT,
   PI_HARDWARE_PROFILE_ID,
   PI_PAGE_SLOT_COUNT,
   PI_PATCHER_VERSION,
@@ -31,7 +29,7 @@ import {
   PI_STEP_PAGE_COUNT,
   PI_TEMPLATE_ID,
   PI_TRACK_COUNT,
-} from "@/types";
+} from "./types";
 
 const GLOBAL_SLOT_DEFAULTS: Omit<SlotConfig, "slotId">[] = [
   {
@@ -114,7 +112,7 @@ const createInactiveSlot = (
 const createStep = (): StepConfig => ({
   active: false,
   probability: 100,
-  duration: Resolution.sixteenth,
+  duration: "1/16",
   microtimeOffset: 0,
   notes: Array.from({ length: PI_STEP_NOTE_COUNT }, () => ({
     pitch: null,
@@ -289,7 +287,12 @@ const EFFECT_SLOT_TARGETS: Record<
   EffectType,
   [string, string, string, string]
 > = {
-  delay: ["track.fx.time", "track.fx.sync", "track.fx.feedback", "track.fx.mix"],
+  delay: [
+    "track.fx.time",
+    "track.fx.sync",
+    "track.fx.feedback",
+    "track.fx.mix",
+  ],
   reverb: [
     "track.fx.type",
     "track.fx.decay",
@@ -330,6 +333,7 @@ const EFFECT_SLOT_LABELS: Record<EffectType, [string, string, string, string]> =
 const createEffectSlots = (
   effectType: EffectType | null,
   prefix: string,
+  effectIndex: number,
 ): SlotConfig[] => {
   if (!effectType) {
     return Array.from({ length: 4 }, (_, index) =>
@@ -345,7 +349,10 @@ const createEffectSlots = (
     createSlot(`${prefix}-${index}`, {
       active: effectType !== "distortion" || index !== 2,
       label,
-      target: targets[index],
+      target: targets[index]?.replace(
+        "track.fx.",
+        `track.fx.${effectIndex}.`,
+      ),
       initialValue: defaults[index],
     }),
   );
@@ -361,12 +368,12 @@ export const createFxPages = (
 
   return {
     fxA: [
-      ...createEffectSlots(slots[0]!.effectType, "fxA-left"),
-      ...createEffectSlots(slots[1]!.effectType, "fxA-right"),
+      ...createEffectSlots(slots[0]!.effectType, "fxA-left", 0),
+      ...createEffectSlots(slots[1]!.effectType, "fxA-right", 1),
     ],
     fxB: [
-      ...createEffectSlots(slots[2]!.effectType, "fxB-left"),
-      ...createEffectSlots(slots[3]!.effectType, "fxB-right"),
+      ...createEffectSlots(slots[2]!.effectType, "fxB-left", 2),
+      ...createEffectSlots(slots[3]!.effectType, "fxB-right", 3),
     ],
   };
 };
@@ -590,7 +597,7 @@ export const withTrackSourceProfile = (
   track: TrackConfig,
   sourceProfileId: SourceProfileId,
 ): TrackConfig => {
-  const next = structuredClone(track) as TrackConfig;
+  const next = structuredClone(track);
   next.sourceProfileId = sourceProfileId;
   next.pages = {
     ...next.pages,
@@ -604,7 +611,7 @@ export const withTrackEffectType = (
   effectIndex: number,
   effectType: EffectType | null,
 ): TrackConfig => {
-  const next = structuredClone(track) as TrackConfig;
+  const next = structuredClone(track);
   next.effectSlots[effectIndex] = createEffectSlotConfig(effectType, effectIndex);
   const fxPages = createFxPages(next.effectSlots);
   next.pages = {

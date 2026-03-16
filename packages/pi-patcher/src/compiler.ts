@@ -10,23 +10,24 @@ import {
   type NumberProp,
   type EnumProp,
   type BooleanProp,
+  type PropSchema,
   type IRoute,
+  ReverbType,
+  DelayTimeMode,
+  NoiseType,
 } from "@blibliki/engine";
-import { ReverbType, DelayTimeMode, NoiseType } from "@blibliki/engine";
 import type {
   BindingTransform,
-  EffectSlotConfig,
   PiPatcherCompileResult,
   PiPatcherDocument,
   PiControlValue,
   ResolvedBinding,
   SessionControlSpec,
   SlotConfig,
-  SourceProfileId,
   TrackConfig,
   TrackRuntimeMetadata,
-} from "@/types";
-import { PI_TRACK_COUNT } from "@/types";
+} from "./types";
+import { PI_TRACK_COUNT } from "./types";
 
 type CompileContext = {
   modules: IAnyModuleSerialize[];
@@ -88,16 +89,15 @@ const toNumberControl = (
 });
 
 const toEnumControl = (
-  schema: EnumProp<string>,
+  schema: EnumProp<string | number>,
   label: string,
-): EnumProp<string> & { kind: "enum" } => ({
+): EnumProp<string | number> & { kind: "enum" } => ({
   kind: "enum",
   label,
   options: [...schema.options],
 });
 
 const toBooleanControl = (
-  schema: BooleanProp,
   label: string,
 ): BooleanProp & { kind: "boolean" } => ({
   kind: "boolean",
@@ -109,8 +109,8 @@ const toControlSpec = (
   propName: string,
   label: string,
 ): SessionControlSpec => {
-  const schema = moduleSchemas[moduleType][
-    propName as keyof (typeof moduleSchemas)[typeof moduleType]
+  const schema = (moduleSchemas[moduleType] as Record<string, PropSchema>)[
+    propName
   ];
 
   if (!schema) {
@@ -121,9 +121,9 @@ const toControlSpec = (
     case "number":
       return toNumberControl(schema, label);
     case "enum":
-      return toEnumControl(schema as EnumProp<string>, label);
+      return toEnumControl(schema, label);
     case "boolean":
-      return toBooleanControl(schema, label);
+      return toBooleanControl(label);
     default:
       throw new Error(
         `Unsupported control schema ${schema.kind} for ${moduleType}.${propName}`,
@@ -178,7 +178,7 @@ const addModulePropBinding = ({
 }) => {
   const existing = context.bindings[bindingKey];
 
-  if (existing && existing.kind === "module") {
+  if (existing?.kind === "module") {
     existing.targets.push({ moduleId, moduleType, propName, transform });
     return;
   }

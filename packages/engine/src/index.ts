@@ -63,6 +63,7 @@ export {
   stepPropSchema,
   NoiseType,
   DelayTimeMode,
+  ReverbType,
   parseWavetableDefinition,
   formatWavetableDefinition,
   parseWavetableConfig,
