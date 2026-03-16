@@ -65,6 +65,22 @@ describe("@blibliki/instrument", () => {
     });
   });
 
+  it("uses the transport swing range expected by the scheduler", () => {
+    const document = createDefaultInstrumentDocument();
+    const compiled = compileInstrumentDocument(document);
+    const swingBinding = compiled.bindings["global.swing"];
+
+    expect(swingBinding).toMatchObject({
+      kind: "transport",
+      transportProp: "swingAmount",
+      control: {
+        kind: "number",
+        min: 0.5,
+        max: 0.75,
+      },
+    });
+  });
+
   it("uses the correct note-source midi output name for compiled routes", () => {
     const stepSequencerDocument = createDefaultInstrumentDocument();
     const stepSequencerTrack = stepSequencerDocument.tracks[0];

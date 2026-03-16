@@ -348,8 +348,8 @@ const compileGlobalBlock = (
     {
       kind: "number",
       label: "Swing",
-      min: 0,
-      max: 1,
+      min: 0.5,
+      max: 0.75,
       step: 0.01,
     },
     "swingAmount",
