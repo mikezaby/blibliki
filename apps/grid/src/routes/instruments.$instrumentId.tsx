@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import InstrumentEditor from "@/components/Instrument";
 
-export const Route = createFileRoute("/instrument/$instrumentId")({
+export const Route = createFileRoute("/instruments/$instrumentId")({
   component: InstrumentPage,
 });
 

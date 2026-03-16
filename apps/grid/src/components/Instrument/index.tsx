@@ -168,7 +168,7 @@ export default function InstrumentEditor({
 
       if (instrumentId === "new") {
         await navigate({
-          to: "/instrument/$instrumentId",
+          to: "/instruments/$instrumentId",
           params: { instrumentId: instrument.id },
         });
       }
@@ -186,7 +186,7 @@ export default function InstrumentEditor({
       const instrument = await InstrumentModel.find(instrumentId);
       await instrument.delete();
       await navigate({
-        to: "/instrument/$instrumentId",
+        to: "/instruments/$instrumentId",
         params: { instrumentId: "new" },
       });
     } catch (error) {

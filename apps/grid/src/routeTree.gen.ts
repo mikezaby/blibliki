@@ -12,7 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DevicesRouteImport } from './routes/devices'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PatchPatchIdRouteImport } from './routes/patch.$patchId'
-import { Route as InstrumentInstrumentIdRouteImport } from './routes/instrument.$instrumentId'
+import { Route as InstrumentsInstrumentIdRouteImport } from './routes/instruments.$instrumentId'
 
 const DevicesRoute = DevicesRouteImport.update({
   id: '/devices',
@@ -29,48 +29,48 @@ const PatchPatchIdRoute = PatchPatchIdRouteImport.update({
   path: '/patch/$patchId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InstrumentInstrumentIdRoute = InstrumentInstrumentIdRouteImport.update({
-  id: '/instrument/$instrumentId',
-  path: '/instrument/$instrumentId',
+const InstrumentsInstrumentIdRoute = InstrumentsInstrumentIdRouteImport.update({
+  id: '/instruments/$instrumentId',
+  path: '/instruments/$instrumentId',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/devices': typeof DevicesRoute
-  '/instrument/$instrumentId': typeof InstrumentInstrumentIdRoute
+  '/instruments/$instrumentId': typeof InstrumentsInstrumentIdRoute
   '/patch/$patchId': typeof PatchPatchIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/devices': typeof DevicesRoute
-  '/instrument/$instrumentId': typeof InstrumentInstrumentIdRoute
+  '/instruments/$instrumentId': typeof InstrumentsInstrumentIdRoute
   '/patch/$patchId': typeof PatchPatchIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/devices': typeof DevicesRoute
-  '/instrument/$instrumentId': typeof InstrumentInstrumentIdRoute
+  '/instruments/$instrumentId': typeof InstrumentsInstrumentIdRoute
   '/patch/$patchId': typeof PatchPatchIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/devices' | '/instrument/$instrumentId' | '/patch/$patchId'
+  fullPaths: '/' | '/devices' | '/instruments/$instrumentId' | '/patch/$patchId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/devices' | '/instrument/$instrumentId' | '/patch/$patchId'
+  to: '/' | '/devices' | '/instruments/$instrumentId' | '/patch/$patchId'
   id:
     | '__root__'
     | '/'
     | '/devices'
-    | '/instrument/$instrumentId'
+    | '/instruments/$instrumentId'
     | '/patch/$patchId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DevicesRoute: typeof DevicesRoute
-  InstrumentInstrumentIdRoute: typeof InstrumentInstrumentIdRoute
+  InstrumentsInstrumentIdRoute: typeof InstrumentsInstrumentIdRoute
   PatchPatchIdRoute: typeof PatchPatchIdRoute
 }
 
@@ -97,11 +97,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PatchPatchIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/instrument/$instrumentId': {
-      id: '/instrument/$instrumentId'
-      path: '/instrument/$instrumentId'
-      fullPath: '/instrument/$instrumentId'
-      preLoaderRoute: typeof InstrumentInstrumentIdRouteImport
+    '/instruments/$instrumentId': {
+      id: '/instruments/$instrumentId'
+      path: '/instruments/$instrumentId'
+      fullPath: '/instruments/$instrumentId'
+      preLoaderRoute: typeof InstrumentsInstrumentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -110,7 +110,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DevicesRoute: DevicesRoute,
-  InstrumentInstrumentIdRoute: InstrumentInstrumentIdRoute,
+  InstrumentsInstrumentIdRoute: InstrumentsInstrumentIdRoute,
   PatchPatchIdRoute: PatchPatchIdRoute,
 }
 export const routeTree = rootRouteImport
