@@ -21,6 +21,7 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "start": "NODE_ENV=development tsx src/cli.ts",
+    "test": "tsx --test test/**/*.test.ts",
     "lint": "eslint src",
     "tsc": "tsc --noEmit",
     "format": "prettier . --write",
