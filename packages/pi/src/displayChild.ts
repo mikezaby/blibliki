@@ -21,8 +21,12 @@ function render(snapshot: PiDisplayState) {
     `${snapshot.header.patchName} | ${snapshot.header.trackName} | ${snapshot.header.pageName} | ${snapshot.header.transport}\n`,
   );
   process.stdout.write(`${renderBand("GLOBAL", snapshot.globals)}\n`);
-  process.stdout.write(`${renderBand(snapshot.upper.title, snapshot.upper.cells)}\n`);
-  process.stdout.write(`${renderBand(snapshot.lower.title, snapshot.lower.cells)}\n`);
+  process.stdout.write(
+    `${renderBand(snapshot.upper.title, snapshot.upper.cells)}\n`,
+  );
+  process.stdout.write(
+    `${renderBand(snapshot.lower.title, snapshot.lower.cells)}\n`,
+  );
   if (snapshot.seqEdit) {
     process.stdout.write(
       `SEQ EDIT page=${snapshot.seqEdit.page} step=${snapshot.seqEdit.selected} playhead=${snapshot.seqEdit.step}\n`,

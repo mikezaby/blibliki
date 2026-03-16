@@ -1,7 +1,4 @@
-import {
-  spawn,
-  type ChildProcessByStdio,
-} from "node:child_process";
+import { spawn, type ChildProcessByStdio } from "node:child_process";
 import type { Writable } from "node:stream";
 import { fileURLToPath } from "node:url";
 import type { PiDisplayState } from "./PiDisplayState.js";

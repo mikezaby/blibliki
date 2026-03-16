@@ -57,7 +57,8 @@ export class PiLaunchControlXL3 {
 
   private onMidiEvent = (event: MidiEvent) => {
     const session = getPiSessionByEngineId(this.engineId);
-    if (!session || event.cc === undefined || event.ccValue === undefined) return;
+    if (!session || event.cc === undefined || event.ccValue === undefined)
+      return;
 
     switch (event.cc) {
       case PLAY:
@@ -82,7 +83,15 @@ export class PiLaunchControlXL3 {
   private refreshTransport() {
     const engine = Engine.getById(this.engineId);
     const isPlaying = engine.state === TransportState.playing;
-    this.output.directSend([176, PLAY, isPlaying ? PLAY_PLAYING_COLOR : PLAY_STOPPED_COLOR]);
-    this.output.directSend([176, RECORD, isPlaying ? RECORD_ACTIVE_COLOR : RECORD_IDLE_COLOR]);
+    this.output.directSend([
+      176,
+      PLAY,
+      isPlaying ? PLAY_PLAYING_COLOR : PLAY_STOPPED_COLOR,
+    ]);
+    this.output.directSend([
+      176,
+      RECORD,
+      isPlaying ? RECORD_ACTIVE_COLOR : RECORD_IDLE_COLOR,
+    ]);
   }
 }

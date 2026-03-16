@@ -1,11 +1,6 @@
 import { Context, Engine } from "@blibliki/engine";
+import { Device, initializeFirebase, Patch, PiPatch } from "@blibliki/models";
 import { compilePiPatcherDocument } from "@blibliki/pi-patcher";
-import {
-  Device,
-  initializeFirebase,
-  Patch,
-  PiPatch,
-} from "@blibliki/models";
 import {
   fetchFirebaseConfig,
   getDefaultGridUrl,

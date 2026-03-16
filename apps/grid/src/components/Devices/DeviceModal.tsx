@@ -14,7 +14,12 @@ import { Cpu, Save } from "lucide-react";
 import { useState } from "react";
 import Modal, { close as closeModal } from "@/components/Modal";
 import { saveDevice } from "@/devicesSlice";
-import { useAppDispatch, useAppSelector, usePatches, usePiPatches } from "@/hooks";
+import {
+  useAppDispatch,
+  useAppSelector,
+  usePatches,
+  usePiPatches,
+} from "@/hooks";
 
 type DeviceModalProps = {
   deviceId: string;
@@ -170,7 +175,8 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
             }}
           />
           <Text tone="muted" size="xs">
-            Pi patches are compiled locally on boot and take precedence over legacy patch assignment
+            Pi patches are compiled locally on boot and take precedence over
+            legacy patch assignment
           </Text>
         </Stack>
       </Stack>

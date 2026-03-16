@@ -115,11 +115,16 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
   const track = document?.tracks[activeTrack];
   const pageBlocks = TRACK_PAGE_BLOCKS[activePage];
 
-  const updateDocument = (updater: (current: PiPatcherDocument) => PiPatcherDocument) => {
+  const updateDocument = (
+    updater: (current: PiPatcherDocument) => PiPatcherDocument,
+  ) => {
     setDocument((current) => (current ? updater(current) : current));
   };
 
-  const updateGlobalSlot = (slotIndex: number, initialValue: SlotConfig["initialValue"]) => {
+  const updateGlobalSlot = (
+    slotIndex: number,
+    initialValue: SlotConfig["initialValue"],
+  ) => {
     updateDocument((current) => {
       const next = structuredClone(current);
       next.globalBlock.slots[slotIndex]!.initialValue = initialValue;
@@ -134,7 +139,8 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
   ) => {
     updateDocument((current) => {
       const next = structuredClone(current);
-      next.tracks[activeTrack]!.pages[blockId][slotIndex]!.initialValue = initialValue;
+      next.tracks[activeTrack]!.pages[blockId][slotIndex]!.initialValue =
+        initialValue;
       return next;
     });
   };
@@ -347,7 +353,8 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
                     onChange={(event) => {
                       updateDocument((current) => {
                         const next = structuredClone(current);
-                        next.tracks[activeTrack]!.name = event.target.value || undefined;
+                        next.tracks[activeTrack]!.name =
+                          event.target.value || undefined;
                         return next;
                       });
                     }}
@@ -362,7 +369,10 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
                       updateDocument((current) => {
                         const next = structuredClone(current);
                         next.tracks[activeTrack]!.noteSource = value;
-                        if (value === "stepSequencer" && !next.tracks[activeTrack]!.stepSequencer) {
+                        if (
+                          value === "stepSequencer" &&
+                          !next.tracks[activeTrack]!.stepSequencer
+                        ) {
                           next.tracks[activeTrack]!.stepSequencer =
                             createDefaultPiPatcherDocument().tracks[0]!.stepSequencer;
                         }
@@ -381,7 +391,9 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
                     onChange={(event) => {
                       updateDocument((current) => {
                         const next = structuredClone(current);
-                        next.tracks[activeTrack]!.midiChannel = Number(event.target.value);
+                        next.tracks[activeTrack]!.midiChannel = Number(
+                          event.target.value,
+                        );
                         return next;
                       });
                     }}
@@ -459,7 +471,11 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
                   title={upperBlock.toUpperCase()}
                   slots={track.pages[upperBlock]}
                   bindingResolver={(slot) =>
-                    resolveTrackBinding(compiled?.result?.bindings, activeTrack, slot)
+                    resolveTrackBinding(
+                      compiled?.result?.bindings,
+                      activeTrack,
+                      slot,
+                    )
                   }
                   onChange={(slotIndex, value) => {
                     updateTrackSlot(upperBlock, slotIndex, value);
@@ -469,7 +485,11 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
                   title={lowerBlock.toUpperCase()}
                   slots={track.pages[lowerBlock]}
                   bindingResolver={(slot) =>
-                    resolveTrackBinding(compiled?.result?.bindings, activeTrack, slot)
+                    resolveTrackBinding(
+                      compiled?.result?.bindings,
+                      activeTrack,
+                      slot,
+                    )
                   }
                   onChange={(slotIndex, value) => {
                     updateTrackSlot(lowerBlock, slotIndex, value);
@@ -480,187 +500,207 @@ export default function PiPatcher({ piPatchId }: PiPatcherProps) {
           </CardContent>
         </Card>
 
-        {track.noteSource === "stepSequencer" && currentSeqPage && currentStep && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Sequencer</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Stack gap={4}>
-                <Stack direction="row" gap={2}>
-                  {track.stepSequencer?.pages.map((page, index) => (
-                    <Button
-                      key={page.name}
-                      size="sm"
-                      color={index === selectedSeqPage ? "info" : "neutral"}
-                      variant={index === selectedSeqPage ? "contained" : "outlined"}
-                      onClick={() => {
-                        setSelectedSeqPage(index);
-                        setSelectedStep(0);
-                      }}
-                    >
-                      {page.name}
-                    </Button>
-                  ))}
+        {track.noteSource === "stepSequencer" &&
+          currentSeqPage &&
+          currentStep && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Sequencer</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Stack gap={4}>
+                  <Stack direction="row" gap={2}>
+                    {track.stepSequencer?.pages.map((page, index) => (
+                      <Button
+                        key={page.name}
+                        size="sm"
+                        color={index === selectedSeqPage ? "info" : "neutral"}
+                        variant={
+                          index === selectedSeqPage ? "contained" : "outlined"
+                        }
+                        onClick={() => {
+                          setSelectedSeqPage(index);
+                          setSelectedStep(0);
+                        }}
+                      >
+                        {page.name}
+                      </Button>
+                    ))}
+                  </Stack>
+
+                  <div className="grid grid-cols-4 gap-2 md:grid-cols-8 xl:grid-cols-16">
+                    {currentSeqPage.steps.map((step, index) => (
+                      <Button
+                        key={index}
+                        size="sm"
+                        color={
+                          index === selectedStep
+                            ? "info"
+                            : step.active
+                              ? "success"
+                              : "neutral"
+                        }
+                        variant={
+                          index === selectedStep ? "contained" : "outlined"
+                        }
+                        onClick={() => {
+                          setSelectedStep(index);
+                        }}
+                      >
+                        {index + 1}
+                      </Button>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                    <Stack gap={3}>
+                      <Label>Step Settings</Label>
+                      <Stack direction="row" align="center" gap={3}>
+                        <Switch
+                          checked={currentStep.active}
+                          onCheckedChange={(checked) => {
+                            updateDocument((current) => {
+                              const next = structuredClone(current);
+                              next.tracks[activeTrack]!.stepSequencer!.pages[
+                                selectedSeqPage
+                              ]!.steps[selectedStep]!.active = checked;
+                              return next;
+                            });
+                          }}
+                        />
+                        <Text>{currentStep.active ? "Active" : "Muted"}</Text>
+                      </Stack>
+                      <Stack gap={2}>
+                        <Label>Probability</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={currentStep.probability}
+                          onChange={(event) => {
+                            updateDocument((current) => {
+                              const next = structuredClone(current);
+                              next.tracks[activeTrack]!.stepSequencer!.pages[
+                                selectedSeqPage
+                              ]!.steps[selectedStep]!.probability = Number(
+                                event.target.value,
+                              );
+                              return next;
+                            });
+                          }}
+                        />
+                      </Stack>
+                      <Stack gap={2}>
+                        <Label>Duration</Label>
+                        <OptionSelect
+                          value={currentStep.duration}
+                          options={["1/16", "1/8", "1/4", "1/2", "1"]}
+                          onChange={(value) => {
+                            updateDocument((current) => {
+                              const next = structuredClone(current);
+                              next.tracks[activeTrack]!.stepSequencer!.pages[
+                                selectedSeqPage
+                              ]!.steps[selectedStep]!.duration = value;
+                              return next;
+                            });
+                          }}
+                        />
+                      </Stack>
+                      <Stack gap={2}>
+                        <Label>Microtime</Label>
+                        <Input
+                          type="number"
+                          min={-100}
+                          max={100}
+                          value={currentStep.microtimeOffset}
+                          onChange={(event) => {
+                            updateDocument((current) => {
+                              const next = structuredClone(current);
+                              next.tracks[activeTrack]!.stepSequencer!.pages[
+                                selectedSeqPage
+                              ]!.steps[selectedStep]!.microtimeOffset = Number(
+                                event.target.value,
+                              );
+                              return next;
+                            });
+                          }}
+                        />
+                      </Stack>
+                    </Stack>
+
+                    <Stack gap={3}>
+                      <Label>Notes</Label>
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        {currentStep.notes.map((note, noteIndex) => (
+                          <Surface
+                            key={noteIndex}
+                            tone="panel"
+                            border="subtle"
+                            radius="md"
+                            className="p-3"
+                          >
+                            <Stack gap={2}>
+                              <Text size="sm" weight="medium">
+                                Voice {noteIndex + 1}
+                              </Text>
+                              <Input
+                                value={note.pitch ?? ""}
+                                placeholder="C4"
+                                onChange={(event) => {
+                                  updateDocument((current) => {
+                                    const next = structuredClone(current);
+                                    next.tracks[
+                                      activeTrack
+                                    ]!.stepSequencer!.pages[
+                                      selectedSeqPage
+                                    ]!.steps[selectedStep]!.notes[
+                                      noteIndex
+                                    ]!.pitch = event.target.value || null;
+                                    return next;
+                                  });
+                                }}
+                              />
+                              <Input
+                                type="number"
+                                min={1}
+                                max={127}
+                                value={note.velocity}
+                                onChange={(event) => {
+                                  updateDocument((current) => {
+                                    const next = structuredClone(current);
+                                    next.tracks[
+                                      activeTrack
+                                    ]!.stepSequencer!.pages[
+                                      selectedSeqPage
+                                    ]!.steps[selectedStep]!.notes[
+                                      noteIndex
+                                    ]!.velocity = Number(event.target.value);
+                                    return next;
+                                  });
+                                }}
+                              />
+                            </Stack>
+                          </Surface>
+                        ))}
+                      </div>
+                    </Stack>
+                  </div>
                 </Stack>
-
-                <div className="grid grid-cols-4 gap-2 md:grid-cols-8 xl:grid-cols-16">
-                  {currentSeqPage.steps.map((step, index) => (
-                    <Button
-                      key={index}
-                      size="sm"
-                      color={index === selectedStep ? "info" : step.active ? "success" : "neutral"}
-                      variant={index === selectedStep ? "contained" : "outlined"}
-                      onClick={() => {
-                        setSelectedStep(index);
-                      }}
-                    >
-                      {index + 1}
-                    </Button>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                  <Stack gap={3}>
-                    <Label>Step Settings</Label>
-                    <Stack direction="row" align="center" gap={3}>
-                      <Switch
-                        checked={currentStep.active}
-                        onCheckedChange={(checked) => {
-                          updateDocument((current) => {
-                            const next = structuredClone(current);
-                            next.tracks[activeTrack]!.stepSequencer!.pages[selectedSeqPage]!.steps[
-                              selectedStep
-                            ]!.active = checked;
-                            return next;
-                          });
-                        }}
-                      />
-                      <Text>{currentStep.active ? "Active" : "Muted"}</Text>
-                    </Stack>
-                    <Stack gap={2}>
-                      <Label>Probability</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={100}
-                        value={currentStep.probability}
-                        onChange={(event) => {
-                          updateDocument((current) => {
-                            const next = structuredClone(current);
-                            next.tracks[activeTrack]!.stepSequencer!.pages[selectedSeqPage]!.steps[
-                              selectedStep
-                            ]!.probability = Number(event.target.value);
-                            return next;
-                          });
-                        }}
-                      />
-                    </Stack>
-                    <Stack gap={2}>
-                      <Label>Duration</Label>
-                      <OptionSelect
-                        value={currentStep.duration}
-                        options={[
-                          "1/16",
-                          "1/8",
-                          "1/4",
-                          "1/2",
-                          "1",
-                        ]}
-                        onChange={(value) => {
-                          updateDocument((current) => {
-                            const next = structuredClone(current);
-                            next.tracks[activeTrack]!.stepSequencer!.pages[selectedSeqPage]!.steps[
-                              selectedStep
-                            ]!.duration = value;
-                            return next;
-                          });
-                        }}
-                      />
-                    </Stack>
-                    <Stack gap={2}>
-                      <Label>Microtime</Label>
-                      <Input
-                        type="number"
-                        min={-100}
-                        max={100}
-                        value={currentStep.microtimeOffset}
-                        onChange={(event) => {
-                          updateDocument((current) => {
-                            const next = structuredClone(current);
-                            next.tracks[activeTrack]!.stepSequencer!.pages[selectedSeqPage]!.steps[
-                              selectedStep
-                            ]!.microtimeOffset = Number(event.target.value);
-                            return next;
-                          });
-                        }}
-                      />
-                    </Stack>
-                  </Stack>
-
-                  <Stack gap={3}>
-                    <Label>Notes</Label>
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                      {currentStep.notes.map((note, noteIndex) => (
-                        <Surface
-                          key={noteIndex}
-                          tone="panel"
-                          border="subtle"
-                          radius="md"
-                          className="p-3"
-                        >
-                          <Stack gap={2}>
-                            <Text size="sm" weight="medium">
-                              Voice {noteIndex + 1}
-                            </Text>
-                            <Input
-                              value={note.pitch ?? ""}
-                              placeholder="C4"
-                              onChange={(event) => {
-                                updateDocument((current) => {
-                                  const next = structuredClone(current);
-                                  next.tracks[activeTrack]!.stepSequencer!.pages[selectedSeqPage]!.steps[
-                                    selectedStep
-                                  ]!.notes[noteIndex]!.pitch =
-                                    event.target.value || null;
-                                  return next;
-                                });
-                              }}
-                            />
-                            <Input
-                              type="number"
-                              min={1}
-                              max={127}
-                              value={note.velocity}
-                              onChange={(event) => {
-                                updateDocument((current) => {
-                                  const next = structuredClone(current);
-                                  next.tracks[activeTrack]!.stepSequencer!.pages[selectedSeqPage]!.steps[
-                                    selectedStep
-                                  ]!.notes[noteIndex]!.velocity = Number(
-                                    event.target.value,
-                                  );
-                                  return next;
-                                });
-                              }}
-                            />
-                          </Stack>
-                        </Surface>
-                      ))}
-                    </div>
-                  </Stack>
-                </div>
-              </Stack>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
+          )}
       </Stack>
     </Surface>
   );
 }
 
 function resolveTrackBinding(
-  bindings: Record<string, ReturnType<typeof compilePiPatcherDocument>["bindings"][string]> | undefined,
+  bindings:
+    | Record<
+        string,
+        ReturnType<typeof compilePiPatcherDocument>["bindings"][string]
+      >
+    | undefined,
   trackIndex: number,
   slot: SlotConfig,
 ) {
@@ -721,7 +761,12 @@ function SlotEditor({
 }) {
   if (!slot.active) {
     return (
-      <Surface tone="panel" border="subtle" radius="md" className="p-3 opacity-60">
+      <Surface
+        tone="panel"
+        border="subtle"
+        radius="md"
+        className="p-3 opacity-60"
+      >
         <Stack gap={1}>
           <Text size="sm" weight="medium">
             {slot.displayLabel ?? slot.label}
@@ -772,7 +817,9 @@ function ControlInput({
     case "enum":
       return (
         <OptionSelect
-          value={(slot.initialValue as string | undefined) ?? control.options[0]}
+          value={
+            (slot.initialValue as string | undefined) ?? control.options[0]
+          }
           options={control.options.map((option) => ({
             name: option.toString(),
             value: option,

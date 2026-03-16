@@ -131,8 +131,10 @@ const toControlSpec = (
   }
 };
 
-const getSlotValue = (slot: SlotConfig, fallback: PiControlValue): PiControlValue =>
-  slot.initialValue ?? fallback;
+const getSlotValue = (
+  slot: SlotConfig,
+  fallback: PiControlValue,
+): PiControlValue => slot.initialValue ?? fallback;
 
 const pushModule = (context: CompileContext, seed: ModuleSeed) => {
   context.modules.push(createModule(seed));
@@ -147,7 +149,13 @@ const pushRoute = (
   destinationIo: string,
 ) => {
   context.routes.push(
-    createRoute(id, sourceModuleId, sourceIo, destinationModuleId, destinationIo),
+    createRoute(
+      id,
+      sourceModuleId,
+      sourceIo,
+      destinationModuleId,
+      destinationIo,
+    ),
   );
 };
 
@@ -216,7 +224,10 @@ const addTransportBinding = (
   });
 };
 
-const compileGlobalBlock = (context: CompileContext, document: PiPatcherDocument) => {
+const compileGlobalBlock = (
+  context: CompileContext,
+  document: PiPatcherDocument,
+) => {
   const masterFilterId = "global-master-filter";
   const globalReverbId = "global-reverb";
   const globalDelayId = "global-delay";
@@ -282,26 +293,64 @@ const compileGlobalBlock = (context: CompileContext, document: PiPatcherDocument
     props: {},
   });
 
-  pushRoute(context, "route-global-master-filter-reverb", masterFilterId, "out", globalReverbId, "in");
-  pushRoute(context, "route-global-reverb-delay", globalReverbId, "out", globalDelayId, "in");
-  pushRoute(context, "route-global-delay-volume", globalDelayId, "out", masterVolumeId, "in");
-  pushRoute(context, "route-global-volume-master", masterVolumeId, "out", masterId, "in");
+  pushRoute(
+    context,
+    "route-global-master-filter-reverb",
+    masterFilterId,
+    "out",
+    globalReverbId,
+    "in",
+  );
+  pushRoute(
+    context,
+    "route-global-reverb-delay",
+    globalReverbId,
+    "out",
+    globalDelayId,
+    "in",
+  );
+  pushRoute(
+    context,
+    "route-global-delay-volume",
+    globalDelayId,
+    "out",
+    masterVolumeId,
+    "in",
+  );
+  pushRoute(
+    context,
+    "route-global-volume-master",
+    masterVolumeId,
+    "out",
+    masterId,
+    "in",
+  );
 
-  addTransportBinding(context, "global.bpm", {
-    kind: "number",
-    label: "Tempo",
-    min: 40,
-    max: 240,
-    step: 1,
-  }, "bpm");
+  addTransportBinding(
+    context,
+    "global.bpm",
+    {
+      kind: "number",
+      label: "Tempo",
+      min: 40,
+      max: 240,
+      step: 1,
+    },
+    "bpm",
+  );
 
-  addTransportBinding(context, "global.swing", {
-    kind: "number",
-    label: "Swing",
-    min: 0,
-    max: 1,
-    step: 0.01,
-  }, "swingAmount");
+  addTransportBinding(
+    context,
+    "global.swing",
+    {
+      kind: "number",
+      label: "Swing",
+      min: 0,
+      max: 1,
+      step: 0.01,
+    },
+    "swingAmount",
+  );
 
   addModulePropBinding({
     context,
@@ -379,7 +428,14 @@ const compileTrackSource = ({
           lowGain: false,
         },
       });
-      pushRoute(context, `${prefix}-route-source-amp`, oscId, "out", ampGainId, "in");
+      pushRoute(
+        context,
+        `${prefix}-route-source-amp`,
+        oscId,
+        "out",
+        ampGainId,
+        "in",
+      );
       addModulePropBinding({
         context,
         bindingKey: namespacedTrackTarget(trackIndex, "track.source.wave"),
@@ -430,10 +486,20 @@ const compileTrackSource = ({
           lowGain: false,
         },
       });
-      pushRoute(context, `${prefix}-route-source-amp`, wavetableId, "out", ampGainId, "in");
+      pushRoute(
+        context,
+        `${prefix}-route-source-amp`,
+        wavetableId,
+        "out",
+        ampGainId,
+        "in",
+      );
       addModulePropBinding({
         context,
-        bindingKey: namespacedTrackTarget(trackIndex, "track.source.wavetable.position"),
+        bindingKey: namespacedTrackTarget(
+          trackIndex,
+          "track.source.wavetable.position",
+        ),
         label: "Position",
         moduleId: wavetableId,
         moduleType: ModuleType.Wavetable,
@@ -441,7 +507,10 @@ const compileTrackSource = ({
       });
       addModulePropBinding({
         context,
-        bindingKey: namespacedTrackTarget(trackIndex, "track.source.wavetable.octave"),
+        bindingKey: namespacedTrackTarget(
+          trackIndex,
+          "track.source.wavetable.octave",
+        ),
         label: "Octave",
         moduleId: wavetableId,
         moduleType: ModuleType.Wavetable,
@@ -449,7 +518,10 @@ const compileTrackSource = ({
       });
       addModulePropBinding({
         context,
-        bindingKey: namespacedTrackTarget(trackIndex, "track.source.wavetable.coarse"),
+        bindingKey: namespacedTrackTarget(
+          trackIndex,
+          "track.source.wavetable.coarse",
+        ),
         label: "Coarse",
         moduleId: wavetableId,
         moduleType: ModuleType.Wavetable,
@@ -457,7 +529,10 @@ const compileTrackSource = ({
       });
       addModulePropBinding({
         context,
-        bindingKey: namespacedTrackTarget(trackIndex, "track.source.wavetable.fine"),
+        bindingKey: namespacedTrackTarget(
+          trackIndex,
+          "track.source.wavetable.fine",
+        ),
         label: "Fine",
         moduleId: wavetableId,
         moduleType: ModuleType.Wavetable,
@@ -524,15 +599,53 @@ const compileTrackSource = ({
         },
       });
 
-      pushRoute(context, `${prefix}-route-noise-color`, noiseId, "out", colorFilterId, "in");
-      pushRoute(context, `${prefix}-route-noise-texture`, colorFilterId, "out", textureId, "in");
-      pushRoute(context, `${prefix}-route-noise-motion`, textureId, "out", motionId, "in");
-      pushRoute(context, `${prefix}-route-noise-stereo`, motionId, "out", stereoId, "in");
-      pushRoute(context, `${prefix}-route-noise-amp`, stereoId, "out", ampGainId, "in");
+      pushRoute(
+        context,
+        `${prefix}-route-noise-color`,
+        noiseId,
+        "out",
+        colorFilterId,
+        "in",
+      );
+      pushRoute(
+        context,
+        `${prefix}-route-noise-texture`,
+        colorFilterId,
+        "out",
+        textureId,
+        "in",
+      );
+      pushRoute(
+        context,
+        `${prefix}-route-noise-motion`,
+        textureId,
+        "out",
+        motionId,
+        "in",
+      );
+      pushRoute(
+        context,
+        `${prefix}-route-noise-stereo`,
+        motionId,
+        "out",
+        stereoId,
+        "in",
+      );
+      pushRoute(
+        context,
+        `${prefix}-route-noise-amp`,
+        stereoId,
+        "out",
+        ampGainId,
+        "in",
+      );
 
       addModulePropBinding({
         context,
-        bindingKey: namespacedTrackTarget(trackIndex, "track.source.noise.type"),
+        bindingKey: namespacedTrackTarget(
+          trackIndex,
+          "track.source.noise.type",
+        ),
         label: "Type",
         moduleId: noiseId,
         moduleType: ModuleType.Noise,
@@ -540,7 +653,10 @@ const compileTrackSource = ({
       });
       addModulePropBinding({
         context,
-        bindingKey: namespacedTrackTarget(trackIndex, "track.source.noise.color"),
+        bindingKey: namespacedTrackTarget(
+          trackIndex,
+          "track.source.noise.color",
+        ),
         label: "Color",
         moduleId: colorFilterId,
         moduleType: ModuleType.Filter,
@@ -548,7 +664,10 @@ const compileTrackSource = ({
       });
       addModulePropBinding({
         context,
-        bindingKey: namespacedTrackTarget(trackIndex, "track.source.noise.texture"),
+        bindingKey: namespacedTrackTarget(
+          trackIndex,
+          "track.source.noise.texture",
+        ),
         label: "Texture",
         moduleId: textureId,
         moduleType: ModuleType.Distortion,
@@ -556,7 +675,10 @@ const compileTrackSource = ({
       });
       addModulePropBinding({
         context,
-        bindingKey: namespacedTrackTarget(trackIndex, "track.source.noise.motion"),
+        bindingKey: namespacedTrackTarget(
+          trackIndex,
+          "track.source.noise.motion",
+        ),
         label: "Motion",
         moduleId: motionId,
         moduleType: ModuleType.Chorus,
@@ -564,7 +686,10 @@ const compileTrackSource = ({
       });
       addModulePropBinding({
         context,
-        bindingKey: namespacedTrackTarget(trackIndex, "track.source.noise.stereo"),
+        bindingKey: namespacedTrackTarget(
+          trackIndex,
+          "track.source.noise.stereo",
+        ),
         label: "Stereo",
         moduleId: stereoId,
         moduleType: ModuleType.StereoPanner,
@@ -608,14 +733,59 @@ const compileTrackSource = ({
         });
       });
 
-      pushRoute(context, `${prefix}-route-3osc-1-gain`, osc1Id, "out", gain1Id, "in");
-      pushRoute(context, `${prefix}-route-3osc-2-gain`, osc2Id, "out", gain2Id, "in");
-      pushRoute(context, `${prefix}-route-3osc-3-gain`, osc3Id, "out", gain3Id, "in");
-      pushRoute(context, `${prefix}-route-3osc-mix-1`, gain1Id, "out", ampGainId, "in");
-      pushRoute(context, `${prefix}-route-3osc-mix-2`, gain2Id, "out", ampGainId, "in");
-      pushRoute(context, `${prefix}-route-3osc-mix-3`, gain3Id, "out", ampGainId, "in");
+      pushRoute(
+        context,
+        `${prefix}-route-3osc-1-gain`,
+        osc1Id,
+        "out",
+        gain1Id,
+        "in",
+      );
+      pushRoute(
+        context,
+        `${prefix}-route-3osc-2-gain`,
+        osc2Id,
+        "out",
+        gain2Id,
+        "in",
+      );
+      pushRoute(
+        context,
+        `${prefix}-route-3osc-3-gain`,
+        osc3Id,
+        "out",
+        gain3Id,
+        "in",
+      );
+      pushRoute(
+        context,
+        `${prefix}-route-3osc-mix-1`,
+        gain1Id,
+        "out",
+        ampGainId,
+        "in",
+      );
+      pushRoute(
+        context,
+        `${prefix}-route-3osc-mix-2`,
+        gain2Id,
+        "out",
+        ampGainId,
+        "in",
+      );
+      pushRoute(
+        context,
+        `${prefix}-route-3osc-mix-3`,
+        gain3Id,
+        "out",
+        ampGainId,
+        "in",
+      );
 
-      const shapeKey = namespacedTrackTarget(trackIndex, "track.source.3osc.shape");
+      const shapeKey = namespacedTrackTarget(
+        trackIndex,
+        "track.source.3osc.shape",
+      );
       [osc1Id, osc2Id, osc3Id].forEach((moduleId) => {
         addModulePropBinding({
           context,
@@ -630,7 +800,10 @@ const compileTrackSource = ({
       [osc1Id, osc2Id, osc3Id].forEach((moduleId) => {
         addModulePropBinding({
           context,
-          bindingKey: namespacedTrackTarget(trackIndex, "track.source.3osc.octave"),
+          bindingKey: namespacedTrackTarget(
+            trackIndex,
+            "track.source.3osc.octave",
+          ),
           label: "Octave",
           moduleId,
           moduleType: ModuleType.Oscillator,
@@ -638,7 +811,10 @@ const compileTrackSource = ({
         });
         addModulePropBinding({
           context,
-          bindingKey: namespacedTrackTarget(trackIndex, "track.source.3osc.coarse"),
+          bindingKey: namespacedTrackTarget(
+            trackIndex,
+            "track.source.3osc.coarse",
+          ),
           label: "Coarse",
           moduleId,
           moduleType: ModuleType.Oscillator,
@@ -646,7 +822,10 @@ const compileTrackSource = ({
         });
         addModulePropBinding({
           context,
-          bindingKey: namespacedTrackTarget(trackIndex, "track.source.3osc.fine"),
+          bindingKey: namespacedTrackTarget(
+            trackIndex,
+            "track.source.3osc.fine",
+          ),
           label: "Fine",
           moduleId,
           moduleType: ModuleType.Oscillator,
@@ -667,7 +846,10 @@ const compileTrackSource = ({
 
       addModulePropBinding({
         context,
-        bindingKey: namespacedTrackTarget(trackIndex, "track.source.3osc.spread"),
+        bindingKey: namespacedTrackTarget(
+          trackIndex,
+          "track.source.3osc.spread",
+        ),
         label: "Spread",
         moduleId: osc2Id,
         moduleType: ModuleType.Oscillator,
@@ -676,7 +858,10 @@ const compileTrackSource = ({
       });
       addModulePropBinding({
         context,
-        bindingKey: namespacedTrackTarget(trackIndex, "track.source.3osc.spread"),
+        bindingKey: namespacedTrackTarget(
+          trackIndex,
+          "track.source.3osc.spread",
+        ),
         label: "Spread",
         moduleId: osc3Id,
         moduleType: ModuleType.Oscillator,
@@ -685,7 +870,10 @@ const compileTrackSource = ({
       });
       addModulePropBinding({
         context,
-        bindingKey: namespacedTrackTarget(trackIndex, "track.source.3osc.blend"),
+        bindingKey: namespacedTrackTarget(
+          trackIndex,
+          "track.source.3osc.blend",
+        ),
         label: "Blend",
         moduleId: gain2Id,
         moduleType: ModuleType.Gain,
@@ -694,7 +882,10 @@ const compileTrackSource = ({
       });
       addModulePropBinding({
         context,
-        bindingKey: namespacedTrackTarget(trackIndex, "track.source.3osc.blend"),
+        bindingKey: namespacedTrackTarget(
+          trackIndex,
+          "track.source.3osc.blend",
+        ),
         label: "Blend",
         moduleId: gain3Id,
         moduleType: ModuleType.Gain,
@@ -850,13 +1041,41 @@ const compileTrack = (
     },
   });
 
-  pushRoute(context, `${prefix}-route-amp-env-gain`, ampEnvId, "out", ampGainId, "gain");
-  pushRoute(context, `${prefix}-route-filter-env-filter`, filterEnvId, "out", filterId, "cutoffMod");
+  pushRoute(
+    context,
+    `${prefix}-route-amp-env-gain`,
+    ampEnvId,
+    "out",
+    ampGainId,
+    "gain",
+  );
+  pushRoute(
+    context,
+    `${prefix}-route-filter-env-filter`,
+    filterEnvId,
+    "out",
+    filterId,
+    "cutoffMod",
+  );
 
   compileTrackSource({ context, track, trackIndex, ampGainId });
 
-  pushRoute(context, `${prefix}-route-amp-filter`, ampGainId, "out", filterId, "in");
-  pushRoute(context, `${prefix}-route-filter-pan`, filterId, "out", panId, "in");
+  pushRoute(
+    context,
+    `${prefix}-route-amp-filter`,
+    ampGainId,
+    "out",
+    filterId,
+    "in",
+  );
+  pushRoute(
+    context,
+    `${prefix}-route-filter-pan`,
+    filterId,
+    "out",
+    panId,
+    "in",
+  );
 
   let currentOutModuleId = panId;
   track.effectSlots.forEach((effectSlot, effectIndex) => {
@@ -917,7 +1136,10 @@ const compileTrack = (
         });
         addModulePropBinding({
           context,
-          bindingKey: namespacedTrackTarget(trackIndex, `track.fx.${effectIndex}.mix`),
+          bindingKey: namespacedTrackTarget(
+            trackIndex,
+            `track.fx.${effectIndex}.mix`,
+          ),
           label: "Mix",
           moduleId,
           moduleType: ModuleType.Delay,
@@ -938,7 +1160,10 @@ const compileTrack = (
         });
         addModulePropBinding({
           context,
-          bindingKey: namespacedTrackTarget(trackIndex, `track.fx.${effectIndex}.type`),
+          bindingKey: namespacedTrackTarget(
+            trackIndex,
+            `track.fx.${effectIndex}.type`,
+          ),
           label: "Type",
           moduleId,
           moduleType: ModuleType.Reverb,
@@ -946,7 +1171,10 @@ const compileTrack = (
         });
         addModulePropBinding({
           context,
-          bindingKey: namespacedTrackTarget(trackIndex, `track.fx.${effectIndex}.decay`),
+          bindingKey: namespacedTrackTarget(
+            trackIndex,
+            `track.fx.${effectIndex}.decay`,
+          ),
           label: "Decay",
           moduleId,
           moduleType: ModuleType.Reverb,
@@ -954,7 +1182,10 @@ const compileTrack = (
         });
         addModulePropBinding({
           context,
-          bindingKey: namespacedTrackTarget(trackIndex, `track.fx.${effectIndex}.preDelay`),
+          bindingKey: namespacedTrackTarget(
+            trackIndex,
+            `track.fx.${effectIndex}.preDelay`,
+          ),
           label: "PreDelay",
           moduleId,
           moduleType: ModuleType.Reverb,
@@ -962,7 +1193,10 @@ const compileTrack = (
         });
         addModulePropBinding({
           context,
-          bindingKey: namespacedTrackTarget(trackIndex, `track.fx.${effectIndex}.mix`),
+          bindingKey: namespacedTrackTarget(
+            trackIndex,
+            `track.fx.${effectIndex}.mix`,
+          ),
           label: "Mix",
           moduleId,
           moduleType: ModuleType.Reverb,
@@ -983,7 +1217,10 @@ const compileTrack = (
         });
         addModulePropBinding({
           context,
-          bindingKey: namespacedTrackTarget(trackIndex, `track.fx.${effectIndex}.rate`),
+          bindingKey: namespacedTrackTarget(
+            trackIndex,
+            `track.fx.${effectIndex}.rate`,
+          ),
           label: "Rate",
           moduleId,
           moduleType: ModuleType.Chorus,
@@ -991,7 +1228,10 @@ const compileTrack = (
         });
         addModulePropBinding({
           context,
-          bindingKey: namespacedTrackTarget(trackIndex, `track.fx.${effectIndex}.depth`),
+          bindingKey: namespacedTrackTarget(
+            trackIndex,
+            `track.fx.${effectIndex}.depth`,
+          ),
           label: "Depth",
           moduleId,
           moduleType: ModuleType.Chorus,
@@ -999,7 +1239,10 @@ const compileTrack = (
         });
         addModulePropBinding({
           context,
-          bindingKey: namespacedTrackTarget(trackIndex, `track.fx.${effectIndex}.feedback`),
+          bindingKey: namespacedTrackTarget(
+            trackIndex,
+            `track.fx.${effectIndex}.feedback`,
+          ),
           label: "Feedback",
           moduleId,
           moduleType: ModuleType.Chorus,
@@ -1007,7 +1250,10 @@ const compileTrack = (
         });
         addModulePropBinding({
           context,
-          bindingKey: namespacedTrackTarget(trackIndex, `track.fx.${effectIndex}.mix`),
+          bindingKey: namespacedTrackTarget(
+            trackIndex,
+            `track.fx.${effectIndex}.mix`,
+          ),
           label: "Mix",
           moduleId,
           moduleType: ModuleType.Chorus,
@@ -1028,7 +1274,10 @@ const compileTrack = (
         });
         addModulePropBinding({
           context,
-          bindingKey: namespacedTrackTarget(trackIndex, `track.fx.${effectIndex}.drive`),
+          bindingKey: namespacedTrackTarget(
+            trackIndex,
+            `track.fx.${effectIndex}.drive`,
+          ),
           label: "Drive",
           moduleId,
           moduleType: ModuleType.Distortion,
@@ -1036,7 +1285,10 @@ const compileTrack = (
         });
         addModulePropBinding({
           context,
-          bindingKey: namespacedTrackTarget(trackIndex, `track.fx.${effectIndex}.tone`),
+          bindingKey: namespacedTrackTarget(
+            trackIndex,
+            `track.fx.${effectIndex}.tone`,
+          ),
           label: "Tone",
           moduleId,
           moduleType: ModuleType.Distortion,
@@ -1044,7 +1296,10 @@ const compileTrack = (
         });
         addModulePropBinding({
           context,
-          bindingKey: namespacedTrackTarget(trackIndex, `track.fx.${effectIndex}.mix`),
+          bindingKey: namespacedTrackTarget(
+            trackIndex,
+            `track.fx.${effectIndex}.mix`,
+          ),
           label: "Mix",
           moduleId,
           moduleType: ModuleType.Distortion,
@@ -1053,15 +1308,50 @@ const compileTrack = (
         break;
     }
 
-    pushRoute(context, `${prefix}-route-fx-${effectIndex}`, currentOutModuleId, "out", moduleId, "in");
+    pushRoute(
+      context,
+      `${prefix}-route-fx-${effectIndex}`,
+      currentOutModuleId,
+      "out",
+      moduleId,
+      "in",
+    );
     currentOutModuleId = moduleId;
   });
 
-  pushRoute(context, `${prefix}-route-final-gain`, currentOutModuleId, "out", finalGainId, "in");
-  pushRoute(context, `${prefix}-route-final-master`, finalGainId, "out", "global-master-filter", "in");
+  pushRoute(
+    context,
+    `${prefix}-route-final-gain`,
+    currentOutModuleId,
+    "out",
+    finalGainId,
+    "in",
+  );
+  pushRoute(
+    context,
+    `${prefix}-route-final-master`,
+    finalGainId,
+    "out",
+    "global-master-filter",
+    "in",
+  );
 
-  pushRoute(context, `${prefix}-route-note-source-source`, noteSourceModuleId, "midi out", ampEnvId, "midi in");
-  pushRoute(context, `${prefix}-route-note-source-filter-env`, noteSourceModuleId, "midi out", filterEnvId, "midi in");
+  pushRoute(
+    context,
+    `${prefix}-route-note-source-source`,
+    noteSourceModuleId,
+    "midi out",
+    ampEnvId,
+    "midi in",
+  );
+  pushRoute(
+    context,
+    `${prefix}-route-note-source-filter-env`,
+    noteSourceModuleId,
+    "midi out",
+    filterEnvId,
+    "midi in",
+  );
 
   const midiTargetPrefix =
     track.sourceProfileId === "wavetable"
@@ -1085,8 +1375,22 @@ const compileTrack = (
     );
   }
   if (track.sourceProfileId === "3-osc") {
-    pushRoute(context, `${prefix}-route-note-source-3osc-2`, noteSourceModuleId, "midi out", `${prefix}-source-3osc-2`, "midi in");
-    pushRoute(context, `${prefix}-route-note-source-3osc-3`, noteSourceModuleId, "midi out", `${prefix}-source-3osc-3`, "midi in");
+    pushRoute(
+      context,
+      `${prefix}-route-note-source-3osc-2`,
+      noteSourceModuleId,
+      "midi out",
+      `${prefix}-source-3osc-2`,
+      "midi in",
+    );
+    pushRoute(
+      context,
+      `${prefix}-route-note-source-3osc-3`,
+      noteSourceModuleId,
+      "midi out",
+      `${prefix}-source-3osc-3`,
+      "midi in",
+    );
   }
 
   addModulePropBinding({
@@ -1242,7 +1546,16 @@ const compileTrack = (
     {
       kind: "enum",
       label: "Targets",
-      options: ["Off", "Pitch", "Filter", "Pitch + Filter", "Pan", "FX Mix", "Custom 1", "Custom 2"],
+      options: [
+        "Off",
+        "Pitch",
+        "Filter",
+        "Pitch + Filter",
+        "Pan",
+        "FX Mix",
+        "Custom 1",
+        "Custom 2",
+      ],
     },
     `track.${trackIndex}.mod.targetPreset`,
   );
@@ -1300,7 +1613,9 @@ export const validatePiPatcherDocument = (
   const errors: string[] = [];
 
   if (document.tracks.length !== PI_TRACK_COUNT) {
-    errors.push(`Expected ${PI_TRACK_COUNT} tracks, received ${document.tracks.length}`);
+    errors.push(
+      `Expected ${PI_TRACK_COUNT} tracks, received ${document.tracks.length}`,
+    );
   }
 
   document.globalBlock.slots.forEach((slot, index) => {

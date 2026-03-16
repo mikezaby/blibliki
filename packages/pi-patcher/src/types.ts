@@ -23,7 +23,12 @@ export type PiControlValue = number | string | boolean | null;
 
 export type PageBlockId = "source" | "amp" | "filter" | "mod" | "fxA" | "fxB";
 export type TrackNoteSource = "stepSequencer" | "externalMidi";
-export type SourceProfileId = "unassigned" | "osc" | "3-osc" | "noise" | "wavetable";
+export type SourceProfileId =
+  | "unassigned"
+  | "osc"
+  | "3-osc"
+  | "noise"
+  | "wavetable";
 export type EffectType = "reverb" | "delay" | "chorus" | "distortion";
 
 export type SlotConfig = {
@@ -110,7 +115,11 @@ export type BindingTransform =
   | { type: "identity" }
   | { type: "linear"; scale: number; offset: number }
   | { type: "enumMap"; map: Record<string, PiControlValue> }
-  | { type: "booleanMap"; trueValue: PiControlValue; falseValue: PiControlValue };
+  | {
+      type: "booleanMap";
+      trueValue: PiControlValue;
+      falseValue: PiControlValue;
+    };
 
 export type ModuleBindingTarget = {
   moduleId: string;

@@ -57,7 +57,8 @@ export default class PiPatch implements IPiPatch {
   static async all(): Promise<PiPatch[]> {
     const querySnapshot = await getDocs(collection(getDb(), "piPatches"));
     return querySnapshot.docs.map(
-      (document) => new PiPatch({ id: document.id, ...document.data() } as IPiPatch),
+      (document) =>
+        new PiPatch({ id: document.id, ...document.data() } as IPiPatch),
     );
   }
 

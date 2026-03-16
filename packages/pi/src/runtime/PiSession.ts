@@ -34,7 +34,9 @@ const ENCODER_ROW_GLOBAL = [13, 14, 15, 16, 17, 18, 19, 20];
 const ENCODER_ROW_UPPER = [21, 22, 23, 24, 25, 26, 27, 28];
 const ENCODER_ROW_LOWER = [29, 30, 31, 32, 33, 34, 35, 36];
 const FADERS = [5, 6, 7, 8, 9, 10, 11, 12];
-const STEP_BUTTONS = [37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52];
+const STEP_BUTTONS = [
+  37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52,
+];
 
 const STEP_OFF_COLOR = 4;
 const STEP_ON_COLOR = 60;
@@ -253,7 +255,9 @@ export class PiSession {
   }
 
   private attachExternalMidiInputs() {
-    const inputDevices = Array.from(this.engine.midiDeviceManager.inputDevices.values());
+    const inputDevices = Array.from(
+      this.engine.midiDeviceManager.inputDevices.values(),
+    );
     inputDevices.forEach((device) => {
       if ("name" in device && isControllerInputName(device.name)) return;
       if (!("addEventListener" in device)) return;
@@ -268,11 +272,15 @@ export class PiSession {
 
         const channel = (event.channel ?? 0) + 1;
         this.compiled.document.tracks.forEach((track, trackIndex) => {
-          if (track.noteSource !== "externalMidi" || track.midiChannel !== channel) {
+          if (
+            track.noteSource !== "externalMidi" ||
+            track.midiChannel !== channel
+          ) {
             return;
           }
 
-          const noteSourceModuleId = this.compiled.tracks[trackIndex]?.noteSourceModuleId;
+          const noteSourceModuleId =
+            this.compiled.tracks[trackIndex]?.noteSourceModuleId;
           if (!noteSourceModuleId) return;
 
           const module = this.engine.findModule(noteSourceModuleId);
@@ -297,13 +305,21 @@ export class PiSession {
     const track = this.compiled.document.tracks[this.state.activeTrack]!;
     const upperIndex = ENCODER_ROW_UPPER.indexOf(cc);
     if (upperIndex >= 0) {
-      this.applySlot(track.pages[upperBlock][upperIndex]!, value, this.state.activeTrack);
+      this.applySlot(
+        track.pages[upperBlock][upperIndex]!,
+        value,
+        this.state.activeTrack,
+      );
       return;
     }
 
     const lowerIndex = ENCODER_ROW_LOWER.indexOf(cc);
     if (lowerIndex >= 0) {
-      this.applySlot(track.pages[lowerBlock][lowerIndex]!, value, this.state.activeTrack);
+      this.applySlot(
+        track.pages[lowerBlock][lowerIndex]!,
+        value,
+        this.state.activeTrack,
+      );
       return;
     }
   }
@@ -338,7 +354,10 @@ export class PiSession {
             value >= 64 ? PlaybackMode.oneShot : PlaybackMode.loop;
           break;
         case 7:
-          track.stepSequencer.loopLength = Math.max(1, Math.round(midiToRange(value, 1, 4)));
+          track.stepSequencer.loopLength = Math.max(
+            1,
+            Math.round(midiToRange(value, 1, 4)),
+          );
           break;
       }
       this.refreshTrackStepSequencer(this.state.activeTrack);
@@ -349,7 +368,10 @@ export class PiSession {
 
     const velocityIndex = ENCODER_ROW_UPPER.indexOf(cc);
     if (velocityIndex >= 0) {
-      step.notes[velocityIndex]!.velocity = Math.max(1, Math.round(midiToRange(value, 1, 127)));
+      step.notes[velocityIndex]!.velocity = Math.max(
+        1,
+        Math.round(midiToRange(value, 1, 127)),
+      );
       this.refreshTrackStepSequencer(this.state.activeTrack);
       this.pushDisplayState();
       return;
@@ -369,7 +391,8 @@ export class PiSession {
     const module = this.engine.findModule(moduleId);
     if (module.moduleType !== ModuleType.StepSequencer) return;
 
-    const stepSequencer = this.compiled.document.tracks[trackIndex]!.stepSequencer!;
+    const stepSequencer =
+      this.compiled.document.tracks[trackIndex]!.stepSequencer!;
     module.props = {
       patterns: [{ name: "A", pages: toEnginePages(stepSequencer.pages) }],
       resolution: stepSequencer.resolution,
@@ -496,7 +519,9 @@ export class PiSession {
         }
         return `${Math.round(this.engine.transport.swingAmount * 100)}%`;
       case "session":
-        return formatValue(this.state.sessionValues[binding.sessionKey] ?? slot.initialValue);
+        return formatValue(
+          this.state.sessionValues[binding.sessionKey] ?? slot.initialValue,
+        );
       case "module": {
         const firstTarget = binding.targets[0];
         if (!firstTarget) return formatValue(slot.initialValue);
@@ -508,10 +533,12 @@ export class PiSession {
   }
 
   private currentStepNo() {
-    const noteSourceModuleId = this.compiled.tracks[this.state.activeTrack]?.noteSourceModuleId;
+    const noteSourceModuleId =
+      this.compiled.tracks[this.state.activeTrack]?.noteSourceModuleId;
     if (!noteSourceModuleId) return this.state.selectedStep + 1;
     const module = this.engine.findModule(noteSourceModuleId);
-    if (module.moduleType !== ModuleType.StepSequencer) return this.state.selectedStep + 1;
+    if (module.moduleType !== ModuleType.StepSequencer)
+      return this.state.selectedStep + 1;
 
     const state = module.state as { currentStep?: number };
     return (state.currentStep ?? this.state.selectedStep) + 1;
@@ -523,7 +550,8 @@ export class PiSession {
     STEP_BUTTONS.forEach((cc, index) => {
       let color = STEP_OFF_COLOR;
       const track = this.compiled.document.tracks[this.state.activeTrack];
-      const currentPage = track?.stepSequencer?.pages[this.state.selectedSeqPage];
+      const currentPage =
+        track?.stepSequencer?.pages[this.state.selectedSeqPage];
       const currentStep = currentPage?.steps[index];
 
       if (currentStep?.active) color = STEP_ON_COLOR;
@@ -542,7 +570,10 @@ const isControllerInputName = (name: string) =>
 const midiToRange = (value: number, min: number, max: number) =>
   min + (value / 127) * (max - min);
 
-const controlValueFromMidi = (control: SessionControlSpec, midiValue: number): PiControlValue => {
+const controlValueFromMidi = (
+  control: SessionControlSpec,
+  midiValue: number,
+): PiControlValue => {
   switch (control.kind) {
     case "boolean":
       return midiValue >= 64;
@@ -557,7 +588,9 @@ const controlValueFromMidi = (control: SessionControlSpec, midiValue: number): P
       const min = control.min ?? 0;
       const max = control.max ?? 1;
       const normalized = midiValue / 127;
-      const curved = control.exp ? Math.pow(normalized, control.exp) : normalized;
+      const curved = control.exp
+        ? Math.pow(normalized, control.exp)
+        : normalized;
       const rawValue = min + curved * (max - min);
       if (control.step) {
         const steps = Math.round((rawValue - min) / control.step);
@@ -599,7 +632,20 @@ const formatValue = (value: PiControlValue | undefined) => {
 const midiToPitch = (value: number) => {
   if (value <= 3) return null;
   const midiNote = Math.round(midiToRange(value, 36, 84));
-  const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  const noteNames = [
+    "C",
+    "C#",
+    "D",
+    "D#",
+    "E",
+    "F",
+    "F#",
+    "G",
+    "G#",
+    "A",
+    "A#",
+    "B",
+  ];
   const octave = Math.floor(midiNote / 12) - 1;
   const name = noteNames[midiNote % 12]!;
   return `${name}${octave}`;
@@ -607,37 +653,39 @@ const midiToPitch = (value: number) => {
 
 const midiToStepDuration = (value: number): IStep["duration"] => {
   const values: IStep["duration"][] = ["1/16", "1/8", "1/4", "1/2", "1"];
-  return values[Math.min(values.length - 1, Math.floor((value / 127) * values.length))]!;
+  return values[
+    Math.min(values.length - 1, Math.floor((value / 127) * values.length))
+  ]!;
 };
 
 const midiToResolution = (value: number): Resolution => {
-  const values = [
-    Resolution.sixteenth,
-    Resolution.eighth,
-    Resolution.quarter,
-  ];
-  return values[Math.min(values.length - 1, Math.floor((value / 127) * values.length))]!;
+  const values = [Resolution.sixteenth, Resolution.eighth, Resolution.quarter];
+  return values[
+    Math.min(values.length - 1, Math.floor((value / 127) * values.length))
+  ]!;
 };
 
 const toEnginePages = (pages: StepPageConfig[]): IPage[] => {
   return pages.map((page: StepPageConfig) => ({
     name: page.name,
-    steps: page.steps.map((step): IStep => ({
-      active: step.active,
-      probability: step.probability,
-      microtimeOffset: step.microtimeOffset,
-      duration: step.duration,
-      ccMessages: [],
-      notes: step.notes.flatMap((note) =>
-        note.pitch
-          ? [
-              {
-                note: note.pitch,
-                velocity: note.velocity,
-              },
-            ]
-          : [],
-      ),
-    })),
+    steps: page.steps.map(
+      (step): IStep => ({
+        active: step.active,
+        probability: step.probability,
+        microtimeOffset: step.microtimeOffset,
+        duration: step.duration,
+        ccMessages: [],
+        notes: step.notes.flatMap((note) =>
+          note.pitch
+            ? [
+                {
+                  note: note.pitch,
+                  velocity: note.velocity,
+                },
+              ]
+            : [],
+        ),
+      }),
+    ),
   }));
 };

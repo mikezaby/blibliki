@@ -323,12 +323,13 @@ const EFFECT_SLOT_DEFAULTS: Record<
   distortion: [2, 8000, null, 0.5],
 };
 
-const EFFECT_SLOT_LABELS: Record<EffectType, [string, string, string, string]> = {
-  delay: ["Time", "Sync", "Feedback", "Mix"],
-  reverb: ["Type", "Decay", "PreDelay", "Mix"],
-  chorus: ["Rate", "Depth", "Feedback", "Mix"],
-  distortion: ["Drive", "Tone", "Unused", "Mix"],
-};
+const EFFECT_SLOT_LABELS: Record<EffectType, [string, string, string, string]> =
+  {
+    delay: ["Time", "Sync", "Feedback", "Mix"],
+    reverb: ["Type", "Decay", "PreDelay", "Mix"],
+    chorus: ["Rate", "Depth", "Feedback", "Mix"],
+    distortion: ["Drive", "Tone", "Unused", "Mix"],
+  };
 
 const createEffectSlots = (
   effectType: EffectType | null,
@@ -349,10 +350,7 @@ const createEffectSlots = (
     createSlot(`${prefix}-${index}`, {
       active: effectType !== "distortion" || index !== 2,
       label,
-      target: targets[index]?.replace(
-        "track.fx.",
-        `track.fx.${effectIndex}.`,
-      ),
+      target: targets[index]?.replace("track.fx.", `track.fx.${effectIndex}.`),
       initialValue: defaults[index],
     }),
   );
@@ -612,7 +610,10 @@ export const withTrackEffectType = (
   effectType: EffectType | null,
 ): TrackConfig => {
   const next = structuredClone(track);
-  next.effectSlots[effectIndex] = createEffectSlotConfig(effectType, effectIndex);
+  next.effectSlots[effectIndex] = createEffectSlotConfig(
+    effectType,
+    effectIndex,
+  );
   const fxPages = createFxPages(next.effectSlots);
   next.pages = {
     ...next.pages,
