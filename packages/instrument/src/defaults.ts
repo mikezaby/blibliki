@@ -149,7 +149,7 @@ export const createDefaultStepSequencerConfig = (
   pages: Array.from({ length: PI_STEP_PAGE_COUNT }, (_, index) =>
     createStepPage(index + 1, voices),
   ),
-  loopLength: 4,
+  loopLength: 1,
   resolution: Resolution.sixteenth,
   playbackMode: PlaybackMode.loop,
 });

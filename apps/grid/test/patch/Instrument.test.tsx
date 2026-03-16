@@ -42,6 +42,6 @@ describe("InstrumentEditor", () => {
     expect((await screen.findAllByText("Loop Length")).length).toBeGreaterThan(
       0,
     );
-    expect(screen.getAllByText("1-4").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("1-1").length).toBeGreaterThan(0);
   });
 });

@@ -16,6 +16,7 @@ describe("@blibliki/instrument", () => {
     expect(
       document.tracks[0]?.effectSlots.map((slot) => slot.effectType),
     ).toEqual(["distortion", "chorus", "delay", "reverb"]);
+    expect(document.tracks[0]?.stepSequencer?.loopLength).toBe(1);
     expect(
       document.tracks[0]?.stepSequencer?.pages[0]?.steps[0]?.notes,
     ).toHaveLength(1);
