@@ -190,7 +190,11 @@ export default function Devices() {
                         Assigned Patch
                       </CardDescription>
                       <div>
-                        {device.patchId ? (
+                        {device.instrumentId ? (
+                          <Badge tone="info" variant="soft" size="sm">
+                            Instrument assigned
+                          </Badge>
+                        ) : device.patchId ? (
                           <Badge tone="success" variant="soft" size="sm">
                             Patch assigned
                           </Badge>
