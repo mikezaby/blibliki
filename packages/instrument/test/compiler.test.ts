@@ -13,6 +13,9 @@ describe("@blibliki/instrument", () => {
     expect(validateInstrumentDocument(document)).toEqual([]);
     expect(document.tracks).toHaveLength(8);
     expect(document.tracks[0]?.voices).toBe(1);
+    expect(document.tracks[0]?.effectSlots.map((slot) => slot.effectType)).toEqual(
+      ["distortion", "chorus", "delay", "reverb"],
+    );
     expect(
       document.tracks[0]?.stepSequencer?.pages[0]?.steps[0]?.notes,
     ).toHaveLength(1);
