@@ -1157,6 +1157,7 @@ These are recommendations made during brainstorming and accepted as the current 
 - Keep the first generic template role-neutral and initialize all `8` tracks immediately
 - Use a single fixed template in `v1` with editable content inside a fixed structure
 - Treat the instrument document as the source of truth and the engine patch as a generated artifact
+- Add a dev-only terminal mock screen before the dedicated LCD process is ready
 - Use per-track exclusive note sources, with sequencer editing constrained to the hardware-supported model
 - Use typed blocks plus one explicit hardware profile id per document
 - Compile through block compilers, track compiler, and patch compiler
@@ -1164,6 +1165,20 @@ These are recommendations made during brainstorming and accepted as the current 
 - Start with a performance dashboard, not local editing
 - Favor compact DSI displays and design the LCD with a monochrome mindset
 - Treat `Rust + Slint + LinuxKMS` as the first display-stack spike, not yet a final production commitment
+- Keep device deployment dual-mode: plain patches remain valid alongside instruments
+- Add dedicated Grid instrument list/edit surfaces instead of overloading the device UI or patch editor
+
+### Follow-Up Integration Note
+
+Runtime implementation exposed three product-level gaps that were not fully specified in this document:
+
+- a real terminal mock screen for LCD-state testing
+- a dedicated Grid instrument list/editor flow
+- a mixed device deployment model that supports both `patch` and `instrument`
+
+Those decisions are now captured in:
+
+- `docs/plans/2026-03-24-instrument-grid-and-deployment-design.md`
 
 ## Open Questions For Next Session
 
@@ -1177,6 +1192,7 @@ The following questions should be revisited in later sessions so context is not 
 6. How should named modulation target presets be authored and stored in instrument?
 7. Which screen should actually be purchased after comparing readability, mounting, and software support on Raspberry Pi 5?
 8. When local editing arrives, what is the smallest useful editing action to support first?
+9. What should the first terminal mock-screen renderer look like for local display testing before the Rust LCD process exists?
 
 ### Prototype Gate
 
