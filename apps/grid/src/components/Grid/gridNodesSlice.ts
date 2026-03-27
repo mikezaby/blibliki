@@ -81,7 +81,7 @@ export const gridNodesSlice = createSlice({
   },
 });
 
-const { setNodes } = gridNodesSlice.actions;
+export const { setNodes } = gridNodesSlice.actions;
 
 export const {
   setGridNodes,

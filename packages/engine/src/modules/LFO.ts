@@ -53,6 +53,7 @@ export type ILFOProps = {
   waveform: LFOWaveform;
   offset: number;
   amount: number;
+  phase: number;
 };
 
 const DEFAULT_PROPS: ILFOProps = {
@@ -62,6 +63,7 @@ const DEFAULT_PROPS: ILFOProps = {
   waveform: LFOWaveform.sine,
   offset: 0,
   amount: 1,
+  phase: 0,
 };
 
 export const lfoPropSchema: ModulePropSchema<
@@ -107,6 +109,13 @@ export const lfoPropSchema: ModulePropSchema<
     step: 0.01,
     label: "Amount",
   },
+  phase: {
+    kind: "number",
+    min: 0,
+    max: 1,
+    step: 0.01,
+    label: "Phase",
+  },
 };
 
 type LFOSetterHooks = SetterHooks<ILFOProps>;
@@ -122,6 +131,7 @@ export class MonoLFO
       | "onAfterSetWaveform"
       | "onAfterSetOffset"
       | "onAfterSetAmount"
+      | "onAfterSetPhase"
     >
 {
   declare audioNode: AudioWorkletNode;
@@ -163,6 +173,7 @@ export class MonoLFO
       this.props.waveform,
     );
     this.waveformParam.value = waveformIndex;
+    this.phaseParam.value = this.props.phase;
 
     // Apply offset calculation
     this.updateOffsetGains();
@@ -257,6 +268,10 @@ export class MonoLFO
 
   onAfterSetAmount: LFOSetterHooks["onAfterSetAmount"] = (value) => {
     this.amountGain.gain.value = value;
+  };
+
+  onAfterSetPhase: LFOSetterHooks["onAfterSetPhase"] = (value) => {
+    this.phaseParam.value = value;
   };
 
   dispose() {

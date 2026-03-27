@@ -12,6 +12,7 @@ import Inspector from "./Inspector";
 import Keyboard from "./Keyboard";
 import LFO from "./LFO";
 import Master from "./Master";
+import MidiChannelFilter from "./MidiChannelFilter";
 import MidiInput from "./MidiInput";
 import MidiMapper from "./MidiMapper";
 import MidiOutput from "./MidiOutput";
@@ -21,6 +22,7 @@ import Reverb from "./Reverb";
 import Scale from "./Scale";
 import StepSequencer from "./StepSequencer";
 import StereoPanner from "./StereoPanner";
+import TransportControl from "./TransportControl";
 import VoiceScheduler from "./VoiceScheduler";
 import Wavetable from "./Wavetable";
 import { updateModule } from "./modulesSlice";
@@ -58,6 +60,7 @@ const COMPONENT_MAPPING: {
   [ModuleType.Gain]: Gain,
   [ModuleType.Envelope]: Envelope,
   [ModuleType.MidiInput]: MidiInput,
+  [ModuleType.MidiChannelFilter]: MidiChannelFilter,
   [ModuleType.MidiOutput]: MidiOutput,
   [ModuleType.MidiMapper]: MidiMapper,
   [ModuleType.VirtualMidi]: Keyboard,
@@ -69,6 +72,7 @@ const COMPONENT_MAPPING: {
   [ModuleType.Inspector]: Inspector,
   [ModuleType.StereoPanner]: StereoPanner,
   [ModuleType.StepSequencer]: StepSequencer,
+  [ModuleType.TransportControl]: TransportControl,
   [ModuleType.VoiceScheduler]: VoiceScheduler,
   [ModuleType.LFO]: LFO,
   [ModuleType.Noise]: Noise,

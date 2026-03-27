@@ -21,6 +21,8 @@ import {
   Upload,
   Download,
   TableOfContents,
+  Cpu,
+  SlidersHorizontal,
 } from "lucide-react";
 import { modulePropsSelector } from "@/components/AudioModule/modulePropsSlice";
 import { modulesSelector } from "@/components/AudioModule/modulesSlice";
@@ -109,7 +111,11 @@ export default function FileMenu() {
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent className="w-72 p-2" align="start" alignOffset={-4}>
+      <DropdownMenuContent
+        className="w-72 p-2 max-h-none overflow-visible"
+        align="start"
+        alignOffset={-4}
+      >
         <DropdownMenuGroup className="space-y-1">
           <DropdownMenuItem asChild>
             <Link to="/patch/$patchId" params={{ patchId: "new" }}>
@@ -161,6 +167,24 @@ export default function FileMenu() {
               Delete
             </DropdownMenuItem>
           )}
+        </DropdownMenuGroup>
+
+        <DropdownMenuSeparator className="my-2" />
+
+        <DropdownMenuGroup className="space-y-1">
+          <DropdownMenuItem asChild>
+            <Link to="/instruments">
+              <SlidersHorizontal className="w-4 h-4" />
+              Instruments
+            </Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem asChild>
+            <Link to="/devices">
+              <Cpu className="w-4 h-4" />
+              Devices
+            </Link>
+          </DropdownMenuItem>
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator className="my-2" />

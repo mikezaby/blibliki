@@ -70,7 +70,7 @@ export const reverbPropSchema: ModulePropSchema<
 };
 
 const DEFAULT_REVERB_PROPS: IReverbProps = {
-  mix: 0.3,
+  mix: 0.0,
   decayTime: 1.5,
   preDelay: 0,
   type: ReverbType.room,

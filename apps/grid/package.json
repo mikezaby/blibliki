@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@blibliki/engine": "workspace:^",
+    "@blibliki/instrument": "workspace:^",
     "@blibliki/models": "workspace:^",
     "@blibliki/ui": "workspace:^",
     "@blibliki/utils": "workspace:^",
@@ -30,6 +31,7 @@
     "@tanstack/react-router": "1.157.18",
     "@tanstack/react-router-devtools": "1.157.18",
     "@tanstack/router-plugin": "1.157.18",
+    "@dagrejs/dagre": "^2.0.0",
     "@xyflow/react": "12.10.0",
     "clsx": "^2.1.1",
     "firebase": "12.8.0",

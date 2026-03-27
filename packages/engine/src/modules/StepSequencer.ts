@@ -36,6 +36,7 @@ export type IStepSequencerProps = {
   patterns: IPattern[];
   activePatternNo: number; // Currently selected pattern index
   activePageNo: number; // Currently selected page within pattern
+  loopLength: number; // Active page count inside the current pattern
   stepsPerPage: number; // 1-16 steps per page
   resolution: Resolution; // Step resolution (16th, 8th, etc.)
   playbackMode: PlaybackMode; // loop or oneShot
@@ -57,6 +58,7 @@ export const stepSequencerPropSchema: ModulePropSchema<
     IStepSequencerProps,
     | "activePatternNo"
     | "activePageNo"
+    | "loopLength"
     | "stepsPerPage"
     | "resolution"
     | "playbackMode"
@@ -80,6 +82,13 @@ export const stepSequencerPropSchema: ModulePropSchema<
     label: "Active page",
     min: 0,
     max: 100,
+    step: 1,
+  },
+  loopLength: {
+    kind: "number",
+    label: "Loop Length",
+    min: 1,
+    max: 16,
     step: 1,
   },
   stepsPerPage: {
@@ -189,6 +198,7 @@ const DEFAULT_PROPS: IStepSequencerProps = {
   patterns: [createDefaultPattern("A")],
   activePatternNo: 0,
   activePageNo: 0,
+  loopLength: 1,
   stepsPerPage: 16,
   resolution: Resolution.sixteenth,
   playbackMode: PlaybackMode.loop,
@@ -205,8 +215,10 @@ const DEFAULT_STATE: IStepSequencerState = {
 type StepSequencerSetterHooks = Pick<
   SetterHooks<IStepSequencerProps>,
   | "onSetActivePatternNo"
+  | "onSetLoopLength"
   | "onAfterSetPatternSequence"
   | "onAfterSetPatterns"
+  | "onAfterSetLoopLength"
   | "onAfterSetResolution"
   | "onAfterSetPlaybackMode"
   | "onAfterSetEnableSequence"
@@ -246,6 +258,13 @@ export default class StepSequencer
     return Math.max(Math.min(value, this.props.patterns.length - 1), 0);
   };
 
+  onSetLoopLength: StepSequencerSetterHooks["onSetLoopLength"] = (value) => {
+    const pageCount =
+      this.props.patterns[this.props.activePatternNo]?.pages.length ?? 1;
+
+    return Math.max(1, Math.min(value, pageCount));
+  };
+
   onAfterSetPatternSequence: StepSequencerSetterHooks["onAfterSetPatternSequence"] =
     (value) => {
       if (!this.source) return;
@@ -264,6 +283,24 @@ export default class StepSequencer
     this.source.props = {
       ...this.source.props,
       patterns: value,
+      loopLength: Math.max(
+        1,
+        Math.min(
+          this.props.loopLength,
+          value[this.props.activePatternNo]?.pages.length ?? 1,
+        ),
+      ),
+    };
+  };
+
+  onAfterSetLoopLength: StepSequencerSetterHooks["onAfterSetLoopLength"] = (
+    value,
+  ) => {
+    if (!this.source) return;
+
+    this.source.props = {
+      ...this.source.props,
+      loopLength: value,
     };
   };
 
@@ -303,6 +340,7 @@ export default class StepSequencer
     this.source = new StepSequencerSource(this.engine.transport, {
       onEvent: this.handleStepEvent,
       patterns: this.props.patterns,
+      loopLength: this.props.loopLength,
       stepsPerPage: this.props.stepsPerPage,
       resolution: this.props.resolution,
       playbackMode: this.props.playbackMode,

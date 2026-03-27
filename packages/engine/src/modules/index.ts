@@ -25,6 +25,10 @@ import LegacyEnvelope, {
   IEnvelopeProps as ILegacyEnvelopeProps,
 } from "./LegacyEnvelope";
 import Master, { IMasterProps, masterPropSchema } from "./Master";
+import MidiChannelFilter, {
+  IMidiChannelFilterProps,
+  midiChannelFilterPropSchema,
+} from "./MidiChannelFilter";
 import MidiInput, { IMidiInputProps, midiInputPropSchema } from "./MidiInput";
 import MidiMapper, {
   IMidiMapperProps,
@@ -50,6 +54,10 @@ import StereoPanner, {
   IStereoPannerProps,
   stereoPannerPropSchema,
 } from "./StereoPanner";
+import TransportControl, {
+  ITransportControlProps,
+  transportControlPropSchema,
+} from "./TransportControl";
 import VirtualMidi, {
   IVirtualMidiProps,
   virtualMidiPropSchema,
@@ -66,6 +74,7 @@ export enum ModuleType {
   Wavetable = "Wavetable",
   Gain = "Gain",
   MidiInput = "MidiInput",
+  MidiChannelFilter = "MidiChannelFilter",
   MidiOutput = "MidiOutput",
   LegacyEnvelope = "LegacyEnvelope", // BACKWARD_COMPAT: Legacy envelope for old patches
   Envelope = "Envelope",
@@ -78,6 +87,7 @@ export enum ModuleType {
   Delay = "Delay",
   Distortion = "Distortion",
   MidiMapper = "MidiMapper",
+  TransportControl = "TransportControl",
   VirtualMidi = "VirtualMidi",
   StepSequencer = "StepSequencer",
   VoiceScheduler = "VoiceScheduler",
@@ -92,6 +102,7 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.Gain]: IGainProps;
   [ModuleType.Master]: IMasterProps;
   [ModuleType.MidiInput]: IMidiInputProps;
+  [ModuleType.MidiChannelFilter]: IMidiChannelFilterProps;
   [ModuleType.MidiOutput]: IMidiOutputProps;
   [ModuleType.LegacyEnvelope]: ILegacyEnvelopeProps; // BACKWARD_COMPAT: Legacy envelope for old patches
   [ModuleType.Envelope]: ICustomEnvelopeProps;
@@ -104,6 +115,7 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.Delay]: IDelayProps;
   [ModuleType.Distortion]: IDistortionProps;
   [ModuleType.MidiMapper]: IMidiMapperProps;
+  [ModuleType.TransportControl]: ITransportControlProps;
   [ModuleType.VirtualMidi]: IVirtualMidiProps;
   [ModuleType.StepSequencer]: IStepSequencerProps;
   [ModuleType.VoiceScheduler]: IVoiceSchedulerProps;
@@ -118,6 +130,7 @@ export type ModuleTypeToStateMapping = {
   [ModuleType.Gain]: never;
   [ModuleType.Master]: never;
   [ModuleType.MidiInput]: never;
+  [ModuleType.MidiChannelFilter]: never;
   [ModuleType.MidiOutput]: never;
   [ModuleType.LegacyEnvelope]: never;
   [ModuleType.Envelope]: never;
@@ -130,6 +143,7 @@ export type ModuleTypeToStateMapping = {
   [ModuleType.Delay]: never;
   [ModuleType.Distortion]: never;
   [ModuleType.MidiMapper]: never;
+  [ModuleType.TransportControl]: never;
   [ModuleType.VirtualMidi]: never;
   [ModuleType.StepSequencer]: IStepSequencerState;
   [ModuleType.VoiceScheduler]: never;
@@ -144,6 +158,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.Gain]: Gain;
   [ModuleType.Master]: Master;
   [ModuleType.MidiInput]: MidiInput;
+  [ModuleType.MidiChannelFilter]: MidiChannelFilter;
   [ModuleType.MidiOutput]: MidiOutput;
   [ModuleType.LegacyEnvelope]: LegacyEnvelope; // BACKWARD_COMPAT: Legacy envelope for old patches
   [ModuleType.Envelope]: CustomEnvelope;
@@ -156,6 +171,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.Delay]: Delay;
   [ModuleType.Distortion]: Distortion;
   [ModuleType.MidiMapper]: MidiMapper;
+  [ModuleType.TransportControl]: TransportControl;
   [ModuleType.VirtualMidi]: VirtualMidi;
   [ModuleType.StepSequencer]: StepSequencer;
   [ModuleType.VoiceScheduler]: VoiceScheduler;
@@ -170,6 +186,7 @@ export const moduleSchemas = {
   [ModuleType.Gain]: gainPropSchema,
   [ModuleType.Master]: masterPropSchema,
   [ModuleType.MidiInput]: midiInputPropSchema,
+  [ModuleType.MidiChannelFilter]: midiChannelFilterPropSchema,
   [ModuleType.MidiOutput]: midiOutputPropSchema,
   [ModuleType.LegacyEnvelope]: legacyEnvelopePropSchema, // BACKWARD_COMPAT: Legacy envelope for old patches
   [ModuleType.Envelope]: customEnvelopePropSchema,
@@ -182,6 +199,7 @@ export const moduleSchemas = {
   [ModuleType.Delay]: delayPropSchema,
   [ModuleType.Distortion]: distortionPropSchema,
   [ModuleType.MidiMapper]: midiMapperPropSchema,
+  [ModuleType.TransportControl]: transportControlPropSchema,
   [ModuleType.VirtualMidi]: virtualMidiPropSchema,
   [ModuleType.StepSequencer]: stepSequencerPropSchema,
   [ModuleType.VoiceScheduler]: voiceSchedulerPropSchema,
@@ -208,6 +226,10 @@ export {
 export type { IGain } from "./Gain";
 export type { IMaster } from "./Master";
 export type { IMidiInput, IMidiInputProps } from "./MidiInput";
+export type {
+  IMidiChannelFilter,
+  IMidiChannelFilterProps,
+} from "./MidiChannelFilter";
 export type { IMidiOutput, IMidiOutputProps } from "./MidiOutput";
 export type { IStereoPanner } from "./StereoPanner";
 export type {
@@ -228,6 +250,10 @@ export type {
   MidiMappingTrack,
 } from "./MidiMapper";
 export { MidiMappingMode } from "./MidiMapper";
+export type {
+  ITransportControl,
+  ITransportControlProps,
+} from "./TransportControl";
 export type { ILFO, ILFOProps } from "./LFO";
 export { LFOWaveform } from "./LFO";
 export type { INoise } from "./Noise";
@@ -281,6 +307,8 @@ export function createModule(
       return Master.create(Master, engineId, params);
     case ModuleType.MidiInput:
       return MidiInput.create(MidiInput, engineId, params);
+    case ModuleType.MidiChannelFilter:
+      return MidiChannelFilter.create(MidiChannelFilter, engineId, params);
     case ModuleType.MidiOutput:
       return MidiOutput.create(MidiOutput, engineId, params);
     // BACKWARD_COMPAT: Legacy envelope for old patches
@@ -306,6 +334,8 @@ export function createModule(
       return Distortion.create(Distortion, engineId, params);
     case ModuleType.MidiMapper:
       return MidiMapper.create(MidiMapper, engineId, params);
+    case ModuleType.TransportControl:
+      return TransportControl.create(TransportControl, engineId, params);
     case ModuleType.VirtualMidi:
       return VirtualMidi.create(VirtualMidi, engineId, params);
     case ModuleType.StepSequencer:

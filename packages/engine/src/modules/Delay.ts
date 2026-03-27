@@ -103,7 +103,7 @@ const DEFAULT_DELAY_PROPS: IDelayProps = {
   sync: false,
   division: "1/4",
   feedback: 0.3,
-  mix: 0.3,
+  mix: 0.0,
   stereo: false,
 };
 

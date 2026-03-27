@@ -14,6 +14,7 @@ import {
   useEffect,
   useEffectEvent,
   useRef,
+  type ReactNode,
 } from "react";
 import { useAppDispatch, useGridNodes, usePatch } from "@/hooks";
 import { store } from "@/store";
@@ -37,7 +38,7 @@ const DEFAULT_REACT_FLOW_PROPS = {
   hideAttribution: true,
 };
 
-export default function Grid() {
+export default function Grid({ children }: { children?: ReactNode }) {
   const { screenToFlowPosition } = useReactFlow();
   const {
     nodes,
@@ -138,6 +139,7 @@ export default function Grid() {
             color={GRID_CANVAS_PATTERN}
           />
           <OnViewportChange viewport={viewport} />
+          {children}
         </ReactFlow>
       </div>
     </Surface>

@@ -87,8 +87,12 @@ enum Control {
   Mode = 104,
 }
 
-const PLAY_STOPPED_COLOR = 16;
-const PLAY_PLAYING_COLOR = 101;
+const PLAY_STOPPED_COLOR = 101;
+const PLAY_PLAYING_COLOR = 16;
+const CHANNEL_BUTTON_OFF_COLOR = Color.Gray6;
+const CHANNEL_BUTTON_PROGRAMMED_COLOR = Color.Gray5;
+const CHANNEL_BUTTON_PLAYHEAD_COLOR = Color.Gray1;
+const CHANNEL_BUTTON_SELECTED_COLOR = 101;
 
 const VALUE_COLOR_RAMP = [
   Color.Gray6,
@@ -176,6 +180,22 @@ export class LaunchControlXL3 extends BaseController {
       );
 
       return VALUE_COLOR_RAMP[index]!;
+    } else if (
+      inRange(cc, Control.ChannelButton0_0, Control.ChannelButton1_7 + 1)
+    ) {
+      if (value >= 127) {
+        return CHANNEL_BUTTON_SELECTED_COLOR;
+      }
+
+      if (value >= 96) {
+        return CHANNEL_BUTTON_PLAYHEAD_COLOR;
+      }
+
+      if (value >= 32) {
+        return CHANNEL_BUTTON_PROGRAMMED_COLOR;
+      }
+
+      return CHANNEL_BUTTON_OFF_COLOR;
     } else {
       return value === 127 ? Color.Gray1 : Color.Gray5;
     }

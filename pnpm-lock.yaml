@@ -87,6 +87,9 @@ importers:
       '@blibliki/engine':
         specifier: workspace:^
         version: link:../../packages/engine
+      '@blibliki/instrument':
+        specifier: workspace:^
+        version: link:../../packages/instrument
       '@blibliki/models':
         specifier: workspace:^
         version: link:../../packages/models
@@ -99,6 +102,9 @@ importers:
       '@clerk/clerk-react':
         specifier: 5.60.0
         version: 5.60.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@dagrejs/dagre':
+        specifier: ^2.0.0
+        version: 2.0.4
       '@radix-ui/react-context-menu':
         specifier: 2.2.16
         version: 2.2.16(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -283,11 +289,30 @@ importers:
         specifier: catalog:test
         version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.1.0)(jiti@2.6.1)(jsdom@27.4.0(postcss@8.5.6))(lightningcss@1.30.2)(terser@5.39.2)(tsx@4.19.4)(yaml@2.8.2)
 
+  packages/instrument:
+    dependencies:
+      '@blibliki/engine':
+        specifier: workspace:^
+        version: link:../engine
+    devDependencies:
+      '@types/node':
+        specifier: 25.1.0
+        version: 25.1.0
+      vite-tsconfig-paths:
+        specifier: catalog:vite
+        version: 6.0.5(typescript@5.9.3)(vite@7.3.1(@types/node@25.1.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.2)(tsx@4.19.4)(yaml@2.8.2))
+      vitest:
+        specifier: catalog:test
+        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.1.0)(jiti@2.6.1)(jsdom@27.4.0(postcss@8.5.6))(lightningcss@1.30.2)(terser@5.39.2)(tsx@4.19.4)(yaml@2.8.2)
+
   packages/models:
     dependencies:
       '@blibliki/engine':
         specifier: workspace:^
         version: link:../engine
+      '@blibliki/instrument':
+        specifier: workspace:^
+        version: link:../instrument
       '@blibliki/utils':
         specifier: workspace:^
         version: link:../utils
@@ -310,6 +335,9 @@ importers:
       '@blibliki/engine':
         specifier: workspace:^
         version: link:../engine
+      '@blibliki/instrument':
+        specifier: workspace:^
+        version: link:../instrument
       '@blibliki/models':
         specifier: workspace:^
         version: link:../models
@@ -323,6 +351,12 @@ importers:
       '@types/node':
         specifier: 25.1.0
         version: 25.1.0
+      vite-tsconfig-paths:
+        specifier: catalog:vite
+        version: 6.0.5(typescript@5.9.3)(vite@7.3.1(@types/node@25.1.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.2)(tsx@4.19.4)(yaml@2.8.2))
+      vitest:
+        specifier: catalog:test
+        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.1.0)(jiti@2.6.1)(jsdom@27.4.0(postcss@8.5.6))(lightningcss@1.30.2)(terser@5.39.2)(tsx@4.19.4)(yaml@2.8.2)
 
   packages/transport:
     dependencies:
@@ -612,6 +646,12 @@ packages:
   '@csstools/css-tokenizer@3.0.4':
     resolution: {integrity: sha512-Vd/9EVDiu6PPJt9yAh6roZP6El1xHrdvIVGjyBsHR0RYwNHgL7FJPyIIW4fANJNG6FtyZfvlRPpFI4ZM/lubvw==}
     engines: {node: '>=18'}
+
+  '@dagrejs/dagre@2.0.4':
+    resolution: {integrity: sha512-J6vCWTNpicHF4zFlZG1cS5DkGzMr9941gddYkakjrg3ZNev4bbqEgLHFTWiFrcJm7UCRu7olO3K6IRDd9gSGhA==}
+
+  '@dagrejs/graphlib@3.0.4':
+    resolution: {integrity: sha512-HxZ7fCvAwTLCWCO0WjDkzAFQze8LdC6iOpKbetDKHIuDfIgMlIzYzqZ4nxwLlclQX+3ZVeZ1K2OuaOE2WWcyOg==}
 
   '@esbuild/aix-ppc64@0.25.4':
     resolution: {integrity: sha512-1VCICWypeQKhVbE9oW/sJaAmjLxhVqacdkvPLEjwlttjfwENRSClS8EjBz0KzRyFSCPDIkuXW34Je/vk7zdB7Q==}
@@ -4455,6 +4495,12 @@ snapshots:
       postcss: 8.5.6
 
   '@csstools/css-tokenizer@3.0.4': {}
+
+  '@dagrejs/dagre@2.0.4':
+    dependencies:
+      '@dagrejs/graphlib': 3.0.4
+
+  '@dagrejs/graphlib@3.0.4': {}
 
   '@esbuild/aix-ppc64@0.25.4':
     optional: true

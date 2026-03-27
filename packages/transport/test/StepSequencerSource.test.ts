@@ -158,4 +158,129 @@ describe("StepSequencerSource", () => {
       }
     });
   });
+
+  describe("pattern sequence expansion", () => {
+    it("treats bare pattern letters as a single repeat in sequence mode", () => {
+      const patterns: IPattern[] = [
+        {
+          name: "A",
+          pages: [
+            {
+              name: "Page 1",
+              steps: [
+                {
+                  active: true,
+                  notes: [{ note: "C4", velocity: 100 }],
+                  ccMessages: [],
+                  probability: 100,
+                  microtimeOffset: 0,
+                  duration: "1/16",
+                },
+              ],
+            },
+          ],
+        },
+        {
+          name: "C",
+          pages: [
+            {
+              name: "Page 1",
+              steps: [
+                {
+                  active: true,
+                  notes: [{ note: "G4", velocity: 100 }],
+                  ccMessages: [],
+                  probability: 100,
+                  microtimeOffset: 0,
+                  duration: "1/16",
+                },
+              ],
+            },
+          ],
+        },
+      ];
+
+      const source = new StepSequencerSource(createMockTransport(), {
+        onEvent: vi.fn(),
+        patterns,
+        loopLength: 1,
+        stepsPerPage: 1,
+        resolution: Resolution.sixteenth,
+        playbackMode: PlaybackMode.loop,
+        patternSequence: "2AC",
+        enableSequence: true,
+      });
+
+      source.onStart(0);
+
+      const events = source.generator(0, TPB - 1);
+
+      expect(events).toHaveLength(4);
+      expect(events.slice(0, 3).map((event) => event.patternNo)).toEqual([
+        0, 0, 1,
+      ]);
+      expect(
+        events.slice(0, 3).map((event) => event.step.notes[0]?.note),
+      ).toEqual(["C4", "C4", "G4"]);
+    });
+
+    it("plays every page of each referenced pattern even when patterns have different page counts", () => {
+      const makeStep = (note: string) => ({
+        active: true,
+        notes: [{ note, velocity: 100 }],
+        ccMessages: [],
+        probability: 100,
+        microtimeOffset: 0,
+        duration: "1/16" as const,
+      });
+
+      const patterns: IPattern[] = [
+        {
+          name: "A",
+          pages: [
+            { name: "A1", steps: [makeStep("C4")] },
+            { name: "A2", steps: [makeStep("D4")] },
+          ],
+        },
+        {
+          name: "B",
+          pages: [
+            { name: "B1", steps: [makeStep("E4")] },
+            { name: "B2", steps: [makeStep("F4")] },
+            { name: "B3", steps: [makeStep("G4")] },
+          ],
+        },
+      ];
+
+      const source = new StepSequencerSource(createMockTransport(), {
+        onEvent: vi.fn(),
+        patterns,
+        loopLength: 1,
+        stepsPerPage: 1,
+        resolution: Resolution.sixteenth,
+        playbackMode: PlaybackMode.loop,
+        patternSequence: "AB",
+        enableSequence: true,
+      });
+
+      source.onStart(0);
+
+      const events = source.generator(0, TPB + TPB / 4 - 1);
+
+      expect(events.map((event) => [event.patternNo, event.pageNo])).toEqual([
+        [0, 0],
+        [0, 1],
+        [1, 0],
+        [1, 1],
+        [1, 2],
+      ]);
+      expect(events.map((event) => event.step.notes[0]?.note)).toEqual([
+        "C4",
+        "D4",
+        "E4",
+        "F4",
+        "G4",
+      ]);
+    });
+  });
 });

@@ -1,5 +1,5 @@
 import { Engine, type IAnyModuleSerialize } from "@blibliki/engine";
-import { IPatch, Patch } from "@blibliki/models";
+import { IPatch, Instrument, Patch } from "@blibliki/models";
 import { Context, requestAnimationFrame } from "@blibliki/utils";
 import { AudioContext } from "@blibliki/utils/web-audio-api";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
@@ -23,6 +23,7 @@ import {
   setAttributes as setGlobalAttributes,
   setBpm,
 } from "./globalSlice";
+import { createInstrumentDebugPatch } from "./instruments/debugPatch";
 
 type PatchProps = {
   patch: Omit<IPatch, "config">;
@@ -72,6 +73,31 @@ export const loadById = (id: string) => async (dispatch: AppDispatch) => {
     throw error;
   }
 };
+
+export const loadInstrumentDebugById =
+  (id: string) => async (dispatch: AppDispatch) => {
+    try {
+      await dispatch(clearEngine());
+      await dispatch(initializeEngine());
+
+      const instrument = await Instrument.find(id);
+      dispatch(load(createInstrumentDebugPatch(instrument.serialize())));
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+
+      dispatch(
+        addNotification({
+          type: "error",
+          title: "Failed to load instrument debug view",
+          message: errorMessage,
+          duration: 5000,
+        }),
+      );
+
+      throw error;
+    }
+  };
 
 export const load = (patch: Patch | IPatch) => (dispatch: AppDispatch) => {
   const { id, name, config, userId } = patch;

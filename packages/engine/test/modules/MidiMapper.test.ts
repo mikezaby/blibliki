@@ -180,6 +180,76 @@ describe("MidiMapper", () => {
     expect(matchingEvents.at(-1)?.ccValue).toBe(64);
   });
 
+  it("restores controller feedback when active track mappings change", async (ctx) => {
+    const gain = ctx.engine.addModule({
+      name: "gain",
+      moduleType: ModuleType.Gain,
+      props: { gain: 1 },
+    });
+
+    const midiMapperSerialized = ctx.engine.addModule({
+      name: "midi mapper",
+      moduleType: ModuleType.MidiMapper,
+      props: {
+        activeTrack: 0,
+        tracks: [
+          {
+            name: "Page A",
+            mappings: [
+              {
+                cc: 21,
+                moduleId: gain.id,
+                moduleType: ModuleType.Gain,
+                mode: MidiMappingMode.direct,
+                propName: "gain",
+              },
+            ],
+          },
+        ],
+        globalMappings: [{} as MidiMapping<ModuleType>],
+      },
+    });
+    const midiMapper = ctx.engine.findModule(
+      midiMapperSerialized.id,
+    ) as MidiMapper;
+
+    const midiOut = midiMapper.outputs.findByName("midi out") as unknown as {
+      onMidiEvent: (event: MidiEvent) => void;
+    };
+    const sentEvents: MidiEvent[] = [];
+    const originalOnMidiEvent = midiOut.onMidiEvent.bind(midiOut);
+
+    midiOut.onMidiEvent = (event: MidiEvent) => {
+      sentEvents.push(event);
+      originalOnMidiEvent(event);
+    };
+
+    await flushMicrotasks();
+    sentEvents.length = 0;
+
+    midiMapper.props = {
+      tracks: [
+        {
+          name: "Page B",
+          mappings: [
+            {
+              cc: 22,
+              moduleId: gain.id,
+              moduleType: ModuleType.Gain,
+              mode: MidiMappingMode.direct,
+              propName: "gain",
+            },
+          ],
+        },
+      ],
+    };
+    await flushMicrotasks();
+
+    const matchingEvents = sentEvents.filter((event) => event.cc === 22);
+    expect(matchingEvents.length).toBeGreaterThan(0);
+    expect(matchingEvents.at(-1)?.ccValue).toBe(64);
+  });
+
   it("does not emit controller feedback from incoming incDec MIDI events", async (ctx) => {
     const gain = ctx.engine.addModule({
       name: "Gain",

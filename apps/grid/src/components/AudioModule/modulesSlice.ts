@@ -89,6 +89,10 @@ export const AvailableModules: Record<
     name: "MIDI Input",
     moduleType: ModuleType.MidiInput,
   },
+  [ModuleType.MidiChannelFilter]: {
+    name: "MIDI Channel Filter",
+    moduleType: ModuleType.MidiChannelFilter,
+  },
   [ModuleType.MidiOutput]: {
     name: "MIDI Output",
     moduleType: ModuleType.MidiOutput,
@@ -112,6 +116,10 @@ export const AvailableModules: Record<
   [ModuleType.MidiMapper]: {
     name: "Midi Mapper",
     moduleType: ModuleType.MidiMapper,
+  },
+  [ModuleType.TransportControl]: {
+    name: "Transport Control",
+    moduleType: ModuleType.TransportControl,
   },
   [ModuleType.VirtualMidi]: {
     name: "Keyboard",
