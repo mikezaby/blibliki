@@ -1,4 +1,4 @@
-import { Optional, pick } from "@blibliki/utils";
+import { Optional } from "@blibliki/utils";
 import {
   collection,
   addDoc,
@@ -12,19 +12,52 @@ import {
 } from "firebase/firestore";
 import { getDb } from "./db";
 
+export type DeviceDeploymentTarget =
+  | {
+      kind: "patch";
+      patchId: string;
+    }
+  | {
+      kind: "instrument";
+      instrumentId: string;
+    };
+
 export type IDevice = {
   id: string;
   token: string;
   name: string;
-  patchId: string | null;
+  deploymentTarget: DeviceDeploymentTarget | null;
+  patchId?: string | null;
   userId: string;
 };
+
+type DeviceLike = {
+  deploymentTarget?: DeviceDeploymentTarget | null;
+  patchId?: string | null;
+};
+
+export function normalizeDeviceDeploymentTarget(
+  device: DeviceLike,
+): DeviceDeploymentTarget | null {
+  if (device.deploymentTarget) {
+    return device.deploymentTarget;
+  }
+
+  if (device.patchId) {
+    return {
+      kind: "patch",
+      patchId: device.patchId,
+    };
+  }
+
+  return null;
+}
 
 export default class Device implements IDevice {
   id!: string;
   token!: string;
   name!: string;
-  patchId!: string | null;
+  deploymentTarget!: DeviceDeploymentTarget | null;
   userId!: string;
 
   static async find(id: string): Promise<Device> {
@@ -88,11 +121,20 @@ export default class Device implements IDevice {
     });
   }
 
-  constructor(props: Optional<IDevice, "id">) {
-    Object.assign(
-      this,
-      pick(props, ["id", "token", "name", "patchId", "userId"]),
-    );
+  constructor(
+    props: Optional<
+      Omit<IDevice, "patchId" | "deploymentTarget"> & {
+        deploymentTarget?: DeviceDeploymentTarget | null;
+        patchId?: string | null;
+      },
+      "id"
+    >,
+  ) {
+    this.id = props.id ?? "";
+    this.token = props.token;
+    this.name = props.name;
+    this.userId = props.userId;
+    this.deploymentTarget = normalizeDeviceDeploymentTarget(props);
   }
 
   async save(): Promise<void> {
@@ -116,7 +158,14 @@ export default class Device implements IDevice {
     return {
       id: this.id,
       ...this.props,
+      patchId: this.patchId,
     };
+  }
+
+  get patchId(): string | null {
+    return this.deploymentTarget?.kind === "patch"
+      ? this.deploymentTarget.patchId
+      : null;
   }
 
   private get docRef() {
@@ -128,7 +177,7 @@ export default class Device implements IDevice {
     return {
       token: this.token,
       name: this.name,
-      patchId: this.patchId,
+      deploymentTarget: this.deploymentTarget,
       userId: this.userId,
     };
   }

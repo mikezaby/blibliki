@@ -58,6 +58,7 @@ export enum PlaybackMode {
 interface StepSequencerSourceProps {
   onEvent: (event: StepSequencerSourceEvent) => void;
   patterns: IPattern[];
+  loopLength: number;
   stepsPerPage: number; // 1-16 steps per page
   resolution: Resolution;
   playbackMode: PlaybackMode;
@@ -80,7 +81,7 @@ function expandPatternSequence(input: string): string[] {
     if (ch >= "0" && ch <= "9") {
       num += ch;
     } else {
-      const count = Number(num);
+      const count = num === "" ? 1 : Number(num);
       for (let i = 0; i < count; i++) {
         result.push(ch);
       }
@@ -92,15 +93,25 @@ function expandPatternSequence(input: string): string[] {
 }
 
 export class StepSequencerSource extends BaseSource<StepSequencerSourceEvent> {
-  props: StepSequencerSourceProps;
+  private _props: StepSequencerSourceProps;
   private expandedSequence: string[] = [];
   private pageMapping: { patternNo: number; pageNo: number }[] = [];
 
   constructor(transport: Transport, props: StepSequencerSourceProps) {
     super(transport);
 
-    this.props = props;
+    this._props = props;
     this.expandedSequence = expandPatternSequence(props.patternSequence);
+    this.pageMapping = this.buildPageMapping();
+  }
+
+  get props() {
+    return this._props;
+  }
+
+  set props(value: StepSequencerSourceProps) {
+    this._props = value;
+    this.expandedSequence = expandPatternSequence(value.patternSequence);
     this.pageMapping = this.buildPageMapping();
   }
 
@@ -124,9 +135,10 @@ export class StepSequencerSource extends BaseSource<StepSequencerSourceEvent> {
 
         const pattern = this.props.patterns[patternNo];
         if (!pattern) continue;
+        const pageCount = pattern.pages.length;
 
         // Add all pages of this pattern to the mapping
-        for (let pageNo = 0; pageNo < pattern.pages.length; pageNo++) {
+        for (let pageNo = 0; pageNo < pageCount; pageNo++) {
           mapping.push({ patternNo, pageNo });
         }
       }
@@ -139,8 +151,9 @@ export class StepSequencerSource extends BaseSource<StepSequencerSourceEvent> {
       ) {
         const pattern = this.props.patterns[patternNo];
         if (!pattern) continue;
+        const pageCount = Math.min(this.props.loopLength, pattern.pages.length);
 
-        for (let pageNo = 0; pageNo < pattern.pages.length; pageNo++) {
+        for (let pageNo = 0; pageNo < pageCount; pageNo++) {
           mapping.push({ patternNo, pageNo });
         }
       }

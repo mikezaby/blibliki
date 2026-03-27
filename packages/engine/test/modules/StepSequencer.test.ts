@@ -9,6 +9,106 @@ import StepSequencer, {
 } from "@/modules/StepSequencer";
 
 describe("StepSequencer", () => {
+  describe("loopLength", () => {
+    it("plays only the active loop pages while keeping extra pages in props", async (ctx) => {
+      ctx.engine.bpm = 120;
+
+      const stepSequencer = new StepSequencer(ctx.engine.id, {
+        name: "stepSequencer",
+        moduleType: ModuleType.StepSequencer,
+        props: {
+          patterns: [
+            {
+              name: "A",
+              pages: [
+                {
+                  name: "Page 1",
+                  steps: [
+                    {
+                      active: true,
+                      notes: [{ note: "C4", velocity: 100 }],
+                      ccMessages: [],
+                      probability: 100,
+                      microtimeOffset: 0,
+                      duration: "1/16",
+                    },
+                    ...Array.from({ length: 15 }, () => ({
+                      active: false,
+                      notes: [],
+                      ccMessages: [],
+                      probability: 100,
+                      microtimeOffset: 0,
+                      duration: "1/16" as const,
+                    })),
+                  ],
+                },
+                {
+                  name: "Page 2",
+                  steps: [
+                    {
+                      active: true,
+                      notes: [{ note: "E4", velocity: 100 }],
+                      ccMessages: [],
+                      probability: 100,
+                      microtimeOffset: 0,
+                      duration: "1/16",
+                    },
+                    ...Array.from({ length: 15 }, () => ({
+                      active: false,
+                      notes: [],
+                      ccMessages: [],
+                      probability: 100,
+                      microtimeOffset: 0,
+                      duration: "1/16" as const,
+                    })),
+                  ],
+                },
+              ],
+            },
+          ],
+          activePatternNo: 0,
+          activePageNo: 0,
+          loopLength: 1,
+          stepsPerPage: 16,
+          resolution: Resolution.sixteenth,
+          playbackMode: PlaybackMode.loop,
+          patternSequence: "",
+          enableSequence: false,
+        },
+      });
+
+      const midiEvents: MidiEvent[] = [];
+      const originalOnMidiEvent = stepSequencer.midiOutput.onMidiEvent;
+      stepSequencer.midiOutput.onMidiEvent = (event: MidiEvent) => {
+        midiEvents.push(event);
+        originalOnMidiEvent.call(stepSequencer.midiOutput, event);
+      };
+
+      const startTime = ctx.context.currentTime;
+      ctx.engine.transport.start(startTime);
+      stepSequencer.start(startTime);
+
+      await sleep(2300);
+
+      const noteOnEvents = midiEvents.filter(
+        (event) => event.type === "noteon",
+      );
+      expect(noteOnEvents.some((event) => event.note?.fullName === "C4")).toBe(
+        true,
+      );
+      expect(noteOnEvents.some((event) => event.note?.fullName === "E4")).toBe(
+        false,
+      );
+
+      expect(stepSequencer.props.patterns[0]?.pages).toHaveLength(2);
+      expect(stepSequencer.props.loopLength).toBe(1);
+
+      const stopTime = ctx.context.currentTime;
+      ctx.engine.transport.stop(stopTime);
+      stepSequencer.stop(stopTime);
+    });
+  });
+
   describe("MIDI event timing with steps 0 and 7 (1/2 note duration)", () => {
     let stepSequencer: StepSequencer;
     let midiEvents: Array<{
@@ -55,6 +155,7 @@ describe("StepSequencer", () => {
         ],
         activePatternNo: 0,
         activePageNo: 0,
+        loopLength: 1,
         stepsPerPage: 16,
         resolution: Resolution.sixteenth,
         playbackMode: PlaybackMode.loop,
@@ -275,6 +376,7 @@ describe("StepSequencer", () => {
         ],
         activePatternNo: 0,
         activePageNo: 0,
+        loopLength: 1,
         stepsPerPage: 16,
         resolution: Resolution.sixteenth,
         playbackMode: PlaybackMode.loop,

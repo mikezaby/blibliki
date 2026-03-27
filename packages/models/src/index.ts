@@ -5,4 +5,8 @@ export type { IPatch, IConfig } from "./Patch";
 export { default as Patch } from "./Patch";
 
 export type { IDevice } from "./Device";
-export { default as Device } from "./Device";
+export type { DeviceDeploymentTarget } from "./Device";
+export { default as Device, normalizeDeviceDeploymentTarget } from "./Device";
+
+export type { IInstrument } from "./Instrument";
+export { default as Instrument } from "./Instrument";

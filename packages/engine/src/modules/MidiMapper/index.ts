@@ -95,7 +95,7 @@ function getMidiFromMappedValue({
 
 type MidiMapperSetterHooks = Pick<
   SetterHooks<IMidiMapperProps>,
-  "onSetActiveTrack"
+  "onSetActiveTrack" | "onAfterSetTracks" | "onAfterSetGlobalMappings"
 >;
 
 export default class MidiMapper
@@ -142,6 +142,19 @@ export default class MidiMapper
 
     return activeTrack;
   };
+
+  onAfterSetTracks: MidiMapperSetterHooks["onAfterSetTracks"] = () => {
+    queueMicrotask(() => {
+      this.syncControllerValues();
+    });
+  };
+
+  onAfterSetGlobalMappings: MidiMapperSetterHooks["onAfterSetGlobalMappings"] =
+    () => {
+      queueMicrotask(() => {
+        this.syncControllerValues();
+      });
+    };
 
   syncControllerValues = (moduleId?: string) => {
     const ccValues = this.syncValues.collectCCValues(this.props, moduleId);

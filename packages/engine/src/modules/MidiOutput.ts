@@ -78,6 +78,7 @@ export default class MidiOutput
 
     if (midiDevice) {
       this.currentDevice = midiDevice;
+      this.persistResolvedDevice(midiDevice);
     }
 
     this.registerInputs();
@@ -117,5 +118,13 @@ export default class MidiOutput
       name: "midi in",
       onMidiEvent: this.onMidiEvent,
     });
+  }
+
+  private persistResolvedDevice(midiDevice: MidiOutputDevice) {
+    this._props = {
+      ...this._props,
+      selectedId: midiDevice.id,
+      selectedName: midiDevice.name,
+    };
   }
 }
