@@ -1,3 +1,4 @@
+import { normalizeDeviceDeploymentTarget } from "@blibliki/models";
 import {
   Badge,
   Button,
@@ -14,6 +15,7 @@ import { useUser } from "@clerk/clerk-react";
 import { Plus, Trash2, Edit2, Cpu, Copy, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { open } from "@/components/Modal/modalSlice";
+import { describeDeviceDeploymentTarget } from "@/devices/deploymentTarget";
 import { loadDevices, deleteDevice } from "@/devicesSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import DeviceModal from "./DeviceModal";
@@ -187,16 +189,27 @@ export default function Devices() {
                     </Stack>
                     <Stack gap={1}>
                       <CardDescription className="text-xs uppercase tracking-wide">
-                        Assigned Patch
+                        Assigned Target
                       </CardDescription>
                       <div>
-                        {device.patchId ? (
-                          <Badge tone="success" variant="soft" size="sm">
-                            Patch assigned
+                        {normalizeDeviceDeploymentTarget(device) ? (
+                          <Badge
+                            tone={
+                              normalizeDeviceDeploymentTarget(device)?.kind ===
+                              "patch"
+                                ? "success"
+                                : "info"
+                            }
+                            variant="soft"
+                            size="sm"
+                          >
+                            {describeDeviceDeploymentTarget(
+                              normalizeDeviceDeploymentTarget(device),
+                            )}
                           </Badge>
                         ) : (
                           <Text asChild tone="muted" size="sm">
-                            <span>No patch assigned</span>
+                            <span>No target assigned</span>
                           </Text>
                         )}
                       </div>

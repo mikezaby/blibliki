@@ -3,7 +3,7 @@ import {
   ModuleType,
   type ModuleTypeToStateMapping,
 } from "@blibliki/engine";
-import { IPatch, Patch } from "@blibliki/models";
+import { IInstrument, IPatch, Instrument, Patch } from "@blibliki/models";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { Connection, Edge, EdgeChange, Node, NodeChange } from "@xyflow/react";
 import { getAuth, signInWithCustomToken } from "firebase/auth";
@@ -65,6 +65,18 @@ export function usePatches(): IPatch[] {
   }, []);
 
   return patches;
+}
+
+export function useInstruments(): IInstrument[] {
+  const [instruments, setInstruments] = useState<IInstrument[]>([]);
+
+  useEffect(() => {
+    void Instrument.all().then((data) => {
+      setInstruments(data.map((instrument) => instrument.serialize()));
+    });
+  }, []);
+
+  return instruments;
 }
 
 export function usePatch() {

@@ -1,4 +1,4 @@
-import { IDevice } from "@blibliki/models";
+import { IDevice, normalizeDeviceDeploymentTarget } from "@blibliki/models";
 import {
   Button,
   Divider,
@@ -13,8 +13,19 @@ import { useUser } from "@clerk/clerk-react";
 import { Cpu, Save } from "lucide-react";
 import { useState } from "react";
 import Modal, { close as closeModal } from "@/components/Modal";
+import {
+  createDeviceDeploymentTarget,
+  getDeviceDeploymentKind,
+  getDeviceDeploymentSelection,
+  type DeviceDeploymentKind,
+} from "@/devices/deploymentTarget";
 import { saveDevice } from "@/devicesSlice";
-import { useAppDispatch, useAppSelector, usePatches } from "@/hooks";
+import {
+  useAppDispatch,
+  useAppSelector,
+  useInstruments,
+  usePatches,
+} from "@/hooks";
 
 type DeviceModalProps = {
   deviceId: string;
@@ -31,11 +42,14 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
   const dispatch = useAppDispatch();
   const { user } = useUser();
   const patches = usePatches();
+  const instruments = useInstruments();
+  const deploymentTarget = normalizeDeviceDeploymentTarget(device ?? {});
 
   const [formData, setFormData] = useState({
     token: device?.token ?? "",
     name: device?.name ?? "",
-    patchId: device?.patchId ?? "",
+    deploymentKind: getDeviceDeploymentKind(deploymentTarget),
+    deploymentSelection: getDeviceDeploymentSelection(deploymentTarget),
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -51,6 +65,16 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
       newErrors.name = "Name is required";
     }
 
+    if (
+      formData.deploymentKind !== "none" &&
+      !formData.deploymentSelection.trim()
+    ) {
+      newErrors.deploymentSelection =
+        formData.deploymentKind === "patch"
+          ? "Patch selection is required"
+          : "Instrument selection is required";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -59,12 +83,17 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
     if (!validate() || !user?.id) return;
 
     try {
+      const deploymentTarget = createDeviceDeploymentTarget(
+        formData.deploymentKind,
+        formData.deploymentSelection,
+      );
+
       await dispatch(
         saveDevice({
           id: isNew ? undefined : deviceId,
           token: formData.token,
           name: formData.name,
-          patchId: formData.patchId || null,
+          deploymentTarget,
           userId: user.id,
         }),
       );
@@ -73,6 +102,25 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
       console.error("Error saving device:", error);
     }
   };
+
+  const targetOptions = [
+    { name: "None", value: "none" },
+    { name: "Patch", value: "patch" },
+    { name: "Instrument", value: "instrument" },
+  ] as const;
+
+  const targetSelectionOptions =
+    formData.deploymentKind === "instrument" ? instruments : patches;
+  const targetSelectionLabel =
+    formData.deploymentKind === "instrument"
+      ? "Select instrument"
+      : "Select patch";
+  const targetHelpText =
+    formData.deploymentKind === "none"
+      ? "Choose whether the device should auto-load a patch or an instrument"
+      : formData.deploymentKind === "patch"
+        ? "This patch will be auto-loaded when the device starts"
+        : "This instrument will be auto-loaded when the device starts";
 
   return (
     <Surface
@@ -142,17 +190,41 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
         </Stack>
 
         <Stack gap={2}>
-          <Label htmlFor="patchId">Assigned Patch</Label>
+          <Label htmlFor="deploymentKind">Assigned Target</Label>
           <OptionSelect
-            label="Select patch"
-            value={formData.patchId}
-            options={patches}
-            onChange={(value: string) => {
-              setFormData({ ...formData, patchId: value });
+            label="Select target type"
+            value={formData.deploymentKind}
+            options={targetOptions}
+            onChange={(value: DeviceDeploymentKind) => {
+              setFormData({
+                ...formData,
+                deploymentKind: value,
+                deploymentSelection: "",
+              });
             }}
           />
+        </Stack>
+
+        <Stack gap={2}>
+          <Label htmlFor="deploymentSelection">
+            {formData.deploymentKind === "instrument"
+              ? "Assigned Instrument"
+              : "Assigned Patch"}
+          </Label>
+          <OptionSelect
+            label={targetSelectionLabel}
+            value={formData.deploymentSelection}
+            options={targetSelectionOptions}
+            disabled={formData.deploymentKind === "none"}
+            onChange={(value: string) => {
+              setFormData({ ...formData, deploymentSelection: value });
+            }}
+          />
+          {errors.deploymentSelection && (
+            <Text tone="error">{errors.deploymentSelection}</Text>
+          )}
           <Text tone="muted" size="xs">
-            This patch will be auto-loaded when the device starts
+            {targetHelpText}
           </Text>
         </Stack>
       </Stack>

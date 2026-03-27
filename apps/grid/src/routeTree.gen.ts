@@ -9,10 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as InstrumentsRouteImport } from './routes/instruments'
 import { Route as DevicesRouteImport } from './routes/devices'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PatchPatchIdRouteImport } from './routes/patch.$patchId'
+import { Route as InstrumentInstrumentIdRouteImport } from './routes/instrument.$instrumentId'
+import { Route as InstrumentInstrumentIdDebugRouteImport } from './routes/instrument.$instrumentId.debug'
 
+const InstrumentsRoute = InstrumentsRouteImport.update({
+  id: '/instruments',
+  path: '/instruments',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DevicesRoute = DevicesRouteImport.update({
   id: '/devices',
   path: '/devices',
@@ -28,39 +36,87 @@ const PatchPatchIdRoute = PatchPatchIdRouteImport.update({
   path: '/patch/$patchId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InstrumentInstrumentIdRoute = InstrumentInstrumentIdRouteImport.update({
+  id: '/instrument/$instrumentId',
+  path: '/instrument/$instrumentId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstrumentInstrumentIdDebugRoute =
+  InstrumentInstrumentIdDebugRouteImport.update({
+    id: '/debug',
+    path: '/debug',
+    getParentRoute: () => InstrumentInstrumentIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/devices': typeof DevicesRoute
+  '/instruments': typeof InstrumentsRoute
+  '/instrument/$instrumentId': typeof InstrumentInstrumentIdRouteWithChildren
   '/patch/$patchId': typeof PatchPatchIdRoute
+  '/instrument/$instrumentId/debug': typeof InstrumentInstrumentIdDebugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/devices': typeof DevicesRoute
+  '/instruments': typeof InstrumentsRoute
+  '/instrument/$instrumentId': typeof InstrumentInstrumentIdRouteWithChildren
   '/patch/$patchId': typeof PatchPatchIdRoute
+  '/instrument/$instrumentId/debug': typeof InstrumentInstrumentIdDebugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/devices': typeof DevicesRoute
+  '/instruments': typeof InstrumentsRoute
+  '/instrument/$instrumentId': typeof InstrumentInstrumentIdRouteWithChildren
   '/patch/$patchId': typeof PatchPatchIdRoute
+  '/instrument/$instrumentId/debug': typeof InstrumentInstrumentIdDebugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/devices' | '/patch/$patchId'
+  fullPaths:
+    | '/'
+    | '/devices'
+    | '/instruments'
+    | '/instrument/$instrumentId'
+    | '/patch/$patchId'
+    | '/instrument/$instrumentId/debug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/devices' | '/patch/$patchId'
-  id: '__root__' | '/' | '/devices' | '/patch/$patchId'
+  to:
+    | '/'
+    | '/devices'
+    | '/instruments'
+    | '/instrument/$instrumentId'
+    | '/patch/$patchId'
+    | '/instrument/$instrumentId/debug'
+  id:
+    | '__root__'
+    | '/'
+    | '/devices'
+    | '/instruments'
+    | '/instrument/$instrumentId'
+    | '/patch/$patchId'
+    | '/instrument/$instrumentId/debug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DevicesRoute: typeof DevicesRoute
+  InstrumentsRoute: typeof InstrumentsRoute
+  InstrumentInstrumentIdRoute: typeof InstrumentInstrumentIdRouteWithChildren
   PatchPatchIdRoute: typeof PatchPatchIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/instruments': {
+      id: '/instruments'
+      path: '/instruments'
+      fullPath: '/instruments'
+      preLoaderRoute: typeof InstrumentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/devices': {
       id: '/devices'
       path: '/devices'
@@ -82,12 +138,42 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PatchPatchIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/instrument/$instrumentId': {
+      id: '/instrument/$instrumentId'
+      path: '/instrument/$instrumentId'
+      fullPath: '/instrument/$instrumentId'
+      preLoaderRoute: typeof InstrumentInstrumentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/instrument/$instrumentId/debug': {
+      id: '/instrument/$instrumentId/debug'
+      path: '/debug'
+      fullPath: '/instrument/$instrumentId/debug'
+      preLoaderRoute: typeof InstrumentInstrumentIdDebugRouteImport
+      parentRoute: typeof InstrumentInstrumentIdRoute
+    }
   }
 }
+
+interface InstrumentInstrumentIdRouteChildren {
+  InstrumentInstrumentIdDebugRoute: typeof InstrumentInstrumentIdDebugRoute
+}
+
+const InstrumentInstrumentIdRouteChildren: InstrumentInstrumentIdRouteChildren =
+  {
+    InstrumentInstrumentIdDebugRoute: InstrumentInstrumentIdDebugRoute,
+  }
+
+const InstrumentInstrumentIdRouteWithChildren =
+  InstrumentInstrumentIdRoute._addFileChildren(
+    InstrumentInstrumentIdRouteChildren,
+  )
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DevicesRoute: DevicesRoute,
+  InstrumentsRoute: InstrumentsRoute,
+  InstrumentInstrumentIdRoute: InstrumentInstrumentIdRouteWithChildren,
   PatchPatchIdRoute: PatchPatchIdRoute,
 }
 export const routeTree = rootRouteImport
