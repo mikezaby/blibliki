@@ -21,7 +21,8 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "start": "NODE_ENV=development tsx src/cli.ts",
-    "lint": "eslint src",
+    "lint": "eslint src test",
+    "test": "vitest",
     "tsc": "tsc --noEmit",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
@@ -30,10 +31,13 @@
   },
   "devDependencies": {
     "@types/audioworklet": "catalog:web-audio",
-    "@types/node": "25.1.0"
+    "@types/node": "25.1.0",
+    "vite-tsconfig-paths": "catalog:vite",
+    "vitest": "catalog:test"
   },
   "dependencies": {
     "@blibliki/engine": "workspace:^",
+    "@blibliki/instrument": "workspace:^",
     "@blibliki/models": "workspace:^",
     "@blibliki/utils": "workspace:^"
   }

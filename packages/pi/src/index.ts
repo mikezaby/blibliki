@@ -1,5 +1,8 @@
-import { Engine } from "@blibliki/engine";
-import { Device, initializeFirebase, Patch } from "@blibliki/models";
+import {
+  Device,
+  initializeFirebase,
+  normalizeDeviceDeploymentTarget,
+} from "@blibliki/models";
 import {
   fetchFirebaseConfig,
   getDefaultGridUrl,
@@ -11,7 +14,12 @@ import {
   updateConfig,
   getConfig,
 } from "./config.js";
+import {
+  startDeviceDeployment,
+  type DeviceDeploymentDependencies,
+} from "./deviceStartup.js";
 import { promptForUserId } from "./prompt.js";
+import { createTerminalDisplaySession } from "./terminalDisplay.js";
 
 export { loadOrCreateConfig, getConfigPath, updateConfig, getConfig };
 export {
@@ -20,6 +28,84 @@ export {
   areFirebaseConfigsEqual,
 } from "./api.js";
 export { promptForUserId, confirmUserIdUpdate } from "./prompt.js";
+export {
+  createInstrumentSession,
+  startInstrumentSession,
+  type InstrumentSession,
+  type StartedInstrumentSession,
+  type InstrumentSessionOptions,
+  type StartInstrumentSessionOptions,
+} from "./instrumentSession.js";
+export {
+  createDefaultInstrumentSession,
+  startDefaultInstrument,
+} from "./defaultInstrument.js";
+export {
+  createInstrumentRuntimeState,
+  createInstrumentDisplayState,
+  navigateInstrumentRuntime,
+  updateInstrumentRuntimeNavigation,
+} from "./instrumentRuntime.js";
+export { createLiveInstrumentDisplayState } from "./liveDisplayState.js";
+export { createInstrumentControllerSession } from "./instrumentControllerSession.js";
+export {
+  createTerminalDisplaySession,
+  renderInstrumentDisplayStateToTerminal,
+} from "./terminalDisplay.js";
+export { startDeviceDeployment } from "./deviceStartup.js";
+export { reduceInstrumentControllerEvent } from "./controllerRuntime.js";
+export type {
+  InstrumentNavigationAction,
+  InstrumentRuntimeState,
+} from "./instrumentRuntime.js";
+export type { LiveDisplayEngine } from "./liveDisplayState.js";
+export type { InstrumentControllerSession } from "./instrumentControllerSession.js";
+export type { InstrumentControllerResult } from "./controllerRuntime.js";
+export type {
+  TerminalDisplaySession,
+  TerminalDisplayWriter,
+} from "./terminalDisplay.js";
+
+export type StartConfiguredDeviceDependencies = Omit<
+  DeviceDeploymentDependencies,
+  "instrumentSessionOptions"
+> & {
+  startDeviceDeployment?: typeof startDeviceDeployment;
+  createTerminalDisplaySession?: typeof createTerminalDisplaySession;
+  instrumentSessionOptions?: DeviceDeploymentDependencies["instrumentSessionOptions"];
+};
+
+export async function startConfiguredDevice(
+  device: Device,
+  dependencies: StartConfiguredDeviceDependencies = {},
+) {
+  const {
+    startDeviceDeployment: startDeployment = startDeviceDeployment,
+    createTerminalDisplaySession:
+      createDisplaySession = createTerminalDisplaySession,
+    instrumentSessionOptions,
+    ...deviceDeploymentDependencies
+  } = dependencies;
+  const deploymentTarget = normalizeDeviceDeploymentTarget(device);
+
+  if (deploymentTarget?.kind !== "instrument") {
+    return startDeployment(device, deviceDeploymentDependencies);
+  }
+
+  const terminalDisplay = createDisplaySession();
+  const onDisplayStateChange = instrumentSessionOptions?.onDisplayStateChange;
+
+  return startDeployment(device, {
+    ...deviceDeploymentDependencies,
+    instrumentSessionOptions: {
+      ...instrumentSessionOptions,
+      onDisplayStateChange: (displayState) => {
+        terminalDisplay.render(displayState);
+        onDisplayStateChange?.(displayState);
+      },
+    },
+  });
+}
 
 /**
  * Check and update Firebase config if necessary
@@ -130,14 +216,7 @@ export async function main(options?: { gridUrl?: string }): Promise<void> {
     throw Error("Device: Not found");
   }
 
-  if (!device.patchId) {
-    throw Error("Device: patch not configured");
-  }
-
-  const patch = await Patch.find(device.patchId);
-
-  const engine = await Engine.load(patch.engineSerialize());
-  await engine.start();
+  await startConfiguredDevice(device);
 }
 
 /**

@@ -7,8 +7,8 @@ Novation Launch Control XL 3 in DAW mode.
 
 | Control | CC | Direction | Behavior | Feedback |
 | --- | ---: | --- | --- | --- |
-| Play | 116 | Controller -> Engine | Starts transport (`engine.start`) | LED color updates (green when playing) |
-| Record | 118 | Controller -> Engine | Stops and resets transport (`engine.stop`) | LED color updates (red when stopped) |
+| Play | 116 | Controller -> Engine | Toggles transport start/stop | LED color updates (green when playing) |
+| Record | 118 | Controller -> Engine | Reserved / ignored | No transport action |
 | Page Up | 106 | Controller -> Engine | Advances `MidiMapper.activePage` by +1 (clamped) | Mapper resync sends current page values |
 | Page Down | 107 | Controller -> Engine | Moves `MidiMapper.activePage` by -1 (clamped) | Mapper resync sends current page values |
 | Track Prev | 103 | Controller -> Engine | Alias for previous mapper page (-1) | Mapper resync sends current page values |

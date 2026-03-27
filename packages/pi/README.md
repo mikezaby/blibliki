@@ -77,7 +77,11 @@ After setup, simply run:
 blibliki-pi
 ```
 
-Your Pi will automatically load and run the configured patch.
+Your Pi will automatically read the device document from Firestore and start
+the configured deployment target:
+
+- a plain Grid patch
+- or an instrument document
 
 ## Architecture
 
