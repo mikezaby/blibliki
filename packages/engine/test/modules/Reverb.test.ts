@@ -1,9 +1,9 @@
-import { sleep } from "@blibliki/utils";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createModule, ModuleType } from "@/modules";
 import Constant from "@/modules/Constant";
 import Inspector from "@/modules/Inspector";
 import Reverb, { ReverbType } from "@/modules/Reverb";
+import { waitForInspectorValue } from "../utils/audioWaits";
 
 describe("Reverb", () => {
   let reverb: Reverb;
@@ -55,22 +55,31 @@ describe("Reverb", () => {
   describe("mix parameter", () => {
     it("should output mostly dry signal when mix = 0", async () => {
       reverb.props = { mix: 0 };
-      await sleep(50);
-      const value = inspector.getValue();
+      const value = await waitForInspectorValue(
+        inspector,
+        (currentValue) => Math.abs(currentValue) > 0.5,
+        { description: "mostly dry reverb output" },
+      );
       expect(value).toBeCloseTo(1, 1);
     });
 
     it("should blend dry and wet when mix = 0.5", async () => {
       reverb.props = { mix: 0.5 };
-      await sleep(50);
-      const value = inspector.getValue();
+      const value = await waitForInspectorValue(
+        inspector,
+        (currentValue) => Math.abs(currentValue) > 0,
+        { description: "blended reverb output" },
+      );
       expect(value).toBeGreaterThan(0);
     });
 
     it("should output mostly wet signal when mix = 1", async () => {
       reverb.props = { mix: 1 };
-      await sleep(100);
-      const value = inspector.getValue();
+      const value = await waitForInspectorValue(
+        inspector,
+        (currentValue) => Math.abs(currentValue) > 0,
+        { description: "wet reverb output" },
+      );
       // Convolution can produce positive or negative values, check for non-zero
       expect(Math.abs(value)).toBeGreaterThan(0);
     });

@@ -4,21 +4,12 @@ import { createModule, ModuleType } from "@/modules";
 import Constant from "@/modules/Constant";
 import { MonoGain } from "@/modules/Gain";
 import Inspector from "@/modules/Inspector";
-import { waitForValue } from "../utils/waitForCondition";
+import { waitForInspectorNear } from "../utils/audioWaits";
 
 describe("Gain", () => {
   let gain: MonoGain;
   let audioSource: Constant;
   let inspector: Inspector;
-
-  const waitForOutput = async (expected: number, tolerance = 0.1) =>
-    waitForValue(
-      () => inspector.getValue(),
-      (value) => Math.abs(value - expected) <= tolerance,
-      {
-        description: `gain output near ${expected}`,
-      },
-    );
 
   beforeEach((ctx) => {
     gain = Module.create(MonoGain, ctx.engine.id, {
@@ -45,7 +36,7 @@ describe("Gain", () => {
   });
 
   it("passes audio through with the default gain", async () => {
-    const value = await waitForOutput(1);
+    const value = await waitForInspectorNear(inspector, 1);
     expect(value).toBeCloseTo(1, 1);
   });
 
@@ -68,7 +59,7 @@ describe("Gain", () => {
     async ({ gainValue, expected, tolerance }) => {
       gain.props = { gain: gainValue };
 
-      const value = await waitForOutput(expected, tolerance);
+      const value = await waitForInspectorNear(inspector, expected, tolerance);
       expect(value).toBeCloseTo(expected, 1);
     },
   );
@@ -84,7 +75,7 @@ describe("Gain", () => {
     gain.props = { gain: 0 };
     modulationSource.plug({ audioModule: gain, from: "out", to: "gain" });
 
-    const value = await waitForOutput(0.5);
+    const value = await waitForInspectorNear(inspector, 0.5);
     expect(value).toBeCloseTo(0.5, 1);
   });
 
@@ -98,11 +89,11 @@ describe("Gain", () => {
 
     gain.props = { gain: 0 };
     modulationSource.plug({ audioModule: gain, from: "out", to: "gain" });
-    await waitForOutput(0.25);
+    await waitForInspectorNear(inspector, 0.25);
 
     modulationSource.props = { value: 1 };
 
-    const value = await waitForOutput(1);
+    const value = await waitForInspectorNear(inspector, 1);
     expect(value).toBeCloseTo(1, 1);
   });
 });

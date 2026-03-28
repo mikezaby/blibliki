@@ -4,26 +4,15 @@ import { createModule, ModuleType } from "@/modules";
 import Constant from "@/modules/Constant";
 import Inspector from "@/modules/Inspector";
 import { MonoScale } from "@/modules/Scale";
-import { waitForValue } from "../utils/waitForCondition";
+import {
+  waitForInspectorFinite,
+  waitForInspectorNear,
+} from "../utils/audioWaits";
 
 describe("Scale", () => {
   let scale: MonoScale;
   let amount: Constant;
   let inspector: Inspector;
-
-  const waitForOutput = async (expected: number, tolerance = 1) =>
-    waitForValue(
-      () => inspector.getValue(),
-      (value) => Math.abs(value - expected) <= tolerance,
-      {
-        description: `scale output near ${expected}`,
-      },
-    );
-
-  const waitForFiniteOutput = async () =>
-    waitForValue(() => inspector.getValue(), Number.isFinite, {
-      description: "finite scale output",
-    });
 
   beforeEach((ctx) => {
     scale = Module.create(MonoScale, ctx.engine.id, {
@@ -70,7 +59,11 @@ describe("Scale", () => {
   ])("$name", async ({ amountValue, expected, tolerance }) => {
     amount.props = { value: amountValue };
 
-    const value = await waitForOutput(expected, tolerance);
+    const value = await waitForInspectorNear(
+      inspector,
+      expected,
+      tolerance ?? 1,
+    );
     expect(value).toBeCloseTo(expected, 0);
   });
 
@@ -78,7 +71,7 @@ describe("Scale", () => {
     amount.props = { value: 0 };
     scale.props = { current: 220 };
 
-    const value = await waitForOutput(220);
+    const value = await waitForInspectorNear(inspector, 220, 1);
     expect(value).toBeCloseTo(220, 1);
   });
 
@@ -97,7 +90,7 @@ describe("Scale", () => {
     scale.props = { min: 0, max: 100, current: 50, mode: "linear" };
     amount.props = { value: amountValue };
 
-    const value = await waitForOutput(expected);
+    const value = await waitForInspectorNear(inspector, expected, 1);
     expect(value).toBeCloseTo(expected, 1);
   });
 
@@ -105,7 +98,7 @@ describe("Scale", () => {
     scale.props = { min: 0, max: 0, current: 0 };
     amount.props = { value: 0 };
 
-    const value = await waitForFiniteOutput();
+    const value = await waitForInspectorFinite(inspector);
     expect(value).toBe(0);
   });
 
@@ -113,7 +106,7 @@ describe("Scale", () => {
     scale.props = { min: -100, max: -20, current: -60, mode: "linear" };
     amount.props = { value: 0.5 };
 
-    const value = await waitForOutput(-40);
+    const value = await waitForInspectorNear(inspector, -40, 1);
     expect(value).toBeCloseTo(-40, 1);
   });
 });

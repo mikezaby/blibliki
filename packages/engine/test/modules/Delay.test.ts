@@ -1,9 +1,9 @@
-import { sleep } from "@blibliki/utils";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createModule, DelayTimeMode, ModuleType } from "@/modules";
 import Constant from "@/modules/Constant";
 import Delay from "@/modules/Delay";
 import Inspector from "@/modules/Inspector";
+import { waitForInspectorValue } from "../utils/audioWaits";
 
 describe("Delay", () => {
   let delay: Delay;
@@ -68,22 +68,31 @@ describe("Delay", () => {
   describe("mix parameter", () => {
     it("should output mostly dry signal when mix = 0", async () => {
       delay.props = { mix: 0 };
-      await sleep(50);
-      const value = inspector.getValue();
+      const value = await waitForInspectorValue(
+        inspector,
+        (currentValue) => Math.abs(currentValue) > 0.5,
+        { description: "dry delay output" },
+      );
       expect(value).toBeCloseTo(1, 1);
     });
 
     it("should blend dry and wet when mix = 0.5", async () => {
       delay.props = { mix: 0.5 };
-      await sleep(50);
-      const value = inspector.getValue();
+      const value = await waitForInspectorValue(
+        inspector,
+        (currentValue) => Math.abs(currentValue) > 0,
+        { description: "blended delay output" },
+      );
       expect(value).toBeGreaterThan(0);
     });
 
     it("should output mostly wet signal when mix = 1", async () => {
       delay.props = { mix: 1 };
-      await sleep(600); // Wait for delay + feedback
-      const value = inspector.getValue();
+      const value = await waitForInspectorValue(
+        inspector,
+        (currentValue) => Math.abs(currentValue) > 0,
+        { description: "wet delay output", timeoutMs: 1500 },
+      );
       expect(value).toBeGreaterThan(0);
     });
   });

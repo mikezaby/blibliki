@@ -1,5 +1,3 @@
-import { sleep } from "@blibliki/utils";
-
 export const getPeak = (values: Float32Array): number =>
   values.reduce((max, value) => Math.max(max, Math.abs(value)), 0);
 
@@ -29,7 +27,9 @@ export const waitForCondition = async (
         `Timed out waiting for ${description} after ${timeoutMs}ms`,
       );
     }
-    await sleep(intervalMs);
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, intervalMs);
+    });
   }
 };
 

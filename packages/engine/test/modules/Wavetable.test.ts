@@ -1,19 +1,18 @@
-import { sleep } from "@blibliki/utils";
 import { describe, expect, it } from "vitest";
 import { ModuleType } from "@/modules";
 import Inspector from "@/modules/Inspector";
 import Wavetable, {
   formatWavetableConfig,
   IWavetableProps,
-  parseWavetableConfig,
   formatWavetableDefinition,
+  parseWavetableConfig,
   parseWavetableDefinition,
 } from "@/modules/Wavetable";
 import {
-  getPeak,
-  waitForCondition,
-  waitForMicrotasks,
-} from "../utils/waitForCondition";
+  readInspectorPeak,
+  waitForInspectorPeakAbove,
+} from "../utils/audioWaits";
+import { waitForCondition, waitForMicrotasks } from "../utils/waitForCondition";
 
 const DEFAULT_PROPS: IWavetableProps = {
   tables: [
@@ -92,20 +91,15 @@ describe("Wavetable", () => {
     ctx.engine.transport.start(ctx.context.currentTime);
     monoOscillator.plug({ audioModule: inspector, from: "out", to: "in" });
 
-    await sleep(50);
-    const lowPositionPeak = inspector.getValues().reduce((max, value) => {
-      return Math.max(max, Math.abs(value));
-    }, 0);
+    const lowPositionPeak = readInspectorPeak(inspector);
 
     oscillator.props = {
       position: 1,
     };
-    await sleep(50);
+    const highPositionPeak = await waitForInspectorPeakAbove(inspector, 0.01, {
+      description: "wavetable output after moving to position 1",
+    });
     ctx.engine.transport.stop(ctx.context.currentTime);
-
-    const highPositionPeak = inspector.getValues().reduce((max, value) => {
-      return Math.max(max, Math.abs(value));
-    }, 0);
 
     expect(lowPositionPeak).toBeLessThan(0.01);
     expect(highPositionPeak).toBeGreaterThan(0.01);
@@ -133,17 +127,12 @@ describe("Wavetable", () => {
     monoOscillator.start(ctx.context.currentTime);
     monoOscillator.plug({ audioModule: inspector, from: "out", to: "in" });
 
-    await sleep(60);
-    const lowPositionPeak = inspector.getValues().reduce((max, value) => {
-      return Math.max(max, Math.abs(value));
-    }, 0);
+    const lowPositionPeak = readInspectorPeak(inspector);
 
     oscillator.props = { position: 1 };
-    await sleep(140);
-
-    const highPositionPeak = inspector.getValues().reduce((max, value) => {
-      return Math.max(max, Math.abs(value));
-    }, 0);
+    const highPositionPeak = await waitForInspectorPeakAbove(inspector, 0.01, {
+      description: "wavetable output after position change without transport",
+    });
 
     expect(lowPositionPeak).toBeLessThan(0.01);
     expect(highPositionPeak).toBeGreaterThan(0.01);
@@ -175,8 +164,10 @@ describe("Wavetable", () => {
     ctx.engine.transport.start(ctx.context.currentTime);
     monoOscillator.plug({ audioModule: inspector, from: "out", to: "in" });
 
-    await waitForCondition(() => getPeak(inspector.getValues()) > 0.01);
-    const beforePresetChangePeak = getPeak(inspector.getValues());
+    const beforePresetChangePeak = await waitForInspectorPeakAbove(
+      inspector,
+      0.01,
+    );
 
     oscillator.props = {
       tables: [
@@ -185,10 +176,10 @@ describe("Wavetable", () => {
       ],
     };
 
-    await waitForCondition(() => getPeak(inspector.getValues()) < 0.01);
+    await waitForCondition(() => readInspectorPeak(inspector) < 0.01);
     ctx.engine.transport.stop(ctx.context.currentTime);
 
-    const afterPresetChangePeak = getPeak(inspector.getValues());
+    const afterPresetChangePeak = readInspectorPeak(inspector);
 
     expect(beforePresetChangePeak).toBeGreaterThan(0.01);
     expect(afterPresetChangePeak).toBeLessThan(0.01);
@@ -223,8 +214,6 @@ describe("Wavetable", () => {
     const monoOscillator = oscillator.audioModules[0]!;
     monoOscillator.start(ctx.context.currentTime);
     monoOscillator.plug({ audioModule: inspector, from: "out", to: "in" });
-
-    await sleep(50);
 
     expect(Number.isFinite(inspector.getValue())).toBe(true);
   });
@@ -262,7 +251,16 @@ describe("Wavetable", () => {
     monoOscillator.start(ctx.context.currentTime);
     ctx.engine.transport.start(ctx.context.currentTime);
     oscillator.props = { position: 1 };
-    await sleep(120);
+    await waitForCondition(
+      () =>
+        updates.some(
+          (update) => typeof update.state?.actualPosition === "number",
+        ),
+      {
+        timeoutMs: 3000,
+        description: "wavetable actualPosition state updates",
+      },
+    );
     ctx.engine.transport.stop(ctx.context.currentTime);
 
     const stateUpdates = updates.filter(
@@ -312,7 +310,10 @@ describe("Wavetable", () => {
     monoOscillator.start(ctx.context.currentTime);
     monoOscillator.plug({ audioModule: inspector, from: "out", to: "in" });
 
-    await sleep(40);
+    await waitForCondition(() => updates.length > 0, {
+      timeoutMs: 3000,
+      description: "initial wavetable actualPosition report",
+    });
     updates.length = 0;
 
     oscillator.props = { position: 1 };

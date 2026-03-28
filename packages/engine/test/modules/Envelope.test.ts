@@ -1,9 +1,9 @@
-import { sleep } from "@blibliki/utils";
 import { describe, expect, it } from "vitest";
 import { ModuleType } from "@/modules";
 import Constant from "@/modules/Constant";
 import Envelope from "@/modules/Envelope";
 import Inspector from "@/modules/Inspector";
+import { waitForInspectorValue } from "../utils/audioWaits";
 import { waitForMicrotasks } from "../utils/waitForCondition";
 
 const DEFAULT_PROPS = {
@@ -95,9 +95,11 @@ describe("Envelope", () => {
       const monoEnvelope = envelope.audioModules[0]!;
       (monoEnvelope.audioNode as AudioWorkletNode).connect(inspector.audioNode);
 
-      await sleep(50);
-
-      const value = inspector.getValue();
+      const value = await waitForInspectorValue(
+        inspector,
+        (currentValue) => currentValue < 0.0001,
+        { description: "silent envelope output" },
+      );
 
       // Should be essentially silent (close to MIN_GAIN = 0.00001)
       expect(value).toBeLessThan(0.0001);
@@ -147,9 +149,11 @@ describe("Envelope", () => {
       // Connect envelope to inspector
       workletNode.connect(inspector.audioNode);
 
-      await sleep(50);
-
-      const value = inspector.getValue();
+      const value = await waitForInspectorValue(
+        inspector,
+        (currentValue) => currentValue > 0.1,
+        { description: "envelope attack rise" },
+      );
 
       // Should be rising or have reached peak
       expect(value).toBeGreaterThan(0.1);
@@ -194,9 +198,11 @@ describe("Envelope", () => {
       constant.audioNode.connect(workletNode.parameters.get("trigger")!);
       workletNode.connect(inspector.audioNode);
 
-      await sleep(100);
-
-      const value = inspector.getValue();
+      const value = await waitForInspectorValue(
+        inspector,
+        (currentValue) => currentValue > 0.4 && currentValue < 0.6,
+        { description: "envelope sustain level" },
+      );
 
       // Should be around sustain level (0.5)
       expect(value).toBeGreaterThan(0.4);
@@ -242,18 +248,22 @@ describe("Envelope", () => {
       constant.audioNode.connect(workletNode.parameters.get("trigger")!);
       workletNode.connect(inspector.audioNode);
 
-      await sleep(50);
-
-      const sustainValue = inspector.getValue();
+      const sustainValue = await waitForInspectorValue(
+        inspector,
+        (currentValue) => currentValue > 0.7,
+        { description: "envelope sustain before release" },
+      );
 
       // Should be at sustain level
       expect(sustainValue).toBeGreaterThan(0.7);
 
       // Now release by setting constant to 0
       constant.props = { value: 0 };
-      await sleep(50);
-
-      const releaseValue = inspector.getValue();
+      const releaseValue = await waitForInspectorValue(
+        inspector,
+        (currentValue) => currentValue < sustainValue - 0.05,
+        { description: "envelope release drop" },
+      );
 
       // Should be lower than sustain (releasing)
       expect(releaseValue).toBeLessThan(sustainValue);
@@ -298,18 +308,27 @@ describe("Envelope", () => {
       constant.audioNode.connect(workletNode.parameters.get("trigger")!);
       workletNode.connect(inspector.audioNode);
 
-      // Wait for sustain
-      await sleep(50);
+      await waitForInspectorValue(
+        inspector,
+        (currentValue) => currentValue > 0.6,
+        { description: "envelope sustain before retrigger" },
+      );
 
       // Release
       constant.props = { value: 0 };
-      await sleep(30);
+      await waitForInspectorValue(
+        inspector,
+        (currentValue) => currentValue < 0.6,
+        { description: "envelope release in progress" },
+      );
 
       // Retrigger during release
       constant.props = { value: 1 };
-      await sleep(50);
-
-      const value = inspector.getValue();
+      const value = await waitForInspectorValue(
+        inspector,
+        (currentValue) => currentValue > 0.5,
+        { description: "envelope retrigger recovery" },
+      );
 
       // Should be back at sustain level after retriggering
       expect(value).toBeGreaterThan(0.5);
