@@ -4,6 +4,7 @@ import { Module, SetterHooks } from "@/core/module/Module";
 import { ICreateModule, ModuleType } from "@/modules";
 import Gain, { MonoGain } from "@/modules/Gain";
 import { CustomWorklet, newAudioWorklet } from "@/processors";
+import { waitForMicrotasks } from "../utils/waitForCondition";
 import {
   TestGainModule,
   TestAudioWorkletModule,
@@ -26,8 +27,7 @@ describe("Module", () => {
       moduleType: ModuleType.Gain,
       props: { gain: 1 },
     });
-    // Wait for queueMicrotask in constructor to complete
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await waitForMicrotasks();
   });
 
   describe("initialize", () => {
@@ -95,7 +95,7 @@ describe("Module", () => {
         },
       });
 
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await waitForMicrotasks();
 
       expect(polyGain.audioModules).toHaveLength(2);
       expect(polyGain.audioModules[0]!.parentModule).toBe(polyGain);
@@ -305,7 +305,7 @@ describe("Module", () => {
       expect(module.minParam.value).toBe(100);
 
       // Should stay stable after microtask.
-      await new Promise<void>((resolve) => queueMicrotask(() => resolve()));
+      await waitForMicrotasks();
 
       expect(module.hookValue).toBe(100);
       expect(module.minParam.value).toBe(100);
@@ -458,7 +458,7 @@ describe("Module", () => {
       expect(module.hookReceivedValue).toBe(777);
 
       // Still true after microtask.
-      await new Promise<void>((resolve) => queueMicrotask(() => resolve()));
+      await waitForMicrotasks();
 
       expect(module.hookWasCalled).toBe(true);
       expect(module.hookReceivedValue).toBe(777);
@@ -472,7 +472,7 @@ describe("Module", () => {
       });
 
       // Wait for hooks
-      await new Promise<void>((resolve) => queueMicrotask(() => resolve()));
+      await waitForMicrotasks();
 
       // Check if hook actually succeeded in setting the value
       expect(module.hookSuccessfullySet).toBe(true);
@@ -487,7 +487,7 @@ describe("Module", () => {
       });
 
       // Wait for hooks
-      await new Promise<void>((resolve) => queueMicrotask(() => resolve()));
+      await waitForMicrotasks();
 
       // Check audioNode is defined
       expect(module.audioNode).toBeDefined();
@@ -506,7 +506,7 @@ describe("Module", () => {
       expect(immediateValue).toBe(123);
       expect(module.hookSuccessfullySet).toBe(true);
 
-      await new Promise<void>((resolve) => queueMicrotask(() => resolve()));
+      await waitForMicrotasks();
 
       expect(module.minParam.value).toBe(123);
       expect(module.hookSuccessfullySet).toBe(true);

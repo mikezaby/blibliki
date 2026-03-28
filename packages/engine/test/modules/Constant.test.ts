@@ -1,8 +1,8 @@
-import { sleep } from "@blibliki/utils";
 import { describe, it, expect, beforeEach } from "vitest";
 import { createModule, ModuleType } from "@/modules";
 import Constant from "@/modules/Constant";
 import Inspector from "@/modules/Inspector";
+import { waitForValue } from "../utils/waitForCondition";
 
 describe("Constant", () => {
   let constant: Constant;
@@ -27,7 +27,10 @@ describe("Constant", () => {
 
   describe("Initialize", () => {
     beforeEach(async () => {
-      await sleep(50);
+      await waitForValue(
+        () => inspector.getValue(),
+        (value) => Math.abs(value - 23) <= 1,
+      );
     });
 
     it("it returns proper value", () => {
@@ -38,7 +41,10 @@ describe("Constant", () => {
   describe("Update value", () => {
     beforeEach(async () => {
       constant.props = { value: 30 };
-      await sleep(50);
+      await waitForValue(
+        () => inspector.getValue(),
+        (value) => Math.abs(value - 30) <= 1,
+      );
     });
 
     it("it returns proper value", () => {

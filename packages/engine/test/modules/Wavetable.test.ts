@@ -9,7 +9,11 @@ import Wavetable, {
   formatWavetableDefinition,
   parseWavetableDefinition,
 } from "@/modules/Wavetable";
-import { getPeak, waitForCondition } from "../utils/waitForCondition";
+import {
+  getPeak,
+  waitForCondition,
+  waitForMicrotasks,
+} from "../utils/waitForCondition";
 
 const DEFAULT_PROPS: IWavetableProps = {
   tables: [
@@ -81,7 +85,7 @@ describe("Wavetable", () => {
       props: {},
     });
 
-    await sleep(10);
+    await waitForMicrotasks();
 
     const monoOscillator = oscillator.audioModules[0]!;
     monoOscillator.start(ctx.context.currentTime);
@@ -123,7 +127,7 @@ describe("Wavetable", () => {
       props: {},
     });
 
-    await sleep(10);
+    await waitForMicrotasks();
 
     const monoOscillator = oscillator.audioModules[0]!;
     monoOscillator.start(ctx.context.currentTime);
@@ -164,7 +168,7 @@ describe("Wavetable", () => {
       props: {},
     });
 
-    await sleep(10);
+    await waitForMicrotasks();
 
     const monoOscillator = oscillator.audioModules[0]!;
     monoOscillator.start(ctx.context.currentTime);
@@ -206,7 +210,7 @@ describe("Wavetable", () => {
       props: {},
     });
 
-    await sleep(10);
+    await waitForMicrotasks();
 
     oscillator.props = {
       tables: [
@@ -253,7 +257,7 @@ describe("Wavetable", () => {
       });
     });
 
-    await sleep(10);
+    await waitForMicrotasks();
     const monoOscillator = oscillator.audioModules[0]!;
     monoOscillator.start(ctx.context.currentTime);
     ctx.engine.transport.start(ctx.context.currentTime);
@@ -302,7 +306,7 @@ describe("Wavetable", () => {
       }
     });
 
-    await sleep(10);
+    await waitForMicrotasks();
 
     const monoOscillator = oscillator.audioModules[0]!;
     monoOscillator.start(ctx.context.currentTime);

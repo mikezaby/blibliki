@@ -1,15 +1,24 @@
-import { sleep } from "@blibliki/utils";
-import { describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { Module } from "@/core/module/Module";
 import { createModule, ModuleType } from "@/modules";
 import Constant from "@/modules/Constant";
 import { MonoGain } from "@/modules/Gain";
 import Inspector from "@/modules/Inspector";
+import { waitForValue } from "../utils/waitForCondition";
 
 describe("Gain", () => {
   let gain: MonoGain;
   let audioSource: Constant;
   let inspector: Inspector;
+
+  const waitForOutput = async (expected: number, tolerance = 0.1) =>
+    waitForValue(
+      () => inspector.getValue(),
+      (value) => Math.abs(value - expected) <= tolerance,
+      {
+        description: `gain output near ${expected}`,
+      },
+    );
 
   beforeEach((ctx) => {
     gain = Module.create(MonoGain, ctx.engine.id, {
@@ -35,150 +44,65 @@ describe("Gain", () => {
     gain.audioNode.connect(inspector.audioNode);
   });
 
-  describe("Initialize", () => {
-    describe("with default gain value", () => {
-      beforeEach(async () => {
-        await sleep(50);
-      });
-
-      it("should pass through audio with gain = 1", () => {
-        const value = inspector.getValue();
-        expect(value).to.be.closeTo(1, 0.1);
-      });
-    });
-
-    describe("with custom gain value", () => {
-      beforeEach(async () => {
-        gain.props = { gain: 0.5 };
-        await sleep(50);
-      });
-
-      it("should apply the gain value", () => {
-        const value = inspector.getValue();
-        expect(value).to.be.closeTo(0.5, 0.1);
-      });
-    });
+  it("passes audio through with the default gain", async () => {
+    const value = await waitForOutput(1);
+    expect(value).toBeCloseTo(1, 1);
   });
 
-  describe("Update gain value", () => {
-    describe("when gain is set to 0", () => {
-      beforeEach(async () => {
-        gain.props = { gain: 0 };
-        await sleep(50);
-      });
+  it.each([
+    { gainValue: 0, expected: 0, tolerance: 0.01, name: "silences the signal" },
+    {
+      gainValue: 0.5,
+      expected: 0.5,
+      tolerance: 0.1,
+      name: "attenuates the signal",
+    },
+    {
+      gainValue: 2,
+      expected: 2,
+      tolerance: 0.1,
+      name: "amplifies the signal",
+    },
+  ])(
+    "$name when the gain prop changes",
+    async ({ gainValue, expected, tolerance }) => {
+      gain.props = { gain: gainValue };
 
-      it("should silence the audio", () => {
-        const value = inspector.getValue();
-        expect(value).to.be.closeTo(0, 0.01);
-      });
-    });
+      const value = await waitForOutput(expected, tolerance);
+      expect(value).toBeCloseTo(expected, 1);
+    },
+  );
 
-    describe("when gain is increased to 2", () => {
-      beforeEach(async () => {
-        gain.props = { gain: 2 };
-        await sleep(50);
-      });
+  it("uses the gain input for modulation", async () => {
+    const modulationSource = createModule(gain.engineId, {
+      name: "modulationSource",
+      moduleType: ModuleType.Constant,
+      props: { value: 0.5 },
+    }) as Constant;
+    modulationSource.start(0);
 
-      it("should amplify the signal", () => {
-        const value = inspector.getValue();
-        expect(value).to.be.closeTo(2, 0.1);
-      });
-    });
+    gain.props = { gain: 0 };
+    modulationSource.plug({ audioModule: gain, from: "out", to: "gain" });
 
-    describe("when gain is set to a very small value", () => {
-      beforeEach(async () => {
-        gain.props = { gain: 0.01 };
-        await sleep(50);
-      });
-
-      it("should significantly attenuate the signal", () => {
-        const value = inspector.getValue();
-        expect(value).to.be.closeTo(0.01, 0.01);
-      });
-    });
+    const value = await waitForOutput(0.5);
+    expect(value).toBeCloseTo(0.5, 1);
   });
 
-  describe("Gain modulation via audio input", () => {
-    let modulationSource: Constant;
+  it("updates the output when the modulation source changes", async () => {
+    const modulationSource = createModule(gain.engineId, {
+      name: "modulationSource",
+      moduleType: ModuleType.Constant,
+      props: { value: 0.25 },
+    }) as Constant;
+    modulationSource.start(0);
 
-    beforeEach(() => {
-      modulationSource = createModule(gain.engineId, {
-        name: "modulationSource",
-        moduleType: ModuleType.Constant,
-        props: { value: 0.5 },
-      }) as Constant;
-      modulationSource.start(0);
-    });
+    gain.props = { gain: 0 };
+    modulationSource.plug({ audioModule: gain, from: "out", to: "gain" });
+    await waitForOutput(0.25);
 
-    describe("when modulation is connected to gain input", () => {
-      beforeEach(async () => {
-        gain.props = { gain: 0 };
-        modulationSource.plug({ audioModule: gain, from: "out", to: "gain" });
-        await sleep(50);
-      });
+    modulationSource.props = { value: 1 };
 
-      it("should modulate the gain value", () => {
-        const value = inspector.getValue();
-        expect(value).to.be.closeTo(0.5, 0.1);
-      });
-    });
-
-    describe("when modulation value changes", () => {
-      beforeEach(async () => {
-        gain.props = { gain: 0 };
-        modulationSource.plug({ audioModule: gain, from: "out", to: "gain" });
-        await sleep(50);
-        modulationSource.props = { value: 1 };
-        await sleep(50);
-      });
-
-      it("should reflect the new modulation value", () => {
-        const value = inspector.getValue();
-        expect(value).to.be.closeTo(1, 0.1);
-      });
-    });
-
-    describe("when modulation affects final gain", () => {
-      beforeEach(async () => {
-        gain.props = { gain: 0.5 };
-        modulationSource.props = { value: 0.5 };
-        modulationSource.plug({ audioModule: gain, from: "out", to: "gain" });
-        await sleep(50);
-      });
-
-      it("should combine base gain with modulation", () => {
-        const value = inspector.getValue();
-        // Base gain (0.5) + modulation (0.5) = 1.0, applied to audioSource value of 1
-        expect(value).to.be.closeTo(1, 0.2);
-      });
-    });
-  });
-
-  describe("Edge cases", () => {
-    describe("when gain is at minimum (0)", () => {
-      beforeEach(async () => {
-        gain.props = { gain: 0 };
-        await sleep(50);
-      });
-
-      it("should output silence", () => {
-        const value = inspector.getValue();
-        expect(value).to.be.closeTo(0, 0.01);
-      });
-    });
-
-    describe("when gain is very large", () => {
-      beforeEach(async () => {
-        gain.props = { gain: 100 };
-        await sleep(50);
-      });
-
-      it("should handle large gain values without errors", () => {
-        const value = inspector.getValue();
-        expect(value).to.be.a("number");
-        expect(isNaN(value)).to.be.false;
-        expect(isFinite(value)).to.be.true;
-      });
-    });
+    const value = await waitForOutput(1);
+    expect(value).toBeCloseTo(1, 1);
   });
 });

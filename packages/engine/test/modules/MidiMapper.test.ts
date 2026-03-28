@@ -3,18 +3,7 @@ import MidiEvent from "@/core/midi/MidiEvent";
 import MidiOutputDevice from "@/core/midi/MidiOutputDevice";
 import { MidiMappingMode, ModuleType } from "@/modules";
 import MidiMapper, { MidiMapping } from "@/modules/MidiMapper";
-
-const flushMicrotasks = async () => {
-  await Promise.resolve();
-};
-
-const flushFrame = async () => {
-  await new Promise<void>((resolve) => {
-    setTimeout(() => {
-      resolve();
-    }, 20);
-  });
-};
+import { waitForMicrotasks } from "../utils/waitForCondition";
 
 const registerMidiOutput = (
   ctx: {
@@ -169,11 +158,11 @@ describe("MidiMapper", () => {
       originalOnMidiEvent(event);
     };
 
-    await flushMicrotasks();
+    await waitForMicrotasks();
     sentEvents.length = 0;
 
     midiMapper.props = { activeTrack: 1 };
-    await flushMicrotasks();
+    await waitForMicrotasks();
 
     const matchingEvents = sentEvents.filter((event) => event.cc === 22);
     expect(matchingEvents.length).toBeGreaterThan(0);
@@ -224,7 +213,7 @@ describe("MidiMapper", () => {
       originalOnMidiEvent(event);
     };
 
-    await flushMicrotasks();
+    await waitForMicrotasks();
     sentEvents.length = 0;
 
     midiMapper.props = {
@@ -243,7 +232,7 @@ describe("MidiMapper", () => {
         },
       ],
     };
-    await flushMicrotasks();
+    await waitForMicrotasks();
 
     const matchingEvents = sentEvents.filter((event) => event.cc === 22);
     expect(matchingEvents.length).toBeGreaterThan(0);
@@ -288,14 +277,14 @@ describe("MidiMapper", () => {
       throw new Error("Expected midi mapper module");
     }
 
-    await flushMicrotasks();
+    await waitForMicrotasks();
     send.mockClear();
 
     mapper.handleCC(MidiEvent.fromCC(13, 110, ctx.context.currentTime), 0);
     send.mockClear();
 
     mapper.handleCC(MidiEvent.fromCC(13, 111, ctx.context.currentTime), 0);
-    await flushFrame();
+    await waitForMicrotasks(2);
 
     expect(send).not.toHaveBeenCalled();
   });

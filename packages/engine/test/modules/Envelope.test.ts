@@ -4,6 +4,7 @@ import { ModuleType } from "@/modules";
 import Constant from "@/modules/Constant";
 import Envelope from "@/modules/Envelope";
 import Inspector from "@/modules/Inspector";
+import { waitForMicrotasks } from "../utils/waitForCondition";
 
 const DEFAULT_PROPS = {
   attack: 0.01,
@@ -88,8 +89,7 @@ describe("Envelope", () => {
         props: {},
       });
 
-      // Wait for audioModules to be created (happens in queueMicrotask)
-      await sleep(10);
+      await waitForMicrotasks();
 
       // Connect envelope audioNode to inspector
       const monoEnvelope = envelope.audioModules[0]!;
@@ -135,8 +135,7 @@ describe("Envelope", () => {
         props: {},
       });
 
-      // Wait for audioModules to be created
-      await sleep(10);
+      await waitForMicrotasks();
 
       // Get the mono envelope module
       const monoEnvelope = envelope.audioModules[0]!;
@@ -188,7 +187,7 @@ describe("Envelope", () => {
         props: {},
       });
 
-      await sleep(10);
+      await waitForMicrotasks();
 
       const monoEnvelope = envelope.audioModules[0]!;
       const workletNode = monoEnvelope.audioNode as AudioWorkletNode;
@@ -236,7 +235,7 @@ describe("Envelope", () => {
         props: {},
       });
 
-      await sleep(10);
+      await waitForMicrotasks();
 
       const monoEnvelope = envelope.audioModules[0]!;
       const workletNode = monoEnvelope.audioNode as AudioWorkletNode;
@@ -292,7 +291,7 @@ describe("Envelope", () => {
         props: {},
       });
 
-      await sleep(10);
+      await waitForMicrotasks();
 
       const monoEnvelope = envelope.audioModules[0]!;
       const workletNode = monoEnvelope.audioNode as AudioWorkletNode;

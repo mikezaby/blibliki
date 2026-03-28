@@ -2,10 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Module } from "@/core";
 import { ModuleType } from "@/modules";
 import { MonoLFO } from "@/modules/LFO";
-
-const flushMicrotasks = async () => {
-  await new Promise<void>((resolve) => queueMicrotask(resolve));
-};
+import { waitForMicrotasks } from "../utils/waitForCondition";
 
 describe("LFO", () => {
   it("initializes the phase parameter immediately from props", (ctx) => {
@@ -31,7 +28,7 @@ describe("LFO", () => {
     });
 
     lfo.props = { phase: 0.75 };
-    await flushMicrotasks();
+    await waitForMicrotasks();
 
     expect(lfo.props.phase).toBe(0.75);
     expect(lfo.phaseParam.value).toBeCloseTo(0.75, 5);

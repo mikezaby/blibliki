@@ -1,10 +1,10 @@
-import { sleep } from "@blibliki/utils";
 import { describe, it, expect, beforeEach } from "vitest";
 import { ModuleType, OscillatorWave } from "@/modules";
 import Constant from "@/modules/Constant";
 import Filter from "@/modules/Filter";
 import Inspector from "@/modules/Inspector";
 import Oscillator from "@/modules/Oscillator";
+import { waitForCondition, waitForMicrotasks } from "../utils/waitForCondition";
 
 describe("Filter", () => {
   describe("Filter with low cutoff and constant modulation", () => {
@@ -65,8 +65,7 @@ describe("Filter", () => {
         props: {},
       });
 
-      // Wait for audioModules to be created
-      await sleep(10);
+      await waitForMicrotasks();
 
       // Get mono modules
       const monoOscillator = oscillator.audioModules[0]!;
@@ -84,8 +83,9 @@ describe("Filter", () => {
     });
 
     it("should output audio when constant modulates filter to high frequency", async () => {
-      // Wait for audio to flow through
-      await sleep(50);
+      await waitForCondition(() => Math.abs(inspector.getValue()) > 0.05, {
+        description: "filter output with cutoff modulation",
+      });
 
       const audioOutput = inspector.getValue();
       // With constant(1) modulating, filter should open to 20kHz
@@ -141,8 +141,7 @@ describe("Filter", () => {
         props: {},
       });
 
-      // Wait for audioModules to be created
-      await sleep(10);
+      await waitForMicrotasks();
 
       // Get mono modules
       const monoOscillator = oscillator.audioModules[0]!;
@@ -157,8 +156,9 @@ describe("Filter", () => {
     });
 
     it("should output audio with high cutoff frequency", async () => {
-      // Wait for audio to flow through
-      await sleep(50);
+      await waitForCondition(() => Math.abs(inspector.getValue()) > 0.05, {
+        description: "filter output with open cutoff",
+      });
 
       const audioOutput = inspector.getValue();
       // With high cutoff, audio should pass through

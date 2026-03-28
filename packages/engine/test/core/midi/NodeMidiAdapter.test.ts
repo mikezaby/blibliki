@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import NodeMidiAdapter from "@/core/midi/adapters/NodeMidiAdapter";
 import type { IMidiPort } from "@/core/midi/adapters/types";
 
 let inputPortNames: string[] = [];
 let outputPortNames: string[] = [];
+const HOT_PLUG_POLL_INTERVAL_MS = 1000;
 
 class MockInput {
   private open = false;
@@ -66,9 +67,18 @@ vi.mock("@julusian/midi", () => ({
 
 describe("NodeMidiAdapter hot-plug polling", () => {
   beforeEach(() => {
+    vi.useFakeTimers();
     inputPortNames = ["Komplete Kontrol"];
     outputPortNames = ["LoopMIDI"];
   });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const advancePoll = async () => {
+    await vi.advanceTimersByTimeAsync(HOT_PLUG_POLL_INTERVAL_MS + 1);
+  };
 
   it("emits statechange when a new input port is added", async () => {
     const adapter = new NodeMidiAdapter();
@@ -80,9 +90,7 @@ describe("NodeMidiAdapter hot-plug polling", () => {
     });
 
     inputPortNames = ["Komplete Kontrol", "New Device"];
-    await new Promise<void>((resolve) => {
-      setTimeout(resolve, 1100);
-    });
+    await advancePoll();
 
     expect(events).toHaveLength(1);
     expect(events[0]?.name).toBe("New Device");
@@ -104,9 +112,7 @@ describe("NodeMidiAdapter hot-plug polling", () => {
     });
 
     outputPortNames = ["LoopMIDI"]; // remove the last port to avoid index churn
-    await new Promise<void>((resolve) => {
-      setTimeout(resolve, 1100);
-    });
+    await advancePoll();
 
     expect(events).toHaveLength(1);
     expect(events[0]?.name).toBe("Launchpad");
@@ -131,18 +137,14 @@ describe("NodeMidiAdapter hot-plug polling", () => {
     port.addEventListener(() => {});
 
     inputPortNames = [];
-    await new Promise<void>((resolve) => {
-      setTimeout(resolve, 2100);
-    });
+    await advancePoll();
     const disconnectEvent = events.find(
       (event) => event.state === "disconnected",
     );
     expect(disconnectEvent).toBe(port);
 
     inputPortNames = ["Komplete Kontrol"];
-    await new Promise<void>((resolve) => {
-      setTimeout(resolve, 2100);
-    });
+    await advancePoll();
 
     const portsAfter = Array.from(access!.inputs());
     expect(portsAfter).toHaveLength(1);
