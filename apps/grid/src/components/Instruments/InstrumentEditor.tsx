@@ -86,29 +86,60 @@ const DURATION_OPTIONS = [
 ] as const;
 const RESOLUTION_OPTIONS = ["1/16", "1/8", "1/4", "1/2", "1"] as const;
 const PLAYBACK_MODE_OPTIONS = ["loop", "pingPong", "random"] as const;
+const DEFAULT_STEP_VELOCITY = 100;
 
-function formatStepNotes(notes: InstrumentSequencerStep["notes"]) {
-  return notes.map(({ note, velocity }) => `${note}@${velocity}`).join(", ");
+function normalizeStepNoteName(value: string) {
+  return value.trim().toUpperCase();
 }
 
-function parseStepNotes(input: string): InstrumentSequencerStep["notes"] {
+function normalizeStepNotesInput(value: string) {
+  return value.toUpperCase();
+}
+
+function formatStepNotes(notes: InstrumentSequencerStep["notes"]) {
+  return notes.map(({ note }) => normalizeStepNoteName(note)).join(", ");
+}
+
+function clampStepVelocity(value: number) {
+  return Math.max(1, Math.min(127, Math.round(value)));
+}
+
+function getStepVelocity(notes: InstrumentSequencerStep["notes"]) {
+  const firstVelocity = notes[0]?.velocity;
+
+  return typeof firstVelocity === "number"
+    ? clampStepVelocity(firstVelocity)
+    : DEFAULT_STEP_VELOCITY;
+}
+
+function parseStepNotes(
+  input: string,
+  velocity: number,
+): InstrumentSequencerStep["notes"] {
+  const nextVelocity = clampStepVelocity(velocity);
+
   return input
     .split(",")
-    .map((entry) => entry.trim())
+    .map((entry) => normalizeStepNoteName(entry))
     .filter((entry) => entry.length > 0)
-    .map((entry) => {
-      const [note, velocityText] = entry.split("@");
-      const velocity = Number(velocityText);
-
-      return {
-        note: note?.trim() ?? "",
-        velocity:
-          Number.isFinite(velocity) && velocity > 0
-            ? Math.round(velocity)
-            : 100,
-      };
-    })
+    .map((entry) => ({
+      note: entry,
+      velocity: nextVelocity,
+    }))
     .filter((entry) => entry.note.length > 0);
+}
+
+function formatSelectedStepNotes(
+  document: InstrumentDocument,
+  trackIndex: number,
+  pageIndex: number,
+  stepIndex: number,
+) {
+  const track = document.tracks[trackIndex] ?? document.tracks[0];
+  const page = track?.sequencer.pages[pageIndex] ?? track?.sequencer.pages[0];
+  const step = page?.steps[stepIndex] ?? page?.steps[0];
+
+  return formatStepNotes(step?.notes ?? []);
 }
 
 type InstrumentEditorProps = {
@@ -126,16 +157,19 @@ export default function InstrumentEditor({
   const [activeTrackIndex, setActiveTrackIndex] = useState(0);
   const [activePageIndex, setActivePageIndex] = useState(0);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
+  const [stepNotesInput, setStepNotesInput] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setName(instrument.name);
-    setDocument(
-      cloneInstrumentDocument(instrument.document as InstrumentDocument),
+    const nextDocument = cloneInstrumentDocument(
+      instrument.document as InstrumentDocument,
     );
+    setName(instrument.name);
+    setDocument(nextDocument);
     setActiveTrackIndex(0);
     setActivePageIndex(0);
     setActiveStepIndex(0);
+    setStepNotesInput(formatSelectedStepNotes(nextDocument, 0, 0, 0));
   }, [instrument]);
 
   const activeTrack = document.tracks[activeTrackIndex] ?? document.tracks[0];
@@ -293,6 +327,9 @@ export default function InstrumentEditor({
                       setActiveTrackIndex(track.index);
                       setActivePageIndex(0);
                       setActiveStepIndex(0);
+                      setStepNotesInput(
+                        formatSelectedStepNotes(document, track.index, 0, 0),
+                      );
                     }}
                   >
                     {track.label}
@@ -541,6 +578,14 @@ export default function InstrumentEditor({
                           onChange={(value: number) => {
                             setActivePageIndex(value - 1);
                             setActiveStepIndex(0);
+                            setStepNotesInput(
+                              formatSelectedStepNotes(
+                                document,
+                                activeTrackIndex,
+                                value - 1,
+                                0,
+                              ),
+                            );
                           }}
                         />
                       </Stack>
@@ -564,6 +609,14 @@ export default function InstrumentEditor({
                               size="sm"
                               onClick={() => {
                                 setActiveStepIndex(stepNo - 1);
+                                setStepNotesInput(
+                                  formatSelectedStepNotes(
+                                    document,
+                                    activeTrackIndex,
+                                    activePageIndex,
+                                    stepNo - 1,
+                                  ),
+                                );
                               }}
                             >
                               {stepNo}
@@ -613,18 +666,24 @@ export default function InstrumentEditor({
                         <Label htmlFor="step-notes">Notes</Label>
                         <Input
                           id="step-notes"
-                          value={formatStepNotes(activeStep.notes)}
-                          placeholder="C3@90, E3@70"
+                          value={stepNotesInput}
+                          placeholder="C3, E3"
                           onChange={(event) => {
+                            const value = normalizeStepNotesInput(
+                              event.target.value,
+                            );
+                            setStepNotesInput(value);
                             setStep({
                               ...activeStep,
-                              notes: parseStepNotes(event.target.value),
+                              notes: parseStepNotes(
+                                value,
+                                getStepVelocity(activeStep.notes),
+                              ),
                             });
                           }}
                         />
                         <Text tone="muted" size="xs">
-                          Use comma-separated notes with optional velocity,
-                          example: `C3@90, E3@72`
+                          Use comma-separated note names, example: `C3, E3`
                         </Text>
                       </Stack>
 
@@ -640,6 +699,30 @@ export default function InstrumentEditor({
                             setStep({
                               ...activeStep,
                               probability: Number(event.target.value),
+                            });
+                          }}
+                        />
+                      </Stack>
+
+                      <Stack gap={2}>
+                        <Label htmlFor="step-velocity">Velocity</Label>
+                        <Input
+                          id="step-velocity"
+                          type="number"
+                          min="1"
+                          max="127"
+                          value={getStepVelocity(activeStep.notes)}
+                          onChange={(event) => {
+                            const velocity = clampStepVelocity(
+                              Number(event.target.value),
+                            );
+
+                            setStep({
+                              ...activeStep,
+                              notes: activeStep.notes.map((note) => ({
+                                ...note,
+                                velocity,
+                              })),
                             });
                           }}
                         />

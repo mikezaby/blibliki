@@ -90,4 +90,128 @@ describe("InstrumentEditor", () => {
 
     expect(voicesInput.value).toBe("12");
   });
+
+  it("separates sequencer note names from step velocity editing", () => {
+    const document = createDefaultInstrumentDocument();
+    const firstTrack = document.tracks[0];
+    if (!firstTrack) {
+      throw new Error("Expected default instrument to include a first track");
+    }
+
+    document.tracks[0] = {
+      ...firstTrack,
+      noteSource: "stepSequencer",
+      sequencer: {
+        ...firstTrack.sequencer,
+        pages: [
+          {
+            ...firstTrack.sequencer.pages[0]!,
+            steps: [
+              {
+                active: true,
+                notes: [
+                  { note: "C3", velocity: 90 },
+                  { note: "E3", velocity: 90 },
+                ],
+                probability: 75,
+                microtimeOffset: 4,
+                duration: "1/16",
+              },
+              ...firstTrack.sequencer.pages[0]!.steps.slice(1),
+            ],
+          },
+          ...firstTrack.sequencer.pages.slice(1),
+        ],
+      },
+    };
+
+    render(
+      <Provider store={store}>
+        <InstrumentEditor
+          instrument={{
+            id: "instrument-1",
+            name: "Broken Instrument",
+            userId: "user-1",
+            document,
+          }}
+        />
+      </Provider>,
+    );
+
+    const notesInput = screen.getByLabelText("Notes") as HTMLInputElement;
+    const velocityInput = screen.getByLabelText("Velocity") as HTMLInputElement;
+
+    expect(notesInput.value).toBe("C3, E3");
+    expect(velocityInput.value).toBe("90");
+
+    fireEvent.change(notesInput, { target: { value: "C3, G3" } });
+    fireEvent.change(velocityInput, { target: { value: "110" } });
+
+    expect(notesInput.value).toBe("C3, G3");
+    expect(velocityInput.value).toBe("110");
+  });
+
+  it("preserves a trailing comma while composing multiple sequencer notes", () => {
+    const document = createDefaultInstrumentDocument();
+    const firstTrack = document.tracks[0];
+    if (!firstTrack) {
+      throw new Error("Expected default instrument to include a first track");
+    }
+
+    document.tracks[0] = {
+      ...firstTrack,
+      noteSource: "stepSequencer",
+    };
+
+    render(
+      <Provider store={store}>
+        <InstrumentEditor
+          instrument={{
+            id: "instrument-1",
+            name: "Broken Instrument",
+            userId: "user-1",
+            document,
+          }}
+        />
+      </Provider>,
+    );
+
+    const notesInput = screen.getByLabelText("Notes") as HTMLInputElement;
+
+    fireEvent.change(notesInput, { target: { value: "C3," } });
+
+    expect(notesInput.value).toBe("C3,");
+  });
+
+  it("normalizes typed note names to uppercase while editing", () => {
+    const document = createDefaultInstrumentDocument();
+    const firstTrack = document.tracks[0];
+    if (!firstTrack) {
+      throw new Error("Expected default instrument to include a first track");
+    }
+
+    document.tracks[0] = {
+      ...firstTrack,
+      noteSource: "stepSequencer",
+    };
+
+    render(
+      <Provider store={store}>
+        <InstrumentEditor
+          instrument={{
+            id: "instrument-1",
+            name: "Broken Instrument",
+            userId: "user-1",
+            document,
+          }}
+        />
+      </Provider>,
+    );
+
+    const notesInput = screen.getByLabelText("Notes") as HTMLInputElement;
+
+    fireEvent.change(notesInput, { target: { value: "c3, e3" } });
+
+    expect(notesInput.value).toBe("C3, E3");
+  });
 });
