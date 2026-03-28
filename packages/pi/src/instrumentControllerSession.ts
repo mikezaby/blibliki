@@ -1,8 +1,8 @@
 import {
   type IMidiMapperProps,
   type IUpdateModule,
+  MidiEvent,
   ModuleType,
-  type MidiEvent,
   TransportState,
 } from "@blibliki/engine";
 import type {
@@ -19,6 +19,9 @@ import {
   createSeqEditPageSync,
   syncSeqEditStepButtonLeds,
 } from "@/sequencerEdit";
+
+const NAVIGATION_LED_CCS = [102, 103, 106, 107] as const;
+const NAVIGATION_LED_ON = 127;
 
 type ControllerInputDevice = {
   name: string;
@@ -131,6 +134,28 @@ function createDisplayState(
   return createLiveInstrumentDisplayState(engine, runtimePatch);
 }
 
+function syncNavigationButtonLeds(
+  engine: LiveDisplayEngine,
+  runtimePatch: CompiledInstrumentEnginePatch,
+) {
+  const controllerOutputId = runtimePatch.runtime.controllerOutputId;
+  if (!controllerOutputId) {
+    return;
+  }
+
+  const controllerOutput = engine.findModule(controllerOutputId);
+  if (
+    controllerOutput.moduleType !== ModuleType.MidiOutput ||
+    typeof controllerOutput.onMidiEvent !== "function"
+  ) {
+    return;
+  }
+
+  NAVIGATION_LED_CCS.forEach((cc) => {
+    controllerOutput.onMidiEvent?.(MidiEvent.fromCC(cc, NAVIGATION_LED_ON, 0));
+  });
+}
+
 export function createInstrumentControllerSession(
   engine: InstrumentControllerEngine,
   runtimePatch: CompiledInstrumentEnginePatch,
@@ -152,6 +177,7 @@ export function createInstrumentControllerSession(
     }
 
     syncSeqEditStepButtonLeds(engine, currentRuntimePatch);
+    syncNavigationButtonLeds(engine, currentRuntimePatch);
     options.onRuntimePatchChange?.(currentRuntimePatch);
     options.onDisplayStateChange?.(
       createDisplayState(engine, currentRuntimePatch),

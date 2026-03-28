@@ -94,6 +94,59 @@ function createControllerInputDevice() {
 }
 
 describe("createInstrumentControllerSession", () => {
+  it("lights page and track navigation leds on startup", () => {
+    const runtimePatch = createInstrumentEnginePatch(
+      createSeededInstrumentDocument(),
+    );
+    const inputDevice = createControllerInputDevice();
+    const ledEvents: MidiEvent[] = [];
+    const modules = new Map<string, unknown>(
+      runtimePatch.patch.modules.map((module) => [module.id, module]),
+    );
+    const controllerOutputId = runtimePatch.runtime.controllerOutputId;
+    if (!controllerOutputId) {
+      throw new Error("Expected controller output module in runtime patch");
+    }
+
+    modules.set(controllerOutputId, {
+      ...(modules.get(controllerOutputId) ?? {}),
+      moduleType: ModuleType.MidiOutput,
+      onMidiEvent: (event: MidiEvent) => {
+        ledEvents.push(event);
+      },
+    });
+
+    createInstrumentControllerSession(
+      {
+        findMidiInputDeviceByFuzzyName: () => ({
+          device: inputDevice,
+          score: 1,
+        }),
+        findModule: (id) => {
+          const module = modules.get(id);
+          if (!module) {
+            throw new Error(`Module ${id} not found`);
+          }
+
+          return module as never;
+        },
+        state: TransportState.stopped,
+        start: () => Promise.resolve(),
+        stop: () => undefined,
+        updateModule: (params) => params,
+      },
+      runtimePatch,
+    );
+
+    const getLedValue = (cc: number) =>
+      ledEvents.filter((event) => event.cc === cc).at(-1)?.ccValue;
+
+    expect(getLedValue(102)).toBe(127);
+    expect(getLedValue(103)).toBe(127);
+    expect(getLedValue(106)).toBe(127);
+    expect(getLedValue(107)).toBe(127);
+  });
+
   it("re-emits display state when a mapped module prop changes", () => {
     const runtimePatch = createInstrumentEnginePatch(
       createSeededInstrumentDocument(),
