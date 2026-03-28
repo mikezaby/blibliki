@@ -263,7 +263,7 @@ export default function InstrumentEditor({
   }
 
   return (
-    <Surface tone="canvas" className="h-screen overflow-auto p-8">
+    <Surface tone="canvas" className="p-8">
       <Stack className="mx-auto w-full max-w-7xl" gap={6}>
         <Stack
           direction="row"
