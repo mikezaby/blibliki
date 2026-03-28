@@ -38,6 +38,7 @@ export default class MidiOutput
   declare audioNode: undefined;
   midiInput!: MidiInput;
   private currentDevice?: MidiOutputDevice;
+  private unsubscribeDeviceListener?: () => void;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.MidiOutput>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
@@ -47,41 +48,9 @@ export default class MidiOutput
       props,
     });
 
-    // Try to find device in order of preference:
-    // 1. By exact ID match
-    // 2. By exact name match
-    // 3. By fuzzy name match (for cross-platform compatibility)
-    let midiDevice =
-      this.props.selectedId &&
-      this.engine.findMidiOutputDevice(this.props.selectedId);
-
-    if (!midiDevice && this.props.selectedName) {
-      midiDevice = this.engine.findMidiOutputDeviceByName(
-        this.props.selectedName,
-      );
-
-      // If exact name match fails, try fuzzy matching
-      if (!midiDevice) {
-        const fuzzyMatch = this.engine.findMidiOutputDeviceByFuzzyName(
-          this.props.selectedName,
-          0.6, // 60% similarity threshold
-        );
-
-        if (fuzzyMatch) {
-          midiDevice = fuzzyMatch.device;
-          console.log(
-            `MIDI device fuzzy matched: "${this.props.selectedName}" -> "${midiDevice.name}" (confidence: ${Math.round(fuzzyMatch.score * 100)}%)`,
-          );
-        }
-      }
-    }
-
-    if (midiDevice) {
-      this.currentDevice = midiDevice;
-      this.persistResolvedDevice(midiDevice);
-    }
-
+    this.resolveCurrentDevice();
     this.registerInputs();
+    this.subscribeToDeviceChanges();
   }
 
   onSetSelectedId: SetterHooks<IMidiOutputProps>["onSetSelectedId"] = (
@@ -92,15 +61,7 @@ export default class MidiOutput
       return value;
     }
 
-    const midiDevice = this.engine.findMidiOutputDevice(value);
-    if (!midiDevice) return value;
-
-    if (this.props.selectedName !== midiDevice.name) {
-      this.props = { selectedName: midiDevice.name };
-      this.triggerPropsUpdate();
-    }
-
-    this.currentDevice = midiDevice;
+    this.resolveCurrentDevice();
 
     return value;
   };
@@ -121,10 +82,68 @@ export default class MidiOutput
   }
 
   private persistResolvedDevice(midiDevice: MidiOutputDevice) {
+    const didChange =
+      this._props.selectedId !== midiDevice.id ||
+      this._props.selectedName !== midiDevice.name;
+
     this._props = {
       ...this._props,
       selectedId: midiDevice.id,
       selectedName: midiDevice.name,
     };
+
+    if (didChange && this._propsInitialized) {
+      this.triggerPropsUpdate();
+    }
+  }
+
+  private subscribeToDeviceChanges() {
+    this.unsubscribeDeviceListener = this.engine.midiDeviceManager.addListener(
+      () => {
+        this.resolveCurrentDevice();
+      },
+    );
+  }
+
+  private resolveCurrentDevice() {
+    // Try to find device in order of preference:
+    // 1. By exact ID match
+    // 2. By exact name match
+    // 3. By fuzzy name match (for cross-platform compatibility)
+    let midiDevice = this.props.selectedId
+      ? this.engine.findMidiOutputDevice(this.props.selectedId)
+      : undefined;
+
+    if (!midiDevice && this.props.selectedName) {
+      midiDevice = this.engine.findMidiOutputDeviceByName(
+        this.props.selectedName,
+      );
+
+      if (!midiDevice) {
+        const fuzzyMatch = this.engine.findMidiOutputDeviceByFuzzyName(
+          this.props.selectedName,
+          0.6,
+        );
+
+        if (fuzzyMatch) {
+          midiDevice = fuzzyMatch.device;
+          console.log(
+            `MIDI device fuzzy matched: "${this.props.selectedName}" -> "${midiDevice.name}" (confidence: ${Math.round(fuzzyMatch.score * 100)}%)`,
+          );
+        }
+      }
+    }
+
+    this.currentDevice = midiDevice;
+
+    if (midiDevice) {
+      this.persistResolvedDevice(midiDevice);
+    }
+  }
+
+  override dispose(): void {
+    this.unsubscribeDeviceListener?.();
+    this.currentDevice = undefined;
+    super.dispose();
   }
 }

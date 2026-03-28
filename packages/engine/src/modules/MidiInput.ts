@@ -57,6 +57,7 @@ export default class MidiInput
   declare audioNode: undefined;
   midiOutput!: MidiOutput;
   _forwardMidiEvent?: (midiEvent: MidiEvent) => void;
+  private unsubscribeDeviceListener?: () => void;
   private attachedDevices = new Map<
     string,
     MidiInputDevice | ComputerKeyboardInput
@@ -70,26 +71,16 @@ export default class MidiInput
       props,
     });
 
-    this.attachConfiguredInputs();
     this.registerOutputs();
+    this.attachConfiguredInputs();
+    this.subscribeToDeviceChanges();
   }
 
   onSetSelectedId: SetterHooks<IMidiInputProps>["onSetSelectedId"] = (
     value,
   ) => {
     if (this.props.allIns) return value;
-
-    this.removeEventListener();
-    if (!value) return value;
-
-    const midiDevice = this.engine.findMidiInputDevice(value);
-    if (!midiDevice) return value;
-
-    if (this.props.selectedName !== midiDevice.name) {
-      this.props = { selectedName: midiDevice.name };
-      this.triggerPropsUpdate();
-    }
-    this.addEventListener(midiDevice);
+    this.syncAttachedDevices();
 
     return value;
   };
@@ -120,20 +111,13 @@ export default class MidiInput
 
   private attachConfiguredInputs() {
     if (this.props.allIns) {
-      this.findAllInputDevices().forEach((midiDevice) => {
-        if (this.isExcludedDevice(midiDevice)) return;
-        this.addEventListener(midiDevice);
-      });
+      this.syncAttachedDevices();
       return;
     }
 
     const midiDevice = this.findSelectedInputDevice();
     if (midiDevice) {
-      const hadSelectedId = !!this.props.selectedId;
       this.persistResolvedDevice(midiDevice);
-      if (hadSelectedId) {
-        this.addEventListener(midiDevice);
-      }
     }
   }
 
@@ -185,10 +169,64 @@ export default class MidiInput
   private persistResolvedDevice(
     midiDevice: MidiInputDevice | ComputerKeyboardInput,
   ) {
+    const didChange =
+      this._props.selectedId !== midiDevice.id ||
+      this._props.selectedName !== midiDevice.name;
+
     this._props = {
       ...this._props,
       selectedId: midiDevice.id,
       selectedName: midiDevice.name,
     };
+
+    if (didChange && this._propsInitialized) {
+      this.triggerPropsUpdate();
+    }
+  }
+
+  private subscribeToDeviceChanges() {
+    this.unsubscribeDeviceListener = this.engine.midiDeviceManager.addListener(
+      () => {
+        this.syncAttachedDevices();
+      },
+    );
+  }
+
+  private syncAttachedDevices() {
+    const desiredDevices = new Map<
+      string,
+      MidiInputDevice | ComputerKeyboardInput
+    >();
+
+    if (this.props.allIns) {
+      this.findAllInputDevices().forEach((midiDevice) => {
+        if (this.isExcludedDevice(midiDevice)) return;
+        desiredDevices.set(midiDevice.id, midiDevice);
+      });
+    } else if (this.props.selectedId || this.props.selectedName) {
+      const midiDevice = this.findSelectedInputDevice();
+      if (midiDevice) {
+        this.persistResolvedDevice(midiDevice);
+        desiredDevices.set(midiDevice.id, midiDevice);
+      }
+    }
+
+    this.attachedDevices.forEach((midiDevice, id) => {
+      if (desiredDevices.has(id)) return;
+
+      midiDevice.removeEventListener(this.forwardMidiEvent);
+      this.attachedDevices.delete(id);
+    });
+
+    desiredDevices.forEach((midiDevice, id) => {
+      if (this.attachedDevices.has(id)) return;
+      this.addEventListener(midiDevice);
+    });
+  }
+
+  override dispose(): void {
+    this.unsubscribeDeviceListener?.();
+    this.removeEventListener();
+    super.dispose();
   }
 }

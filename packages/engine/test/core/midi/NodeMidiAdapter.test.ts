@@ -5,9 +5,16 @@ import type { IMidiPort } from "@/core/midi/adapters/types";
 let inputPortNames: string[] = [];
 let outputPortNames: string[] = [];
 const HOT_PLUG_POLL_INTERVAL_MS = 1000;
+let inputInstances: MockInput[] = [];
+let outputInstances: MockOutput[] = [];
 
 class MockInput {
   private open = false;
+  destroyed = false;
+
+  constructor() {
+    inputInstances.push(this);
+  }
 
   getPortCount(): number {
     return inputPortNames.length;
@@ -25,6 +32,11 @@ class MockInput {
     this.open = false;
   }
 
+  destroy(): void {
+    this.open = false;
+    this.destroyed = true;
+  }
+
   on(): void {}
 
   off(): void {}
@@ -36,6 +48,11 @@ class MockInput {
 
 class MockOutput {
   private open = false;
+  destroyed = false;
+
+  constructor() {
+    outputInstances.push(this);
+  }
 
   getPortCount(): number {
     return outputPortNames.length;
@@ -51,6 +68,11 @@ class MockOutput {
 
   closePort(): void {
     this.open = false;
+  }
+
+  destroy(): void {
+    this.open = false;
+    this.destroyed = true;
   }
 
   sendMessage(): void {}
@@ -70,6 +92,8 @@ describe("NodeMidiAdapter hot-plug polling", () => {
     vi.useFakeTimers();
     inputPortNames = ["Komplete Kontrol"];
     outputPortNames = ["LoopMIDI"];
+    inputInstances = [];
+    outputInstances = [];
   });
 
   afterEach(() => {
@@ -153,5 +177,29 @@ describe("NodeMidiAdapter hot-plug polling", () => {
       (event) => event.state === "connected",
     );
     expect(reconnectEvent[reconnectEvent.length - 1]).toBe(port);
+  });
+
+  it("destroys temporary scan clients after the initial scan and each poll", async () => {
+    const adapter = new NodeMidiAdapter();
+    const access = await adapter.requestMIDIAccess();
+    expect(access).not.toBeNull();
+
+    access!.addEventListener("statechange", () => {});
+    await advancePoll();
+
+    expect(inputInstances).toHaveLength(3);
+    expect(outputInstances).toHaveLength(3);
+    expect(
+      inputInstances.filter((instance) => instance.destroyed),
+    ).toHaveLength(2);
+    expect(
+      outputInstances.filter((instance) => instance.destroyed),
+    ).toHaveLength(2);
+    expect(
+      inputInstances.filter((instance) => !instance.destroyed),
+    ).toHaveLength(1);
+    expect(
+      outputInstances.filter((instance) => !instance.destroyed),
+    ).toHaveLength(1);
   });
 });

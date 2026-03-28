@@ -19,6 +19,7 @@ type NodeMidiInput = {
   getPortName(port: number): string;
   openPort(port: number): void;
   closePort(): void;
+  destroy?(): void;
   on(
     event: "message",
     callback: (deltaTime: number, message: number[]) => void,
@@ -35,6 +36,7 @@ type NodeMidiOutput = {
   getPortName(port: number): string;
   openPort(port: number): void;
   closePort(): void;
+  destroy?(): void;
   sendMessage(message: number[]): void;
   isPortOpen(): boolean;
 };
@@ -43,6 +45,18 @@ type NodeMidiModule = {
   Input: new () => NodeMidiInput;
   Output: new () => NodeMidiOutput;
 };
+
+function destroyMidiClient(
+  client: Pick<NodeMidiInput, "closePort" | "isPortOpen" | "destroy">,
+) {
+  try {
+    if (client.isPortOpen()) {
+      client.closePort();
+    }
+  } finally {
+    client.destroy?.();
+  }
+}
 
 class NodeMidiInputPort implements IMidiInputPort {
   private portIndex: number;
@@ -318,9 +332,7 @@ class NodeMidiAccess implements IMidiAccess {
         }
       }
 
-      if (input.isPortOpen()) {
-        input.closePort();
-      }
+      destroyMidiClient(input);
     } catch (err) {
       console.error("Error scanning MIDI input ports:", err);
     }
@@ -369,9 +381,7 @@ class NodeMidiAccess implements IMidiAccess {
         }
       }
 
-      if (output.isPortOpen()) {
-        output.closePort();
-      }
+      destroyMidiClient(output);
     } catch (err) {
       console.error("Error scanning MIDI output ports:", err);
     }

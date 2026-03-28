@@ -49,4 +49,46 @@ describe("MidiOutput", () => {
     module.onMidiEvent(MidiEvent.fromCC(21, 64, ctx.context.currentTime));
     expect(dawController.send).toHaveBeenCalledWith(expect.any(Uint8Array));
   });
+
+  it("binds the selected output when the device appears after module creation", (ctx) => {
+    const listeners: Array<(device: FakeOutputDevice) => void> = [];
+    vi.spyOn(ctx.engine.midiDeviceManager, "addListener").mockImplementation(
+      (callback) => {
+        listeners.push(
+          callback as unknown as (device: FakeOutputDevice) => void,
+        );
+        return () => {};
+      },
+    );
+
+    ctx.engine.midiDeviceManager.outputDevices.clear();
+
+    const serialized = ctx.engine.addModule({
+      name: "Late Output",
+      moduleType: ModuleType.MidiOutput,
+      props: {
+        selectedName: "LCXL3 DAW Out",
+      },
+    });
+
+    const module = ctx.engine.findModule(serialized.id) as MidiOutput;
+    const lateDevice = createFakeOutputDevice(
+      "lcxl3-daw-out-1",
+      "LCXL3 1 DAW OUT",
+    );
+
+    ctx.engine.midiDeviceManager.outputDevices.set(
+      lateDevice.id,
+      lateDevice as never,
+    );
+    listeners.forEach((listener) => {
+      listener(lateDevice);
+    });
+
+    module.onMidiEvent(MidiEvent.fromCC(21, 64, ctx.context.currentTime));
+
+    expect(module.props.selectedId).toBe("lcxl3-daw-out-1");
+    expect(module.props.selectedName).toBe("LCXL3 1 DAW OUT");
+    expect(lateDevice.send).toHaveBeenCalledWith(expect.any(Uint8Array));
+  });
 });

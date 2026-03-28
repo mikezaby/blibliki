@@ -39,6 +39,7 @@ export default class MidiDeviceManager {
   }
 
   dispose() {
+    this.listeners = [];
     this.controllerMatcherRegistry.dispose();
   }
 
@@ -130,6 +131,11 @@ export default class MidiDeviceManager {
 
   addListener(callback: ListenerCallback) {
     this.listeners.push(callback);
+    return () => {
+      this.listeners = this.listeners.filter(
+        (listener) => listener !== callback,
+      );
+    };
   }
 
   private async initializeDevices() {
@@ -206,6 +212,10 @@ export default class MidiDeviceManager {
               const device = new MidiOutputDevice(output);
               this.outputDevices.set(device.id, device);
               this.reconcileControllers();
+
+              this.listeners.forEach((listener) => {
+                listener(device);
+              });
               break;
             }
           }
@@ -232,6 +242,10 @@ export default class MidiDeviceManager {
           device.disconnect();
           this.outputDevices.delete(device.id);
           this.reconcileControllers();
+
+          this.listeners.forEach((listener) => {
+            listener(device);
+          });
         }
       }
     });

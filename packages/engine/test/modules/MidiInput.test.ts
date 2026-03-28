@@ -154,4 +154,41 @@ describe("MidiInput", () => {
     expect(forwardedEvents[0]?.note?.midiNumber).toBe(60);
     expect(forwardedEvents[1]?.note?.midiNumber).toBe(64);
   });
+
+  it("attaches the selected input when the device appears after module creation", (ctx) => {
+    const listeners: Array<(device: FakeInputDevice) => void> = [];
+    vi.spyOn(ctx.engine.midiDeviceManager, "addListener").mockImplementation(
+      (callback) => {
+        listeners.push(
+          callback as unknown as (device: FakeInputDevice) => void,
+        );
+        return () => {};
+      },
+    );
+
+    ctx.engine.midiDeviceManager.inputDevices.clear();
+
+    const serialized = ctx.engine.addModule({
+      name: "Late Input",
+      moduleType: ModuleType.MidiInput,
+      props: {
+        selectedName: "KeyStep 37",
+      },
+    });
+
+    const module = ctx.engine.findModule(serialized.id) as MidiInput;
+    const lateDevice = createFakeInputDevice("keystep-1", "KeyStep 37");
+
+    ctx.engine.midiDeviceManager.inputDevices.set(
+      lateDevice.id,
+      lateDevice as never,
+    );
+    listeners.forEach((listener) => {
+      listener(lateDevice);
+    });
+
+    expect(lateDevice.addEventListener).toHaveBeenCalledTimes(1);
+    expect(module.props.selectedId).toBe("keystep-1");
+    expect(module.props.selectedName).toBe("KeyStep 37");
+  });
 });
