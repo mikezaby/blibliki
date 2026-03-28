@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { Provider } from "react-redux";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -66,5 +66,28 @@ describe("InstrumentEditor", () => {
 
     expect(toggle).toBeDefined();
     expect(toggle.closest(".ui-card-header")).not.toBeNull();
+  });
+
+  it("allows editing the active track voices", () => {
+    render(
+      <Provider store={store}>
+        <InstrumentEditor
+          instrument={{
+            id: "instrument-1",
+            name: "Broken Instrument",
+            userId: "user-1",
+            document: createDefaultInstrumentDocument(),
+          }}
+        />
+      </Provider>,
+    );
+
+    const voicesInput = screen.getByLabelText("Voices") as HTMLInputElement;
+
+    expect(voicesInput.value).toBe("8");
+
+    fireEvent.change(voicesInput, { target: { value: "12" } });
+
+    expect(voicesInput.value).toBe("12");
   });
 });

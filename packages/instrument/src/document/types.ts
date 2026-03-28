@@ -76,6 +76,7 @@ export type InstrumentTrackDocument = {
   key: string;
   name?: string;
   enabled?: boolean;
+  voices?: number;
   noteSource: InstrumentNoteSource;
   midiChannel: number;
   sourceProfileId: SourceProfileId;

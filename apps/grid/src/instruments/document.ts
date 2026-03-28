@@ -76,6 +76,7 @@ export type InstrumentTrackDocument = {
   key: string;
   name?: string;
   enabled?: boolean;
+  voices?: number;
   noteSource: InstrumentNoteSource;
   midiChannel: number;
   sourceProfileId: SourceProfileId;
@@ -117,6 +118,7 @@ function createDefaultTrack(trackNo: number): InstrumentTrackDocument {
   return {
     key: `track-${trackNo}`,
     enabled: true,
+    voices: 8,
     midiChannel: trackNo,
     noteSource: "externalMidi",
     sourceProfileId: "unassigned",

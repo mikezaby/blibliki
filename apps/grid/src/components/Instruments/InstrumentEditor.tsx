@@ -394,6 +394,25 @@ export default function InstrumentEditor({
                   </Stack>
 
                   <Stack gap={2}>
+                    <Label htmlFor="track-voices">Voices</Label>
+                    <Input
+                      id="track-voices"
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={activeTrack.voices ?? 8}
+                      onChange={(event) => {
+                        const voices = Number.parseInt(event.target.value, 10);
+                        if (!Number.isFinite(voices) || voices < 1) {
+                          return;
+                        }
+
+                        setTrackChanges({ voices });
+                      }}
+                    />
+                  </Stack>
+
+                  <Stack gap={2}>
                     <Label>Note Source</Label>
                     <OptionSelect
                       label="Select note source"

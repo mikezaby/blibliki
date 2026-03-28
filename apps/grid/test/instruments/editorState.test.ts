@@ -29,6 +29,7 @@ describe("instrument editor state helpers", () => {
     const updated = updateTrackDocument(createDocument(), 0, {
       name: "Bass",
       enabled: false,
+      voices: 12,
       midiChannel: 3,
       noteSource: "stepSequencer",
       sourceProfileId: "threeOsc",
@@ -38,6 +39,7 @@ describe("instrument editor state helpers", () => {
       expect.objectContaining({
         name: "Bass",
         enabled: false,
+        voices: 12,
         midiChannel: 3,
         noteSource: "stepSequencer",
         sourceProfileId: "threeOsc",

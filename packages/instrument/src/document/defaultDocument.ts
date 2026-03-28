@@ -43,6 +43,7 @@ function createDefaultTrack(trackNo: number): InstrumentTrackDocument {
   return {
     key: `track-${trackNo}`,
     enabled: true,
+    voices: 8,
     midiChannel: trackNo,
     noteSource: "externalMidi",
     sourceProfileId: "unassigned",

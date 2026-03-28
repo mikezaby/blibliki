@@ -169,4 +169,22 @@ describe("compileInstrument", () => {
       "Instrument must have at least one enabled track",
     );
   });
+
+  it("uses track voices before the global compile fallback", () => {
+    const document = createDefaultInstrumentDocument();
+    document.tracks[0] = {
+      ...document.tracks[0]!,
+      sourceProfileId: "osc",
+      voices: 3,
+    };
+
+    const compiled = compileInstrument(document, {
+      trackVoices: 12,
+    });
+    const sourceModule = compiled.tracks[0]?.compiledTrack.engine.modules.find(
+      (module) => module.id === "track-1.source.main",
+    );
+
+    expect(sourceModule?.voices).toBe(3);
+  });
 });

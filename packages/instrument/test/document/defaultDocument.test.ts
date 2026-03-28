@@ -44,6 +44,12 @@ describe("createDefaultInstrumentDocument metadata", () => {
     expect(document.tracks.every((track) => track.enabled)).toBe(true);
   });
 
+  it("assigns eight voices to every default track", () => {
+    const document = createDefaultInstrumentDocument();
+
+    expect(document.tracks.every((track) => track.voices === 8)).toBe(true);
+  });
+
   it("starts global delay and reverb sends dry", () => {
     const document = createDefaultInstrumentDocument();
 
