@@ -387,10 +387,7 @@ export function syncSeqEditStepButtonLeds(
   }
 
   ledValues.forEach((value, index) => {
-    const nextValue =
-      currentStep === index && value !== STEP_LED_SELECTED
-        ? STEP_LED_PLAYHEAD
-        : value;
+    const nextValue = currentStep === index ? STEP_LED_PLAYHEAD : value;
     const cc = STEP_BUTTON_CCS[index];
     if (cc === undefined) {
       return;

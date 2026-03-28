@@ -870,6 +870,13 @@ describe("createInstrumentControllerSession", () => {
     expect(getLedValue(38)).toBe(96);
     expect(getLedValue(39)).toBe(0);
 
+    inputDevice.emit(MidiEvent.fromCC(38, 127, 0));
+
+    expect(session.getRuntimePatch().runtime.navigation.selectedStepIndex).toBe(
+      1,
+    );
+    expect(getLedValue(38)).toBe(96);
+
     liveStepSequencer.state = {
       currentStep: 5,
     };
