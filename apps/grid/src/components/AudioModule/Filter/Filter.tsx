@@ -11,7 +11,7 @@ const AmountCenter: MarkProps[] = [{ value: 0, label: "" }];
 const BiquadFilter: ModuleComponent<ModuleType.Filter> = (props) => {
   const {
     updateProp,
-    props: { cutoff, Q, type, envelopeAmount },
+    props: { cutoff, Q, type, envelopeAmount, keyTrack },
   } = props;
 
   return (
@@ -26,6 +26,15 @@ const BiquadFilter: ModuleComponent<ModuleType.Filter> = (props) => {
         step={0.01}
         onChange={updateProp("envelopeAmount")}
         value={envelopeAmount}
+      />
+      <Fader
+        name="Key Track"
+        marks={AmountCenter}
+        min={-1}
+        max={1}
+        step={0.01}
+        onChange={updateProp("keyTrack")}
+        value={keyTrack}
       />
       <FilterType value={type} updateProp={updateProp("type")} />
     </Container>

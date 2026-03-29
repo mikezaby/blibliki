@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import MidiEvent from "@/core/midi/MidiEvent";
 import { ModuleType, OscillatorWave } from "@/modules";
 import Constant from "@/modules/Constant";
 import Filter from "@/modules/Filter";
@@ -39,6 +40,7 @@ describe("Filter", () => {
         props: {
           cutoff: 20, // Very low cutoff
           envelopeAmount: 1, // Full modulation amount
+          keyTrack: 0,
           type: "lowpass",
           Q: 1,
         },
@@ -125,6 +127,7 @@ describe("Filter", () => {
         props: {
           cutoff: 20000, // High cutoff - should let audio through
           envelopeAmount: 0, // No modulation
+          keyTrack: 0,
           type: "lowpass",
           Q: 1,
         },
@@ -175,6 +178,7 @@ describe("Filter", () => {
         props: {
           cutoff: 20000,
           envelopeAmount: 0,
+          keyTrack: 0,
           type: "lowpass",
           Q: 1,
         },
@@ -186,6 +190,7 @@ describe("Filter", () => {
 
       expect(filter.props.cutoff).toBe(20000); // Default MAX_FREQ
       expect(filter.props.envelopeAmount).toBe(0);
+      expect(filter.props.keyTrack).toBe(0);
       expect(filter.props.type).toBe("lowpass");
       expect(filter.props.Q).toBe(1);
     });
@@ -197,6 +202,7 @@ describe("Filter", () => {
         props: {
           cutoff: 1000,
           envelopeAmount: 0.5,
+          keyTrack: 0.75,
           type: "highpass",
           Q: 2,
         },
@@ -208,8 +214,79 @@ describe("Filter", () => {
 
       expect(filter.props.cutoff).toBe(1000);
       expect(filter.props.envelopeAmount).toBe(0.5);
+      expect(filter.props.keyTrack).toBe(0.75);
       expect(filter.props.type).toBe("highpass");
       expect(filter.props.Q).toBe(2);
+    });
+  });
+
+  describe("Key tracking", () => {
+    it("keeps the last tracked cutoff after note release until the next attack", async (ctx) => {
+      const filter = new Filter(ctx.engine.id, {
+        name: "Filter",
+        moduleType: ModuleType.Filter,
+        props: {
+          cutoff: 1000,
+          envelopeAmount: 0,
+          keyTrack: 1,
+          type: "lowpass",
+          Q: 1,
+        },
+        voices: 1,
+        monoModuleConstructor: () => {
+          throw new Error("Not used in test");
+        },
+      });
+
+      await waitForMicrotasks();
+
+      const monoFilter = filter.audioModules[0] as any;
+
+      expect(monoFilter.scale.props.current).toBe(1000);
+
+      // This behavior is centered on exact C2 / MIDI 48.
+      // In this codebase, C3 is one octave above that pivot.
+      filter.onMidiEvent(
+        MidiEvent.fromNote("C3", true, ctx.context.currentTime),
+      );
+      expect(monoFilter.scale.props.current).toBeCloseTo(2000, 5);
+
+      filter.onMidiEvent(
+        MidiEvent.fromNote("C3", false, ctx.context.currentTime),
+      );
+      expect(monoFilter.scale.props.current).toBeCloseTo(2000, 5);
+
+      filter.onMidiEvent(
+        MidiEvent.fromNote("C2", true, ctx.context.currentTime),
+      );
+      expect(monoFilter.scale.props.current).toBe(1000);
+    });
+
+    it("inverts cutoff tracking when keyTrack is -1", async (ctx) => {
+      const filter = new Filter(ctx.engine.id, {
+        name: "Filter",
+        moduleType: ModuleType.Filter,
+        props: {
+          cutoff: 1000,
+          envelopeAmount: 0,
+          keyTrack: -1,
+          type: "lowpass",
+          Q: 1,
+        },
+        voices: 1,
+        monoModuleConstructor: () => {
+          throw new Error("Not used in test");
+        },
+      });
+
+      await waitForMicrotasks();
+
+      const monoFilter = filter.audioModules[0] as any;
+
+      filter.onMidiEvent(
+        MidiEvent.fromNote("C3", true, ctx.context.currentTime),
+      );
+      expect(monoFilter.scale.props.current).toBeCloseTo(500, 5);
     });
   });
 });

@@ -1,6 +1,7 @@
 import { Context } from "@blibliki/utils";
 import { BiquadFilterNode } from "@blibliki/utils/web-audio-api";
 import { EnumProp, ModulePropSchema } from "@/core";
+import Note from "@/core/Note";
 import { IModuleConstructor, Module, SetterHooks } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
 import { ICreateModule, ModuleType } from ".";
@@ -10,16 +11,19 @@ import { MonoScale } from "./Scale";
 export type IFilterProps = {
   cutoff: number;
   envelopeAmount: number;
+  keyTrack: number;
   type: BiquadFilterType;
   Q: number;
 };
 
 const MIN_FREQ = 20;
 const MAX_FREQ = 20000;
+const KEY_TRACK_PIVOT_MIDI = 48;
 
 const DEFAULT_PROPS: IFilterProps = {
   cutoff: MAX_FREQ,
   envelopeAmount: 0,
+  keyTrack: 0,
   type: "lowpass",
   Q: 1,
 };
@@ -45,6 +49,13 @@ export const filterPropSchema: ModulePropSchema<
     step: 0.01,
     label: "Envelope Amount",
   },
+  keyTrack: {
+    kind: "number",
+    min: -1,
+    max: 1,
+    step: 0.01,
+    label: "Key Track",
+  },
   type: {
     kind: "enum",
     options: ["lowpass", "highpass", "bandpass"] satisfies BiquadFilterType[],
@@ -68,12 +79,14 @@ class MonoFilter
       | "onAfterSetType"
       | "onAfterSetCutoff"
       | "onAfterSetQ"
+      | "onAfterSetKeyTrack"
       | "onAfterSetEnvelopeAmount"
     >
 {
   declare audioNode: BiquadFilterNode;
   private scale: MonoScale;
   private amount: MonoGain;
+  private lastTrackedNote?: Note;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Filter>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
@@ -100,7 +113,11 @@ class MonoFilter
     this.scale = Module.create(MonoScale, engineId, {
       name: "scale",
       moduleType: ModuleType.Scale,
-      props: { min: MIN_FREQ, max: MAX_FREQ, current: this.props.cutoff },
+      props: {
+        min: MIN_FREQ,
+        max: MAX_FREQ,
+        current: this.getTrackedCutoff(),
+      },
     });
 
     this.amount.plug({ audioModule: this.scale, from: "out", to: "in" });
@@ -114,18 +131,35 @@ class MonoFilter
     this.audioNode.type = value;
   };
 
-  onAfterSetCutoff: SetterHooks<IFilterProps>["onAfterSetCutoff"] = (value) => {
-    this.scale.props = { current: value };
+  onAfterSetCutoff: SetterHooks<IFilterProps>["onAfterSetCutoff"] = () => {
+    this.updateTrackedCutoff();
   };
 
   onAfterSetQ: SetterHooks<IFilterProps>["onAfterSetQ"] = (value) => {
     this.audioNode.Q.value = value;
   };
 
+  onAfterSetKeyTrack: SetterHooks<IFilterProps>["onAfterSetKeyTrack"] = () => {
+    this.updateTrackedCutoff();
+  };
+
   onAfterSetEnvelopeAmount: SetterHooks<IFilterProps>["onAfterSetEnvelopeAmount"] =
     (value) => {
       this.amount.props = { gain: value };
     };
+
+  triggerAttack(note: Note, triggeredAt: number): void {
+    super.triggerAttack(note, triggeredAt);
+    this.lastTrackedNote = note;
+    this.updateTrackedCutoff();
+  }
+
+  triggerRelease(note: Note, triggeredAt: number): void {
+    super.triggerRelease(note, triggeredAt);
+    this.lastTrackedNote =
+      this.activeNotes[this.activeNotes.length - 1] ?? note;
+    this.updateTrackedCutoff();
+  }
 
   private registerInputs() {
     this.registerAudioInput({
@@ -142,6 +176,26 @@ class MonoFilter
       name: "Q",
       getAudioNode: () => this.audioNode.Q,
     });
+  }
+
+  private updateTrackedCutoff() {
+    this.scale.props = { current: this.getTrackedCutoff() };
+  }
+
+  private getTrackedCutoff() {
+    const note =
+      this.activeNotes[this.activeNotes.length - 1] ?? this.lastTrackedNote;
+
+    if (!note || this.props.keyTrack === 0) {
+      return this.props.cutoff;
+    }
+
+    const semitoneOffset = note.midiNumber - KEY_TRACK_PIVOT_MIDI;
+    const trackedCutoff =
+      this.props.cutoff *
+      Math.pow(2, (semitoneOffset * this.props.keyTrack) / 12);
+
+    return Math.min(MAX_FREQ, Math.max(MIN_FREQ, trackedCutoff));
   }
 }
 
