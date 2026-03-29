@@ -26,7 +26,52 @@ Run Blibliki audio synthesis on Raspberry Pi and other Node.js environments.
 ### Prerequisites
 
 - Node.js 18+ installed on your Raspberry Pi
+- pnpm or npm available on the device
 - Audio output configured (via HDMI, 3.5mm jack, or USB audio interface)
+
+### Linux Audio Setup
+
+This section is **Linux-only**.
+
+On macOS, `@blibliki/pi` can run without JACK, PipeWire, or the `pw-jack`
+wrapper. You can start it directly with `blibliki-pi` or `pnpm start`.
+
+`@blibliki/pi` uses `node-web-audio-api` for audio output in Node.js. On Linux,
+that library is built against JACK and works with either:
+
+- a running JACK server
+- PipeWire's JACK compatibility layer (`pipewire-jack`)
+
+PipeWire with JACK compatibility is the recommended setup because it works well
+on Raspberry Pi OS and other modern Linux distributions.
+
+For Debian, Ubuntu, or Raspberry Pi OS, install PipeWire and the JACK shim:
+
+```bash
+sudo apt update
+sudo apt install pipewire pipewire-jack wireplumber
+```
+
+After installation, make sure the `pw-jack` wrapper is available:
+
+```bash
+pw-jack --help
+```
+
+If your distribution uses different package names, install the packages that
+provide:
+
+- PipeWire
+- a session manager such as WirePlumber
+- JACK compatibility for PipeWire
+- the `pw-jack` command
+
+If `node-web-audio-api` must compile from source on your platform, install the
+native build dependencies first:
+
+```bash
+sudo apt install libasound2-dev libjack-jackd2-dev
+```
 
 ### Install
 
@@ -43,7 +88,11 @@ pnpm add -g @blibliki/pi
 Run blibliki-pi for the first time:
 
 ```bash
+# macOS
 blibliki-pi
+
+# Linux
+pw-jack blibliki-pi
 ```
 
 This will:
@@ -74,7 +123,11 @@ Once connected:
 After setup, simply run:
 
 ```bash
+# macOS
 blibliki-pi
+
+# Linux
+pw-jack blibliki-pi
 ```
 
 Your Pi will automatically read the device document from Firestore and start
@@ -82,6 +135,26 @@ the configured deployment target:
 
 - a plain Grid patch
 - or an instrument document
+
+### Running From The Repository
+
+If you are developing from this monorepo instead of using the published CLI:
+
+```bash
+pnpm install
+pnpm build:packages
+cd packages/pi
+
+# macOS
+pnpm start
+
+# Linux
+pw-jack pnpm start
+```
+
+`pnpm start` runs the local `blibliki-pi` CLI entrypoint in development mode.
+On Linux, keep the `pw-jack` prefix so the Node audio runtime can connect to
+PipeWire's JACK layer. On macOS, run it directly.
 
 ## Architecture
 
