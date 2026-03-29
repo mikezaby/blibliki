@@ -1,4 +1,4 @@
-import { Connection, XYPosition } from "@xyflow/react";
+import type { Connection, XYPosition } from "@xyflow/react";
 import {
   addModule,
   type AvailableModuleType,

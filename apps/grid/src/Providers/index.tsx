@@ -1,5 +1,4 @@
 import { ClerkProvider } from "@clerk/clerk-react";
-import { ReactFlowProvider } from "@xyflow/react";
 import { ReactNode } from "react";
 import { Provider } from "react-redux";
 import { store } from "@/store";
@@ -16,10 +15,8 @@ export default function Providers(props: { children: ReactNode }) {
   return (
     <Provider store={store}>
       <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-        <ReactFlowProvider>
-          <FirebaseInitializer />
-          {children}
-        </ReactFlowProvider>
+        <FirebaseInitializer />
+        {children}
       </ClerkProvider>
     </Provider>
   );

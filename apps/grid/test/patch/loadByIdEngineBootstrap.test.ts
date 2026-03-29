@@ -1,24 +1,35 @@
 // @vitest-environment node
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { loadById } from "../../src/patchSlice";
 
-const { patchBuildMock, engineDisposeMock } = vi.hoisted(() => ({
-  patchBuildMock: vi.fn(() => ({
-    id: "",
-    name: "Init patch",
-    userId: "",
-    config: {
-      bpm: 120,
-      modules: [],
-      gridNodes: {
-        nodes: [],
-        edges: [],
-        viewport: { x: 0, y: 0, zoom: 1 },
+const { patchBuildMock, engineAddRouteMock, engineDisposeMock } = vi.hoisted(
+  () => ({
+    patchBuildMock: vi.fn(() => ({
+      id: "",
+      name: "Init patch",
+      userId: "",
+      config: {
+        bpm: 120,
+        modules: [],
+        gridNodes: {
+          nodes: [],
+          edges: [
+            {
+              id: "edge-1",
+              source: "seq-1",
+              sourceHandle: "midi out",
+              target: "osc-1",
+              targetHandle: "midi in",
+            },
+          ],
+          viewport: { x: 0, y: 0, zoom: 1 },
+        },
       },
-    },
-  })),
-  engineDisposeMock: vi.fn(),
-}));
+    })),
+    engineAddRouteMock: vi.fn((route) => route),
+    engineDisposeMock: vi.fn(),
+  }),
+);
 
 vi.mock("@blibliki/engine", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@blibliki/engine")>();
@@ -41,6 +52,10 @@ vi.mock("@blibliki/engine", async (importOriginal) => {
     async initialize(): Promise<void> {}
 
     onPropsUpdate(): void {}
+
+    addRoute(route: unknown): unknown {
+      return engineAddRouteMock(route);
+    }
 
     dispose(): void {
       engineDisposeMock();
@@ -89,11 +104,15 @@ type DispatchedAction = {
 };
 
 describe("patchSlice.loadById", () => {
+  beforeEach(() => {
+    engineAddRouteMock.mockClear();
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("should bootstrap engine lifecycle state when loading a new patch", async () => {
+  const createHarness = () => {
     const actions: DispatchedAction[] = [];
     const getState = () =>
       ({
@@ -120,6 +139,12 @@ describe("patchSlice.loadById", () => {
       return action;
     }) as (action: unknown) => unknown;
 
+    return { actions, dispatch };
+  };
+
+  it("should bootstrap engine lifecycle state when loading a new patch", async () => {
+    const { actions, dispatch } = createHarness();
+
     await loadById("new")(dispatch as never);
 
     expect(patchBuildMock).toHaveBeenCalledTimes(1);
@@ -130,5 +155,31 @@ describe("patchSlice.loadById", () => {
           (action.payload as Record<string, unknown>)?.isInitialized === true,
       ),
     ).toBe(true);
+    expect(
+      actions.some((action) => action.type === "gridNodes/setGridNodes"),
+    ).toBe(true);
+  });
+
+  it("skips grid node hydration when loading a runtime-only patch view", async () => {
+    const { actions, dispatch } = createHarness();
+
+    await loadById("new", { viewMode: "runtime" })(dispatch as never);
+
+    expect(
+      actions.some(
+        (action) =>
+          action.type === "global/setAttributes" &&
+          (action.payload as Record<string, unknown>)?.isInitialized === true,
+      ),
+    ).toBe(true);
+    expect(
+      actions.some((action) => action.type === "gridNodes/setGridNodes"),
+    ).toBe(false);
+    expect(engineAddRouteMock).toHaveBeenCalledTimes(1);
+    expect(engineAddRouteMock).toHaveBeenCalledWith({
+      source: { moduleId: "seq-1", ioName: "midi out" },
+      destination: { moduleId: "osc-1", ioName: "midi in" },
+      id: "edge-1",
+    });
   });
 });

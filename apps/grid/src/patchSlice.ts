@@ -11,11 +11,13 @@ import {
   updatePlainModule,
 } from "@/components/AudioModule/modulesSlice";
 import {
+  hydrateEngineRoutes,
   removeAllGridNodes,
   setGridNodes,
 } from "@/components/Grid/gridNodesSlice";
 import { addNotification } from "@/notificationsSlice";
 import { assertPatchPayloadHasNoUndefined } from "@/patch/patchPayloadValidation";
+import type { PatchViewMode } from "@/patch/viewMode";
 import { AppDispatch, RootState } from "@/store";
 import { createEnginePropsUpdateQueue } from "./global/enginePropsUpdateQueue";
 import {
@@ -29,6 +31,10 @@ type PatchProps = {
   patch: Omit<IPatch, "config">;
   status: "idle" | "loading" | "succeeded" | "failed";
   error?: string;
+};
+
+type PatchLoadOptions = {
+  viewMode?: PatchViewMode;
 };
 
 const initialState: PatchProps = {
@@ -49,30 +55,32 @@ export const patchSlice = createSlice({
   },
 });
 
-export const loadById = (id: string) => async (dispatch: AppDispatch) => {
-  try {
-    await dispatch(clearEngine());
-    await dispatch(initializeEngine());
+export const loadById =
+  (id: string, options: PatchLoadOptions = {}) =>
+  async (dispatch: AppDispatch) => {
+    try {
+      await dispatch(clearEngine());
+      await dispatch(initializeEngine());
 
-    const patch = id === "new" ? Patch.build() : await Patch.find(id);
+      const patch = id === "new" ? Patch.build() : await Patch.find(id);
 
-    dispatch(load(patch));
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error occurred";
+      dispatch(load(patch, options));
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
 
-    dispatch(
-      addNotification({
-        type: "error",
-        title: "Failed to load patch",
-        message: errorMessage,
-        duration: 5000,
-      }),
-    );
+      dispatch(
+        addNotification({
+          type: "error",
+          title: "Failed to load patch",
+          message: errorMessage,
+          duration: 5000,
+        }),
+      );
 
-    throw error;
-  }
-};
+      throw error;
+    }
+  };
 
 export const loadInstrumentDebugById =
   (id: string) => async (dispatch: AppDispatch) => {
@@ -99,16 +107,26 @@ export const loadInstrumentDebugById =
     }
   };
 
-export const load = (patch: Patch | IPatch) => (dispatch: AppDispatch) => {
-  const { id, name, config, userId } = patch;
-  const { bpm, modules, gridNodes } = config;
+export const load =
+  (patch: Patch | IPatch, options: PatchLoadOptions = {}) =>
+  (dispatch: AppDispatch) => {
+    const { id, name, config, userId } = patch;
+    const { bpm, modules, gridNodes } = config;
 
-  dispatch(loadModules(modules as ModuleProps[]));
-  dispatch(setGridNodes(gridNodes));
-  dispatch(setBpm(bpm));
+    dispatch(loadModules(modules as ModuleProps[]));
 
-  dispatch(setAttributes({ patch: { id, name, userId }, status: "succeeded" }));
-};
+    if (options.viewMode === "runtime") {
+      hydrateEngineRoutes(gridNodes);
+    } else {
+      dispatch(setGridNodes(gridNodes));
+    }
+
+    dispatch(setBpm(bpm));
+
+    dispatch(
+      setAttributes({ patch: { id, name, userId }, status: "succeeded" }),
+    );
+  };
 
 export const save =
   (props: { userId: string; asNew: boolean }) =>

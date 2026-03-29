@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import Grid from "@/components/Grid";
-import InstrumentDebugAutoLayout from "@/instruments/InstrumentDebugAutoLayout";
+import { lazy, Suspense } from "react";
 import { loadInstrumentDebugById } from "@/patchSlice";
 import { store } from "@/store";
+
+const InstrumentDebugGrid = lazy(
+  () => import("@/instruments/InstrumentDebugGrid"),
+);
 
 export const Route = createFileRoute("/instrument/$instrumentId/debug")({
   loader: async ({ params }) => {
@@ -13,8 +16,8 @@ export const Route = createFileRoute("/instrument/$instrumentId/debug")({
 
 function InstrumentDebugGridPage() {
   return (
-    <Grid>
-      <InstrumentDebugAutoLayout />
-    </Grid>
+    <Suspense fallback={null}>
+      <InstrumentDebugGrid />
+    </Suspense>
   );
 }

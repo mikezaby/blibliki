@@ -55,7 +55,11 @@ export default function FileMenu() {
 
   const onDestroy = async () => {
     await dispatch(destroy());
-    await navigate({ to: "/patch/$patchId", params: { patchId: "new" } });
+    await navigate({
+      to: "/patch/$patchId",
+      params: { patchId: "new" },
+      search: { mode: undefined },
+    });
   };
 
   const exportGridJSON = () => {
@@ -118,7 +122,11 @@ export default function FileMenu() {
       >
         <DropdownMenuGroup className="space-y-1">
           <DropdownMenuItem asChild>
-            <Link to="/patch/$patchId" params={{ patchId: "new" }}>
+            <Link
+              to="/patch/$patchId"
+              params={{ patchId: "new" }}
+              search={{ mode: undefined }}
+            >
               <Plus className="w-4 h-4" />
               New
             </Link>

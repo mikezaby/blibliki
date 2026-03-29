@@ -5,5 +5,6 @@ export const Route = createFileRoute("/")({
     redirect({
       to: "/patch/$patchId",
       params: { patchId: "new" },
+      search: { mode: undefined },
     }),
 });

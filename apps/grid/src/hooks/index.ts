@@ -5,7 +5,13 @@ import {
 } from "@blibliki/engine";
 import { IInstrument, IPatch, Instrument, Patch } from "@blibliki/models";
 import { useAuth, useUser } from "@clerk/clerk-react";
-import { Connection, Edge, EdgeChange, Node, NodeChange } from "@xyflow/react";
+import type {
+  Connection,
+  Edge,
+  EdgeChange,
+  Node,
+  NodeChange,
+} from "@xyflow/react";
 import { getAuth, signInWithCustomToken } from "firebase/auth";
 import { useCallback, useEffect, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";

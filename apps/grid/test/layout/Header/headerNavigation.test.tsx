@@ -83,6 +83,10 @@ vi.mock("@tanstack/react-router", () => ({
     return <a href={href}>{children}</a>;
   },
   useNavigate: () => navigateMock,
+  useLocation: () => ({
+    pathname: "/patch/new",
+    search: {},
+  }),
 }));
 
 vi.mock("@clerk/clerk-react", () => ({

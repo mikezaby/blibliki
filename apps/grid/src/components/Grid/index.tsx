@@ -1,14 +1,15 @@
 import { Surface } from "@blibliki/ui";
 import {
-  ReactFlow,
-  Controls,
   Background,
   BackgroundVariant,
-  XYPosition,
+  Controls,
+  ReactFlow,
+  ReactFlowProvider,
   useOnViewportChange,
-  Viewport,
   useReactFlow,
 } from "@xyflow/react";
+import type { Viewport, XYPosition } from "@xyflow/react";
+import "@xyflow/react/dist/base.css";
 import {
   type MouseEvent as ReactMouseEvent,
   useEffect,
@@ -39,6 +40,14 @@ const DEFAULT_REACT_FLOW_PROPS = {
 };
 
 export default function Grid({ children }: { children?: ReactNode }) {
+  return (
+    <ReactFlowProvider>
+      <GridCanvas>{children}</GridCanvas>
+    </ReactFlowProvider>
+  );
+}
+
+function GridCanvas({ children }: { children?: ReactNode }) {
   const { screenToFlowPosition } = useReactFlow();
   const {
     nodes,

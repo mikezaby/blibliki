@@ -94,6 +94,7 @@ export default function LoadPatchModal() {
                     <Link
                       to="/patch/$patchId"
                       params={{ patchId: id }}
+                      search={{ mode: undefined }}
                       onClick={close}
                     >
                       <div className="min-w-0 flex-1 text-left">
