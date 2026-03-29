@@ -42,6 +42,7 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "lint": "eslint src",
+    "test": "vitest",
     "tsc": "tsc --noEmit",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
@@ -50,7 +51,8 @@
   },
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
-    "@types/node": "25.1.0"
+    "@types/node": "25.1.0",
+    "vitest": "catalog:test"
   },
   "dependencies": {
     "crypto-js": "^4.2.0",

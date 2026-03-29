@@ -1,6 +1,10 @@
 // Node.js entry point - re-exports everything from index and adds Context from node version
 export * from "./index.js";
-export { Context, type AnyAudioContext } from "./Context.node.js";
+export {
+  Context,
+  type AnyAudioContext,
+  type ContextOptions,
+} from "./Context.node.js";
 export {
   requestAnimationFrame,
   cancelAnimationFrame,

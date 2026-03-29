@@ -1,7 +1,6 @@
 import { Engine, type IAnyModuleSerialize } from "@blibliki/engine";
 import { IPatch, Instrument, Patch } from "@blibliki/models";
 import { Context, requestAnimationFrame } from "@blibliki/utils";
-import { AudioContext } from "@blibliki/utils/web-audio-api";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
   addModule,
@@ -232,8 +231,7 @@ const initializeEngine =
   () => async (dispatch: AppDispatch, getState: () => RootState) => {
     const { context: contextConf, bpm } = getState().global;
 
-    const audioContext = new AudioContext(contextConf);
-    const context = new Context(audioContext);
+    const context = new Context(contextConf);
     const engine = new Engine(context);
     await engine.initialize();
     engine.bpm = bpm;
