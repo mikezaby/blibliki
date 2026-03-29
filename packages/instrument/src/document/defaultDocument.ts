@@ -58,6 +58,7 @@ export function createDefaultInstrumentDocument(): InstrumentDocument {
     name: DEFAULT_NAME,
     templateId: DEFAULT_TEMPLATE_ID,
     hardwareProfileId: DEFAULT_HARDWARE_PROFILE_ID,
+    latencyHint: "interactive",
     globalBlock: {
       tempo: 120,
       swing: 0,

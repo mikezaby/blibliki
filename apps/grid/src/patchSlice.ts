@@ -82,12 +82,28 @@ export const loadById =
   };
 
 export const loadInstrumentDebugById =
-  (id: string) => async (dispatch: AppDispatch) => {
+  (id: string) => async (dispatch: AppDispatch, getState: () => RootState) => {
     try {
       await dispatch(clearEngine());
-      await dispatch(initializeEngine());
 
       const instrument = await Instrument.find(id);
+      const document = instrument.serialize().document as {
+        latencyHint?: "interactive" | "playback";
+      };
+      const currentContext = getState().global.context;
+      const latencyHint =
+        document.latencyHint === "playback" ? "playback" : "interactive";
+
+      dispatch(
+        setGlobalAttributes({
+          context: {
+            ...currentContext,
+            latencyHint,
+          },
+        }),
+      );
+
+      await dispatch(initializeEngine());
       dispatch(load(createInstrumentDebugPatch(instrument.serialize())));
     } catch (error) {
       const errorMessage =

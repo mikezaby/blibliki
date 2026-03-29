@@ -36,6 +36,7 @@ export type SourceProfileId =
   | "threeOsc";
 
 export type EffectProfileId = "distortion" | "chorus" | "delay" | "reverb";
+export type InstrumentLatencyHint = "interactive" | "playback";
 
 export type InstrumentGlobalBlock = {
   tempo: number;
@@ -89,6 +90,7 @@ export type InstrumentDocument = {
   name: string;
   templateId: string;
   hardwareProfileId: string;
+  latencyHint?: InstrumentLatencyHint;
   globalBlock: InstrumentGlobalBlock;
   tracks: InstrumentTrackDocument[];
 };
@@ -141,6 +143,7 @@ export function createDefaultInstrumentDocument(): InstrumentDocument {
     name: DEFAULT_NAME,
     templateId: DEFAULT_TEMPLATE_ID,
     hardwareProfileId: DEFAULT_HARDWARE_PROFILE_ID,
+    latencyHint: "interactive",
     globalBlock: {
       tempo: 120,
       swing: 0,

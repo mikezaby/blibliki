@@ -1,5 +1,12 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { Instrument } from "@blibliki/models";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import type { ReactNode } from "react";
 import { Provider } from "react-redux";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -89,6 +96,48 @@ describe("InstrumentEditor", () => {
     fireEvent.change(voicesInput, { target: { value: "12" } });
 
     expect(voicesInput.value).toBe("12");
+  });
+
+  it("saves the selected latency mode with the instrument document", async () => {
+    const saveSpy = vi.spyOn(Instrument.prototype, "save").mockResolvedValue();
+
+    render(
+      <Provider store={store}>
+        <InstrumentEditor
+          instrument={{
+            id: "instrument-1",
+            name: "Broken Instrument",
+            userId: "user-1",
+            document: createDefaultInstrumentDocument(),
+          }}
+        />
+      </Provider>,
+    );
+
+    const latencyValue = screen.getByText("interactive");
+    const latencyTrigger =
+      latencyValue.closest('[role="combobox"]') ??
+      latencyValue.closest("button");
+
+    if (!(latencyTrigger instanceof HTMLElement)) {
+      throw new Error("Expected latency trigger button");
+    }
+
+    latencyTrigger.focus();
+    fireEvent.keyDown(latencyTrigger, { key: "ArrowDown" });
+    fireEvent.click(screen.getByRole("option", { name: "playback" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save Instrument" }));
+
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+
+    const savedInstrument = saveSpy.mock.instances[0] as Instrument;
+    const savedDocument = savedInstrument.document as {
+      latencyHint?: string;
+    };
+
+    expect(savedDocument.latencyHint).toBe("playback");
   });
 
   it("separates sequencer note names from step velocity editing", () => {

@@ -22,6 +22,7 @@ import { useAppDispatch } from "@/hooks";
 import type {
   EffectProfileId,
   InstrumentDocument,
+  InstrumentLatencyHint,
   InstrumentSequencerStep,
   InstrumentTrackDocument,
   SourceProfileId,
@@ -86,6 +87,7 @@ const DURATION_OPTIONS = [
 ] as const;
 const RESOLUTION_OPTIONS = ["1/16", "1/8", "1/4", "1/2", "1"] as const;
 const PLAYBACK_MODE_OPTIONS = ["loop", "pingPong", "random"] as const;
+const LATENCY_HINT_OPTIONS = ["interactive", "playback"] as const;
 const DEFAULT_STEP_VELOCITY = 100;
 
 function normalizeStepNoteName(value: string) {
@@ -367,6 +369,20 @@ export default function InstrumentEditor({
                     <Badge tone="neutral" variant="soft" size="sm">
                       {document.hardwareProfileId}
                     </Badge>
+                  </Stack>
+                  <Stack gap={2}>
+                    <Label>Latency</Label>
+                    <OptionSelect
+                      label="Select latency mode"
+                      value={document.latencyHint ?? "interactive"}
+                      options={LATENCY_HINT_OPTIONS}
+                      onChange={(value: InstrumentLatencyHint) => {
+                        setDocument((current) => ({
+                          ...current,
+                          latencyHint: value,
+                        }));
+                      }}
+                    />
                   </Stack>
                 </div>
               </CardContent>

@@ -9,6 +9,7 @@ const {
   engineDisposeMock,
   engineAddModuleMock,
   engineAddRouteMock,
+  contextConstructorMock,
 } = vi.hoisted(() => ({
   createInstrumentEnginePatchMock: vi.fn(() => ({
     patch: {
@@ -123,6 +124,7 @@ const {
   engineDisposeMock: vi.fn(),
   engineAddModuleMock: vi.fn((module) => module),
   engineAddRouteMock: vi.fn((route) => route),
+  contextConstructorMock: vi.fn(),
 }));
 
 vi.mock("@blibliki/instrument", () => ({
@@ -185,7 +187,9 @@ vi.mock("@blibliki/engine", async (importOriginal) => {
 
 vi.mock("@blibliki/utils", () => ({
   Context: class {
-    constructor(_audioContext?: unknown) {}
+    constructor(contextConf?: unknown) {
+      contextConstructorMock(contextConf);
+    }
   },
   requestAnimationFrame: (callback: () => void) => {
     callback();
@@ -217,20 +221,21 @@ type DispatchedAction = {
 describe("patchSlice.loadInstrumentDebugById", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    contextConstructorMock.mockClear();
   });
 
-  it("loads an instrument into Grid as a transient patch with seeded nodes for post-render layout", async () => {
+  const createHarness = () => {
+    const state = {
+      global: {
+        context: { latencyHint: "interactive", lookAhead: 0.05 },
+        bpm: 120,
+      },
+      modules: { entities: {} },
+      moduleProps: { entities: {} },
+      moduleState: { entities: {} },
+    };
     const actions: DispatchedAction[] = [];
-    const getState = () =>
-      ({
-        global: {
-          context: { latencyHint: "interactive", lookAhead: 0.05 },
-          bpm: 120,
-        },
-        modules: { entities: {} },
-        moduleProps: { entities: {} },
-        moduleState: { entities: {} },
-      }) as never;
+    const getState = () => state as never;
 
     const dispatch = ((action: unknown) => {
       if (typeof action === "function") {
@@ -242,12 +247,28 @@ describe("patchSlice.loadInstrumentDebugById", () => {
         )(dispatch, getState);
       }
 
-      actions.push(action as DispatchedAction);
+      const typedAction = action as DispatchedAction;
+      actions.push(typedAction);
+
+      if (typedAction.type === "global/setAttributes" && typedAction.payload) {
+        state.global = {
+          ...state.global,
+          ...(typedAction.payload as Partial<typeof state.global>),
+        };
+      }
+
       return action;
     }) as (action: unknown) => unknown;
 
+    return { actions, dispatch, getState };
+  };
+
+  it("loads an instrument into Grid as a transient patch with seeded nodes for post-render layout", async () => {
+    const { actions, dispatch, getState } = createHarness();
+
     await patchSlice.loadInstrumentDebugById?.("instrument-1")(
       dispatch as never,
+      getState,
     );
 
     expect(instrumentFindMock).toHaveBeenCalledWith("instrument-1");
@@ -318,5 +339,44 @@ describe("patchSlice.loadInstrumentDebugById", () => {
     expect(
       (patchAction?.payload as { patch: { name: string } }).patch.name,
     ).toBe("Debug: Broken Instrument");
+  });
+
+  it("boots the debug engine with the instrument latency hint", async () => {
+    instrumentFindMock.mockResolvedValueOnce({
+      serialize: () => ({
+        id: "instrument-1",
+        name: "Broken Instrument",
+        userId: "user-1",
+        document: {
+          version: "1",
+          name: "Broken Instrument",
+          templateId: "default-performance-instrument",
+          hardwareProfileId: "launchcontrolxl3-pi-lcd",
+          latencyHint: "playback",
+          globalBlock: {
+            tempo: 126,
+            swing: 0,
+            masterFilterCutoff: 20_000,
+            masterFilterResonance: 1,
+            reverbSend: 0.3,
+            delaySend: 0.3,
+            masterVolume: 1,
+          },
+          tracks: [],
+        },
+      }),
+    });
+
+    const { dispatch, getState } = createHarness();
+
+    await patchSlice.loadInstrumentDebugById?.("instrument-1")(
+      dispatch as never,
+      getState,
+    );
+
+    expect(contextConstructorMock).toHaveBeenCalledWith({
+      latencyHint: "playback",
+      lookAhead: 0.05,
+    });
   });
 });
