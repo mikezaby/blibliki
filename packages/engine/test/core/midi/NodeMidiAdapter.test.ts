@@ -4,10 +4,22 @@ import type { IMidiPort } from "@/core/midi/adapters/types";
 
 let inputPortNames: string[] = [];
 let outputPortNames: string[] = [];
+let failInputConstruction = false;
+let failOutputConstruction = false;
+let inputConstructionCount = 0;
+let outputConstructionCount = 0;
 const HOT_PLUG_POLL_INTERVAL_MS = 1000;
 
 class MockInput {
   private open = false;
+
+  constructor() {
+    inputConstructionCount += 1;
+
+    if (failInputConstruction) {
+      throw new Error("Failed to initialise RtMidi");
+    }
+  }
 
   getPortCount(): number {
     return inputPortNames.length;
@@ -36,6 +48,14 @@ class MockInput {
 
 class MockOutput {
   private open = false;
+
+  constructor() {
+    outputConstructionCount += 1;
+
+    if (failOutputConstruction) {
+      throw new Error("Failed to initialise RtMidi");
+    }
+  }
 
   getPortCount(): number {
     return outputPortNames.length;
@@ -70,6 +90,10 @@ describe("NodeMidiAdapter hot-plug polling", () => {
     vi.useFakeTimers();
     inputPortNames = ["Komplete Kontrol"];
     outputPortNames = ["LoopMIDI"];
+    failInputConstruction = false;
+    failOutputConstruction = false;
+    inputConstructionCount = 0;
+    outputConstructionCount = 0;
   });
 
   afterEach(() => {
@@ -153,5 +177,21 @@ describe("NodeMidiAdapter hot-plug polling", () => {
       (event) => event.state === "connected",
     );
     expect(reconnectEvent[reconnectEvent.length - 1]).toBe(port);
+  });
+
+  it("reuses scanner clients across hot-plug polls", async () => {
+    const adapter = new NodeMidiAdapter();
+    const access = await adapter.requestMIDIAccess();
+    expect(access).not.toBeNull();
+
+    access!.addEventListener("statechange", () => {});
+
+    const initialInputConstructionCount = inputConstructionCount;
+    const initialOutputConstructionCount = outputConstructionCount;
+
+    await vi.advanceTimersByTimeAsync(HOT_PLUG_POLL_INTERVAL_MS * 3);
+
+    expect(inputConstructionCount).toBe(initialInputConstructionCount);
+    expect(outputConstructionCount).toBe(initialOutputConstructionCount);
   });
 });

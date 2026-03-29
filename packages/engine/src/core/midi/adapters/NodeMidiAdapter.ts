@@ -246,11 +246,15 @@ class NodeMidiAccess implements IMidiAccess {
   private inputPorts = new Map<string, NodeMidiInputPort>();
   private outputPorts = new Map<string, NodeMidiOutputPort>();
   private MidiModule: NodeMidiModule;
+  private scannerInput: NodeMidiInput;
+  private scannerOutput: NodeMidiOutput;
   private listeners = new Set<(port: IMidiPort) => void>();
   private pollTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(MidiModule: NodeMidiModule) {
     this.MidiModule = MidiModule;
+    this.scannerInput = new this.MidiModule.Input();
+    this.scannerOutput = new this.MidiModule.Output();
     this.scanPorts(false);
   }
 
@@ -276,7 +280,7 @@ class NodeMidiAccess implements IMidiAccess {
 
     // Scan input ports
     try {
-      const input = new this.MidiModule.Input();
+      const input = this.scannerInput;
       const inputCount = input.getPortCount();
 
       for (let i = 0; i < inputCount; i++) {
@@ -327,7 +331,7 @@ class NodeMidiAccess implements IMidiAccess {
 
     // Scan output ports
     try {
-      const output = new this.MidiModule.Output();
+      const output = this.scannerOutput;
       const outputCount = output.getPortCount();
 
       for (let i = 0; i < outputCount; i++) {
