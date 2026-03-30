@@ -1,4 +1,4 @@
-import { type IInstrument } from "@blibliki/models";
+import { Instrument, type IInstrument } from "@blibliki/models";
 import {
   Badge,
   Button,
@@ -13,8 +13,14 @@ import {
 } from "@blibliki/ui";
 import { useUser } from "@clerk/clerk-react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { FolderKanban, Plus, SlidersHorizontal, User } from "lucide-react";
-import { useState } from "react";
+import {
+  FolderKanban,
+  Plus,
+  SlidersHorizontal,
+  Trash2,
+  User,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import { useAppDispatch, useInstruments } from "@/hooks";
 import { createNewInstrumentForUser } from "@/instruments/createInstrument";
 import type { InstrumentDocument } from "@/instruments/document";
@@ -34,6 +40,16 @@ export default function Instruments() {
   const { user } = useUser();
   const instruments = useInstruments();
   const [creating, setCreating] = useState(false);
+  const [visibleInstruments, setVisibleInstruments] = useState<IInstrument[]>(
+    [],
+  );
+  const [deletingInstrumentId, setDeletingInstrumentId] = useState<
+    string | null
+  >(null);
+
+  useEffect(() => {
+    setVisibleInstruments(instruments);
+  }, [instruments]);
 
   const handleCreate = async () => {
     if (!user?.id || creating) {
@@ -76,6 +92,53 @@ export default function Instruments() {
     }
   };
 
+  const handleDelete = async (instrument: IInstrument) => {
+    if (
+      instrument.userId !== user?.id ||
+      deletingInstrumentId === instrument.id
+    ) {
+      return;
+    }
+
+    if (!confirm("Are you sure you want to delete this instrument?")) {
+      return;
+    }
+
+    setDeletingInstrumentId(instrument.id);
+
+    try {
+      const instrumentRecord = await Instrument.find(instrument.id);
+      await instrumentRecord.delete();
+
+      setVisibleInstruments((current) =>
+        current.filter(({ id }) => id !== instrument.id),
+      );
+
+      dispatch(
+        addNotification({
+          type: "success",
+          title: "Instrument deleted",
+          message: `"${instrument.name}" has been deleted.`,
+          duration: 3000,
+        }),
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+
+      dispatch(
+        addNotification({
+          type: "error",
+          title: "Failed to delete instrument",
+          message: errorMessage,
+          duration: 5000,
+        }),
+      );
+    } finally {
+      setDeletingInstrumentId(null);
+    }
+  };
+
   return (
     <Surface tone="canvas" className="h-screen overflow-auto p-8">
       <Stack className="mx-auto w-full max-w-6xl" gap={6}>
@@ -101,7 +164,7 @@ export default function Instruments() {
           </Button>
         </Stack>
 
-        {instruments.length === 0 ? (
+        {visibleInstruments.length === 0 ? (
           <Card className="border-2 border-dashed">
             <CardContent className="py-16">
               <Stack align="center" justify="center" gap={4}>
@@ -124,8 +187,10 @@ export default function Instruments() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {instruments.map((instrument) => {
+            {visibleInstruments.map((instrument) => {
               const document = instrument.document as InstrumentDocument;
+              const canDelete = instrument.userId === user?.id;
+              const isDeleting = deletingInstrumentId === instrument.id;
 
               return (
                 <Card
@@ -174,19 +239,36 @@ export default function Instruments() {
                         )}
                       </Stack>
 
-                      <Button
-                        asChild
-                        color="neutral"
-                        variant="outlined"
-                        size="sm"
-                      >
-                        <Link
-                          to="/instrument/$instrumentId"
-                          params={{ instrumentId: instrument.id }}
+                      <Stack direction="row" gap={2}>
+                        <Button
+                          asChild
+                          color="neutral"
+                          variant="outlined"
+                          size="sm"
+                          className={canDelete ? "flex-1" : "w-full"}
                         >
-                          Open Instrument
-                        </Link>
-                      </Button>
+                          <Link
+                            to="/instrument/$instrumentId"
+                            params={{ instrumentId: instrument.id }}
+                          >
+                            Open Instrument
+                          </Link>
+                        </Button>
+                        {canDelete ? (
+                          <Button
+                            onClick={() => {
+                              void handleDelete(instrument);
+                            }}
+                            variant="outlined"
+                            color="error"
+                            size="sm"
+                            disabled={isDeleting}
+                            aria-label={`Delete ${instrument.name}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        ) : null}
+                      </Stack>
                     </Stack>
                   </CardContent>
                 </Card>
