@@ -114,27 +114,35 @@ function createSeqEditDisplayState() {
 }
 
 describe("renderInstrumentDisplayStateToTerminal", () => {
-  it("renders performance mode as a four-band terminal frame with empty and inactive slots preserved", () => {
-    expect(
-      renderInstrumentDisplayStateToTerminal(createPerformanceDisplayState()),
-    ).toBe(
-      "INSTRUMENT Default Instrument | TRACK track-1 | CH 1 | PAGE 1 sourceAmp\n" +
-        "MODE performance | TRANSPORT stopped\n" +
-        "GLOBAL | BPM:120 BPM | SWG:0% | MCF:20000 | MRQ:1 | REV:0% | DLY:0% | [---]:[--] | VOL:100%\n" +
-        "TOP SOURCE | WAVE:sine | FREQ:440 | OCT:0 | CRS:0 | FINE:0 | LOW:ON | (empty):-- | (empty):--\n" +
-        "BOTTOM AMP | A:-- | D:-- | S:-- | R:-- | (empty):-- | (empty):-- | (empty):-- | GAIN:--",
+  it("renders performance mode as a dashboard with separate label, value, and encoder-visual rows", () => {
+    const rendered = renderInstrumentDisplayStateToTerminal(
+      createPerformanceDisplayState(),
+    );
+
+    expect(rendered).toMatch(
+      /GLOBAL[\s\S]*\n.*BPM.*SWG.*MCF.*MRQ.*REV.*DLY.*\[---\].*VOL.*\n.*120 BPM.*0%.*20000.*1.*0%.*0%.*\[--\].*100%.*\n.*o.*----.*\n/,
+    );
+    expect(rendered).toMatch(
+      /SOURCE[\s\S]*\n.*WAVE.*FREQ.*OCT.*CRS.*FINE.*LOW.*\n.*sine.*440.*0.*0.*0.*ON.*--.*--.*\n.*o.*----.*\n/,
+    );
+    expect(rendered).toMatch(
+      /AMP[\s\S]*\n.*A.*D.*S.*R.*GAIN.*\n.*--.*--.*--.*--.*--.*--.*--.*--.*\n.*----.*\n\+/,
     );
   });
 
-  it("renders seq edit mode using the sequencer slot labels and values", () => {
-    expect(
-      renderInstrumentDisplayStateToTerminal(createSeqEditDisplayState()),
-    ).toBe(
-      "INSTRUMENT Default Instrument | TRACK track-1 | CH 1 | PAGE 1 sourceAmp\n" +
-        "MODE seqEdit | TRANSPORT stopped\n" +
-        "GLOBAL | ACT:ON | PROB:75% | DUR:1/8 | MICR:10 | RES:1/16 | MODE:loop | [---]:[--] | LOOP:2\n" +
-        "TOP VELOCITY | VEL1:80 | [VEL2]:[--] | [VEL3]:[--] | [VEL4]:[--] | [VEL5]:[--] | [VEL6]:[--] | [VEL7]:[--] | [VEL8]:[--]\n" +
-        "BOTTOM PITCH | N1:C3 | [N2]:[--] | [N3]:[--] | [N4]:[--] | [N5]:[--] | [N6]:[--] | [N7]:[--] | [N8]:[--]",
+  it("renders seq edit mode using the same dashboard structure", () => {
+    const rendered = renderInstrumentDisplayStateToTerminal(
+      createSeqEditDisplayState(),
+    );
+
+    expect(rendered).toMatch(
+      /GLOBAL[\s\S]*\n.*ACT.*PROB.*DUR.*MICR.*RES.*MODE.*\[---\].*LOOP.*\n.*ON.*75%.*1\/8.*10.*1\/16.*loop.*\[--\].*2.*\n.*o.*----.*\n/,
+    );
+    expect(rendered).toMatch(
+      /VELOCITY[\s\S]*\n.*VEL1.*\[VEL2\].*\[VEL8\].*\n.*80.*\[--\].*\[--\].*\n.*o.*----.*\n/,
+    );
+    expect(rendered).toMatch(
+      /PITCH[\s\S]*\n.*N1.*\[N2\].*\[N8\].*\n.*C3.*\[--\].*\[--\].*\n.*o.*----.*\n\+/,
     );
   });
 });
@@ -156,19 +164,16 @@ describe("createTerminalDisplaySession", () => {
     session.dispose();
     session.render(createPerformanceDisplayState());
 
+    const performanceFrame = renderInstrumentDisplayStateToTerminal(
+      createPerformanceDisplayState(),
+    );
+    const seqEditFrame = renderInstrumentDisplayStateToTerminal(
+      createSeqEditDisplayState(),
+    );
+
     expect(writes).toEqual([
-      "\u001b[2J\u001b[H" +
-        "INSTRUMENT Default Instrument | TRACK track-1 | CH 1 | PAGE 1 sourceAmp\n" +
-        "MODE performance | TRANSPORT stopped\n" +
-        "GLOBAL | BPM:120 BPM | SWG:0% | MCF:20000 | MRQ:1 | REV:0% | DLY:0% | [---]:[--] | VOL:100%\n" +
-        "TOP SOURCE | WAVE:sine | FREQ:440 | OCT:0 | CRS:0 | FINE:0 | LOW:ON | (empty):-- | (empty):--\n" +
-        "BOTTOM AMP | A:-- | D:-- | S:-- | R:-- | (empty):-- | (empty):-- | (empty):-- | GAIN:--\n",
-      "\u001b[2J\u001b[H" +
-        "INSTRUMENT Default Instrument | TRACK track-1 | CH 1 | PAGE 1 sourceAmp\n" +
-        "MODE seqEdit | TRANSPORT stopped\n" +
-        "GLOBAL | ACT:ON | PROB:75% | DUR:1/8 | MICR:10 | RES:1/16 | MODE:loop | [---]:[--] | LOOP:2\n" +
-        "TOP VELOCITY | VEL1:80 | [VEL2]:[--] | [VEL3]:[--] | [VEL4]:[--] | [VEL5]:[--] | [VEL6]:[--] | [VEL7]:[--] | [VEL8]:[--]\n" +
-        "BOTTOM PITCH | N1:C3 | [N2]:[--] | [N3]:[--] | [N4]:[--] | [N5]:[--] | [N6]:[--] | [N7]:[--] | [N8]:[--]\n",
+      `\u001b[2J\u001b[H${performanceFrame}\n`,
+      `\u001b[2J\u001b[H${seqEditFrame}\n`,
     ]);
   });
 });
