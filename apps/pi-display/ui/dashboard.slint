@@ -85,7 +85,7 @@ component BandFrame inherits Rectangle {
             spacing: compact ? 6px : 10px;
 
             for cell in cells: CellFrame {
-                width: 1*;
+                horizontal-stretch: 1;
                 compact: compact;
                 label: cell.label;
                 value: cell.value;
@@ -168,7 +168,10 @@ export component DashboardWindow inherits Window {
                     }
                 }
 
-                Rectangle { width: 1*; background: transparent; }
+                Rectangle {
+                    horizontal-stretch: 1;
+                    background: transparent;
+                }
 
                 Rectangle {
                     width: compact-layout ? 84px : 110px;

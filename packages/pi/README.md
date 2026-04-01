@@ -156,6 +156,82 @@ pw-jack pnpm start
 On Linux, keep the `pw-jack` prefix so the Node audio runtime can connect to
 PipeWire's JACK layer. On macOS, run it directly.
 
+## Running With `pi-display`
+
+`@blibliki/pi` can publish display state to the independent `apps/pi-display`
+process over OSC.
+
+### Display-first workflow
+
+Start the display listener first from the worktree root:
+
+```bash
+cd /Users/mikezaby/projects/blibliki/blibliki/.worktrees/pi-display-osc
+SLINT_BACKEND=winit BLIBLIKI_DISPLAY_DEBUG=1 pnpm -C apps/pi-display start
+```
+
+Then start the Pi runtime in OSC mode:
+
+```bash
+cd /Users/mikezaby/projects/blibliki/blibliki/.worktrees/pi-display-osc
+BLIBLIKI_PI_DISPLAY_MODE=osc \
+BLIBLIKI_PI_DISPLAY_HOST=127.0.0.1 \
+BLIBLIKI_PI_DISPLAY_PORT=41234 \
+BLIBLIKI_PI_CONTROL_PORT=41235 \
+BLIBLIKI_PI_DISPLAY_DEBUG=1 \
+pnpm -C packages/pi start-default
+```
+
+This is the easiest local setup because `start-default` does not depend on
+Firestore or the Grid deployment target.
+
+### Firestore-driven runtime
+
+If you want the normal configured device path instead:
+
+```bash
+cd /Users/mikezaby/projects/blibliki/blibliki/.worktrees/pi-display-osc
+BLIBLIKI_PI_DISPLAY_MODE=osc \
+BLIBLIKI_PI_DISPLAY_HOST=127.0.0.1 \
+BLIBLIKI_PI_DISPLAY_PORT=41234 \
+BLIBLIKI_PI_CONTROL_PORT=41235 \
+BLIBLIKI_PI_DISPLAY_DEBUG=1 \
+pnpm -C packages/pi start
+```
+
+### Compact layout family
+
+To publish the `800x480` layout preset instead of the default `1280x720`
+preset, add:
+
+```bash
+BLIBLIKI_PI_DISPLAY_TARGET_CLASS=compact-standard
+```
+
+### Environment Variables
+
+- `BLIBLIKI_PI_DISPLAY_MODE=terminal|osc`
+- `BLIBLIKI_PI_DISPLAY_HOST`
+- `BLIBLIKI_PI_DISPLAY_PORT`
+- `BLIBLIKI_PI_CONTROL_PORT`
+- `BLIBLIKI_PI_DISPLAY_DEBUG=0|1`
+- `BLIBLIKI_PI_DISPLAY_TARGET_CLASS=standard|compact-standard`
+
+### Debugging
+
+If you want to test the display without the engine, use the fixture tools:
+
+```bash
+cd /Users/mikezaby/projects/blibliki/blibliki/.worktrees/pi-display-osc
+pnpm -C packages/display-protocol debug:send-full
+pnpm -C packages/display-protocol debug:send-band --band upper
+pnpm -C packages/display-protocol debug:dump
+```
+
+For the display-side requirements and startup notes, see:
+
+- [apps/pi-display/README.md](/Users/mikezaby/projects/blibliki/blibliki/.worktrees/pi-display-osc/apps/pi-display/README.md)
+
 ## Architecture
 
 @blibliki/pi wraps the @blibliki/engine package and provides:
