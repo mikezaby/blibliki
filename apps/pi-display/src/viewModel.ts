@@ -21,6 +21,12 @@ export type DashboardBandViewModel = {
 };
 
 export type DashboardViewModel = {
+  layout: {
+    targetClass: DisplayProtocolState["screen"]["targetClass"];
+    compact: boolean;
+    width: number;
+    height: number;
+  };
   header: {
     left: string;
     center: string;
@@ -46,10 +52,31 @@ function isAccentBand(key: DisplayBandKey) {
   return key === "upper";
 }
 
+function createLayout(
+  targetClass: DisplayProtocolState["screen"]["targetClass"],
+) {
+  if (targetClass === "compact-standard") {
+    return {
+      targetClass,
+      compact: true,
+      width: 800,
+      height: 480,
+    };
+  }
+
+  return {
+    targetClass,
+    compact: false,
+    width: 1280,
+    height: 720,
+  };
+}
+
 export function createDashboardViewModel(
   state: DisplayProtocolState,
 ): DashboardViewModel {
   return {
+    layout: createLayout(state.screen.targetClass),
     header: {
       left: state.header.left,
       center: state.header.center,

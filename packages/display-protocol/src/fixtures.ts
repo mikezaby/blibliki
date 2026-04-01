@@ -2,6 +2,7 @@ import type {
   DisplayBandState,
   DisplayOscMessage,
   DisplayProtocolState,
+  DisplayTargetClass,
 } from "./index";
 import {
   DEFAULT_DISPLAY_OSC_HOST,
@@ -20,6 +21,24 @@ export type DebugFixtureNetworkConfig = {
   piPort: number;
 };
 
+export function readDebugFixtureTargetClass(
+  env: NodeJS.ProcessEnv = process.env,
+): DisplayTargetClass {
+  if (
+    env.BLIBLIKI_DEBUG_TARGET_CLASS &&
+    env.BLIBLIKI_DEBUG_TARGET_CLASS !== "standard" &&
+    env.BLIBLIKI_DEBUG_TARGET_CLASS !== "compact-standard"
+  ) {
+    throw new Error(
+      `Invalid BLIBLIKI_DEBUG_TARGET_CLASS value: ${env.BLIBLIKI_DEBUG_TARGET_CLASS}`,
+    );
+  }
+
+  return env.BLIBLIKI_DEBUG_TARGET_CLASS === "compact-standard"
+    ? "compact-standard"
+    : "standard";
+}
+
 export function readDebugFixtureNetworkConfig(
   env: NodeJS.ProcessEnv = process.env,
 ): DebugFixtureNetworkConfig {
@@ -36,12 +55,15 @@ export function readDebugFixtureNetworkConfig(
   };
 }
 
-export function createDebugFullState(revision = 1): DisplayProtocolState {
+export function createDebugFullState(
+  revision = 1,
+  targetClass: DisplayTargetClass = "standard",
+): DisplayProtocolState {
   return {
     revision,
     screen: {
       orientation: "landscape",
-      targetClass: "standard",
+      targetClass,
     },
     header: {
       left: "BLIBLIKI PI",

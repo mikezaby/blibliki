@@ -2,6 +2,7 @@ import {
   DEFAULT_DISPLAY_OSC_HOST,
   DEFAULT_DISPLAY_OSC_PORT,
   DEFAULT_PI_OSC_PORT,
+  type DisplayTargetClass,
 } from "@blibliki/display-protocol";
 import type { InstrumentDisplayState } from "@blibliki/instrument";
 import { instrumentDisplayStateToProtocol } from "@/displayProtocol";
@@ -54,6 +55,18 @@ function readPort(
   return port;
 }
 
+function readTargetClass(value: string | undefined): DisplayTargetClass {
+  if (!value || value === "standard") {
+    return "standard";
+  }
+
+  if (value === "compact-standard") {
+    return value;
+  }
+
+  throw new Error(`Invalid BLIBLIKI_PI_DISPLAY_TARGET_CLASS value: ${value}`);
+}
+
 function createOscDisplayOutput(
   env: NodeJS.ProcessEnv,
   dependencies: Required<
@@ -64,6 +77,8 @@ function createOscDisplayOutput(
   >,
 ): DisplayOutput {
   const host = env.BLIBLIKI_PI_DISPLAY_HOST ?? DEFAULT_DISPLAY_OSC_HOST;
+  const debugEnabled = env.BLIBLIKI_PI_DISPLAY_DEBUG === "1";
+  const targetClass = readTargetClass(env.BLIBLIKI_PI_DISPLAY_TARGET_CLASS);
   const displayPort = readPort(
     env.BLIBLIKI_PI_DISPLAY_PORT,
     DEFAULT_DISPLAY_OSC_PORT,
@@ -82,6 +97,11 @@ function createOscDisplayOutput(
     host,
     displayPort,
     controlPort,
+    debugLog: debugEnabled
+      ? (message) => {
+          console.log(`[blibliki-pi-display] ${message}`);
+        }
+      : undefined,
   });
   let revision = 0;
 
@@ -89,7 +109,7 @@ function createOscDisplayOutput(
     render(displayState) {
       revision += 1;
       publisher.publish(
-        instrumentDisplayStateToProtocol(displayState, revision),
+        instrumentDisplayStateToProtocol(displayState, revision, targetClass),
       );
     },
     dispose() {

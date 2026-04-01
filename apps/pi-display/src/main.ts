@@ -1,10 +1,10 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import * as slint from "slint-ui";
 import { readDisplayAppConfig } from "@/config";
 import { createDisplayStore } from "@/displayStore";
 import { createDisplayLogger } from "@/logger";
 import { createOscListener } from "@/oscListener";
+import { loadSlintRuntime } from "@/slintRuntime";
 import {
   createDashboardViewModel,
   type DashboardBandViewModel,
@@ -38,7 +38,8 @@ function createBandModel(band: DashboardBandViewModel): DashboardBandModel {
   };
 }
 
-type DashboardWindowHandle = slint.ComponentHandle & {
+type DashboardWindowHandle = import("slint-ui").ComponentHandle & {
+  compact_layout: boolean;
   header_left: string;
   header_center: string;
   header_right: string;
@@ -76,6 +77,7 @@ function applyState(
   const upperBand = viewModel.bands.find((band) => band.key === "upper");
   const lowerBand = viewModel.bands.find((band) => band.key === "lower");
 
+  window.compact_layout = viewModel.layout.compact;
   window.header_left = viewModel.header.left;
   window.header_center = viewModel.header.center;
   window.header_right = viewModel.header.right;
@@ -95,6 +97,7 @@ async function main() {
   const config = readDisplayAppConfig();
   const logger = createDisplayLogger(config.debug);
   const store = createDisplayStore();
+  const slint = await loadSlintRuntime();
   const ui = slint.loadFile(resolveUiPath()) as DashboardModule;
   const window = new ui.DashboardWindow();
   const listener = createOscListener(config, store, logger);

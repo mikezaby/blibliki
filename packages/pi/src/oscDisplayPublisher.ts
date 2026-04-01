@@ -23,7 +23,12 @@ export type CreateOscDisplayPublisherOptions = {
   host?: string;
   displayPort?: number;
   controlPort?: number;
+  debugLog?: (message: string) => void;
 };
+
+function summarizeState(state: DisplayProtocolState) {
+  return `revision=${state.revision} track=${state.header.center} right="${state.header.right}"`;
+}
 
 function sendFullState(
   transport: OscDisplayPublisherTransport,
@@ -46,6 +51,7 @@ export function createOscDisplayPublisher({
   host = DEFAULT_DISPLAY_OSC_HOST,
   displayPort = DEFAULT_DISPLAY_OSC_PORT,
   controlPort: _controlPort = DEFAULT_PI_OSC_PORT,
+  debugLog,
 }: CreateOscDisplayPublisherOptions): OscDisplayPublisher {
   let latestState: DisplayProtocolState | undefined;
   let disposed = false;
@@ -60,6 +66,8 @@ export function createOscDisplayPublisher({
       return;
     }
 
+    debugLog?.("request_full_state");
+    debugLog?.(`resend ${summarizeState(latestState)}`);
     sendFullState(transport, host, displayPort, latestState);
   });
 
@@ -70,6 +78,7 @@ export function createOscDisplayPublisher({
       }
 
       latestState = state;
+      debugLog?.(`publish ${summarizeState(state)}`);
       sendFullState(transport, host, displayPort, state);
     },
     dispose() {

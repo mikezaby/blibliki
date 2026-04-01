@@ -8,6 +8,7 @@ export struct DashboardCell {
 }
 
 component CellFrame inherits Rectangle {
+    in property <bool> compact;
     in property <string> label;
     in property <string> value;
     in property <string> visual;
@@ -21,13 +22,13 @@ component CellFrame inherits Rectangle {
     border-radius: 2px;
 
     VerticalLayout {
-        padding: 10px;
-        spacing: 6px;
+        padding: compact ? 6px : 10px;
+        spacing: compact ? 3px : 6px;
 
         Text {
             text: label;
             color: inactive ? #7d7d7d : #f2efe5;
-            font-size: 20px;
+            font-size: compact ? 14px : 20px;
             font-family: "Monospace";
             horizontal-alignment: center;
         }
@@ -35,7 +36,7 @@ component CellFrame inherits Rectangle {
         Text {
             text: value;
             color: accent ? #ffb347 : #f2efe5;
-            font-size: 28px;
+            font-size: compact ? 18px : 28px;
             font-family: "Monospace";
             horizontal-alignment: center;
         }
@@ -43,7 +44,7 @@ component CellFrame inherits Rectangle {
         Text {
             text: visual;
             color: empty ? #4a4a4a : #f2efe5;
-            font-size: 22px;
+            font-size: compact ? 16px : 22px;
             font-family: "Monospace";
             horizontal-alignment: center;
         }
@@ -51,6 +52,7 @@ component CellFrame inherits Rectangle {
 }
 
 component BandFrame inherits Rectangle {
+    in property <bool> compact;
     in property <string> title;
     in property <[DashboardCell]> cells;
 
@@ -60,11 +62,11 @@ component BandFrame inherits Rectangle {
     border-radius: 2px;
 
     VerticalLayout {
-        padding: 10px;
-        spacing: 10px;
+        padding: compact ? 6px : 10px;
+        spacing: compact ? 6px : 10px;
 
         Rectangle {
-            height: 32px;
+            height: compact ? 24px : 32px;
             background: #101115;
             border-width: 2px;
             border-color: #f2efe5;
@@ -72,7 +74,7 @@ component BandFrame inherits Rectangle {
             Text {
                 text: title;
                 color: #f2efe5;
-                font-size: 22px;
+                font-size: compact ? 16px : 22px;
                 font-family: "Monospace";
                 vertical-alignment: center;
                 horizontal-alignment: center;
@@ -80,10 +82,11 @@ component BandFrame inherits Rectangle {
         }
 
         HorizontalLayout {
-            spacing: 10px;
+            spacing: compact ? 6px : 10px;
 
             for cell in cells: CellFrame {
                 width: 1*;
+                compact: compact;
                 label: cell.label;
                 value: cell.value;
                 visual: cell.visual;
@@ -97,8 +100,9 @@ component BandFrame inherits Rectangle {
 
 export component DashboardWindow inherits Window {
     background: #020202;
-    width: 1280px;
-    height: 720px;
+    in-out property <bool> compact-layout: false;
+    width: compact-layout ? 800px : 1280px;
+    height: compact-layout ? 480px : 720px;
     title: "Blibliki Pi Display";
 
     in-out property <string> header-left: "BLIBLIKI PI";
@@ -115,22 +119,22 @@ export component DashboardWindow inherits Window {
     in-out property <[DashboardCell]> lower-cells: [];
 
     VerticalLayout {
-        padding: 20px;
-        spacing: 16px;
+        padding: compact-layout ? 12px : 20px;
+        spacing: compact-layout ? 10px : 16px;
 
         Rectangle {
-            height: 92px;
+            height: compact-layout ? 70px : 92px;
             background: #090a0d;
             border-width: 3px;
             border-color: #f2efe5;
             border-radius: 2px;
 
             HorizontalLayout {
-                padding: 14px;
-                spacing: 14px;
+                padding: compact-layout ? 10px : 14px;
+                spacing: compact-layout ? 10px : 14px;
 
                 Rectangle {
-                    width: 180px;
+                    width: compact-layout ? 124px : 180px;
                     border-width: 2px;
                     border-color: #f2efe5;
                     background: #121318;
@@ -138,7 +142,7 @@ export component DashboardWindow inherits Window {
                     Text {
                         text: header-left;
                         color: #f2efe5;
-                        font-size: 28px;
+                        font-size: compact-layout ? 20px : 28px;
                         font-family: "Monospace";
                         vertical-alignment: center;
                         horizontal-alignment: center;
@@ -152,14 +156,14 @@ export component DashboardWindow inherits Window {
                     Text {
                         text: header-center;
                         color: #ffb347;
-                        font-size: 34px;
+                        font-size: compact-layout ? 24px : 34px;
                         font-family: "Monospace";
                     }
 
                     Text {
                         text: header-right;
                         color: #f2efe5;
-                        font-size: 20px;
+                        font-size: compact-layout ? 14px : 20px;
                         font-family: "Monospace";
                     }
                 }
@@ -167,7 +171,7 @@ export component DashboardWindow inherits Window {
                 Rectangle { width: 1*; background: transparent; }
 
                 Rectangle {
-                    width: 110px;
+                    width: compact-layout ? 84px : 110px;
                     border-width: 2px;
                     border-color: transport-active ? #ffb347 : #f2efe5;
                     background: transport-active ? #1a1207 : #121318;
@@ -175,7 +179,7 @@ export component DashboardWindow inherits Window {
                     Text {
                         text: transport-text;
                         color: transport-active ? #ffb347 : #f2efe5;
-                        font-size: 24px;
+                        font-size: compact-layout ? 18px : 24px;
                         font-family: "Monospace";
                         vertical-alignment: center;
                         horizontal-alignment: center;
@@ -183,7 +187,7 @@ export component DashboardWindow inherits Window {
                 }
 
                 Rectangle {
-                    width: 92px;
+                    width: compact-layout ? 76px : 92px;
                     border-width: 2px;
                     border-color: #f2efe5;
                     background: #121318;
@@ -191,7 +195,7 @@ export component DashboardWindow inherits Window {
                     Text {
                         text: mode-text;
                         color: #f2efe5;
-                        font-size: 22px;
+                        font-size: compact-layout ? 16px : 22px;
                         font-family: "Monospace";
                         vertical-alignment: center;
                         horizontal-alignment: center;
@@ -201,19 +205,22 @@ export component DashboardWindow inherits Window {
         }
 
         BandFrame {
-            height: 180px;
+            height: compact-layout ? 118px : 180px;
+            compact: compact-layout;
             title: global-title;
             cells: global-cells;
         }
 
         BandFrame {
-            height: 180px;
+            height: compact-layout ? 118px : 180px;
+            compact: compact-layout;
             title: upper-title;
             cells: upper-cells;
         }
 
         BandFrame {
-            height: 180px;
+            height: compact-layout ? 118px : 180px;
+            compact: compact-layout;
             title: lower-title;
             cells: lower-cells;
         }

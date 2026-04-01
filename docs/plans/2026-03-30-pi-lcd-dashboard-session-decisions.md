@@ -90,6 +90,15 @@ For `v1`:
 
 The selected accent direction is `warm amber`, used sparingly for active or focused state such as transport, page emphasis, or currently highlighted controls.
 
+### 8. `v1` layout support is one landscape family with two presets
+
+The real display should stay landscape-only for `v1` and support one dashboard family with two concrete presets:
+
+- `standard` for `1280x720`
+- `compact-standard` for `800x480`
+
+This is not the same as promising a universal responsive UI for every panel size. The agreed approach is to keep one information architecture and tune the spacing, typography, and band heights between those two presets. Smaller `4:3` displays such as `320x240` remain explicitly out of scope for `v1`.
+
 ## What The Terminal Mock Should Validate
 
 The upgraded mock dashboard should prove:
@@ -145,7 +154,7 @@ The following were left open:
 
 - whether TypeScript Slint is sufficient on Raspberry Pi long term
 - the exact OSC library choice for Node
-- the final pixel-level layout tuning for `1280x720` versus `800x480`
+- the final pixel-level tuning within the `standard` and `compact-standard` presets
 - whether later versions need finer-grained partial updates than section-level messages
 
 ## Summary
@@ -160,3 +169,4 @@ The agreed direction is:
 - use OSC over localhost for the renderer transport
 - start with full snapshots and optional section updates
 - build the first real renderer in TypeScript + Slint and move onto Pi quickly
+- keep `v1` to the `standard` and `compact-standard` landscape presets

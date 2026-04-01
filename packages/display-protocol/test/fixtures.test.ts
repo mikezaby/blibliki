@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { createDebugBandMessage, createDebugFullState } from "@/fixtures";
+import {
+  createDebugBandMessage,
+  createDebugFullState,
+  readDebugFixtureTargetClass,
+} from "@/fixtures";
 import { decodeDisplayOscPacket, encodeDisplayOscMessage } from "@/index";
 
 describe("display protocol fixtures", () => {
@@ -30,5 +34,30 @@ describe("display protocol fixtures", () => {
 
     expect(message.revision).toBe(2);
     expect(message.bandKey).toBe("global");
+  });
+
+  it("can create a compact-standard full debug state for 800x480 testing", () => {
+    const state = createDebugFullState(3, "compact-standard");
+    const decoded = decodeDisplayOscPacket(
+      encodeDisplayOscMessage({
+        type: "display.full",
+        state,
+      }),
+    );
+
+    if (decoded.type !== "display.full") {
+      throw new Error("Expected full snapshot");
+    }
+
+    expect(decoded.state.revision).toBe(3);
+    expect(decoded.state.screen.targetClass).toBe("compact-standard");
+  });
+
+  it("reads the requested fixture target class from the environment", () => {
+    expect(
+      readDebugFixtureTargetClass({
+        BLIBLIKI_DEBUG_TARGET_CLASS: "compact-standard",
+      } as NodeJS.ProcessEnv),
+    ).toBe("compact-standard");
   });
 });

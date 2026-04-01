@@ -9,6 +9,7 @@ import {
   createInstrumentDisplayState,
   createInstrumentRuntimeState,
 } from "@/instrumentRuntime";
+import type { CreateOscDisplayPublisherOptions } from "@/oscDisplayPublisher";
 
 function createSeededInstrumentDocument() {
   const document = createDefaultInstrumentDocument();
@@ -105,5 +106,62 @@ describe("createConfiguredDisplayOutput", () => {
     expect(firstState.revision).toBe(1);
     expect(secondState.revision).toBe(2);
     expect(disposePublisher).toHaveBeenCalledTimes(1);
+  });
+
+  it("passes a debug logger to the osc publisher when display debug is enabled", () => {
+    const createOscDisplayPublisher = vi.fn(
+      (_options: CreateOscDisplayPublisherOptions) => ({
+        publish: vi.fn(),
+        dispose: vi.fn(),
+      }),
+    );
+
+    createConfiguredDisplayOutput({
+      env: {
+        BLIBLIKI_PI_DISPLAY_MODE: "osc",
+        BLIBLIKI_PI_DISPLAY_DEBUG: "1",
+      },
+      createTerminalDisplaySession: vi.fn(),
+      createUdpOscDisplayTransport: vi.fn(() => ({
+        send: vi.fn(),
+        onMessage: vi.fn(() => () => undefined),
+        close: vi.fn(),
+      })),
+      createOscDisplayPublisher,
+    });
+
+    const publisherOptions = createOscDisplayPublisher.mock.calls[0]?.[0];
+
+    expect(publisherOptions).toBeDefined();
+    expect(typeof publisherOptions?.debugLog).toBe("function");
+  });
+
+  it("publishes the configured display target class for compact layouts", () => {
+    const publish = vi.fn();
+    const createOscDisplayPublisher = vi.fn(
+      (_options: CreateOscDisplayPublisherOptions) => ({
+        publish,
+        dispose: vi.fn(),
+      }),
+    );
+    const output = createConfiguredDisplayOutput({
+      env: {
+        BLIBLIKI_PI_DISPLAY_MODE: "osc",
+        BLIBLIKI_PI_DISPLAY_TARGET_CLASS: "compact-standard",
+      },
+      createTerminalDisplaySession: vi.fn(),
+      createUdpOscDisplayTransport: vi.fn(() => ({
+        send: vi.fn(),
+        onMessage: vi.fn(() => () => undefined),
+        close: vi.fn(),
+      })),
+      createOscDisplayPublisher,
+    });
+
+    output.render(createFixtureDisplayState());
+
+    const state = publish.mock.calls[0]?.[0] as DisplayProtocolState;
+
+    expect(state.screen.targetClass).toBe("compact-standard");
   });
 });

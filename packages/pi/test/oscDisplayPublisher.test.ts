@@ -3,7 +3,7 @@ import {
   encodeDisplayOscMessage,
   type DisplayProtocolState,
 } from "@blibliki/display-protocol";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createOscDisplayPublisher } from "@/oscDisplayPublisher";
 
 function createStateFixture(): DisplayProtocolState {
@@ -90,5 +90,31 @@ describe("createOscDisplayPublisher", () => {
     publisher.dispose();
 
     expect(transport.closed).toBe(true);
+  });
+
+  it("logs publish and resync events when debug logging is enabled", () => {
+    const transport = createFakeTransport();
+    const debugLog = vi.fn();
+    const publisher = createOscDisplayPublisher({
+      transport,
+      host: "127.0.0.1",
+      displayPort: 41234,
+      controlPort: 41235,
+      debugLog,
+    });
+    const state = createStateFixture();
+
+    publisher.publish(state);
+    transport.emit(
+      encodeDisplayOscMessage({ type: "display.request_full_state" }),
+    );
+
+    expect(debugLog).toHaveBeenCalledWith(
+      'publish revision=4 track=track-1 right="Page 1: SOURCE / AMP"',
+    );
+    expect(debugLog).toHaveBeenCalledWith("request_full_state");
+    expect(debugLog).toHaveBeenCalledWith(
+      'resend revision=4 track=track-1 right="Page 1: SOURCE / AMP"',
+    );
   });
 });

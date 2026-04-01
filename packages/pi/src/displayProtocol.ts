@@ -2,6 +2,7 @@ import type {
   DisplayBandState,
   DisplayCellValue,
   DisplayProtocolState,
+  DisplayTargetClass,
   DisplayVisualScale,
 } from "@blibliki/display-protocol";
 import { TransportState } from "@blibliki/engine";
@@ -171,12 +172,13 @@ function mapDisplayBand(
 export function instrumentDisplayStateToProtocol(
   displayState: InstrumentDisplayState,
   revision = 0,
+  targetClass: DisplayTargetClass = "standard",
 ): DisplayProtocolState {
   return {
     revision,
     screen: {
       orientation: "landscape",
-      targetClass: "standard",
+      targetClass,
     },
     header: {
       left: displayState.header.instrumentName,

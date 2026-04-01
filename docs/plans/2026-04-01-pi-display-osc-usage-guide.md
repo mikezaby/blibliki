@@ -17,6 +17,7 @@ The transport defaults are:
 - display listen port: `41234`
 - Pi control port: `41235`
 - host: `127.0.0.1`
+- target class: `standard` by default, `compact-standard` for the `800x480` preset
 
 ## One-Time Setup
 
@@ -35,6 +36,12 @@ pnpm approve-builds
 
 and approve `slint-ui`.
 
+On macOS, the Slint native binary may also require Homebrew `gettext`. If startup fails with a missing `libintl.8.dylib` message, install:
+
+```bash
+brew install gettext
+```
+
 ## Start The Display On macOS
 
 For desktop development, run the display app with the windowed backend:
@@ -49,6 +56,7 @@ What this does:
 - binds UDP on `41234`
 - sends `/blibliki/v1/display/request_full_state` to `127.0.0.1:41235`
 - logs incoming messages when `BLIBLIKI_DISPLAY_DEBUG=1`
+- chooses `standard` or `compact-standard` layout from the incoming OSC state
 
 ## Start The Display On Raspberry Pi Without X
 
@@ -71,10 +79,35 @@ BLIBLIKI_PI_DISPLAY_MODE=osc \
 BLIBLIKI_PI_DISPLAY_HOST=127.0.0.1 \
 BLIBLIKI_PI_DISPLAY_PORT=41234 \
 BLIBLIKI_PI_CONTROL_PORT=41235 \
+BLIBLIKI_PI_DISPLAY_DEBUG=1 \
 pnpm -C packages/pi start
 ```
 
 If you omit `BLIBLIKI_PI_DISPLAY_MODE=osc`, the Pi runtime keeps using the terminal fallback renderer.
+
+To run the local default instrument instead of the Firestore-driven deployment target:
+
+```bash
+cd /Users/mikezaby/projects/blibliki/blibliki/.worktrees/pi-display-osc
+BLIBLIKI_PI_DISPLAY_MODE=osc \
+BLIBLIKI_PI_DISPLAY_HOST=127.0.0.1 \
+BLIBLIKI_PI_DISPLAY_PORT=41234 \
+BLIBLIKI_PI_CONTROL_PORT=41235 \
+BLIBLIKI_PI_DISPLAY_DEBUG=1 \
+pnpm -C packages/pi start-default
+```
+
+To drive the `800x480` layout family, add:
+
+```bash
+BLIBLIKI_PI_DISPLAY_TARGET_CLASS=compact-standard
+```
+
+When `BLIBLIKI_PI_DISPLAY_DEBUG=1` is set, the Pi process logs outgoing snapshot publishes and resync replies such as:
+
+- `publish revision=12 track=track-2 right="Page 2: FILTER / MOD"`
+- `request_full_state`
+- `resend revision=12 track=track-2 right="Page 2: FILTER / MOD"`
 
 ## Debug Without The Pi Runtime
 
@@ -94,6 +127,14 @@ cd /Users/mikezaby/projects/blibliki/blibliki/.worktrees/pi-display-osc
 pnpm -C packages/display-protocol debug:send-full
 ```
 
+To force the compact `800x480` preset through the fixture path:
+
+```bash
+cd /Users/mikezaby/projects/blibliki/blibliki/.worktrees/pi-display-osc
+BLIBLIKI_DEBUG_TARGET_CLASS=compact-standard \
+pnpm -C packages/display-protocol debug:send-full
+```
+
 Send a section update for the global band:
 
 ```bash
@@ -107,6 +148,8 @@ This is the fastest way to verify:
 - OSC decoding works
 - state is applied
 - the dashboard redraws
+
+The built-in fixtures default to `standard`, but `BLIBLIKI_DEBUG_TARGET_CLASS=compact-standard` lets you validate the compact preset without starting the engine.
 
 ## Dump Incoming OSC Traffic
 
@@ -125,7 +168,8 @@ By default this listens on `41234`.
 2. Verify the window responds to `debug:send-full`.
 3. Verify a partial update with `debug:send-band`.
 4. Start `packages/pi` with `BLIBLIKI_PI_DISPLAY_MODE=osc`.
-5. Change track, page, or control values in the Pi runtime and confirm the display logs and redraws.
+5. If you want the `800x480` preset, add `BLIBLIKI_PI_DISPLAY_TARGET_CLASS=compact-standard`.
+6. Change track, page, or control values in the Pi runtime and confirm the display logs and redraws.
 
 ## Failure Interpretation
 
