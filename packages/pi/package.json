@@ -36,6 +36,7 @@
     "vitest": "catalog:test"
   },
   "dependencies": {
+    "@blibliki/display-protocol": "workspace:^",
     "@blibliki/engine": "workspace:^",
     "@blibliki/instrument": "workspace:^",
     "@blibliki/models": "workspace:^",
