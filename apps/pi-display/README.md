@@ -62,6 +62,8 @@ For Pi validation without X11 or Wayland, use:
 SLINT_BACKEND=linuxkms-software
 ```
 
+If you do not set `SLINT_BACKEND`, Slint may auto-select a direct-display backend on the Pi anyway.
+
 This project currently documents the runtime path, but backend-specific system package requirements still need validation on target hardware.
 
 ## Start The Display
@@ -86,6 +88,8 @@ What this does:
 cd /Users/mikezaby/projects/blibliki/blibliki/.worktrees/pi-display-osc
 SLINT_BACKEND=linuxkms-software BLIBLIKI_DISPLAY_DEBUG=1 pnpm -C apps/pi-display start
 ```
+
+If Slint auto-selects a direct KMS backend that does not provide a Node-compatible event loop, `pi-display` now falls back to a show-only mode instead of crashing.
 
 ## Fast Standalone Debug
 
@@ -192,6 +196,12 @@ pnpm -C packages/pi start-default
 
 - run `pnpm -C packages/display-protocol debug:dump`
 - verify packets are arriving on `41234`
+
+### The display crashes with "The Slint platform does not provide an event loop"
+
+- that can happen on Pi direct-display backends, even if you did not set `SLINT_BACKEND` explicitly
+- current `pi-display` falls back to a show-only mode when this happens
+- if you still want to reduce backend ambiguity, start it explicitly with `SLINT_BACKEND=linuxkms-software`
 
 ### The display reacts to fixtures but not to the Pi engine
 

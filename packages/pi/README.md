@@ -170,6 +170,8 @@ cd /Users/mikezaby/projects/blibliki/blibliki/.worktrees/pi-display-osc
 SLINT_BACKEND=winit BLIBLIKI_DISPLAY_DEBUG=1 pnpm -C apps/pi-display start
 ```
 
+On Raspberry Pi without X11 or Wayland, use `SLINT_BACKEND=linuxkms-software` instead. If you omit `SLINT_BACKEND`, Slint may auto-select a direct-display backend on the Pi.
+
 Then start the Pi runtime in OSC mode:
 
 ```bash

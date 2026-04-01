@@ -9,6 +9,7 @@ import {
   createDashboardViewModel,
   type DashboardBandViewModel,
 } from "@/viewModel";
+import { runWindowWithFallback, shouldUseShowOnlyMode } from "@/windowRunner";
 
 type DashboardCellModel = {
   label: string;
@@ -101,6 +102,10 @@ async function main() {
   const ui = slint.loadFile(resolveUiPath()) as DashboardModule;
   const window = new ui.DashboardWindow();
   const listener = createOscListener(config, store, logger);
+  let resolveShutdown: (() => void) | undefined;
+  const shutdownPromise = new Promise<void>((resolve) => {
+    resolveShutdown = resolve;
+  });
 
   listener.start(() => {
     applyState(window, store);
@@ -112,12 +117,16 @@ async function main() {
     listener.close();
     window.hide();
     slint.quitEventLoop();
+    resolveShutdown?.();
   };
 
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
 
-  await window.run();
+  await runWindowWithFallback(window, logger, {
+    preferShowOnlyMode: shouldUseShowOnlyMode(process.env, process.platform),
+    keepAlive: () => shutdownPromise,
+  });
 }
 
 void main();
