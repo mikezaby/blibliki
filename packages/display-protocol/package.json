@@ -17,6 +17,9 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "debug:dump": "tsx src/bin/dumpOsc.ts",
+    "debug:send-band": "tsx src/bin/sendBandFixture.ts",
+    "debug:send-full": "tsx src/bin/sendFullFixture.ts",
     "lint": "eslint src test",
     "test": "vitest",
     "tsc": "tsc --noEmit",

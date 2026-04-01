@@ -6,12 +6,15 @@ import {
   type MidiPortSelection,
 } from "@blibliki/instrument";
 import {
+  createConfiguredDisplayOutput,
+  type DisplayOutput,
+} from "@/displayOutput";
+import {
   createInstrumentSession,
   type InstrumentSessionEngine,
   type InstrumentSession,
   startInstrumentSession,
 } from "@/instrumentSession";
-import { createTerminalDisplaySession } from "@/terminalDisplay";
 
 export type DefaultInstrumentSessionOptions = {
   key?: string;
@@ -27,6 +30,12 @@ export type DefaultInstrumentSession = InstrumentSession & {
     droneTrackKey: string;
     droneNote: string;
   };
+};
+
+export type StartDefaultInstrumentDependencies = {
+  startInstrumentSession?: typeof startInstrumentSession;
+  createConfiguredDisplayOutput?: () => DisplayOutput;
+  waitForShutdown?: typeof waitForShutdown;
 };
 
 const DEFAULT_VOICES = 8;
@@ -177,6 +186,7 @@ export function createDefaultInstrumentSession(
 
 export async function startDefaultInstrument(
   options: DefaultInstrumentSessionOptions = {},
+  dependencies: StartDefaultInstrumentDependencies = {},
 ): Promise<void> {
   console.log("=== Blibliki Pi Default Instrument ===");
 
@@ -186,8 +196,12 @@ export async function startDefaultInstrument(
   if (!droneTrack) {
     throw new Error("Default instrument session requires at least one track");
   }
-  const terminalDisplay = createTerminalDisplaySession();
-  const startedSession = await startInstrumentSession(document, {
+  const displayOutput =
+    dependencies.createConfiguredDisplayOutput?.() ??
+    createConfiguredDisplayOutput();
+  const startedSession = await (
+    dependencies.startInstrumentSession ?? startInstrumentSession
+  )(document, {
     trackVoices: voices,
     noteInput: false,
     controllerInput: options.controllerInput,
@@ -197,7 +211,7 @@ export async function startDefaultInstrument(
       note: options.droneNote ?? DEFAULT_DRONE_NOTE,
     },
     onDisplayStateChange: (displayState: InstrumentDisplayState) => {
-      terminalDisplay.render(displayState);
+      displayOutput.render(displayState);
     },
   });
   const { engine, controllerSession } = startedSession;
@@ -210,8 +224,12 @@ export async function startDefaultInstrument(
     "Use your Launch Control XL3 to shape the sound. Press Ctrl+C to stop.",
   );
 
-  await waitForShutdown(engine, session, () => {
-    terminalDisplay.dispose();
-    controllerSession.dispose();
-  });
+  await (dependencies.waitForShutdown ?? waitForShutdown)(
+    engine,
+    session,
+    () => {
+      displayOutput.dispose();
+      controllerSession.dispose();
+    },
+  );
 }

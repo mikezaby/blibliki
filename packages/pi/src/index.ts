@@ -18,8 +18,8 @@ import {
   startDeviceDeployment,
   type DeviceDeploymentDependencies,
 } from "./deviceStartup.js";
+import { createConfiguredDisplayOutput } from "./displayOutput.js";
 import { promptForUserId } from "./prompt.js";
-import { createTerminalDisplaySession } from "./terminalDisplay.js";
 
 export { loadOrCreateConfig, getConfigPath, updateConfig, getConfig };
 export {
@@ -41,6 +41,10 @@ export {
   startDefaultInstrument,
 } from "./defaultInstrument.js";
 export {
+  createConfiguredDisplayOutput,
+  type DisplayOutput,
+} from "./displayOutput.js";
+export {
   createInstrumentRuntimeState,
   createInstrumentDisplayState,
   navigateInstrumentRuntime,
@@ -48,10 +52,13 @@ export {
 } from "./instrumentRuntime.js";
 export { createLiveInstrumentDisplayState } from "./liveDisplayState.js";
 export { createInstrumentControllerSession } from "./instrumentControllerSession.js";
+export { instrumentDisplayStateToProtocol } from "./displayProtocol.js";
+export { createOscDisplayPublisher } from "./oscDisplayPublisher.js";
 export {
   createTerminalDisplaySession,
   renderInstrumentDisplayStateToTerminal,
 } from "./terminalDisplay.js";
+export { createUdpOscDisplayTransport } from "./udpOscTransport.js";
 export { startDeviceDeployment } from "./deviceStartup.js";
 export { reduceInstrumentControllerEvent } from "./controllerRuntime.js";
 export type {
@@ -61,17 +68,19 @@ export type {
 export type { LiveDisplayEngine } from "./liveDisplayState.js";
 export type { InstrumentControllerSession } from "./instrumentControllerSession.js";
 export type { InstrumentControllerResult } from "./controllerRuntime.js";
+export type { OscDisplayPublisher } from "./oscDisplayPublisher.js";
 export type {
   TerminalDisplaySession,
   TerminalDisplayWriter,
 } from "./terminalDisplay.js";
+export type { UdpOscDisplayTransport } from "./udpOscTransport.js";
 
 export type StartConfiguredDeviceDependencies = Omit<
   DeviceDeploymentDependencies,
   "instrumentSessionOptions"
 > & {
   startDeviceDeployment?: typeof startDeviceDeployment;
-  createTerminalDisplaySession?: typeof createTerminalDisplaySession;
+  createConfiguredDisplayOutput?: typeof createConfiguredDisplayOutput;
   instrumentSessionOptions?: DeviceDeploymentDependencies["instrumentSessionOptions"];
 };
 
@@ -81,8 +90,8 @@ export async function startConfiguredDevice(
 ) {
   const {
     startDeviceDeployment: startDeployment = startDeviceDeployment,
-    createTerminalDisplaySession:
-      createDisplaySession = createTerminalDisplaySession,
+    createConfiguredDisplayOutput:
+      createDisplayOutput = createConfiguredDisplayOutput,
     instrumentSessionOptions,
     ...deviceDeploymentDependencies
   } = dependencies;
@@ -92,19 +101,24 @@ export async function startConfiguredDevice(
     return startDeployment(device, deviceDeploymentDependencies);
   }
 
-  const terminalDisplay = createDisplaySession();
+  const displayOutput = createDisplayOutput();
   const onDisplayStateChange = instrumentSessionOptions?.onDisplayStateChange;
 
-  return startDeployment(device, {
-    ...deviceDeploymentDependencies,
-    instrumentSessionOptions: {
-      ...instrumentSessionOptions,
-      onDisplayStateChange: (displayState) => {
-        terminalDisplay.render(displayState);
-        onDisplayStateChange?.(displayState);
+  try {
+    return await startDeployment(device, {
+      ...deviceDeploymentDependencies,
+      instrumentSessionOptions: {
+        ...instrumentSessionOptions,
+        onDisplayStateChange: (displayState) => {
+          displayOutput.render(displayState);
+          onDisplayStateChange?.(displayState);
+        },
       },
-    },
-  });
+    });
+  } catch (error) {
+    displayOutput.dispose();
+    throw error;
+  }
 }
 
 /**

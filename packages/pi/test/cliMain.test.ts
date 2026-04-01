@@ -48,12 +48,14 @@ describe("runCli", () => {
 });
 
 describe("getCliHelpText", () => {
-  it("documents firestore-driven startup and no longer advertises default-instrument", () => {
+  it("documents firestore-driven startup and the display env configuration", () => {
     const helpText = getCliHelpText();
 
     expect(helpText).toContain(
       "Start from the device deployment target in Firestore",
     );
     expect(helpText).not.toContain("default-instrument");
+    expect(helpText).toContain("BLIBLIKI_PI_DISPLAY_MODE");
+    expect(helpText).toContain("BLIBLIKI_PI_DISPLAY_PORT");
   });
 });

@@ -2,6 +2,12 @@ export { DISPLAY_OSC_ADDRESSES, DISPLAY_OSC_NAMESPACE } from "./addresses";
 export { decodeDisplayOscPacket, encodeDisplayOscMessage } from "./codec";
 export type { DisplayOscMessage } from "./codec";
 export {
+  createDebugBandMessage,
+  createDebugFullState,
+  readDebugFixtureNetworkConfig,
+} from "./fixtures";
+export type { DebugBandMessage } from "./fixtures";
+export {
   DEFAULT_DISPLAY_OSC_HOST,
   DEFAULT_DISPLAY_OSC_PORT,
   DEFAULT_PI_OSC_PORT,

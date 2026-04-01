@@ -1,0 +1,221 @@
+export struct DashboardCell {
+    label: string,
+    value: string,
+    visual: string,
+    accent: bool,
+    inactive: bool,
+    empty: bool,
+}
+
+component CellFrame inherits Rectangle {
+    in property <string> label;
+    in property <string> value;
+    in property <string> visual;
+    in property <bool> accent;
+    in property <bool> inactive;
+    in property <bool> empty;
+
+    background: empty ? #111111 : #0a0a0d;
+    border-width: 2px;
+    border-color: accent ? #ffb347 : #f2efe5;
+    border-radius: 2px;
+
+    VerticalLayout {
+        padding: 10px;
+        spacing: 6px;
+
+        Text {
+            text: label;
+            color: inactive ? #7d7d7d : #f2efe5;
+            font-size: 20px;
+            font-family: "Monospace";
+            horizontal-alignment: center;
+        }
+
+        Text {
+            text: value;
+            color: accent ? #ffb347 : #f2efe5;
+            font-size: 28px;
+            font-family: "Monospace";
+            horizontal-alignment: center;
+        }
+
+        Text {
+            text: visual;
+            color: empty ? #4a4a4a : #f2efe5;
+            font-size: 22px;
+            font-family: "Monospace";
+            horizontal-alignment: center;
+        }
+    }
+}
+
+component BandFrame inherits Rectangle {
+    in property <string> title;
+    in property <[DashboardCell]> cells;
+
+    background: #050507;
+    border-width: 2px;
+    border-color: #f2efe5;
+    border-radius: 2px;
+
+    VerticalLayout {
+        padding: 10px;
+        spacing: 10px;
+
+        Rectangle {
+            height: 32px;
+            background: #101115;
+            border-width: 2px;
+            border-color: #f2efe5;
+
+            Text {
+                text: title;
+                color: #f2efe5;
+                font-size: 22px;
+                font-family: "Monospace";
+                vertical-alignment: center;
+                horizontal-alignment: center;
+            }
+        }
+
+        HorizontalLayout {
+            spacing: 10px;
+
+            for cell in cells: CellFrame {
+                width: 1*;
+                label: cell.label;
+                value: cell.value;
+                visual: cell.visual;
+                accent: cell.accent;
+                inactive: cell.inactive;
+                empty: cell.empty;
+            }
+        }
+    }
+}
+
+export component DashboardWindow inherits Window {
+    background: #020202;
+    width: 1280px;
+    height: 720px;
+    title: "Blibliki Pi Display";
+
+    in-out property <string> header-left: "BLIBLIKI PI";
+    in-out property <string> header-center: "track-1";
+    in-out property <string> header-right: "Page 1: SOURCE / AMP";
+    in-out property <string> transport-text: "STOP";
+    in-out property <string> mode-text: "PERF";
+    in-out property <bool> transport-active: false;
+    in-out property <string> global-title: "GLOBAL";
+    in-out property <string> upper-title: "UPPER";
+    in-out property <string> lower-title: "LOWER";
+    in-out property <[DashboardCell]> global-cells: [];
+    in-out property <[DashboardCell]> upper-cells: [];
+    in-out property <[DashboardCell]> lower-cells: [];
+
+    VerticalLayout {
+        padding: 20px;
+        spacing: 16px;
+
+        Rectangle {
+            height: 92px;
+            background: #090a0d;
+            border-width: 3px;
+            border-color: #f2efe5;
+            border-radius: 2px;
+
+            HorizontalLayout {
+                padding: 14px;
+                spacing: 14px;
+
+                Rectangle {
+                    width: 180px;
+                    border-width: 2px;
+                    border-color: #f2efe5;
+                    background: #121318;
+
+                    Text {
+                        text: header-left;
+                        color: #f2efe5;
+                        font-size: 28px;
+                        font-family: "Monospace";
+                        vertical-alignment: center;
+                        horizontal-alignment: center;
+                    }
+                }
+
+                VerticalLayout {
+                    spacing: 4px;
+                    alignment: start;
+
+                    Text {
+                        text: header-center;
+                        color: #ffb347;
+                        font-size: 34px;
+                        font-family: "Monospace";
+                    }
+
+                    Text {
+                        text: header-right;
+                        color: #f2efe5;
+                        font-size: 20px;
+                        font-family: "Monospace";
+                    }
+                }
+
+                Rectangle { width: 1*; background: transparent; }
+
+                Rectangle {
+                    width: 110px;
+                    border-width: 2px;
+                    border-color: transport-active ? #ffb347 : #f2efe5;
+                    background: transport-active ? #1a1207 : #121318;
+
+                    Text {
+                        text: transport-text;
+                        color: transport-active ? #ffb347 : #f2efe5;
+                        font-size: 24px;
+                        font-family: "Monospace";
+                        vertical-alignment: center;
+                        horizontal-alignment: center;
+                    }
+                }
+
+                Rectangle {
+                    width: 92px;
+                    border-width: 2px;
+                    border-color: #f2efe5;
+                    background: #121318;
+
+                    Text {
+                        text: mode-text;
+                        color: #f2efe5;
+                        font-size: 22px;
+                        font-family: "Monospace";
+                        vertical-alignment: center;
+                        horizontal-alignment: center;
+                    }
+                }
+            }
+        }
+
+        BandFrame {
+            height: 180px;
+            title: global-title;
+            cells: global-cells;
+        }
+
+        BandFrame {
+            height: 180px;
+            title: upper-title;
+            cells: upper-cells;
+        }
+
+        BandFrame {
+            height: 180px;
+            title: lower-title;
+            cells: lower-cells;
+        }
+    }
+}

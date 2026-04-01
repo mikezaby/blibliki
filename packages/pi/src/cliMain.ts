@@ -33,8 +33,15 @@ Options:
 Examples:
   blibliki-pi
   blibliki-pi http://192.168.1.100:5173
+  BLIBLIKI_PI_DISPLAY_MODE=osc blibliki-pi
   blibliki-pi setup-firebase
   blibliki-pi setup-firebase http://192.168.1.100:5173
+
+Environment:
+  BLIBLIKI_PI_DISPLAY_MODE   terminal (default) or osc
+  BLIBLIKI_PI_DISPLAY_HOST   Display listener host (default 127.0.0.1)
+  BLIBLIKI_PI_DISPLAY_PORT   Display listener UDP port (default 41234)
+  BLIBLIKI_PI_CONTROL_PORT   Pi control UDP port for resync requests (default 41235)
 `;
 }
 

@@ -76,6 +76,20 @@ For `v1`:
 - every state message carries a monotonic `revision`
 - the display can request a fresh full snapshot on startup or reconnect
 
+### 7. The first real display style should be retro-modern, not skeuomorphic
+
+The visual direction for `pi-display` should borrow the discipline of Elektron-style hardware screens without copying any specific layout literally.
+
+For `v1`:
+
+- the base palette stays effectively monochrome
+- the screen should use high-contrast light-on-dark styling
+- the typography should feel display-like and hardware-oriented
+- the layout should use hard frames, boxed regions, and clear information density
+- one restrained accent color is allowed
+
+The selected accent direction is `warm amber`, used sparingly for active or focused state such as transport, page emphasis, or currently highlighted controls.
+
 ## What The Terminal Mock Should Validate
 
 The upgraded mock dashboard should prove:

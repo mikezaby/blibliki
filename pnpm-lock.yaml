@@ -210,6 +210,25 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0
 
+  apps/pi-display:
+    dependencies:
+      '@blibliki/display-protocol':
+        specifier: workspace:^
+        version: link:../../packages/display-protocol
+      slint-ui:
+        specifier: ^1.13.1
+        version: 1.15.1
+      vite-tsconfig-paths:
+        specifier: catalog:vite
+        version: 6.0.5(typescript@5.9.3)(vite@7.3.1(@types/node@25.1.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.39.2)(tsx@4.21.0)(yaml@2.8.2))
+    devDependencies:
+      '@types/node':
+        specifier: 25.1.0
+        version: 25.1.0
+      vitest:
+        specifier: catalog:test
+        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.1.0)(jiti@2.6.1)(jsdom@27.4.0(postcss@8.5.6))(lightningcss@1.30.2)(terser@5.39.2)(tsx@4.21.0)(yaml@2.8.2)
+
   apps/storybook:
     dependencies:
       '@blibliki/ui':
@@ -1343,6 +1362,11 @@ packages:
     resolution: {integrity: sha512-sC6tTMAMZsHOQILAv/R0On5tKKhzBQUjdyYWzh9l0UQeNry12CFIyRWK1Mep5xCHWCTUB0w4gxngpciA5PgN/Q==}
     engines: {node: '>=14.15'}
 
+  '@napi-rs/cli@2.18.4':
+    resolution: {integrity: sha512-SgJeA4df9DE2iAEpr3M2H0OKl/yjtg1BnRI5/JyowS71tUWhrfSu2LT0V3vlHET+g1hBVlrO60PmEXwUEKp8Mg==}
+    engines: {node: '>= 10'}
+    hasBin: true
+
   '@opentelemetry/api@1.9.0':
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
     engines: {node: '>=8.0.0'}
@@ -1900,6 +1924,33 @@ packages:
 
   '@rollup/rollup-win32-x64-msvc@4.52.4':
     resolution: {integrity: sha512-bf9PtUa0u8IXDVxzRToFQKsNCRz9qLYfR/MpECxl4mRoWYjAeFjgxj1XdZr2M/GNVpT05p+LgQOHopYDlUu6/w==}
+    cpu: [x64]
+    os: [win32]
+
+  '@slint-ui/slint-ui-binary-darwin-arm64@1.15.1':
+    resolution: {integrity: sha512-gU2JdZjMmqleI45tJKDPouTaVKz5F/uukosbOh7rvhJamN3swt6HvB/Nshls92ed+nt9QhFhss8/NJGltmUqEQ==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@slint-ui/slint-ui-binary-linux-arm64-gnu@1.15.1':
+    resolution: {integrity: sha512-Ebibri6zHEoJeuOLCgX6IwfuFAUmzSYnh0GGOdpiNzk4NlhSo0zA3hiDzI3P78cV/8GEVDbjqT67NwXbJHRt2g==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@slint-ui/slint-ui-binary-linux-x64-gnu@1.15.1':
+    resolution: {integrity: sha512-PJRr+SAird01MUKG0mfk25wUbIocJxoB0bza2SIFiZBcZikWLucwWkWDMoDD72vdD2A9L0lQL9fdJjH8Tkw2gw==}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@slint-ui/slint-ui-binary-win32-arm64-msvc@1.15.1':
+    resolution: {integrity: sha512-L+aGYwS+Bj3aaj2J4IA38+0W08gdb+dVINkPaqbdgv+XSoonpPas5tFpFtbGsKhGDtj3iTK44qvcT8YwIg2ejA==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@slint-ui/slint-ui-binary-win32-x64-msvc@1.15.1':
+    resolution: {integrity: sha512-SxVgBnPSk4xvg8HWiH+G1HnaU1cmDsNtOyfkzPbtrmdvMeArzLA2biD1zIqC/oY2xHfRNZEbt7efXJuNR0R2qg==}
     cpu: [x64]
     os: [win32]
 
@@ -3721,6 +3772,10 @@ packages:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
 
+  slint-ui@1.15.1:
+    resolution: {integrity: sha512-QwQrUFa3rJuQrZJSGrjJYXvM6ogm/hOd+MxLr+S2Wwyh9YIjXZAmwv0PeSklysqbkVfrXK3zH9fsqUlMoqU7Rg==}
+    engines: {node: '>= 10'}
+
   solid-js@1.9.10:
     resolution: {integrity: sha512-Coz956cos/EPDlhs6+jsdTxKuJDPT7B5SVIWgABwROyxjY7Xbr8wkzD68Et+NxnV7DLJ3nJdAC2r9InuV/4Jew==}
 
@@ -5147,6 +5202,8 @@ snapshots:
       node-addon-api: 6.1.0
       pkg-prebuilds: 1.0.0
 
+  '@napi-rs/cli@2.18.4': {}
+
   '@opentelemetry/api@1.9.0':
     optional: true
 
@@ -5628,6 +5685,21 @@ snapshots:
     optional: true
 
   '@rollup/rollup-win32-x64-msvc@4.52.4':
+    optional: true
+
+  '@slint-ui/slint-ui-binary-darwin-arm64@1.15.1':
+    optional: true
+
+  '@slint-ui/slint-ui-binary-linux-arm64-gnu@1.15.1':
+    optional: true
+
+  '@slint-ui/slint-ui-binary-linux-x64-gnu@1.15.1':
+    optional: true
+
+  '@slint-ui/slint-ui-binary-win32-arm64-msvc@1.15.1':
+    optional: true
+
+  '@slint-ui/slint-ui-binary-win32-x64-msvc@1.15.1':
     optional: true
 
   '@solid-primitives/event-listener@2.4.3(solid-js@1.9.10)':
@@ -7556,6 +7628,16 @@ snapshots:
   siginfo@2.0.0: {}
 
   signal-exit@4.1.0: {}
+
+  slint-ui@1.15.1:
+    dependencies:
+      '@napi-rs/cli': 2.18.4
+    optionalDependencies:
+      '@slint-ui/slint-ui-binary-darwin-arm64': 1.15.1
+      '@slint-ui/slint-ui-binary-linux-arm64-gnu': 1.15.1
+      '@slint-ui/slint-ui-binary-linux-x64-gnu': 1.15.1
+      '@slint-ui/slint-ui-binary-win32-arm64-msvc': 1.15.1
+      '@slint-ui/slint-ui-binary-win32-x64-msvc': 1.15.1
 
   solid-js@1.9.10:
     dependencies:

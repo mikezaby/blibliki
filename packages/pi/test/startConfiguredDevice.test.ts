@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { startConfiguredDevice } from "@/index";
 
 describe("startConfiguredDevice", () => {
-  it("wires terminal display rendering into instrument deployments", async () => {
+  it("wires configured display output rendering into instrument deployments", async () => {
     const device = new Device({
       token: "token-1",
       name: "Device",
@@ -15,12 +15,13 @@ describe("startConfiguredDevice", () => {
       userId: "user-1",
     });
     const render = vi.fn();
+    const dispose = vi.fn();
     const displayState = {} as InstrumentDisplayState;
 
     await startConfiguredDevice(device, {
-      createTerminalDisplaySession: () => ({
+      createConfiguredDisplayOutput: () => ({
         render,
-        dispose: () => undefined,
+        dispose,
       }),
       startDeviceDeployment: (_device, dependencies = {}) => {
         dependencies.instrumentSessionOptions?.onDisplayStateChange?.(
@@ -37,7 +38,7 @@ describe("startConfiguredDevice", () => {
     expect(render).toHaveBeenCalledWith(displayState);
   });
 
-  it("does not create a terminal display for patch deployments", async () => {
+  it("does not create a display output for patch deployments", async () => {
     const device = new Device({
       token: "token-1",
       name: "Device",
@@ -47,10 +48,10 @@ describe("startConfiguredDevice", () => {
       },
       userId: "user-1",
     });
-    const createTerminalDisplaySession = vi.fn();
+    const createConfiguredDisplayOutput = vi.fn();
 
     await startConfiguredDevice(device, {
-      createTerminalDisplaySession,
+      createConfiguredDisplayOutput,
       startDeviceDeployment: () =>
         Promise.resolve({
           kind: "patch",
@@ -58,6 +59,6 @@ describe("startConfiguredDevice", () => {
         }),
     });
 
-    expect(createTerminalDisplaySession).not.toHaveBeenCalled();
+    expect(createConfiguredDisplayOutput).not.toHaveBeenCalled();
   });
 });
