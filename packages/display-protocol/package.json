@@ -1,0 +1,33 @@
+{
+  "name": "@blibliki/display-protocol",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "README.md",
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src test",
+    "test": "vitest",
+    "tsc": "tsc --noEmit",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "bump": "npm version patch",
+    "release": "pnpm run build && pnpm publish --access public"
+  },
+  "devDependencies": {
+    "@types/node": "25.1.0",
+    "vite-tsconfig-paths": "catalog:vite",
+    "vitest": "catalog:test"
+  }
+}

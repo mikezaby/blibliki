@@ -1,0 +1,3 @@
+export const DEFAULT_DISPLAY_OSC_HOST = "127.0.0.1";
+export const DEFAULT_DISPLAY_OSC_PORT = 41234;
+export const DEFAULT_PI_OSC_PORT = 41235;
