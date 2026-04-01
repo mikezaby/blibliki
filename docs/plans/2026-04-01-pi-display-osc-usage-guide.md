@@ -142,6 +142,13 @@ cd /Users/mikezaby/projects/blibliki/blibliki/.worktrees/pi-display-osc
 pnpm -C packages/display-protocol debug:send-band
 ```
 
+Send a specific section update, for example the upper band:
+
+```bash
+cd /Users/mikezaby/projects/blibliki/blibliki/.worktrees/pi-display-osc
+pnpm -C packages/display-protocol debug:send-band --band upper
+```
+
 This is the fastest way to verify:
 
 - the display window launches

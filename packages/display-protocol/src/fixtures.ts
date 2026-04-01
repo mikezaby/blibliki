@@ -1,5 +1,6 @@
 import type {
   DisplayBandState,
+  DisplayBandKey,
   DisplayOscMessage,
   DisplayProtocolState,
   DisplayTargetClass,
@@ -208,11 +209,112 @@ function createDebugGlobalBand(): DisplayBandState {
   };
 }
 
-export function createDebugBandMessage(revision = 2): DebugBandMessage {
+function createDebugUpperBand(): DisplayBandState {
+  return {
+    key: "upper",
+    title: "SOURCE",
+    cells: [
+      {
+        key: "source.wave",
+        label: "WAVE",
+        inactive: false,
+        empty: false,
+        value: {
+          kind: "enum",
+          raw: "square",
+          formatted: "square",
+          visualNormalized: 0.82,
+          visualScale: "linear",
+        },
+      },
+      {
+        key: "source.detune",
+        label: "DTUN",
+        inactive: false,
+        empty: false,
+        value: {
+          kind: "number",
+          raw: 19,
+          formatted: "19",
+          visualNormalized: 0.19,
+          visualScale: "linear",
+        },
+      },
+    ],
+  };
+}
+
+function createDebugLowerBand(): DisplayBandState {
+  return {
+    key: "lower",
+    title: "AMP",
+    cells: [
+      {
+        key: "amp.attack",
+        label: "ATK",
+        inactive: false,
+        empty: false,
+        value: {
+          kind: "number",
+          raw: 48,
+          formatted: "48",
+          visualNormalized: 0.48,
+          visualScale: "linear",
+        },
+      },
+      {
+        key: "amp.release",
+        label: "REL",
+        inactive: false,
+        empty: false,
+        value: {
+          kind: "number",
+          raw: 910,
+          formatted: "910",
+          visualNormalized: 0.82,
+          visualScale: "linear",
+        },
+      },
+    ],
+  };
+}
+
+function createDebugBand(bandKey: DisplayBandKey): DisplayBandState {
+  switch (bandKey) {
+    case "global":
+      return createDebugGlobalBand();
+    case "upper":
+      return createDebugUpperBand();
+    case "lower":
+      return createDebugLowerBand();
+  }
+}
+
+export function readDebugFixtureBandKey(
+  args: string[] = process.argv.slice(2),
+): DisplayBandKey {
+  const flagIndex = args.indexOf("--band");
+  const bandValue = flagIndex === -1 ? undefined : args[flagIndex + 1];
+
+  if (!bandValue || bandValue === "global") {
+    return "global";
+  }
+
+  if (bandValue === "upper" || bandValue === "lower") {
+    return bandValue;
+  }
+
+  throw new Error(`Invalid --band value: ${bandValue}`);
+}
+
+export function createDebugBandMessage(
+  revision = 2,
+  bandKey: DisplayBandKey = "global",
+): DebugBandMessage {
   return {
     type: "display.band",
     revision,
-    bandKey: "global",
-    band: createDebugGlobalBand(),
+    bandKey,
+    band: createDebugBand(bandKey),
   };
 }
