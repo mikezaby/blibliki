@@ -319,8 +319,14 @@ function decodeBand(
 
 function decodeFullState(args: (number | string)[]): DisplayProtocolState {
   const revision = takeNumber(args, 0);
-  const orientation = takeString(args, 1) as DisplayProtocolState["screen"]["orientation"];
-  const targetClass = takeString(args, 2) as DisplayProtocolState["screen"]["targetClass"];
+  const orientation = takeString(
+    args,
+    1,
+  ) as DisplayProtocolState["screen"]["orientation"];
+  const targetClass = takeString(
+    args,
+    2,
+  ) as DisplayProtocolState["screen"]["targetClass"];
   const left = takeString(args, 3);
   const center = takeString(args, 4);
   const right = takeString(args, 5);
@@ -353,10 +359,15 @@ function decodeFullState(args: (number | string)[]): DisplayProtocolState {
   };
 }
 
-function encodeBandMessage(message: Extract<DisplayOscMessage, { type: "display.band" }>) {
+function encodeBandMessage(
+  message: Extract<DisplayOscMessage, { type: "display.band" }>,
+) {
   return {
     address: DISPLAY_OSC_ADDRESSES.band[message.bandKey],
-    args: [{ tag: "i", value: message.revision }, ...createBandArgs(message.band)],
+    args: [
+      { tag: "i", value: message.revision },
+      ...createBandArgs(message.band),
+    ],
   } as const;
 }
 
@@ -438,7 +449,10 @@ export function decodeDisplayOscPacket(packet: Uint8Array): DisplayOscMessage {
         left: takeString(decodedArgs.args, 1),
         center: takeString(decodedArgs.args, 2),
         right: takeString(decodedArgs.args, 3),
-        transport: takeString(decodedArgs.args, 4) as DisplayHeaderState["transport"],
+        transport: takeString(
+          decodedArgs.args,
+          4,
+        ) as DisplayHeaderState["transport"],
         mode: takeString(decodedArgs.args, 5) as DisplayHeaderState["mode"],
       },
     };

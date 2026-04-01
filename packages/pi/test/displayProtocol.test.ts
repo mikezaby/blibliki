@@ -4,11 +4,11 @@ import {
   createInstrumentEnginePatch,
 } from "@blibliki/instrument";
 import { describe, expect, it } from "vitest";
+import { instrumentDisplayStateToProtocol } from "@/displayProtocol";
 import {
   createInstrumentDisplayState,
   createInstrumentRuntimeState,
 } from "@/instrumentRuntime";
-import { instrumentDisplayStateToProtocol } from "@/displayProtocol";
 
 function createSeededInstrumentDocument() {
   const document = createDefaultInstrumentDocument();

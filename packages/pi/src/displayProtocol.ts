@@ -125,9 +125,7 @@ function getPageSummary(displayState: InstrumentDisplayState) {
   return `Page ${displayState.header.controllerPage}: ${displayState.upperBand.title} / ${displayState.lowerBand.title}`;
 }
 
-function mapGlobalBand(
-  displayState: InstrumentDisplayState,
-): DisplayBandState {
+function mapGlobalBand(displayState: InstrumentDisplayState): DisplayBandState {
   return {
     key: "global",
     title: "GLOBAL",
