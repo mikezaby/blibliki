@@ -25,11 +25,10 @@ describe("dashboard header logo layout", () => {
   it("lays out track and page horizontally and removes the unused mode badge", () => {
     const source = readDashboardSource();
 
-    expect(source).toContain(`Rectangle {
-                    background: transparent;
-                    vertical-stretch: 1;
-
-                    HorizontalLayout {`);
+    expect(source).toContain("background: transparent;");
+    expect(source).toContain("vertical-stretch: 1;");
+    expect(source).toContain("text: header-center;");
+    expect(source).toContain("text: header-right;");
     expect(source).not.toContain(`VerticalLayout {
                     spacing: 4px;
                     alignment: start;`);
@@ -80,5 +79,16 @@ describe("dashboard header logo layout", () => {
     expect(source).toContain("private property <length> slot-width:");
     expect(source).toContain("width: slot-width;");
     expect(source).toContain("x: (parent.width - self.width) / 2;");
+  });
+
+  it("shows a centered startup splash until real display state arrives", () => {
+    const source = readDashboardSource();
+
+    expect(source).toContain("in-out property <bool> splash-visible: true;");
+    expect(source).toContain('in-out property <string> splash-logo-text: "";');
+    expect(source).toContain("visible: splash-visible;");
+    expect(source).toContain("text: splash-logo-text;");
+    expect(source).toContain('text: "loading display";');
+    expect(source).toContain("font-size: compact-layout ? 52px : 88px;");
   });
 });

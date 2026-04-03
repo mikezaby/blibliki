@@ -43,6 +43,8 @@ function createBandModel(band: DashboardBandViewModel): DashboardBandModel {
 
 type DashboardWindowHandle = import("slint-ui").ComponentHandle & {
   compact_layout: boolean;
+  splash_visible: boolean;
+  splash_logo_text: string;
   header_left: string;
   header_center: string;
   header_right: string;
@@ -60,6 +62,10 @@ type DashboardModule = {
   DashboardWindow: new () => DashboardWindowHandle;
 };
 
+const MIN_STARTUP_SPLASH_MS = 1000;
+const SPLASH_LOGO_TEXT = "Blibliki";
+const SPLASH_LETTER_INTERVAL_MS = 100;
+
 function resolveUiPath() {
   const currentFile = fileURLToPath(import.meta.url);
   return resolve(dirname(currentFile), "../ui/dashboard.slint");
@@ -68,10 +74,10 @@ function resolveUiPath() {
 function applyState(
   window: DashboardWindowHandle,
   store: ReturnType<typeof createDisplayStore>,
-) {
+): boolean {
   const state = store.getState();
   if (!state) {
-    return;
+    return false;
   }
 
   const viewModel = createDashboardViewModel(state);
@@ -92,6 +98,7 @@ function applyState(
   window.upper_cells = upperBand ? createBandModel(upperBand).cells : [];
   window.lower_cells = lowerBand ? createBandModel(lowerBand).cells : [];
   window.window.requestRedraw();
+  return true;
 }
 
 async function main() {
@@ -101,19 +108,92 @@ async function main() {
   const slint = await loadSlintRuntime();
   const ui = slint.loadFile(resolveUiPath()) as DashboardModule;
   const window = new ui.DashboardWindow();
+  const splashShownAt = Date.now();
+  let splashHideTimeout: ReturnType<typeof setTimeout> | undefined;
+  let splashLetterInterval: ReturnType<typeof setInterval> | undefined;
+  let revealedLetters = 0;
   const listener = createOscListener(config, store, logger);
   let resolveShutdown: (() => void) | undefined;
   const shutdownPromise = new Promise<void>((resolve) => {
     resolveShutdown = resolve;
   });
 
+  window.splash_visible = true;
+  window.splash_logo_text = "";
+  window.window.requestRedraw();
+
+  const stopSplashAnimation = () => {
+    if (!splashLetterInterval) {
+      return;
+    }
+
+    clearInterval(splashLetterInterval);
+    splashLetterInterval = undefined;
+  };
+
+  splashLetterInterval = setInterval(() => {
+    if (revealedLetters >= SPLASH_LOGO_TEXT.length) {
+      stopSplashAnimation();
+      return;
+    }
+
+    revealedLetters += 1;
+    window.splash_logo_text = SPLASH_LOGO_TEXT.slice(0, revealedLetters);
+    window.window.requestRedraw();
+
+    if (revealedLetters >= SPLASH_LOGO_TEXT.length) {
+      stopSplashAnimation();
+    }
+  }, SPLASH_LETTER_INTERVAL_MS);
+
+  const hideSplash = () => {
+    if (!window.splash_visible) {
+      return;
+    }
+
+    stopSplashAnimation();
+    window.splash_visible = false;
+    window.window.requestRedraw();
+  };
+
+  const hideSplashWhenReady = () => {
+    const remainingSplashMs =
+      MIN_STARTUP_SPLASH_MS - (Date.now() - splashShownAt);
+
+    if (remainingSplashMs <= 0) {
+      if (splashHideTimeout) {
+        clearTimeout(splashHideTimeout);
+        splashHideTimeout = undefined;
+      }
+      hideSplash();
+      return;
+    }
+
+    if (splashHideTimeout) {
+      return;
+    }
+
+    splashHideTimeout = setTimeout(() => {
+      splashHideTimeout = undefined;
+      hideSplash();
+    }, remainingSplashMs);
+  };
+
   listener.start(() => {
-    applyState(window, store);
+    if (applyState(window, store)) {
+      hideSplashWhenReady();
+    }
   });
 
-  applyState(window, store);
+  if (applyState(window, store)) {
+    hideSplashWhenReady();
+  }
 
   const shutdown = () => {
+    stopSplashAnimation();
+    if (splashHideTimeout) {
+      clearTimeout(splashHideTimeout);
+    }
     listener.close();
     window.hide();
     slint.quitEventLoop();

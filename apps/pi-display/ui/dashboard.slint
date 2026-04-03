@@ -177,6 +177,8 @@ component BandFrame inherits Rectangle {
 export component DashboardWindow inherits Window {
     background: #010103;
     in-out property <bool> compact-layout: false;
+    in-out property <bool> splash-visible: true;
+    in-out property <string> splash-logo-text: "";
     width: compact-layout ? 800px : 1280px;
     height: compact-layout ? 480px : 720px;
     title: "Blibliki Pi Display";
@@ -193,105 +195,154 @@ export component DashboardWindow inherits Window {
     in-out property <[DashboardCell]> upper-cells: [];
     in-out property <[DashboardCell]> lower-cells: [];
 
-    VerticalLayout {
-        padding: compact-layout ? 10px : 16px;
-        spacing: compact-layout ? 8px : 12px;
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        background: transparent;
+        border-width: 0px;
 
-        Rectangle {
-            height: compact-layout ? 60px : 76px;
-            background: #040507;
-            border-width: 0px;
+        VerticalLayout {
+            width: parent.width;
+            height: parent.height;
+            padding: compact-layout ? 10px : 16px;
+            spacing: compact-layout ? 8px : 12px;
 
-            HorizontalLayout {
-                padding: compact-layout ? 8px : 12px;
-                spacing: compact-layout ? 10px : 16px;
+            Rectangle {
+                height: compact-layout ? 60px : 76px;
+                background: #040507;
+                border-width: 0px;
 
-                Rectangle {
-                    width: compact-layout ? 156px : 220px;
-                    border-width: 0px;
-                    background: transparent;
+                HorizontalLayout {
+                    padding: compact-layout ? 8px : 12px;
+                    spacing: compact-layout ? 10px : 16px;
 
-                    Text {
-                        x: compact-layout ? -2px : -3px;
-                        text: header-left;
-                        color: #f2efe5;
-                        font-size: compact-layout ? 28px : 40px;
-                        font-family: "Monospace";
-                        vertical-alignment: center;
-                        horizontal-alignment: left;
-                    }
-                }
-
-                Rectangle {
-                    background: transparent;
-                    vertical-stretch: 1;
-
-                    HorizontalLayout {
-                        spacing: compact-layout ? 10px : 16px;
+                    Rectangle {
+                        width: compact-layout ? 156px : 220px;
+                        border-width: 0px;
+                        background: transparent;
 
                         Text {
-                            text: header-center;
-                            color: #ffb347;
-                            font-size: compact-layout ? 22px : 30px;
+                            x: compact-layout ? -2px : -3px;
+                            text: header-left;
+                            color: #f2efe5;
+                            font-size: compact-layout ? 28px : 40px;
                             font-family: "Monospace";
                             vertical-alignment: center;
+                            horizontal-alignment: left;
                         }
+                    }
+
+                    Rectangle {
+                        background: transparent;
+                        vertical-stretch: 1;
+
+                        HorizontalLayout {
+                            spacing: compact-layout ? 10px : 16px;
+
+                            Text {
+                                text: header-center;
+                                color: #ffb347;
+                                font-size: compact-layout ? 22px : 30px;
+                                font-family: "Monospace";
+                                vertical-alignment: center;
+                            }
+
+                            Text {
+                                text: header-right;
+                                color: #b3bcc2;
+                                font-size: compact-layout ? 14px : 18px;
+                                font-family: "Monospace";
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        horizontal-stretch: 1;
+                        background: transparent;
+                    }
+
+                    Rectangle {
+                        width: compact-layout ? 84px : 110px;
+                        border-width: 0px;
+                        background: transport-active ? #2a1b0a : #0f1316;
 
                         Text {
-                            text: header-right;
-                            color: #b3bcc2;
-                            font-size: compact-layout ? 14px : 18px;
+                            text: transport-text;
+                            color: transport-active ? #ffb347 : #f2efe5;
+                            font-size: compact-layout ? 18px : 24px;
                             font-family: "Monospace";
                             vertical-alignment: center;
+                            horizontal-alignment: center;
                         }
                     }
+
                 }
+            }
 
-                Rectangle {
-                    horizontal-stretch: 1;
-                    background: transparent;
-                }
+            BandFrame {
+                height: compact-layout ? 118px : 180px;
+                compact: compact-layout;
+                title: global-title;
+                accent-lane: false;
+                cells: global-cells;
+            }
 
-                Rectangle {
-                    width: compact-layout ? 84px : 110px;
-                    border-width: 0px;
-                    background: transport-active ? #2a1b0a : #0f1316;
+            BandFrame {
+                height: compact-layout ? 118px : 180px;
+                compact: compact-layout;
+                title: upper-title;
+                accent-lane: true;
+                cells: upper-cells;
+            }
 
-                    Text {
-                        text: transport-text;
-                        color: transport-active ? #ffb347 : #f2efe5;
-                        font-size: compact-layout ? 18px : 24px;
-                        font-family: "Monospace";
-                        vertical-alignment: center;
-                        horizontal-alignment: center;
-                    }
-                }
-
+            BandFrame {
+                height: compact-layout ? 118px : 180px;
+                compact: compact-layout;
+                title: lower-title;
+                accent-lane: false;
+                cells: lower-cells;
             }
         }
 
-        BandFrame {
-            height: compact-layout ? 118px : 180px;
-            compact: compact-layout;
-            title: global-title;
-            accent-lane: false;
-            cells: global-cells;
-        }
+        Rectangle {
+            x: 0px;
+            y: 0px;
+            width: parent.width;
+            height: parent.height;
+            visible: splash-visible;
+            background: #010103;
+            border-width: 0px;
 
-        BandFrame {
-            height: compact-layout ? 118px : 180px;
-            compact: compact-layout;
-            title: upper-title;
-            accent-lane: true;
-            cells: upper-cells;
-        }
+            VerticalLayout {
+                width: parent.width;
+                height: parent.height;
+                alignment: center;
+                spacing: compact-layout ? 10px : 16px;
 
-        BandFrame {
-            height: compact-layout ? 118px : 180px;
-            compact: compact-layout;
-            title: lower-title;
-            accent-lane: false;
-            cells: lower-cells;
+                Text {
+                    text: splash-logo-text;
+                    color: #f2efe5;
+                    font-size: compact-layout ? 52px : 88px;
+                    font-family: "Monospace";
+                    horizontal-alignment: center;
+                }
+
+                Rectangle {
+                    width: compact-layout ? 108px : 160px;
+                    height: 2px;
+                    background: #ffb347;
+                    border-width: 0px;
+                }
+
+                Text {
+                    text: "loading display";
+                    color: #8f999f;
+                    font-size: compact-layout ? 12px : 16px;
+                    font-family: "Monospace";
+                    horizontal-alignment: center;
+                }
+            }
         }
     }
 }
