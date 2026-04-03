@@ -12,7 +12,7 @@ function createState(
       targetClass,
     },
     header: {
-      left: "Blibliki Pi",
+      left: "Blibliki",
       center: "track-2",
       right: "Page 2: FILTER / MOD",
       transport: "PLAY",

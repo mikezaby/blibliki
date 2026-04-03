@@ -9,6 +9,7 @@ import { TransportState } from "@blibliki/engine";
 import type { InstrumentDisplayState } from "@blibliki/instrument";
 
 const EMPTY_VALUE_TEXT = "--";
+const DISPLAY_BRAND = "Blibliki";
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -181,7 +182,7 @@ export function instrumentDisplayStateToProtocol(
       targetClass,
     },
     header: {
-      left: displayState.header.instrumentName,
+      left: DISPLAY_BRAND,
       center: displayState.header.trackName,
       right: getPageSummary(displayState),
       transport:

@@ -39,7 +39,7 @@ describe("instrumentDisplayStateToProtocol", () => {
       createFixtureDisplayState(),
     );
 
-    expect(protocol.header.left).toBe("Default Instrument");
+    expect(protocol.header.left).toBe("Blibliki");
     expect(protocol.header.center).toBe("track-1");
     expect(protocol.header.right).toContain("Page 1");
     expect(protocol.header.transport).toBe("STOP");

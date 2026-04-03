@@ -15,7 +15,7 @@ function createState(revision: number): DisplayProtocolState {
       targetClass: "standard",
     },
     header: {
-      left: "Blibliki Pi",
+      left: "Blibliki",
       center: revision === 4 ? "track-1" : "track-2",
       right: "Page 1: SOURCE / AMP",
       transport: "STOP",
@@ -45,7 +45,7 @@ describe("createDisplayStore", () => {
   it("applies full snapshots and ignores stale header updates", () => {
     const store = createDisplayStore();
     const staleHeader: DisplayHeaderState = {
-      left: "Blibliki Pi",
+      left: "Blibliki",
       center: "track-stale",
       right: "Page 0: STALE / STALE",
       transport: "PLAY",

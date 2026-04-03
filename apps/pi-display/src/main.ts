@@ -45,7 +45,6 @@ type DashboardWindowHandle = import("slint-ui").ComponentHandle & {
   header_center: string;
   header_right: string;
   transport_text: string;
-  mode_text: string;
   transport_active: boolean;
   global_title: string;
   upper_title: string;
@@ -83,7 +82,6 @@ function applyState(
   window.header_center = viewModel.header.center;
   window.header_right = viewModel.header.right;
   window.transport_text = viewModel.header.transport;
-  window.mode_text = viewModel.header.mode;
   window.transport_active = viewModel.header.transport === "PLAY";
   window.global_title = globalBand?.title ?? "GLOBAL";
   window.upper_title = upperBand?.title ?? "UPPER";

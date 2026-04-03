@@ -67,7 +67,7 @@ export function createDebugFullState(
       targetClass,
     },
     header: {
-      left: "BLIBLIKI PI",
+      left: "Blibliki",
       center: "track-1",
       right: "Page 1: SOURCE / AMP",
       transport: "STOP",
