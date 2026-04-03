@@ -47,4 +47,35 @@ describe("dashboard header logo layout", () => {
     expect(source).not.toContain("border-color: accent ? #ffb347 : #f2efe5;");
     expect(source).not.toContain("background: #101115;");
   });
+
+  it("renders each slot with a real encoder arc and needle glyph", () => {
+    const source = readDashboardSource();
+
+    expect(source).toContain("arc-path: string");
+    expect(source).toContain("needle-path: string");
+    expect(source).toContain("Path {");
+    expect(source).toContain("commands: arc-path;");
+    expect(source).toContain("commands: needle-path;");
+    expect(source).not.toContain("text: visual;");
+  });
+
+  it("lays out each slot as label then encoder then value inside an equal-width row", () => {
+    const source = readDashboardSource();
+    const labelIndex = source.indexOf("text: label;");
+    const glyphIndex = source.indexOf("EncoderGlyph {");
+    const valueIndex = source.indexOf("text: value;");
+
+    expect(labelIndex).toBeGreaterThan(-1);
+    expect(glyphIndex).toBeGreaterThan(labelIndex);
+    expect(valueIndex).toBeGreaterThan(glyphIndex);
+    expect(source).toContain("alignment: center;");
+    expect(source).toContain("spacing: compact ? 7px : 10px;");
+    expect(source).toContain("private property <int> visible-slot-count: 8;");
+    expect(source).toContain(
+      "private property <length> slot-gap: compact ? 10px : 14px;",
+    );
+    expect(source).toContain("private property <length> slot-width:");
+    expect(source).toContain("width: slot-width;");
+    expect(source).toContain("x: (parent.width - self.width) / 2;");
+  });
 });

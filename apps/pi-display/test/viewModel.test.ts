@@ -55,6 +55,11 @@ function createState(
 describe("createDashboardViewModel", () => {
   it("maps structured display state into renderer-friendly props", () => {
     const viewModel = createDashboardViewModel(createState());
+    const cell = viewModel.bands[0]?.cells[0];
+    const globalBand = viewModel.bands[0];
+    const upperBand = viewModel.bands[1];
+    const lowerBand = viewModel.bands[2];
+    const lastGlobalCell = globalBand?.cells[7];
 
     expect(viewModel.header.center).toBe("track-2");
     expect(viewModel.layout).toEqual({
@@ -63,13 +68,17 @@ describe("createDashboardViewModel", () => {
       width: 1280,
       height: 720,
     });
-    expect(viewModel.bands[0]?.cells[0]).toEqual(
-      expect.objectContaining({
-        label: "BPM",
-        value: "137 BPM",
-        visualNormalized: 0.75,
-      }),
-    );
+    expect(cell).toBeDefined();
+    expect(cell?.label).toBe("BPM");
+    expect(cell?.value).toBe("137 BPM");
+    expect(cell?.visualNormalized).toBe(0.75);
+    expect(cell?.encoderArcPath).toContain("A 26 26");
+    expect(cell?.encoderNeedlePath).toContain("L");
+    expect(globalBand?.cells).toHaveLength(8);
+    expect(upperBand?.cells).toHaveLength(8);
+    expect(lowerBand?.cells).toHaveLength(8);
+    expect(lastGlobalCell?.empty).toBe(true);
+    expect(lastGlobalCell?.value).toBe("--");
     expect("revision" in viewModel).toBe(false);
   });
 

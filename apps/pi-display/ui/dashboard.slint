@@ -1,17 +1,81 @@
 export struct DashboardCell {
     label: string,
     value: string,
-    visual: string,
+    arc-path: string,
+    needle-path: string,
     accent: bool,
     inactive: bool,
     empty: bool,
+}
+
+component EncoderGlyph inherits Rectangle {
+    in property <bool> compact;
+    in property <string> arc-path;
+    in property <string> needle-path;
+    in property <bool> accent;
+    in property <bool> inactive;
+    in property <bool> empty;
+
+    private property <string> track-path: "M 13.62 50.38 A 26 26 0 1 1 50.38 50.38";
+
+    width: compact ? 34px : 48px;
+    height: compact ? 34px : 48px;
+    background: transparent;
+    border-width: 0px;
+
+    Path {
+        width: parent.width;
+        height: parent.height;
+        viewbox-width: 64;
+        viewbox-height: 64;
+        commands: track-path;
+        fill: transparent;
+        stroke: empty ? #15181c : inactive ? #242a2f : #1f252a;
+        stroke-width: compact ? 3px : 4px;
+        stroke-line-cap: round;
+    }
+
+    Path {
+        width: parent.width;
+        height: parent.height;
+        viewbox-width: 64;
+        viewbox-height: 64;
+        commands: arc-path;
+        fill: transparent;
+        stroke: accent ? #ffb347 : #cdd2d6;
+        stroke-width: compact ? 3px : 4px;
+        stroke-line-cap: round;
+    }
+
+    Path {
+        width: parent.width;
+        height: parent.height;
+        viewbox-width: 64;
+        viewbox-height: 64;
+        commands: needle-path;
+        fill: transparent;
+        stroke: empty ? #20252a : accent ? #ffb347 : inactive ? #7a7971 : #f2efe5;
+        stroke-width: compact ? 2px : 3px;
+        stroke-line-cap: round;
+    }
+
+    Rectangle {
+        x: compact ? 15px : 21px;
+        y: compact ? 15px : 21px;
+        width: compact ? 4px : 6px;
+        height: compact ? 4px : 6px;
+        border-radius: compact ? 2px : 3px;
+        background: empty ? #1c2126 : accent ? #ffb347 : #f2efe5;
+        border-width: 0px;
+    }
 }
 
 component CellFrame inherits Rectangle {
     in property <bool> compact;
     in property <string> label;
     in property <string> value;
-    in property <string> visual;
+    in property <string> arc-path;
+    in property <string> needle-path;
     in property <bool> accent;
     in property <bool> inactive;
     in property <bool> empty;
@@ -20,31 +84,43 @@ component CellFrame inherits Rectangle {
     border-width: 0px;
 
     VerticalLayout {
+        alignment: center;
         padding: compact ? 2px : 4px;
-        spacing: compact ? 2px : 4px;
+        spacing: compact ? 7px : 10px;
 
         Text {
             text: label;
+            width: parent.width;
             color: empty ? #30363b : inactive ? #596168 : #8f999f;
             font-size: compact ? 11px : 15px;
             font-family: "Monospace";
-            horizontal-alignment: left;
+            horizontal-alignment: center;
+        }
+
+        Rectangle {
+            width: parent.width;
+            height: compact ? 34px : 48px;
+            background: transparent;
+            border-width: 0px;
+
+            EncoderGlyph {
+                x: (parent.width - self.width) / 2;
+                compact: compact;
+                arc-path: arc-path;
+                needle-path: needle-path;
+                accent: accent;
+                inactive: inactive;
+                empty: empty;
+            }
         }
 
         Text {
             text: value;
+            width: parent.width;
             color: empty ? #3b4147 : accent ? #ffb347 : inactive ? #bdb7ac : #f2efe5;
             font-size: compact ? 24px : 36px;
             font-family: "Monospace";
-            horizontal-alignment: left;
-        }
-
-        Text {
-            text: visual;
-            color: empty ? #21262b : accent ? #d89b4b : #6f7880;
-            font-size: compact ? 13px : 18px;
-            font-family: "Monospace";
-            horizontal-alignment: left;
+            horizontal-alignment: center;
         }
     }
 }
@@ -54,6 +130,10 @@ component BandFrame inherits Rectangle {
     in property <string> title;
     in property <[DashboardCell]> cells;
     in property <bool> accent-lane;
+
+    private property <int> visible-slot-count: 8;
+    private property <length> slot-gap: compact ? 10px : 14px;
+    private property <length> slot-width: (self.width - slot-gap * (visible-slot-count - 1)) / visible-slot-count;
 
     background: accent-lane ? #0a0806 : #050608;
     border-width: 0px;
@@ -75,14 +155,17 @@ component BandFrame inherits Rectangle {
         }
 
         HorizontalLayout {
-            spacing: compact ? 12px : 18px;
+            vertical-stretch: 1;
+            spacing: slot-gap;
 
             for cell in cells: CellFrame {
-                horizontal-stretch: 1;
+                width: slot-width;
+                vertical-stretch: 1;
                 compact: compact;
                 label: cell.label;
                 value: cell.value;
-                visual: cell.visual;
+                arc-path: cell.arc-path;
+                needle-path: cell.needle-path;
                 accent: cell.accent;
                 inactive: cell.inactive;
                 empty: cell.empty;

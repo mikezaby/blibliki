@@ -14,7 +14,8 @@ import { runWindowWithFallback, shouldUseShowOnlyMode } from "@/windowRunner";
 type DashboardCellModel = {
   label: string;
   value: string;
-  visual: string;
+  arc_path: string;
+  needle_path: string;
   accent: boolean;
   inactive: boolean;
   empty: boolean;
@@ -31,7 +32,8 @@ function createBandModel(band: DashboardBandViewModel): DashboardBandModel {
     cells: band.cells.map((cell) => ({
       label: cell.label,
       value: cell.value,
-      visual: cell.visual,
+      arc_path: cell.encoderArcPath,
+      needle_path: cell.encoderNeedlePath,
       accent: cell.accent,
       inactive: cell.inactive,
       empty: cell.empty,
