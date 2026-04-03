@@ -16,37 +16,35 @@ component CellFrame inherits Rectangle {
     in property <bool> inactive;
     in property <bool> empty;
 
-    background: empty ? #111111 : #0a0a0d;
-    border-width: 2px;
-    border-color: accent ? #ffb347 : #f2efe5;
-    border-radius: 2px;
+    background: transparent;
+    border-width: 0px;
 
     VerticalLayout {
-        padding: compact ? 6px : 10px;
-        spacing: compact ? 3px : 6px;
+        padding: compact ? 2px : 4px;
+        spacing: compact ? 2px : 4px;
 
         Text {
             text: label;
-            color: inactive ? #7d7d7d : #f2efe5;
-            font-size: compact ? 14px : 20px;
+            color: empty ? #30363b : inactive ? #596168 : #8f999f;
+            font-size: compact ? 11px : 15px;
             font-family: "Monospace";
-            horizontal-alignment: center;
+            horizontal-alignment: left;
         }
 
         Text {
             text: value;
-            color: accent ? #ffb347 : #f2efe5;
-            font-size: compact ? 18px : 28px;
+            color: empty ? #3b4147 : accent ? #ffb347 : inactive ? #bdb7ac : #f2efe5;
+            font-size: compact ? 24px : 36px;
             font-family: "Monospace";
-            horizontal-alignment: center;
+            horizontal-alignment: left;
         }
 
         Text {
             text: visual;
-            color: empty ? #4a4a4a : #f2efe5;
-            font-size: compact ? 16px : 22px;
+            color: empty ? #21262b : accent ? #d89b4b : #6f7880;
+            font-size: compact ? 13px : 18px;
             font-family: "Monospace";
-            horizontal-alignment: center;
+            horizontal-alignment: left;
         }
     }
 }
@@ -55,34 +53,29 @@ component BandFrame inherits Rectangle {
     in property <bool> compact;
     in property <string> title;
     in property <[DashboardCell]> cells;
+    in property <bool> accent-lane;
 
-    background: #050507;
-    border-width: 2px;
-    border-color: #f2efe5;
-    border-radius: 2px;
+    background: accent-lane ? #0a0806 : #050608;
+    border-width: 0px;
 
     VerticalLayout {
-        padding: compact ? 6px : 10px;
+        padding: compact ? 8px : 12px;
         spacing: compact ? 6px : 10px;
 
-        Rectangle {
-            height: compact ? 24px : 32px;
-            background: #101115;
-            border-width: 2px;
-            border-color: #f2efe5;
+        Text {
+            text: title;
+            color: accent-lane ? #ffb347 : #93a0a7;
+            font-size: compact ? 12px : 16px;
+            font-family: "Monospace";
+        }
 
-            Text {
-                text: title;
-                color: #f2efe5;
-                font-size: compact ? 16px : 22px;
-                font-family: "Monospace";
-                vertical-alignment: center;
-                horizontal-alignment: center;
-            }
+        Rectangle {
+            height: 1px;
+            background: accent-lane ? #3a2914 : #171c20;
         }
 
         HorizontalLayout {
-            spacing: compact ? 6px : 10px;
+            spacing: compact ? 12px : 18px;
 
             for cell in cells: CellFrame {
                 horizontal-stretch: 1;
@@ -99,7 +92,7 @@ component BandFrame inherits Rectangle {
 }
 
 export component DashboardWindow inherits Window {
-    background: #020202;
+    background: #010103;
     in-out property <bool> compact-layout: false;
     width: compact-layout ? 800px : 1280px;
     height: compact-layout ? 480px : 720px;
@@ -118,19 +111,17 @@ export component DashboardWindow inherits Window {
     in-out property <[DashboardCell]> lower-cells: [];
 
     VerticalLayout {
-        padding: compact-layout ? 12px : 20px;
-        spacing: compact-layout ? 10px : 16px;
+        padding: compact-layout ? 10px : 16px;
+        spacing: compact-layout ? 8px : 12px;
 
         Rectangle {
-            height: compact-layout ? 70px : 92px;
-            background: #090a0d;
-            border-width: 3px;
-            border-color: #f2efe5;
-            border-radius: 2px;
+            height: compact-layout ? 60px : 76px;
+            background: #040507;
+            border-width: 0px;
 
             HorizontalLayout {
-                padding: compact-layout ? 8px : 10px;
-                spacing: compact-layout ? 8px : 12px;
+                padding: compact-layout ? 6px : 10px;
+                spacing: compact-layout ? 10px : 16px;
 
                 Rectangle {
                     width: compact-layout ? 156px : 220px;
@@ -140,7 +131,7 @@ export component DashboardWindow inherits Window {
                     Text {
                         text: header-left;
                         color: #f2efe5;
-                        font-size: compact-layout ? 26px : 36px;
+                        font-size: compact-layout ? 28px : 40px;
                         font-family: "Monospace";
                         vertical-alignment: center;
                         horizontal-alignment: left;
@@ -157,15 +148,15 @@ export component DashboardWindow inherits Window {
                         Text {
                             text: header-center;
                             color: #ffb347;
-                            font-size: compact-layout ? 24px : 34px;
+                            font-size: compact-layout ? 22px : 30px;
                             font-family: "Monospace";
                             vertical-alignment: center;
                         }
 
                         Text {
                             text: header-right;
-                            color: #f2efe5;
-                            font-size: compact-layout ? 14px : 20px;
+                            color: #b3bcc2;
+                            font-size: compact-layout ? 14px : 18px;
                             font-family: "Monospace";
                             vertical-alignment: center;
                         }
@@ -179,9 +170,8 @@ export component DashboardWindow inherits Window {
 
                 Rectangle {
                     width: compact-layout ? 84px : 110px;
-                    border-width: 2px;
-                    border-color: transport-active ? #ffb347 : #f2efe5;
-                    background: transport-active ? #1a1207 : #121318;
+                    border-width: 0px;
+                    background: transport-active ? #2a1b0a : #0f1316;
 
                     Text {
                         text: transport-text;
@@ -200,6 +190,7 @@ export component DashboardWindow inherits Window {
             height: compact-layout ? 118px : 180px;
             compact: compact-layout;
             title: global-title;
+            accent-lane: false;
             cells: global-cells;
         }
 
@@ -207,6 +198,7 @@ export component DashboardWindow inherits Window {
             height: compact-layout ? 118px : 180px;
             compact: compact-layout;
             title: upper-title;
+            accent-lane: true;
             cells: upper-cells;
         }
 
@@ -214,6 +206,7 @@ export component DashboardWindow inherits Window {
             height: compact-layout ? 118px : 180px;
             compact: compact-layout;
             title: lower-title;
+            accent-lane: false;
             cells: lower-cells;
         }
     }
