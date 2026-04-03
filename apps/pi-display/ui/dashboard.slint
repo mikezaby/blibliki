@@ -203,7 +203,7 @@ export component DashboardWindow inherits Window {
             border-width: 0px;
 
             HorizontalLayout {
-                padding: compact-layout ? 6px : 10px;
+                padding: compact-layout ? 8px : 12px;
                 spacing: compact-layout ? 10px : 16px;
 
                 Rectangle {
@@ -212,6 +212,7 @@ export component DashboardWindow inherits Window {
                     background: transparent;
 
                     Text {
+                        x: compact-layout ? -2px : -3px;
                         text: header-left;
                         color: #f2efe5;
                         font-size: compact-layout ? 28px : 40px;

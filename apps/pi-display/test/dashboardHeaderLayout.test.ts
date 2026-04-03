@@ -14,6 +14,9 @@ describe("dashboard header logo layout", () => {
     const source = readDashboardSource();
 
     expect(source).toContain("width: compact-layout ? 156px : 220px;");
+    expect(source).toContain("padding: compact-layout ? 8px : 12px;");
+    expect(source).not.toContain("padding: compact-layout ? 6px : 10px;");
+    expect(source).toContain("x: compact-layout ? -2px : -3px;");
     expect(source).toContain("border-width: 0px;");
     expect(source).toContain("background: transparent;");
     expect(source).toContain("font-size: compact-layout ? 28px : 40px;");

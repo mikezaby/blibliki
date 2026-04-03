@@ -100,6 +100,16 @@ function isAccentBand(key: DisplayBandKey) {
   return key === "upper";
 }
 
+function formatCellValue(
+  cell: DisplayProtocolState["bands"][number]["cells"][number],
+) {
+  if (cell.key === "tempo") {
+    return String(cell.value.raw);
+  }
+
+  return cell.value.formatted;
+}
+
 function createEmptyCell(key: string): DashboardCellViewModel {
   return {
     key,
@@ -169,7 +179,7 @@ export function createDashboardViewModel(
         band.cells.map((cell) => ({
           key: cell.key,
           label: cell.label,
-          value: cell.value.formatted,
+          value: formatCellValue(cell),
           visualNormalized: cell.value.visualNormalized,
           encoderArcPath: createEncoderArcPath(
             cell.value.visualNormalized,

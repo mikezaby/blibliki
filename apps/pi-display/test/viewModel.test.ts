@@ -70,7 +70,7 @@ describe("createDashboardViewModel", () => {
     });
     expect(cell).toBeDefined();
     expect(cell?.label).toBe("BPM");
-    expect(cell?.value).toBe("137 BPM");
+    expect(cell?.value).toBe("137");
     expect(cell?.visualNormalized).toBe(0.75);
     expect(cell?.encoderArcPath).toContain("A 26 26");
     expect(cell?.encoderNeedlePath).toContain("L");
