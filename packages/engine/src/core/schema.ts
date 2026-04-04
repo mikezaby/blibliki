@@ -7,8 +7,8 @@ type BasePropType = {
 
 export type NumberProp = BasePropType & {
   kind: "number";
-  min?: number;
-  max?: number;
+  min: number;
+  max: number;
   step?: number;
   exp?: number;
 };
