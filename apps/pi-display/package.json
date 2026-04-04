@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc --noEmit",
-    "dev": "tsx src/main.ts",
+    "dev": "tsx src/dev.ts",
     "start": "NODE_ENV=production tsx src/main.ts",
     "test": "vitest",
     "tsc": "tsc --noEmit",

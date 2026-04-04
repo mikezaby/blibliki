@@ -82,6 +82,17 @@ What this does:
 - sends `/blibliki/v1/display/request_full_state` to `127.0.0.1:41235`
 - logs incoming message summaries when `BLIBLIKI_DISPLAY_DEBUG=1`
 
+### Hot Reload During UI Work
+
+For local iteration on the display app itself:
+
+```bash
+cd /Users/mikezaby/projects/blibliki/blibliki
+SLINT_BACKEND=winit BLIBLIKI_DISPLAY_DEBUG=1 pnpm -C apps/pi-display dev
+```
+
+This `dev` runner watches [src](/Users/mikezaby/projects/blibliki/blibliki/apps/pi-display/src) and [ui](/Users/mikezaby/projects/blibliki/blibliki/apps/pi-display/ui), then restarts the display process when you change TypeScript or Slint files.
+
 ### Raspberry Pi without X
 
 ```bash
