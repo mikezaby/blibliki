@@ -2,7 +2,6 @@ export struct DashboardCell {
     label: string,
     value: string,
     arc-path: string,
-    needle-path: string,
     accent: bool,
     inactive: bool,
     empty: bool,
@@ -11,7 +10,6 @@ export struct DashboardCell {
 component EncoderGlyph inherits Rectangle {
     in property <bool> compact;
     in property <string> arc-path;
-    in property <string> needle-path;
     in property <bool> accent;
     in property <bool> inactive;
     in property <bool> empty;
@@ -47,27 +45,6 @@ component EncoderGlyph inherits Rectangle {
         stroke-line-cap: round;
     }
 
-    Path {
-        width: parent.width;
-        height: parent.height;
-        viewbox-width: 64;
-        viewbox-height: 64;
-        commands: needle-path;
-        fill: transparent;
-        stroke: empty ? #20252a : accent ? #ffb347 : inactive ? #7a7971 : #f2efe5;
-        stroke-width: compact ? 2px : 3px;
-        stroke-line-cap: round;
-    }
-
-    Rectangle {
-        x: compact ? 15px : 21px;
-        y: compact ? 15px : 21px;
-        width: compact ? 4px : 6px;
-        height: compact ? 4px : 6px;
-        border-radius: compact ? 2px : 3px;
-        background: empty ? #1c2126 : accent ? #ffb347 : #f2efe5;
-        border-width: 0px;
-    }
 }
 
 component CellFrame inherits Rectangle {
@@ -75,7 +52,6 @@ component CellFrame inherits Rectangle {
     in property <string> label;
     in property <string> value;
     in property <string> arc-path;
-    in property <string> needle-path;
     in property <bool> accent;
     in property <bool> inactive;
     in property <bool> empty;
@@ -92,7 +68,7 @@ component CellFrame inherits Rectangle {
             text: label;
             width: parent.width;
             color: empty ? #30363b : inactive ? #596168 : #8f999f;
-            font-size: compact ? 11px : 15px;
+            font-size: compact ? 24px : 36px;
             font-family: "Monospace";
             horizontal-alignment: center;
         }
@@ -107,7 +83,6 @@ component CellFrame inherits Rectangle {
                 x: (parent.width - self.width) / 2;
                 compact: compact;
                 arc-path: arc-path;
-                needle-path: needle-path;
                 accent: accent;
                 inactive: inactive;
                 empty: empty;
@@ -165,7 +140,6 @@ component BandFrame inherits Rectangle {
                 label: cell.label;
                 value: cell.value;
                 arc-path: cell.arc-path;
-                needle-path: cell.needle-path;
                 accent: cell.accent;
                 inactive: cell.inactive;
                 empty: cell.empty;

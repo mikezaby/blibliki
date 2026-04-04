@@ -41,7 +41,7 @@ describe("dashboard header logo layout", () => {
 
     expect(source).toContain("background: transparent;");
     expect(source).toContain("border-width: 0px;");
-    expect(source).toContain("font-size: compact ? 11px : 15px;");
+    expect(source).toContain("font-size: compact ? 24px : 36px;");
     expect(source).toContain("font-size: compact ? 24px : 36px;");
     expect(source).toContain("in property <bool> accent-lane;");
     expect(source).toContain("height: 1px;");
@@ -50,14 +50,18 @@ describe("dashboard header logo layout", () => {
     expect(source).not.toContain("background: #101115;");
   });
 
-  it("renders each slot with a real encoder arc and needle glyph", () => {
+  it("renders each slot with an arc-only encoder glyph", () => {
     const source = readDashboardSource();
 
     expect(source).toContain("arc-path: string");
-    expect(source).toContain("needle-path: string");
     expect(source).toContain("Path {");
     expect(source).toContain("commands: arc-path;");
-    expect(source).toContain("commands: needle-path;");
+    expect(source).not.toContain("needle-path: string");
+    expect(source).not.toContain("commands: needle-path;");
+    expect(source).not.toContain("border-radius: compact ? 2px : 3px;");
+    expect(source).not.toContain(
+      "background: empty ? #1c2126 : accent ? #ffb347 : #f2efe5;",
+    );
     expect(source).not.toContain("text: visual;");
   });
 

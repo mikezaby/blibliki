@@ -9,7 +9,6 @@ export type DashboardCellViewModel = {
   value: string;
   visualNormalized: number | null;
   encoderArcPath: string;
-  encoderNeedlePath: string;
   inactive: boolean;
   empty: boolean;
   accent: boolean;
@@ -42,7 +41,6 @@ const EMPTY_SLOT_TEXT = "--";
 const VISIBLE_SLOT_COUNT = 8;
 const ENCODER_CENTER = 32;
 const ENCODER_TRACK_RADIUS = 26;
-const ENCODER_NEEDLE_RADIUS = 18;
 const ENCODER_START_ANGLE = 135;
 const ENCODER_SWEEP_ANGLE = 270;
 
@@ -84,18 +82,6 @@ function createEncoderArcPath(normalized: number | null, empty: boolean) {
   return `M ${formatPointValue(start.x)} ${formatPointValue(start.y)} A ${ENCODER_TRACK_RADIUS} ${ENCODER_TRACK_RADIUS} 0 ${largeArc} 1 ${formatPointValue(end.x)} ${formatPointValue(end.y)}`;
 }
 
-function createEncoderNeedlePath(normalized: number | null, empty: boolean) {
-  const safeNormalized = clampNormalized(normalized);
-  if (empty || safeNormalized === null) {
-    return "";
-  }
-
-  const endAngle = ENCODER_START_ANGLE + safeNormalized * ENCODER_SWEEP_ANGLE;
-  const end = createEncoderPoint(ENCODER_NEEDLE_RADIUS, endAngle);
-
-  return `M ${ENCODER_CENTER} ${ENCODER_CENTER} L ${formatPointValue(end.x)} ${formatPointValue(end.y)}`;
-}
-
 function isAccentBand(key: DisplayBandKey) {
   return key === "upper";
 }
@@ -117,7 +103,6 @@ function createEmptyCell(key: string): DashboardCellViewModel {
     value: EMPTY_SLOT_TEXT,
     visualNormalized: null,
     encoderArcPath: "",
-    encoderNeedlePath: "",
     inactive: false,
     empty: true,
     accent: false,
@@ -182,10 +167,6 @@ export function createDashboardViewModel(
           value: formatCellValue(cell),
           visualNormalized: cell.value.visualNormalized,
           encoderArcPath: createEncoderArcPath(
-            cell.value.visualNormalized,
-            cell.empty,
-          ),
-          encoderNeedlePath: createEncoderNeedlePath(
             cell.value.visualNormalized,
             cell.empty,
           ),

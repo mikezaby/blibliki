@@ -73,7 +73,7 @@ describe("createDashboardViewModel", () => {
     expect(cell?.value).toBe("137");
     expect(cell?.visualNormalized).toBe(0.75);
     expect(cell?.encoderArcPath).toContain("A 26 26");
-    expect(cell?.encoderNeedlePath).toContain("L");
+    expect("encoderNeedlePath" in (cell ?? {})).toBe(false);
     expect(globalBand?.cells).toHaveLength(8);
     expect(upperBand?.cells).toHaveLength(8);
     expect(lowerBand?.cells).toHaveLength(8);

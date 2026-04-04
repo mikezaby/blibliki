@@ -15,7 +15,6 @@ type DashboardCellModel = {
   label: string;
   value: string;
   arc_path: string;
-  needle_path: string;
   accent: boolean;
   inactive: boolean;
   empty: boolean;
@@ -33,7 +32,6 @@ function createBandModel(band: DashboardBandViewModel): DashboardBandModel {
       label: cell.label,
       value: cell.value,
       arc_path: cell.encoderArcPath,
-      needle_path: cell.encoderNeedlePath,
       accent: cell.accent,
       inactive: cell.inactive,
       empty: cell.empty,
