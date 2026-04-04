@@ -65,7 +65,10 @@ function resolveGlobalSlotValue(
         runtimePatch.runtime.transportControlId,
         "bpm",
       );
-      return typeof value === "number" ? `${value} BPM` : slot.valueText;
+      return {
+        rawValue: typeof value === "number" ? value : slot.rawValue,
+        valueText: typeof value === "number" ? `${value} BPM` : slot.valueText,
+      };
     }
     case "swing": {
       const value = getModuleProp(
@@ -73,7 +76,11 @@ function resolveGlobalSlotValue(
         runtimePatch.runtime.transportControlId,
         "swing",
       );
-      return typeof value === "number" ? formatPercent(value) : slot.valueText;
+      return {
+        rawValue: typeof value === "number" ? value : slot.rawValue,
+        valueText:
+          typeof value === "number" ? formatPercent(value) : slot.valueText,
+      };
     }
     case "masterFilterCutoff": {
       const value = getModuleProp(
@@ -81,7 +88,10 @@ function resolveGlobalSlotValue(
         runtimePatch.runtime.masterFilterId,
         "cutoff",
       );
-      return typeof value === "number" ? `${value}` : slot.valueText;
+      return {
+        rawValue: typeof value === "number" ? value : slot.rawValue,
+        valueText: typeof value === "number" ? `${value}` : slot.valueText,
+      };
     }
     case "masterFilterResonance": {
       const value = getModuleProp(
@@ -89,7 +99,10 @@ function resolveGlobalSlotValue(
         runtimePatch.runtime.masterFilterId,
         "Q",
       );
-      return typeof value === "number" ? `${value}` : slot.valueText;
+      return {
+        rawValue: typeof value === "number" ? value : slot.rawValue,
+        valueText: typeof value === "number" ? `${value}` : slot.valueText,
+      };
     }
     case "reverbSend": {
       const value = getModuleProp(
@@ -97,7 +110,11 @@ function resolveGlobalSlotValue(
         runtimePatch.runtime.globalReverbId,
         "mix",
       );
-      return typeof value === "number" ? formatPercent(value) : slot.valueText;
+      return {
+        rawValue: typeof value === "number" ? value : slot.rawValue,
+        valueText:
+          typeof value === "number" ? formatPercent(value) : slot.valueText,
+      };
     }
     case "delaySend": {
       const value = getModuleProp(
@@ -105,7 +122,11 @@ function resolveGlobalSlotValue(
         runtimePatch.runtime.globalDelayId,
         "mix",
       );
-      return typeof value === "number" ? formatPercent(value) : slot.valueText;
+      return {
+        rawValue: typeof value === "number" ? value : slot.rawValue,
+        valueText:
+          typeof value === "number" ? formatPercent(value) : slot.valueText,
+      };
     }
     case "masterVolume": {
       const value = getModuleProp(
@@ -113,12 +134,23 @@ function resolveGlobalSlotValue(
         runtimePatch.runtime.masterVolumeId,
         "gain",
       );
-      return typeof value === "number" ? formatPercent(value) : slot.valueText;
+      return {
+        rawValue: typeof value === "number" ? value : slot.rawValue,
+        valueText:
+          typeof value === "number" ? formatPercent(value) : slot.valueText,
+      };
     }
-    case "inactive":
-      return slot.valueText;
+    case "inactive": {
+      return {
+        rawValue: slot.rawValue,
+        valueText: slot.valueText,
+      };
+    }
     default:
-      return slot.valueText;
+      return {
+        rawValue: slot.rawValue,
+        valueText: slot.valueText,
+      };
   }
 }
 
@@ -153,6 +185,10 @@ function resolveSlotValueFromRuntimePatch(
 
       return {
         ...slot,
+        rawValue:
+          liveValue === undefined
+            ? slot.rawValue
+            : (liveValue as typeof slot.rawValue),
         valueText:
           liveValue === undefined ? slot.valueText : formatSlotValue(liveValue),
       };
@@ -189,7 +225,7 @@ export function createLiveInstrumentDisplayState(
     globalBand: {
       slots: staticDisplayState.globalBand.slots.map((slot) => ({
         ...slot,
-        valueText: resolveGlobalSlotValue(slot, engine, runtimePatch),
+        ...resolveGlobalSlotValue(slot, engine, runtimePatch),
       })) as InstrumentDisplayState["globalBand"]["slots"],
     },
     upperBand: resolveSlotValueFromRuntimePatch(

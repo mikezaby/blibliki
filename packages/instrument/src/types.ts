@@ -21,6 +21,7 @@ export type ValueSpec =
       min?: number;
       max?: number;
       step?: number;
+      exp?: number;
     }
   | {
       kind: "enum";

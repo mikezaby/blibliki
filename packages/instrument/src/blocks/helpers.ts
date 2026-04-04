@@ -40,6 +40,7 @@ export function getValueSpecForModuleProp<T extends ModuleType>(
         min: schema.min,
         max: schema.max,
         step: schema.step,
+        exp: schema.exp,
       };
     case "enum":
       return {

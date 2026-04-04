@@ -2,6 +2,7 @@ import type { DisplayProtocolState } from "@blibliki/display-protocol";
 import {
   createDefaultInstrumentDocument,
   createInstrumentEnginePatch,
+  type InstrumentDisplayState,
 } from "@blibliki/instrument";
 import { describe, expect, it } from "vitest";
 import { instrumentDisplayStateToProtocol } from "@/displayProtocol";
@@ -33,6 +34,67 @@ function createFixtureDisplayState() {
   return createInstrumentDisplayState(runtimeState);
 }
 
+function createSchemaBoundDisplayState(value: number): InstrumentDisplayState {
+  return {
+    header: {
+      instrumentName: "Test Instrument",
+      trackName: "track-1",
+      pageKey: "sourceAmp",
+      controllerPage: 1,
+      midiChannel: 1,
+      transportState: "stopped",
+      mode: "performance",
+    },
+    globalBand: {
+      slots: Array.from({ length: 8 }, (_, index) => ({
+        key: `global-${index}`,
+        label: `Global ${index}`,
+        shortLabel: `G${index}`,
+        cc: 13 + index,
+        valueText: "--",
+      })) as InstrumentDisplayState["globalBand"]["slots"],
+    },
+    upperBand: {
+      position: "top",
+      title: "AMP",
+      slots: [
+        {
+          kind: "slot",
+          blockKey: "amp",
+          slotKey: "attack",
+          label: "Attack",
+          shortLabel: "A",
+          cc: 21,
+          valueText: `${value}`,
+          rawValue: value,
+          valueSpec: {
+            kind: "number",
+            min: 0,
+            max: 10,
+            step: 0.01,
+            exp: 7,
+          },
+        },
+        { kind: "empty", valueText: "--" },
+        { kind: "empty", valueText: "--" },
+        { kind: "empty", valueText: "--" },
+        { kind: "empty", valueText: "--" },
+        { kind: "empty", valueText: "--" },
+        { kind: "empty", valueText: "--" },
+        { kind: "empty", valueText: "--" },
+      ] as unknown as InstrumentDisplayState["upperBand"]["slots"],
+    },
+    lowerBand: {
+      position: "bottom",
+      title: "EMPTY",
+      slots: Array.from({ length: 8 }, () => ({
+        kind: "empty",
+        valueText: "--",
+      })) as InstrumentDisplayState["lowerBand"]["slots"],
+    },
+  } as unknown as InstrumentDisplayState;
+}
+
 describe("instrumentDisplayStateToProtocol", () => {
   it("maps the runtime display state into renderer-ready protocol state", () => {
     const protocol: DisplayProtocolState = instrumentDisplayStateToProtocol(
@@ -58,5 +120,44 @@ describe("instrumentDisplayStateToProtocol", () => {
 
     expect(tempoValue.formatted).toBe("120 BPM");
     expect(tempoValue.visualNormalized).not.toBeNull();
+  });
+
+  it("normalizes numeric display values from schema metadata without resetting across range heuristics", () => {
+    const belowOneProtocol = instrumentDisplayStateToProtocol(
+      createSchemaBoundDisplayState(0.99),
+    );
+    const aboveOneProtocol = instrumentDisplayStateToProtocol(
+      createSchemaBoundDisplayState(1.01),
+    );
+
+    const belowOneValue = belowOneProtocol.bands[1]?.cells[0]?.value;
+    const aboveOneValue = aboveOneProtocol.bands[1]?.cells[0]?.value;
+
+    if (belowOneValue?.kind !== "number" || aboveOneValue?.kind !== "number") {
+      throw new Error(
+        "Expected schema-bound slot to map to numeric protocol values",
+      );
+    }
+
+    if (
+      belowOneValue.visualNormalized === null ||
+      aboveOneValue.visualNormalized === null
+    ) {
+      throw new Error(
+        "Expected schema-bound slot to map to normalized protocol values",
+      );
+    }
+
+    expect(belowOneValue.visualNormalized).toBeCloseTo(
+      Math.pow(0.99 / 10, 1 / 7),
+      6,
+    );
+    expect(aboveOneValue.visualNormalized).toBeCloseTo(
+      Math.pow(1.01 / 10, 1 / 7),
+      6,
+    );
+    expect(aboveOneValue.visualNormalized).toBeGreaterThan(
+      belowOneValue.visualNormalized,
+    );
   });
 });

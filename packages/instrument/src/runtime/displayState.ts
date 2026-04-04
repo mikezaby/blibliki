@@ -1,10 +1,13 @@
-import { TransportState } from "@blibliki/engine";
+import { ModuleType, TransportState } from "@blibliki/engine";
+import { getValueSpecForModuleProp } from "@/blocks/helpers";
 import type { InstrumentRuntimeMode } from "@/compiler/instrumentTypes";
 import type { CompiledLaunchControlXL3Page } from "@/compiler/types";
 import type { InstrumentGlobalBlock } from "@/document/types";
 import { launchControlXL3GlobalRow } from "@/hardware/launchControlXL3/globalRow";
 import type { PageRegionPosition } from "@/pages/Page";
+import type { SlotInitialValue } from "@/slots/BaseSlot";
 import type { Fixed8, TrackPageKey } from "@/types";
+import type { ValueSpec } from "@/types";
 
 export type DisplaySlotState =
   | {
@@ -20,6 +23,8 @@ export type DisplaySlotState =
       cc: number;
       inactive?: boolean;
       valueText: string;
+      rawValue?: SlotInitialValue;
+      valueSpec: ValueSpec;
     };
 
 export type DisplayBandState = {
@@ -35,6 +40,8 @@ export type GlobalDisplaySlotState = {
   cc: number;
   inactive?: boolean;
   valueText: string;
+  rawValue?: SlotInitialValue;
+  valueSpec?: ValueSpec;
 };
 
 export type InstrumentDisplayState = {
@@ -113,6 +120,59 @@ function formatGlobalValue(
   }
 }
 
+function getGlobalRawValue(
+  globalBlock: InstrumentGlobalBlock,
+  key: (typeof launchControlXL3GlobalRow)[number]["key"],
+) {
+  switch (key) {
+    case "tempo":
+      return globalBlock.tempo;
+    case "swing":
+      return globalBlock.swing;
+    case "masterFilterCutoff":
+      return globalBlock.masterFilterCutoff;
+    case "masterFilterResonance":
+      return globalBlock.masterFilterResonance;
+    case "reverbSend":
+      return globalBlock.reverbSend;
+    case "delaySend":
+      return globalBlock.delaySend;
+    case "masterVolume":
+      return globalBlock.masterVolume;
+    case "inactive":
+      return undefined;
+    default:
+      key satisfies never;
+      return undefined;
+  }
+}
+
+function getGlobalValueSpec(
+  key: (typeof launchControlXL3GlobalRow)[number]["key"],
+): ValueSpec | undefined {
+  switch (key) {
+    case "tempo":
+      return getValueSpecForModuleProp(ModuleType.TransportControl, "bpm");
+    case "swing":
+      return getValueSpecForModuleProp(ModuleType.TransportControl, "swing");
+    case "masterFilterCutoff":
+      return getValueSpecForModuleProp(ModuleType.Filter, "cutoff");
+    case "masterFilterResonance":
+      return getValueSpecForModuleProp(ModuleType.Filter, "Q");
+    case "reverbSend":
+      return getValueSpecForModuleProp(ModuleType.Reverb, "mix");
+    case "delaySend":
+      return getValueSpecForModuleProp(ModuleType.Delay, "mix");
+    case "masterVolume":
+      return getValueSpecForModuleProp(ModuleType.Gain, "gain");
+    case "inactive":
+      return undefined;
+    default:
+      key satisfies never;
+      return undefined;
+  }
+}
+
 function createGlobalBandState(globalBlock: InstrumentGlobalBlock) {
   return {
     slots: launchControlXL3GlobalRow.map((control) => ({
@@ -122,6 +182,8 @@ function createGlobalBandState(globalBlock: InstrumentGlobalBlock) {
       cc: control.cc,
       inactive: control.inactive,
       valueText: formatGlobalValue(globalBlock, control.key),
+      rawValue: getGlobalRawValue(globalBlock, control.key),
+      valueSpec: getGlobalValueSpec(control.key),
     })) as Fixed8<GlobalDisplaySlotState>,
   };
 }
@@ -160,6 +222,8 @@ function createBandState(
         cc: slot.cc,
         inactive: slot.inactive,
         valueText: formatSlotValue(slot.initialValue),
+        rawValue: slot.initialValue,
+        valueSpec: slot.valueSpec,
       };
     }) as Fixed8<DisplaySlotState>,
   };

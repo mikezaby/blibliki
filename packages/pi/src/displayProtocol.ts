@@ -6,7 +6,7 @@ import type {
   DisplayVisualScale,
 } from "@blibliki/display-protocol";
 import { TransportState } from "@blibliki/engine";
-import type { InstrumentDisplayState } from "@blibliki/instrument";
+import type { InstrumentDisplayState, ValueSpec } from "@blibliki/instrument";
 
 const EMPTY_VALUE_TEXT = "--";
 const DISPLAY_BRAND = "Blibliki";
@@ -55,7 +55,36 @@ function normalizeNumericValue(value: number) {
   };
 }
 
-function parseDisplayValue(valueText: string): DisplayCellValue {
+function normalizeSchemaNumberValue(value: number, valueSpec: ValueSpec) {
+  if (valueSpec.kind !== "number") {
+    return;
+  }
+
+  const { min, max, exp } = valueSpec;
+  if (min === undefined || max === undefined || max === min) {
+    return;
+  }
+
+  const normalized = clamp((value - min) / (max - min), 0, 1);
+  return {
+    normalized:
+      exp !== undefined && exp !== 1
+        ? Math.pow(normalized, 1 / exp)
+        : normalized,
+    scale: "linear" as DisplayVisualScale,
+  };
+}
+
+function parseDisplayValue(
+  source:
+    | InstrumentDisplayState["globalBand"]["slots"][number]
+    | Extract<
+        InstrumentDisplayState["upperBand"]["slots"][number],
+        { kind: "slot" }
+      >
+    | { valueText: "--" },
+): DisplayCellValue {
+  const valueText = source.valueText;
   const trimmed = valueText.trim();
   if (trimmed === EMPTY_VALUE_TEXT) {
     return {
@@ -65,6 +94,61 @@ function parseDisplayValue(valueText: string): DisplayCellValue {
       visualNormalized: null,
       visualScale: "linear",
     };
+  }
+
+  if (
+    "valueSpec" in source &&
+    source.valueSpec?.kind === "boolean" &&
+    typeof source.rawValue === "boolean"
+  ) {
+    return {
+      kind: "boolean",
+      raw: source.rawValue,
+      formatted: valueText,
+      visualNormalized: source.rawValue ? 1 : 0,
+      visualScale: "linear",
+    };
+  }
+
+  if (
+    "valueSpec" in source &&
+    source.valueSpec?.kind === "enum" &&
+    (typeof source.rawValue === "string" || typeof source.rawValue === "number")
+  ) {
+    const optionIndex = source.valueSpec.options.findIndex(
+      (option) => option === source.rawValue,
+    );
+    const optionCount = source.valueSpec.options.length;
+    const visualNormalized =
+      optionIndex < 0 || optionCount <= 1 ? 0 : optionIndex / (optionCount - 1);
+
+    return {
+      kind: "enum",
+      raw: `${source.rawValue}`,
+      formatted: valueText,
+      visualNormalized,
+      visualScale: "linear",
+    };
+  }
+
+  if (
+    "valueSpec" in source &&
+    source.valueSpec?.kind === "number" &&
+    typeof source.rawValue === "number"
+  ) {
+    const normalized = normalizeSchemaNumberValue(
+      source.rawValue,
+      source.valueSpec,
+    );
+    if (normalized) {
+      return {
+        kind: "number",
+        raw: source.rawValue,
+        formatted: valueText,
+        visualNormalized: normalized.normalized,
+        visualScale: normalized.scale,
+      };
+    }
   }
 
   const normalizedText = trimmed.toUpperCase();
@@ -136,7 +220,7 @@ function mapGlobalBand(displayState: InstrumentDisplayState): DisplayBandState {
       label: slot.shortLabel,
       inactive: slot.inactive ?? false,
       empty: false,
-      value: parseDisplayValue(slot.valueText),
+      value: parseDisplayValue(slot),
     })),
   };
 }
@@ -155,7 +239,7 @@ function mapDisplayBand(
           label: EMPTY_VALUE_TEXT,
           inactive: false,
           empty: true,
-          value: parseDisplayValue(EMPTY_VALUE_TEXT),
+          value: parseDisplayValue({ valueText: EMPTY_VALUE_TEXT }),
         };
       }
 
@@ -164,7 +248,7 @@ function mapDisplayBand(
         label: slot.shortLabel,
         inactive: slot.inactive ?? false,
         empty: false,
-        value: parseDisplayValue(slot.valueText),
+        value: parseDisplayValue(slot),
       };
     }),
   };
