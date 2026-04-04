@@ -8,6 +8,7 @@ export type DashboardCellViewModel = {
   label: string;
   value: string;
   visualNormalized: number | null;
+  showEncoder: boolean;
   encoderArcPath: string;
   inactive: boolean;
   empty: boolean;
@@ -96,12 +97,19 @@ function formatCellValue(
   return cell.value.formatted;
 }
 
+function shouldShowEncoder(
+  cell: DisplayProtocolState["bands"][number]["cells"][number],
+) {
+  return cell.empty || cell.value.kind === "number";
+}
+
 function createEmptyCell(key: string): DashboardCellViewModel {
   return {
     key,
     label: EMPTY_SLOT_TEXT,
     value: EMPTY_SLOT_TEXT,
     visualNormalized: null,
+    showEncoder: true,
     encoderArcPath: "",
     inactive: false,
     empty: true,
@@ -161,19 +169,23 @@ export function createDashboardViewModel(
       key: band.key,
       title: band.title,
       cells: padBandCells(
-        band.cells.map((cell) => ({
-          key: cell.key,
-          label: cell.label,
-          value: formatCellValue(cell),
-          visualNormalized: cell.value.visualNormalized,
-          encoderArcPath: createEncoderArcPath(
-            cell.value.visualNormalized,
-            cell.empty,
-          ),
-          inactive: cell.inactive,
-          empty: cell.empty,
-          accent: isAccentBand(band.key) && !cell.empty,
-        })),
+        band.cells.map((cell) => {
+          const showEncoder = shouldShowEncoder(cell);
+
+          return {
+            key: cell.key,
+            label: cell.label,
+            value: formatCellValue(cell),
+            visualNormalized: cell.value.visualNormalized,
+            showEncoder,
+            encoderArcPath: showEncoder
+              ? createEncoderArcPath(cell.value.visualNormalized, cell.empty)
+              : "",
+            inactive: cell.inactive,
+            empty: cell.empty,
+            accent: isAccentBand(band.key) && !cell.empty,
+          };
+        }),
         band.key,
       ),
     })),

@@ -1,6 +1,7 @@
 export struct DashboardCell {
     label: string,
     value: string,
+    show-encoder: bool,
     arc-path: string,
     accent: bool,
     inactive: bool,
@@ -51,51 +52,83 @@ component CellFrame inherits Rectangle {
     in property <bool> compact;
     in property <string> label;
     in property <string> value;
+    in property <bool> show-encoder;
     in property <string> arc-path;
     in property <bool> accent;
     in property <bool> inactive;
     in property <bool> empty;
 
+    private property <length> encoder-height: compact ? 34px : 48px;
+    private property <length> label-height: compact ? 24px : 36px;
+    private property <length> value-height: compact ? 24px : 36px;
+    private property <length> body-spacing: compact ? 7px : 10px;
+
     background: transparent;
     border-width: 0px;
 
     VerticalLayout {
-        alignment: center;
+        alignment: start;
         padding: compact ? 2px : 4px;
-        spacing: compact ? 7px : 10px;
+        spacing: compact ? 4px : 6px;
 
-        Text {
-            text: label;
+        Rectangle {
             width: parent.width;
-            color: empty ? #30363b : inactive ? #596168 : #8f999f;
-            font-size: compact ? 24px : 36px;
-            font-family: "Monospace";
-            horizontal-alignment: center;
+            height: label-height;
+            background: transparent;
+            border-width: 0px;
+
+            Text {
+                text: label;
+                width: parent.width;
+                height: parent.height;
+                color: empty ? #30363b : inactive ? #596168 : #8f999f;
+                font-size: compact ? 24px : 36px;
+                font-family: "Monospace";
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
         }
 
         Rectangle {
             width: parent.width;
-            height: compact ? 34px : 48px;
+            vertical-stretch: 1;
             background: transparent;
             border-width: 0px;
 
-            EncoderGlyph {
-                x: (parent.width - self.width) / 2;
-                compact: compact;
-                arc-path: arc-path;
-                accent: accent;
-                inactive: inactive;
-                empty: empty;
-            }
-        }
+            VerticalLayout {
+                width: parent.width;
+                height: parent.height;
+                alignment: center;
+                spacing: body-spacing;
 
-        Text {
-            text: value;
-            width: parent.width;
-            color: empty ? #3b4147 : accent ? #ffb347 : inactive ? #bdb7ac : #f2efe5;
-            font-size: compact ? 24px : 36px;
-            font-family: "Monospace";
-            horizontal-alignment: center;
+                if show-encoder : Rectangle {
+                    width: parent.width;
+                    height: encoder-height;
+                    background: transparent;
+                    border-width: 0px;
+
+                    EncoderGlyph {
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                        compact: compact;
+                        arc-path: arc-path;
+                        accent: accent;
+                        inactive: inactive;
+                        empty: empty;
+                    }
+                }
+
+                Text {
+                    text: value;
+                    width: parent.width;
+                    height: value-height;
+                    color: empty ? #3b4147 : accent ? #ffb347 : inactive ? #bdb7ac : #f2efe5;
+                    font-size: compact ? 24px : 36px;
+                    font-family: "Monospace";
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
         }
     }
 }
@@ -139,6 +172,7 @@ component BandFrame inherits Rectangle {
                 compact: compact;
                 label: cell.label;
                 value: cell.value;
+                show-encoder: cell.show-encoder;
                 arc-path: cell.arc-path;
                 accent: cell.accent;
                 inactive: cell.inactive;

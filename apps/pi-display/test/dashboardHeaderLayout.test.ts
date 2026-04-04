@@ -85,6 +85,47 @@ describe("dashboard header logo layout", () => {
     expect(source).toContain("x: (parent.width - self.width) / 2;");
   });
 
+  it("keeps discrete values centered below the top label without rendering an encoder", () => {
+    const source = readDashboardSource();
+
+    expect(source).toMatch(
+      /component CellFrame inherits Rectangle \{[\s\S]*?VerticalLayout \{\n\s*alignment: start;/,
+    );
+    expect(source).toContain("show-encoder: bool");
+    expect(source).toContain(`Rectangle {
+            width: parent.width;
+            height: label-height;
+            background: transparent;
+            border-width: 0px;
+
+            Text {
+                text: label;`);
+    expect(source).toContain(`Rectangle {
+            width: parent.width;
+            vertical-stretch: 1;
+            background: transparent;
+            border-width: 0px;`);
+    expect(source).toContain("private property <length> encoder-height:");
+    expect(source).toContain("private property <length> label-height:");
+    expect(source).toContain("private property <length> value-height:");
+    expect(source).not.toContain(
+      "private property <length> body-content-height:",
+    );
+    expect(source).toContain(`VerticalLayout {
+                width: parent.width;
+                height: parent.height;
+                alignment: center;
+                spacing: body-spacing;`);
+    expect(source).toContain("if show-encoder : Rectangle");
+    expect(source).not.toContain("if !show-encoder : Text");
+    expect(source).not.toContain("visible: show-encoder;");
+    expect(source).not.toContain("visible: !show-encoder;");
+    expect(source).toContain("text: value;");
+    expect(source).toContain("height: parent.height;");
+    expect(source).toContain("height: value-height;");
+    expect(source).toContain("vertical-alignment: center;");
+  });
+
   it("shows a centered startup splash until real display state arrives", () => {
     const source = readDashboardSource();
 

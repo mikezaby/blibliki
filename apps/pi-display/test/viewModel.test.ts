@@ -52,6 +52,57 @@ function createState(
   };
 }
 
+function createDiscreteState(): DisplayProtocolState {
+  return {
+    ...createState(),
+    bands: [
+      {
+        key: "global",
+        title: "GLOBAL",
+        cells: [
+          {
+            key: "wave",
+            label: "WAVE",
+            inactive: false,
+            empty: false,
+            value: {
+              kind: "enum",
+              raw: "square",
+              formatted: "square",
+              visualNormalized: 0.82,
+              visualScale: "linear",
+            },
+          },
+        ],
+      },
+      {
+        key: "upper",
+        title: "FILTER",
+        cells: [
+          {
+            key: "sync",
+            label: "SYNC",
+            inactive: false,
+            empty: false,
+            value: {
+              kind: "boolean",
+              raw: true,
+              formatted: "on",
+              visualNormalized: 1,
+              visualScale: "linear",
+            },
+          },
+        ],
+      },
+      {
+        key: "lower",
+        title: "MOD",
+        cells: [],
+      },
+    ],
+  };
+}
+
 describe("createDashboardViewModel", () => {
   it("maps structured display state into renderer-friendly props", () => {
     const viewModel = createDashboardViewModel(createState());
@@ -91,5 +142,18 @@ describe("createDashboardViewModel", () => {
       width: 800,
       height: 480,
     });
+  });
+
+  it("omits encoders for enum and boolean cells", () => {
+    const viewModel = createDashboardViewModel(createDiscreteState());
+    const enumCell = viewModel.bands[0]?.cells[0];
+    const booleanCell = viewModel.bands[1]?.cells[0];
+
+    expect(enumCell?.value).toBe("square");
+    expect(enumCell?.showEncoder).toBe(false);
+    expect(enumCell?.encoderArcPath).toBe("");
+    expect(booleanCell?.value).toBe("on");
+    expect(booleanCell?.showEncoder).toBe(false);
+    expect(booleanCell?.encoderArcPath).toBe("");
   });
 });
