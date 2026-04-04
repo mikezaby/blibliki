@@ -287,6 +287,73 @@ describe("createInstrumentControllerSession", () => {
     expect(lastDisplayState).toBe("track-2:sourceAmp");
   });
 
+  it("requires a second shifted track-next press to confirm cloud save", async () => {
+    const runtimePatch = createInstrumentEnginePatch(
+      createSeededInstrumentDocument(),
+    );
+    const inputDevice = createControllerInputDevice();
+    const modules = new Map(
+      runtimePatch.patch.modules.map((module) => [module.id, module]),
+    );
+    const notices: string[] = [];
+    const persistenceActions: ("saveDraft" | "discardDraft")[] = [];
+
+    createInstrumentControllerSession(
+      {
+        findMidiInputDeviceByFuzzyName: () => ({
+          device: inputDevice,
+          score: 1,
+        }),
+        findModule: (id) => {
+          const module = modules.get(id);
+          if (!module) {
+            throw new Error(`Module ${id} not found`);
+          }
+
+          return module;
+        },
+        state: TransportState.stopped,
+        start: () => Promise.resolve(),
+        stop: () => undefined,
+        updateModule: (params) => params,
+      },
+      runtimePatch,
+      {
+        onDisplayStateChange: (displayState) => {
+          if (displayState.notice?.title) {
+            notices.push(displayState.notice.title);
+          }
+        },
+        onPersistenceAction: (action) => {
+          persistenceActions.push(action);
+          return {
+            title: "SAVE COMPLETE",
+            message: "Firestore updated",
+            tone: "success",
+          };
+        },
+      },
+    );
+
+    inputDevice.emit(MidiEvent.fromCC(63, 127, 0));
+    inputDevice.emit(MidiEvent.fromCC(102, 127, 0));
+    inputDevice.emit(MidiEvent.fromCC(102, 0, 0));
+    inputDevice.emit(MidiEvent.fromCC(63, 0, 0));
+
+    expect(persistenceActions).toEqual([]);
+    expect(notices).toContain("SAVE TO CLOUD?");
+
+    inputDevice.emit(MidiEvent.fromCC(63, 127, 0));
+    inputDevice.emit(MidiEvent.fromCC(102, 127, 0));
+    await new Promise<void>((resolve) => {
+      queueMicrotask(resolve);
+    });
+
+    expect(persistenceActions).toEqual(["saveDraft"]);
+    expect(notices).toContain("SAVING...");
+    expect(notices).toContain("SAVE COMPLETE");
+  });
+
   it("detaches the controller listener on dispose", () => {
     const runtimePatch = createInstrumentEnginePatch(
       createSeededInstrumentDocument(),

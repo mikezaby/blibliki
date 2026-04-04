@@ -1,6 +1,7 @@
 import { type MidiEvent, ModuleType, TransportState } from "@blibliki/engine";
 import type {
   CompiledInstrumentEnginePatch,
+  InstrumentDisplayNotice,
   InstrumentDisplayState,
 } from "@blibliki/instrument";
 import {
@@ -199,6 +200,9 @@ function resolveSlotValueFromRuntimePatch(
 export function createLiveInstrumentDisplayState(
   engine: LiveDisplayEngine,
   runtimePatch: CompiledInstrumentEnginePatch,
+  options: {
+    notice?: InstrumentDisplayNotice;
+  } = {},
 ): InstrumentDisplayState {
   const runtimeState = createInstrumentRuntimeState(runtimePatch);
   if (runtimeState.navigation.mode === "seqEdit") {
@@ -206,6 +210,7 @@ export function createLiveInstrumentDisplayState(
     if (seqEditDisplayState) {
       return {
         ...seqEditDisplayState,
+        notice: options.notice,
         header: {
           ...seqEditDisplayState.header,
           transportState: engine.state ?? TransportState.stopped,
@@ -218,6 +223,7 @@ export function createLiveInstrumentDisplayState(
 
   return {
     ...staticDisplayState,
+    notice: options.notice,
     header: {
       ...staticDisplayState.header,
       transportState: engine.state ?? TransportState.stopped,

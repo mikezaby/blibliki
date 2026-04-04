@@ -236,4 +236,34 @@ describe("reduceInstrumentControllerEvent", () => {
       selectedStepIndex: 8,
     });
   });
+
+  it("maps shifted track buttons to draft save and discard commands instead of navigation", () => {
+    const runtimePatch = createInstrumentEnginePatch(
+      createSeededInstrumentDocument(),
+    );
+    const shifted = reduceInstrumentControllerEvent(
+      runtimePatch,
+      MidiEvent.fromCC(63, 127, 0),
+    );
+
+    const saveDraft = reduceInstrumentControllerEvent(
+      shifted.runtimePatch,
+      MidiEvent.fromCC(102, 127, 0),
+    );
+    const discardDraft = reduceInstrumentControllerEvent(
+      shifted.runtimePatch,
+      MidiEvent.fromCC(103, 127, 0),
+    );
+
+    expect(saveDraft.command).toEqual({
+      type: "persistence",
+      action: "saveDraft",
+    });
+    expect(saveDraft.runtimePatch).toBe(shifted.runtimePatch);
+    expect(discardDraft.command).toEqual({
+      type: "persistence",
+      action: "discardDraft",
+    });
+    expect(discardDraft.runtimePatch).toBe(shifted.runtimePatch);
+  });
 });

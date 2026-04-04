@@ -5,6 +5,7 @@ import {
   createTrackFromDocument,
   type CompiledInstrumentEnginePatch,
   type CreateInstrumentEnginePatchOptions,
+  type InstrumentDisplayNotice,
   type InstrumentDisplayState,
   type InstrumentDocument,
   type InstrumentTrackDocument,
@@ -15,6 +16,7 @@ import {
   type InstrumentControllerEngine,
   type InstrumentControllerSession,
 } from "@/instrumentControllerSession";
+import { createSavedInstrumentDocument } from "@/instrumentPersistence";
 
 export type InstrumentSessionDrone = {
   trackKey: string;
@@ -37,6 +39,7 @@ export type InstrumentSession = {
 
 export type InstrumentSessionEngine = InstrumentControllerEngine & {
   dispose: () => void;
+  serialize?: () => IEngineSerialize;
   findMidiOutputDeviceByFuzzyName?: (
     name: string,
     threshold?: number,
@@ -55,6 +58,18 @@ export type InstrumentSessionEngine = InstrumentControllerEngine & {
 
 export type StartInstrumentSessionOptions = InstrumentSessionOptions &
   CreateInstrumentControllerSessionOptions & {
+    onDocumentChange?: (
+      document: InstrumentDocument,
+      runtimePatch: CompiledInstrumentEnginePatch,
+    ) => Promise<void> | void;
+    onPersistenceRequest?: (
+      action: "saveDraft" | "discardDraft",
+      document: InstrumentDocument,
+      runtimePatch: CompiledInstrumentEnginePatch,
+    ) =>
+      | Promise<InstrumentDisplayNotice | undefined>
+      | InstrumentDisplayNotice
+      | undefined;
     engineLoader?: (
       patch: InstrumentSession["patch"],
     ) => Promise<InstrumentSessionEngine>;
@@ -196,6 +211,22 @@ export async function startInstrumentSession(
   const session = createInstrumentSession(document, options);
   const engine = await (options.engineLoader ?? loadEngine)(session.patch);
 
+  const createSavedDocumentSnapshot = (
+    runtimePatch: CompiledInstrumentEnginePatch,
+  ) => {
+    if (typeof engine.serialize !== "function") {
+      throw new Error(
+        "Instrument session engine must support serialize() when document persistence is used",
+      );
+    }
+
+    return createSavedInstrumentDocument(
+      document,
+      runtimePatch,
+      engine.serialize(),
+    );
+  };
+
   if (session.runtime.droneMidiId && session.runtime.droneNote) {
     engine.triggerVirtualMidi(
       session.runtime.droneMidiId,
@@ -203,6 +234,18 @@ export async function startInstrumentSession(
       "noteOn",
     );
   }
+
+  const handleRuntimePatchChange = (
+    runtimePatch: CompiledInstrumentEnginePatch,
+  ) => {
+    options.onRuntimePatchChange?.(runtimePatch);
+    if (!options.onDocumentChange) {
+      return;
+    }
+
+    const savedDocument = createSavedDocumentSnapshot(runtimePatch);
+    void options.onDocumentChange(savedDocument, runtimePatch);
+  };
 
   const controllerSession = createInstrumentControllerSession(
     engine,
@@ -212,8 +255,15 @@ export async function startInstrumentSession(
       runtime: session.runtime,
     },
     {
-      onRuntimePatchChange: options.onRuntimePatchChange,
+      initialDisplayNotice: options.initialDisplayNotice,
+      onRuntimePatchChange: handleRuntimePatchChange,
       onDisplayStateChange: options.onDisplayStateChange,
+      onPersistenceAction: (action, runtimePatch) =>
+        options.onPersistenceRequest?.(
+          action,
+          createSavedDocumentSnapshot(runtimePatch),
+          runtimePatch,
+        ),
     },
   );
 

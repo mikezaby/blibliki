@@ -183,4 +183,41 @@ describe("createLiveInstrumentDisplayState", () => {
       }),
     );
   });
+
+  it("passes through persistence notices for Pi confirmation prompts", () => {
+    const runtimePatch = createInstrumentEnginePatch(
+      createSeededInstrumentDocument(),
+    );
+    const modules = new Map(
+      runtimePatch.patch.modules.map((module) => [module.id, module]),
+    );
+
+    const displayState = createLiveInstrumentDisplayState(
+      {
+        state: TransportState.stopped,
+        findModule: (id: string) => {
+          const module = modules.get(id);
+          if (!module) {
+            throw new Error(`Module ${id} not found`);
+          }
+
+          return module;
+        },
+      },
+      runtimePatch,
+      {
+        notice: {
+          title: "SAVE TO CLOUD?",
+          message: "SHIFT+NEXT AGAIN",
+          tone: "warning",
+        },
+      },
+    );
+
+    expect(displayState.notice).toEqual({
+      title: "SAVE TO CLOUD?",
+      message: "SHIFT+NEXT AGAIN",
+      tone: "warning",
+    });
+  });
 });

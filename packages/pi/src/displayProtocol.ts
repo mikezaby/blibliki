@@ -259,6 +259,11 @@ export function instrumentDisplayStateToProtocol(
   revision = 0,
   targetClass: DisplayTargetClass = "standard",
 ): DisplayProtocolState {
+  const headerCenter =
+    displayState.notice?.title ?? displayState.header.trackName;
+  const headerRight =
+    displayState.notice?.message ?? getPageSummary(displayState);
+
   return {
     revision,
     screen: {
@@ -267,8 +272,8 @@ export function instrumentDisplayStateToProtocol(
     },
     header: {
       left: DISPLAY_BRAND,
-      center: displayState.header.trackName,
-      right: getPageSummary(displayState),
+      center: headerCenter,
+      right: headerRight,
       transport:
         displayState.header.transportState === TransportState.playing
           ? "PLAY"

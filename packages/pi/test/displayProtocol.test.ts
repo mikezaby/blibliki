@@ -160,4 +160,18 @@ describe("instrumentDisplayStateToProtocol", () => {
       belowOneValue.visualNormalized,
     );
   });
+
+  it("uses notices in the protocol header when the Pi asks for save confirmation", () => {
+    const displayState = createFixtureDisplayState();
+    displayState.notice = {
+      title: "SAVE TO CLOUD?",
+      message: "SHIFT+NEXT AGAIN",
+      tone: "warning",
+    };
+
+    const protocol = instrumentDisplayStateToProtocol(displayState);
+
+    expect(protocol.header.center).toBe("SAVE TO CLOUD?");
+    expect(protocol.header.right).toBe("SHIFT+NEXT AGAIN");
+  });
 });

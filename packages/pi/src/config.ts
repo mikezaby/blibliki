@@ -1,4 +1,4 @@
-import { FirebaseConfig } from "@blibliki/models";
+import type { DeviceDeploymentTarget, FirebaseConfig } from "@blibliki/models";
 import { randomBytes } from "node:crypto";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
@@ -9,6 +9,8 @@ export interface Config {
   userId?: string;
   firebase?: FirebaseConfig;
   deviceId?: string;
+  deviceName?: string;
+  deploymentTarget?: DeviceDeploymentTarget | null;
   patchId?: string;
 }
 

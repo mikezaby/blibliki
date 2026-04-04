@@ -44,6 +44,12 @@ export type GlobalDisplaySlotState = {
   valueSpec?: ValueSpec;
 };
 
+export type InstrumentDisplayNotice = {
+  title: string;
+  message?: string;
+  tone?: "info" | "success" | "warning" | "error";
+};
+
 export type InstrumentDisplayState = {
   header: {
     instrumentName: string;
@@ -54,6 +60,7 @@ export type InstrumentDisplayState = {
     transportState: TransportState;
     mode: InstrumentRuntimeMode;
   };
+  notice?: InstrumentDisplayNotice;
   globalBand: {
     slots: Fixed8<GlobalDisplaySlotState>;
   };

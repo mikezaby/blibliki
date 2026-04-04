@@ -7,6 +7,7 @@ import {
 } from "@blibliki/engine";
 import type {
   CompiledInstrumentEnginePatch,
+  InstrumentDisplayNotice,
   InstrumentDisplayState,
 } from "@blibliki/instrument";
 import { reduceInstrumentControllerEvent } from "@/controllerRuntime";
@@ -22,6 +23,39 @@ import {
 
 const NAVIGATION_LED_CCS = [102, 103, 106, 107] as const;
 const NAVIGATION_LED_ON = 127;
+const SHIFT_CC = 63;
+
+const PERSISTENCE_CONFIRM_NOTICE: Record<
+  "saveDraft" | "discardDraft",
+  InstrumentDisplayNotice
+> = {
+  saveDraft: {
+    title: "SAVE TO CLOUD?",
+    message: "SHIFT+NEXT AGAIN",
+    tone: "warning",
+  },
+  discardDraft: {
+    title: "DISCARD DRAFT?",
+    message: "SHIFT+PREV AGAIN",
+    tone: "warning",
+  },
+};
+
+const PERSISTENCE_PROGRESS_NOTICE: Record<
+  "saveDraft" | "discardDraft",
+  InstrumentDisplayNotice
+> = {
+  saveDraft: {
+    title: "SAVING...",
+    message: "Draft -> Firestore",
+    tone: "info",
+  },
+  discardDraft: {
+    title: "RELOADING...",
+    message: "Loading Firestore",
+    tone: "info",
+  },
+};
 
 type ControllerInputDevice = {
   name: string;
@@ -71,8 +105,16 @@ export type InstrumentControllerEngine = MidiInputLookup &
   LiveDisplayEngine;
 
 export type CreateInstrumentControllerSessionOptions = {
+  initialDisplayNotice?: InstrumentDisplayNotice;
   onRuntimePatchChange?: (runtimePatch: CompiledInstrumentEnginePatch) => void;
   onDisplayStateChange?: (displayState: InstrumentDisplayState) => void;
+  onPersistenceAction?: (
+    action: "saveDraft" | "discardDraft",
+    runtimePatch: CompiledInstrumentEnginePatch,
+  ) =>
+    | Promise<InstrumentDisplayNotice | undefined>
+    | InstrumentDisplayNotice
+    | undefined;
 };
 
 export type InstrumentControllerSession = {
@@ -130,8 +172,22 @@ function createMidiMapperUpdate(
 function createDisplayState(
   engine: LiveDisplayEngine,
   runtimePatch: CompiledInstrumentEnginePatch,
+  notice?: InstrumentDisplayNotice,
 ) {
-  return createLiveInstrumentDisplayState(engine, runtimePatch);
+  return createLiveInstrumentDisplayState(engine, runtimePatch, {
+    notice,
+  });
+}
+
+function getPersistenceErrorNotice(
+  action: "saveDraft" | "discardDraft",
+  error: unknown,
+): InstrumentDisplayNotice {
+  return {
+    title: action === "saveDraft" ? "SAVE FAILED" : "RELOAD FAILED",
+    message: error instanceof Error ? error.message : String(error),
+    tone: "error",
+  };
 }
 
 function syncNavigationButtonLeds(
@@ -162,6 +218,9 @@ export function createInstrumentControllerSession(
   options: CreateInstrumentControllerSessionOptions = {},
 ): InstrumentControllerSession {
   let currentRuntimePatch = runtimePatch;
+  let currentNotice = options.initialDisplayNotice;
+  let pendingPersistenceAction: "saveDraft" | "discardDraft" | null = null;
+  let persistenceActionInFlight = false;
   let disposed = false;
   const controllerInputName = getSelectedMidiName(
     runtimePatch,
@@ -180,8 +239,56 @@ export function createInstrumentControllerSession(
     syncNavigationButtonLeds(engine, currentRuntimePatch);
     options.onRuntimePatchChange?.(currentRuntimePatch);
     options.onDisplayStateChange?.(
-      createDisplayState(engine, currentRuntimePatch),
+      createDisplayState(engine, currentRuntimePatch, currentNotice),
     );
+  };
+
+  const clearPendingPersistenceAction = () => {
+    pendingPersistenceAction = null;
+    currentNotice = undefined;
+  };
+
+  const handlePersistenceAction = async (
+    action: "saveDraft" | "discardDraft",
+  ) => {
+    if (persistenceActionInFlight) {
+      emitState();
+      return;
+    }
+
+    if (pendingPersistenceAction !== action) {
+      pendingPersistenceAction = action;
+      currentNotice = PERSISTENCE_CONFIRM_NOTICE[action];
+      emitState();
+      return;
+    }
+
+    pendingPersistenceAction = null;
+    persistenceActionInFlight = true;
+    currentNotice = PERSISTENCE_PROGRESS_NOTICE[action];
+    emitState();
+
+    try {
+      const nextNotice = await options.onPersistenceAction?.(
+        action,
+        currentRuntimePatch,
+      );
+      if (disposed) {
+        return;
+      }
+
+      currentNotice = nextNotice;
+      emitState();
+    } catch (error) {
+      if (disposed) {
+        return;
+      }
+
+      currentNotice = getPersistenceErrorNotice(action, error);
+      emitState();
+    } finally {
+      persistenceActionInFlight = false;
+    }
   };
 
   engine.onPropsUpdate?.(() => {
@@ -193,8 +300,26 @@ export function createInstrumentControllerSession(
 
   const handleMidiEvent = (event: MidiEvent) => {
     const result = reduceInstrumentControllerEvent(currentRuntimePatch, event);
+    if (
+      pendingPersistenceAction &&
+      event.cc !== SHIFT_CC &&
+      event.ccValue === 127
+    ) {
+      const isMatchingPersistenceAction =
+        result.command.type === "persistence" &&
+        result.command.action === pendingPersistenceAction;
+      if (!isMatchingPersistenceAction) {
+        clearPendingPersistenceAction();
+      }
+    }
+
     let didRuntimePatchChange = result.runtimePatch !== currentRuntimePatch;
     currentRuntimePatch = result.runtimePatch;
+
+    if (result.command.type === "persistence") {
+      void handlePersistenceAction(result.command.action);
+      return;
+    }
 
     if (result.command.type === "navigation") {
       engine.updateModule(createMidiMapperUpdate(currentRuntimePatch));
@@ -246,7 +371,8 @@ export function createInstrumentControllerSession(
 
   return {
     getRuntimePatch: () => currentRuntimePatch,
-    getDisplayState: () => createDisplayState(engine, currentRuntimePatch),
+    getDisplayState: () =>
+      createDisplayState(engine, currentRuntimePatch, currentNotice),
     dispose: () => {
       disposed = true;
       controllerInput?.removeEventListener(onMidiEvent);

@@ -145,6 +145,19 @@ describe("renderInstrumentDisplayStateToTerminal", () => {
       /PITCH[\s\S]*\n.*N1.*\[N2\].*\[N8\].*\n.*C3.*\[--\].*\[--\].*\n.*o.*----.*\n\+/,
     );
   });
+
+  it("renders persistence notices above the dashboard bands", () => {
+    const displayState = createPerformanceDisplayState();
+    displayState.notice = {
+      title: "SAVE TO CLOUD?",
+      message: "SHIFT+NEXT AGAIN",
+      tone: "warning",
+    };
+
+    const rendered = renderInstrumentDisplayStateToTerminal(displayState);
+
+    expect(rendered).toContain("SAVE TO CLOUD? | SHIFT+NEXT AGAIN");
+  });
 });
 
 describe("createTerminalDisplaySession", () => {

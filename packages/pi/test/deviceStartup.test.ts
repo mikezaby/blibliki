@@ -5,9 +5,12 @@ import {
 } from "@blibliki/instrument";
 import type { InstrumentDisplayState } from "@blibliki/instrument";
 import { Device } from "@blibliki/models";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { startDeviceDeployment } from "@/deviceStartup";
-import type { StartedInstrumentSession } from "@/instrumentSession";
+import type {
+  StartedInstrumentSession,
+  StartInstrumentSessionOptions,
+} from "@/instrumentSession";
 
 const PATCH: IEngineSerialize = {
   bpm: 120,
@@ -169,6 +172,247 @@ describe("startDeviceDeployment", () => {
     });
 
     expect(receivedDisplayHook).toBe(onDisplayStateChange);
+  });
+
+  it("autosaves Pi-side instrument document changes only to the local working copy", async () => {
+    const device = new Device({
+      token: "token-1",
+      name: "Device",
+      deploymentTarget: {
+        kind: "instrument",
+        instrumentId: "instrument-1",
+      },
+      userId: "user-1",
+    });
+    const document = createDefaultInstrumentDocument();
+    const workingCopySaves: InstrumentDocument[] = [];
+    const save = vi.fn().mockResolvedValue(undefined);
+    let emitDocumentChange: StartInstrumentSessionOptions["onDocumentChange"];
+
+    await startDeviceDeployment(device, {
+      loadPatch: () =>
+        Promise.reject(new Error("Patch path should not be used")),
+      loadInstrument: () =>
+        Promise.resolve({
+          document,
+          save,
+        }),
+      saveWorkingCopy: (_instrumentId, nextDocument) => {
+        workingCopySaves.push(nextDocument);
+      },
+      loadEngine: () =>
+        Promise.reject(new Error("Patch engine should not be used")),
+      startInstrumentSession: (_instrumentDocument, options) => {
+        emitDocumentChange = options?.onDocumentChange;
+
+        return Promise.resolve({
+          session: {} as never,
+          engine: {} as never,
+          controllerSession: {} as never,
+          getDisplayState: () => {
+            throw new Error("Not needed for test");
+          },
+          dispose: () => undefined,
+        } as unknown as StartedInstrumentSession);
+      },
+    });
+
+    if (!emitDocumentChange) {
+      throw new Error(
+        "Expected startDeviceDeployment to provide onDocumentChange",
+      );
+    }
+
+    const nextDocument = {
+      ...document,
+      globalBlock: {
+        ...document.globalBlock,
+        masterVolume: 0.66,
+      },
+    };
+
+    await emitDocumentChange(nextDocument, {} as never);
+    await Promise.resolve();
+
+    expect(workingCopySaves.at(-1)).toEqual(nextDocument);
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it("caches the loaded instrument document as a working copy before the session starts", async () => {
+    const device = new Device({
+      token: "token-1",
+      name: "Device",
+      deploymentTarget: {
+        kind: "instrument",
+        instrumentId: "instrument-1",
+      },
+      userId: "user-1",
+    });
+    const document = createDefaultInstrumentDocument();
+    const workingCopySaves: InstrumentDocument[] = [];
+
+    await startDeviceDeployment(device, {
+      loadPatch: () =>
+        Promise.reject(new Error("Patch path should not be used")),
+      loadInstrument: () =>
+        Promise.resolve({
+          document,
+        }),
+      saveWorkingCopy: (_instrumentId, nextDocument) => {
+        workingCopySaves.push(nextDocument);
+      },
+      loadEngine: () =>
+        Promise.reject(new Error("Patch engine should not be used")),
+      startInstrumentSession: () =>
+        Promise.resolve({
+          session: {} as never,
+          engine: {} as never,
+          controllerSession: {} as never,
+          getDisplayState: () => {
+            throw new Error("Not needed for test");
+          },
+          dispose: () => undefined,
+        } as unknown as StartedInstrumentSession),
+    });
+
+    expect(workingCopySaves).toEqual([document]);
+  });
+
+  it("saves the current local draft back to Firestore only after the explicit save command", async () => {
+    const device = new Device({
+      token: "token-1",
+      name: "Device",
+      deploymentTarget: {
+        kind: "instrument",
+        instrumentId: "instrument-1",
+      },
+      userId: "user-1",
+    });
+    const document = createDefaultInstrumentDocument();
+    const save = vi.fn().mockResolvedValue(undefined);
+    let persistAction: StartInstrumentSessionOptions["onPersistenceRequest"];
+
+    await startDeviceDeployment(device, {
+      loadPatch: () =>
+        Promise.reject(new Error("Patch path should not be used")),
+      loadInstrument: () =>
+        Promise.resolve({
+          document,
+          save,
+        }),
+      saveWorkingCopy: () => undefined,
+      loadEngine: () =>
+        Promise.reject(new Error("Patch engine should not be used")),
+      startInstrumentSession: (_instrumentDocument, options) => {
+        persistAction = options?.onPersistenceRequest;
+
+        return Promise.resolve({
+          session: {} as never,
+          engine: {} as never,
+          controllerSession: {} as never,
+          getDisplayState: () => {
+            throw new Error("Not needed for test");
+          },
+          dispose: () => undefined,
+        } as unknown as StartedInstrumentSession);
+      },
+    });
+
+    if (!persistAction) {
+      throw new Error(
+        "Expected startDeviceDeployment to provide onPersistenceAction",
+      );
+    }
+
+    const nextDocument = {
+      ...document,
+      globalBlock: {
+        ...document.globalBlock,
+        masterVolume: 0.66,
+      },
+    };
+
+    const notice = await persistAction("saveDraft", nextDocument, {} as never);
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(notice).toEqual({
+      title: "SAVE COMPLETE",
+      message: "Firestore updated",
+      tone: "success",
+    });
+  });
+
+  it("discards the local draft and restarts from Firestore after the explicit reload command", async () => {
+    const device = new Device({
+      token: "token-1",
+      name: "Device",
+      deploymentTarget: {
+        kind: "instrument",
+        instrumentId: "instrument-1",
+      },
+      userId: "user-1",
+    });
+    const workingDocument = createDefaultInstrumentDocument();
+    const remoteDocument = {
+      ...createDefaultInstrumentDocument(),
+      name: "Remote Instrument",
+    };
+    const workingCopySaves: InstrumentDocument[] = [];
+    let startCalls = 0;
+    let persistAction: StartInstrumentSessionOptions["onPersistenceRequest"];
+    const initialDisplayNotices: StartInstrumentSessionOptions["initialDisplayNotice"][] =
+      [];
+
+    await startDeviceDeployment(device, {
+      loadPatch: () =>
+        Promise.reject(new Error("Patch path should not be used")),
+      loadInstrument: () =>
+        Promise.resolve({
+          document: remoteDocument,
+          save: vi.fn().mockResolvedValue(undefined),
+        }),
+      loadWorkingCopy: () => workingDocument,
+      saveWorkingCopy: (_instrumentId, nextDocument) => {
+        workingCopySaves.push(nextDocument);
+      },
+      loadEngine: () =>
+        Promise.reject(new Error("Patch engine should not be used")),
+      startInstrumentSession: (instrumentDocument, options) => {
+        startCalls += 1;
+        initialDisplayNotices.push(options?.initialDisplayNotice);
+        persistAction = options?.onPersistenceRequest;
+
+        return Promise.resolve({
+          session: {
+            compiledInstrument: {
+              name: instrumentDocument.name,
+            },
+          } as never,
+          engine: {} as never,
+          controllerSession: {} as never,
+          getDisplayState: () => {
+            throw new Error("Not needed for test");
+          },
+          dispose: () => undefined,
+        } as unknown as StartedInstrumentSession);
+      },
+    });
+
+    if (!persistAction) {
+      throw new Error(
+        "Expected startDeviceDeployment to provide onPersistenceAction",
+      );
+    }
+
+    await persistAction("discardDraft", workingDocument, {} as never);
+
+    expect(startCalls).toBe(2);
+    expect(workingCopySaves.at(-1)).toEqual(remoteDocument);
+    expect(initialDisplayNotices.at(-1)).toEqual({
+      title: "REMOTE RELOADED",
+      message: "Local draft discarded",
+      tone: "success",
+    });
   });
 
   it("fails clearly when the device has no deployment target", async () => {

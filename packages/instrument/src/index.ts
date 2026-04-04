@@ -103,6 +103,7 @@ export type {
   CreateInstrumentDisplayStateInput,
   DisplayBandState,
   DisplaySlotState,
+  InstrumentDisplayNotice,
   InstrumentDisplayState,
 } from "./runtime/displayState";
 export { compileTrack } from "./compiler/compileTrack";

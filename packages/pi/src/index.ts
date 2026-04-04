@@ -13,12 +13,14 @@ import {
   getConfigPath,
   updateConfig,
   getConfig,
+  type Config,
 } from "./config.js";
 import {
   startDeviceDeployment,
   type DeviceDeploymentDependencies,
 } from "./deviceStartup.js";
 import { createConfiguredDisplayOutput } from "./displayOutput.js";
+import { loadInstrumentWorkingCopy } from "./instrumentPersistence.js";
 import { promptForUserId } from "./prompt.js";
 
 export { loadOrCreateConfig, getConfigPath, updateConfig, getConfig };
@@ -84,6 +86,12 @@ export type StartConfiguredDeviceDependencies = Omit<
   instrumentSessionOptions?: DeviceDeploymentDependencies["instrumentSessionOptions"];
 };
 
+type ResolveConfiguredDeviceDependencies = {
+  findDevices?: typeof Device.findBy;
+  updateConfig?: typeof updateConfig;
+  hasInstrumentWorkingCopy?: (instrumentId: string) => boolean;
+};
+
 export async function startConfiguredDevice(
   device: Device,
   dependencies: StartConfiguredDeviceDependencies = {},
@@ -117,6 +125,84 @@ export async function startConfiguredDevice(
     });
   } catch (error) {
     displayOutput.dispose();
+    throw error;
+  }
+}
+
+function createCachedDevice(config: Config): Device | null {
+  if (!config.userId) {
+    return null;
+  }
+
+  const deploymentTarget =
+    config.deploymentTarget ??
+    (config.patchId
+      ? {
+          kind: "patch" as const,
+          patchId: config.patchId,
+        }
+      : null);
+  if (!deploymentTarget) {
+    return null;
+  }
+
+  return new Device({
+    id: config.deviceId,
+    token: config.token,
+    name: config.deviceName ?? "Cached Device",
+    deploymentTarget,
+    userId: config.userId,
+  });
+}
+
+export async function resolveConfiguredDevice(
+  config: Config,
+  dependencies: ResolveConfiguredDeviceDependencies = {},
+): Promise<Device> {
+  const findDevices = (opts: Parameters<typeof Device.findBy>[0]) =>
+    (dependencies.findDevices ?? Device.findBy)(opts);
+  const hasInstrumentWorkingCopy =
+    dependencies.hasInstrumentWorkingCopy ??
+    ((instrumentId: string) =>
+      loadInstrumentWorkingCopy(instrumentId) !== null);
+
+  try {
+    const device = (
+      await findDevices({
+        userId: config.userId,
+        token: config.token,
+      })
+    )[0];
+
+    if (!device) {
+      throw new Error("Device: Not found");
+    }
+
+    dependencies.updateConfig?.({
+      deviceId: device.id,
+      deviceName: device.name,
+      deploymentTarget: device.deploymentTarget,
+      patchId: device.patchId ?? undefined,
+    });
+
+    return device;
+  } catch (error) {
+    const cachedDevice = createCachedDevice(config);
+    const deploymentTarget = normalizeDeviceDeploymentTarget(
+      cachedDevice ?? {},
+    );
+
+    if (
+      cachedDevice &&
+      deploymentTarget?.kind === "instrument" &&
+      hasInstrumentWorkingCopy(deploymentTarget.instrumentId)
+    ) {
+      console.warn(
+        `Falling back to cached instrument deployment ${deploymentTarget.instrumentId}`,
+      );
+      return cachedDevice;
+    }
+
     throw error;
   }
 }
@@ -219,16 +305,9 @@ export async function main(options?: { gridUrl?: string }): Promise<void> {
 
   initializeFirebase(finalConfig.firebase!);
 
-  const device = (
-    await Device.findBy({
-      userId: finalConfig.userId,
-      token: finalConfig.token,
-    })
-  )[0];
-
-  if (!device) {
-    throw Error("Device: Not found");
-  }
+  const device = await resolveConfiguredDevice(finalConfig, {
+    updateConfig,
+  });
 
   await startConfiguredDevice(device);
 }

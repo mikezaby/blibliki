@@ -46,6 +46,21 @@ function renderTitleRow(title: string, row: string) {
   return `| ${normalizedTitle.padEnd(contentWidth, " ")} |`;
 }
 
+function renderNoticeRow(
+  displayState: InstrumentDisplayState,
+  row: string,
+): string | null {
+  if (!displayState.notice) {
+    return null;
+  }
+
+  const content = displayState.notice.message
+    ? `${displayState.notice.title} | ${displayState.notice.message}`
+    : displayState.notice.title;
+
+  return renderTitleRow(content, row);
+}
+
 function createIndicator(position: number) {
   return Array.from({ length: 4 }, (_, index) =>
     index === position ? "o" : "-",
@@ -170,9 +185,12 @@ export function renderInstrumentDisplayStateToTerminal(
     `${displayState.header.transportState.toUpperCase()} | ` +
     displayState.header.mode.toUpperCase();
 
+  const noticeRow = renderNoticeRow(displayState, baseRow);
+
   return [
     renderBorder(baseRow),
     renderTitleRow(headerText, baseRow),
+    ...(noticeRow ? [noticeRow] : []),
     renderBand("GLOBAL", globalCells),
     renderBand(displayState.upperBand.title, upperCells),
     renderBand(displayState.lowerBand.title, lowerCells),

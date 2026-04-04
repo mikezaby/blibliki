@@ -25,6 +25,10 @@ type InstrumentControllerCommand =
   | {
       type: "seqEdit.step";
       stepIndex: number;
+    }
+  | {
+      type: "persistence";
+      action: "saveDraft" | "discardDraft";
     };
 
 export type InstrumentControllerResult = {
@@ -80,6 +84,26 @@ export function reduceInstrumentControllerEvent(
   const activeTrack =
     runtimePatch.compiledInstrument.tracks[currentNavigation.activeTrackIndex];
   const sequencerTrack = activeTrack?.noteSource === "stepSequencer";
+
+  if (currentNavigation.shiftPressed && event.cc === TRACK_NEXT_CC) {
+    return {
+      runtimePatch,
+      command: {
+        type: "persistence",
+        action: "saveDraft",
+      },
+    };
+  }
+
+  if (currentNavigation.shiftPressed && event.cc === TRACK_PREV_CC) {
+    return {
+      runtimePatch,
+      command: {
+        type: "persistence",
+        action: "discardDraft",
+      },
+    };
+  }
 
   if (
     event.cc === PAGE_UP_CC &&
