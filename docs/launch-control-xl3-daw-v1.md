@@ -13,7 +13,7 @@ Novation Launch Control XL 3 in DAW mode.
 | Page Down | 107 | Controller -> Engine | Moves `MidiMapper.activePage` by -1 (clamped) | Mapper resync sends current page values |
 | Track Prev | 103 | Controller -> Engine | Alias for previous mapper page (-1) | Mapper resync sends current page values |
 | Track Next | 102 | Controller -> Engine | Alias for next mapper page (+1) | Mapper resync sends current page values |
-| Encoders/Faders | 5..36 | Both | CC mapping input and reverse sync | Sent on channel 16 (`0xBF`) |
+| Encoders/Faders | 5..36 | Both | Faders stay absolute; encoder rows run in DAW relative mode and are normalized back to CC `13..36` in software before mapping | Sent on channel 16 (`0xBF`) |
 | Shift/Brightness | 63, 112 | Engine -> Controller | Special DAW controls | Sent on channel 7 (`0xB6`) |
 | Other mapped buttons | Variable | Both | CC mapping input and reverse sync | Sent on channel 1 (`0xB0`) |
 
@@ -26,6 +26,7 @@ Novation Launch Control XL 3 in DAW mode.
 ## Known Limitations (V1)
 
 - Only Launch Control XL 3 DAW mode is supported as a first-party profile.
+- Encoder rows are intentionally forced into relative mode on connect; reverse sync still targets the absolute CC indices used by the LED rings.
 - Navigation buttons currently target `MidiMapper` page changes only (not track selection).
 - Track buttons (`Track Prev/Next`) are mapped as page navigation aliases.
 - If multiple `MidiMapper` modules exist, page navigation applies to all of them.

@@ -383,9 +383,9 @@ describe("createInstrumentControllerSession", () => {
     inputDevice.emit(MidiEvent.fromCC(63, 127, 0));
     inputDevice.emit(MidiEvent.fromCC(106, 127, 0));
     inputDevice.emit(MidiEvent.fromCC(63, 0, 0));
-    inputDevice.emit(MidiEvent.fromCC(13, 127, 0));
-    inputDevice.emit(MidiEvent.fromCC(14, 64, 0));
-    inputDevice.emit(MidiEvent.fromCC(20, 127, 0));
+    inputDevice.emit(MidiEvent.fromCC(13, 65, 0));
+    inputDevice.emit(MidiEvent.fromCC(14, 63, 0));
+    inputDevice.emit(MidiEvent.fromCC(20, 66, 0));
 
     const stepSequencerUpdate = updateCalls.find(
       (call) => call.moduleType === ModuleType.StepSequencer,
@@ -420,7 +420,7 @@ describe("createInstrumentControllerSession", () => {
     expect(stepSequencerProps.patterns[0]?.pages[0]?.steps[0]).toEqual(
       expect.objectContaining({
         active: true,
-        probability: 50,
+        probability: 74,
       }),
     );
 
@@ -486,10 +486,10 @@ describe("createInstrumentControllerSession", () => {
     inputDevice.emit(MidiEvent.fromCC(63, 127, 0));
     inputDevice.emit(MidiEvent.fromCC(106, 127, 0));
     inputDevice.emit(MidiEvent.fromCC(63, 0, 0));
-    inputDevice.emit(MidiEvent.fromCC(21, 100, 0));
-    inputDevice.emit(MidiEvent.fromCC(29, 85, 0));
-    inputDevice.emit(MidiEvent.fromCC(30, 96, 0));
-    inputDevice.emit(MidiEvent.fromCC(22, 110, 0));
+    inputDevice.emit(MidiEvent.fromCC(21, 84, 0));
+    inputDevice.emit(MidiEvent.fromCC(29, 65, 0));
+    inputDevice.emit(MidiEvent.fromCC(30, 65, 0));
+    inputDevice.emit(MidiEvent.fromCC(22, 74, 0));
 
     const stepSequencerModule = modules.get("track-1.runtime.stepSequencer");
     if (
@@ -514,11 +514,11 @@ describe("createInstrumentControllerSession", () => {
 
     expect(stepSequencerProps.patterns[0]?.pages[0]?.steps[0]?.notes).toEqual([
       {
-        note: "C4",
+        note: "C#3",
         velocity: 100,
       },
       {
-        note: "F#4",
+        note: "C3",
         velocity: 110,
       },
     ]);
@@ -534,12 +534,12 @@ describe("createInstrumentControllerSession", () => {
     );
     expect(session.getDisplayState().lowerBand.slots[0]).toEqual(
       expect.objectContaining({
-        valueText: "C4",
+        valueText: "C#3",
       }),
     );
     expect(session.getDisplayState().lowerBand.slots[1]).toEqual(
       expect.objectContaining({
-        valueText: "F#4",
+        valueText: "C3",
       }),
     );
   });

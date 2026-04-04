@@ -150,11 +150,12 @@ describe("compileTrack", () => {
 
     expect(
       sourceAmpMappings.mappings.map(
-        ({ cc, moduleId, moduleType, propName }) => ({
+        ({ cc, moduleId, moduleType, propName, mode }) => ({
           cc,
           moduleId,
           moduleType,
           propName,
+          mode,
         }),
       ),
     ).toEqual([
@@ -163,66 +164,77 @@ describe("compileTrack", () => {
         moduleId: "source.main",
         moduleType: ModuleType.Oscillator,
         propName: "wave",
+        mode: "incDec",
       },
       {
         cc: 22,
         moduleId: "source.main",
         moduleType: ModuleType.Oscillator,
         propName: "frequency",
+        mode: "incDec",
       },
       {
         cc: 23,
         moduleId: "source.main",
         moduleType: ModuleType.Oscillator,
         propName: "octave",
+        mode: "incDec",
       },
       {
         cc: 24,
         moduleId: "source.main",
         moduleType: ModuleType.Oscillator,
         propName: "coarse",
+        mode: "incDec",
       },
       {
         cc: 25,
         moduleId: "source.main",
         moduleType: ModuleType.Oscillator,
         propName: "fine",
+        mode: "incDec",
       },
       {
         cc: 26,
         moduleId: "source.main",
         moduleType: ModuleType.Oscillator,
         propName: "lowGain",
+        mode: "incDec",
       },
       {
         cc: 29,
         moduleId: "amp.envelope",
         moduleType: ModuleType.Envelope,
         propName: "attack",
+        mode: "incDec",
       },
       {
         cc: 30,
         moduleId: "amp.envelope",
         moduleType: ModuleType.Envelope,
         propName: "decay",
+        mode: "incDec",
       },
       {
         cc: 31,
         moduleId: "amp.envelope",
         moduleType: ModuleType.Envelope,
         propName: "sustain",
+        mode: "incDec",
       },
       {
         cc: 32,
         moduleId: "amp.envelope",
         moduleType: ModuleType.Envelope,
         propName: "release",
+        mode: "incDec",
       },
       {
         cc: 36,
         moduleId: "amp.gain",
         moduleType: ModuleType.Gain,
         propName: "gain",
+        mode: "incDec",
       },
     ]);
 

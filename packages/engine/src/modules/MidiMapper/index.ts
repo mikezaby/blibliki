@@ -60,37 +60,229 @@ const DEFAULT_PROPS: IMidiMapperProps = {
   globalMappings: [{} as MidiMapping<ModuleType>],
 };
 
-function getMidiFromMappedValue({
-  value,
-  midiValue,
-  propSchema,
-  mapping,
-}: {
-  value: number;
-  propSchema: NumberProp;
-  midiValue: number;
-  mapping: MidiMapping<ModuleType>;
-}): number {
+const DEFAULT_RELATIVE_THRESHOLD = 64;
+const DEFAULT_RELATIVE_ENUM_TICKS = 2;
+const MIDI_MAX_VALUE = 127;
+
+type RelativeNumberState = {
+  normalizedValue: number;
+  lastPropValue: number;
+};
+
+type RelativeEnumState<T extends string | number> = {
+  accumulatedDelta: number;
+  lastPropValue: T;
+};
+
+function clampNumber(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function getMappingKey(mapping: MidiMapping<ModuleType>) {
+  return [
+    mapping.cc ?? "",
+    mapping.moduleId ?? "",
+    mapping.moduleType ?? "",
+    mapping.propName ?? "",
+    mapping.mode ?? "",
+  ].join(":");
+}
+
+function getStepPrecision(step: number) {
+  const exponentMatch = `${step}`.match(/e-(\d+)$/);
+  if (exponentMatch) {
+    return Number(exponentMatch[1]);
+  }
+
+  const decimalPart = `${step}`.split(".")[1];
+  return decimalPart?.length ?? 0;
+}
+
+function quantizeNumberValue(value: number, propSchema: NumberProp): number {
   const min = propSchema.min ?? 0;
   const max = propSchema.max ?? 1;
-  const exp = propSchema.exp ?? 1;
+  const clampedValue = clampNumber(value, min, max);
+  const step = propSchema.step;
 
-  const { threshold = 64, mode } = mapping;
+  if (step === undefined || step <= 0) {
+    return clampedValue;
+  }
 
-  // Reverse the range mapping: get curvedValue
-  const curvedValue = (value - min) / (max - min);
+  const steps = Math.round((clampedValue - min) / step);
+  const precision = getStepPrecision(step);
+  const quantizedValue = Number((min + steps * step).toFixed(precision));
 
-  // Reverse the exponential curve: get normalizedMidi
-  const normalizedMidi = Math.pow(curvedValue, 1 / exp);
+  return clampNumber(quantizedValue, min, max);
+}
 
-  // Reverse the MIDI normalization: get midiValue
-  let newMidiValue = normalizedMidi * 127;
-  newMidiValue =
-    (midiValue >= threshold && mode === MidiMappingMode.incDec) ||
-    (midiValue <= threshold && mode === MidiMappingMode.incDecRev)
-      ? newMidiValue + 1
-      : newMidiValue - 1;
-  return Math.round(Math.max(0, Math.min(127, newMidiValue))); // Valid MIDI range
+function getNormalizedNumberValue(
+  value: number,
+  propSchema: NumberProp,
+): number {
+  const min = propSchema.min ?? 0;
+  const max = propSchema.max ?? 1;
+
+  if (max === min) {
+    return 0;
+  }
+
+  const normalizedValue = (clampNumber(value, min, max) - min) / (max - min);
+  return Math.pow(
+    clampNumber(normalizedValue, 0, 1),
+    1 / (propSchema.exp ?? 1),
+  );
+}
+
+function mapNormalizedToNumberValue(
+  normalizedValue: number,
+  propSchema: NumberProp,
+): number {
+  const min = propSchema.min ?? 0;
+  const max = propSchema.max ?? 1;
+
+  if (max === min) {
+    return min;
+  }
+
+  const curvedValue = Math.pow(
+    clampNumber(normalizedValue, 0, 1),
+    propSchema.exp ?? 1,
+  );
+
+  return quantizeNumberValue(min + curvedValue * (max - min), propSchema);
+}
+
+function getRelativeDelta(
+  midiValue: number,
+  mapping: MidiMapping<ModuleType>,
+): number {
+  const threshold = mapping.threshold ?? DEFAULT_RELATIVE_THRESHOLD;
+  const rawDelta = midiValue - threshold;
+
+  if (rawDelta === 0) {
+    return 0;
+  }
+
+  return mapping.mode === MidiMappingMode.incDecRev ? -rawDelta : rawDelta;
+}
+
+function mapRelativeNumberValue({
+  currentValue,
+  propSchema,
+  mapping,
+  delta,
+  relativeState,
+}: {
+  currentValue: number;
+  propSchema: NumberProp;
+  mapping: MidiMapping<ModuleType>;
+  delta: number;
+  relativeState?: RelativeNumberState;
+}): { value: number; relativeState?: RelativeNumberState } {
+  if (mapping.step !== undefined) {
+    return {
+      value: quantizeNumberValue(
+        currentValue + delta * mapping.step,
+        propSchema,
+      ),
+    };
+  }
+
+  if (propSchema.exp !== undefined && propSchema.exp !== 1) {
+    const baseNormalizedValue =
+      relativeState?.lastPropValue === currentValue
+        ? relativeState.normalizedValue
+        : getNormalizedNumberValue(currentValue, propSchema);
+    const normalizedValue = clampNumber(
+      baseNormalizedValue + delta / MIDI_MAX_VALUE,
+      0,
+      1,
+    );
+    const value = mapNormalizedToNumberValue(normalizedValue, propSchema);
+
+    return {
+      value,
+      relativeState: {
+        normalizedValue,
+        lastPropValue: value,
+      },
+    };
+  }
+
+  if (propSchema.step !== undefined) {
+    return {
+      value: quantizeNumberValue(
+        currentValue + delta * propSchema.step,
+        propSchema,
+      ),
+    };
+  }
+
+  return {
+    value: mapNormalizedToNumberValue(
+      getNormalizedNumberValue(currentValue, propSchema) +
+        delta / MIDI_MAX_VALUE,
+      propSchema,
+    ),
+  };
+}
+
+function getRelativeEnumTicks(mapping: MidiMapping<ModuleType>) {
+  if (mapping.step === undefined || !Number.isFinite(mapping.step)) {
+    return DEFAULT_RELATIVE_ENUM_TICKS;
+  }
+
+  return Math.max(1, Math.round(mapping.step));
+}
+
+function mapRelativeEnumValue<T extends string | number>(
+  currentValue: T,
+  options: T[],
+  delta: number,
+  accumulatedDelta: number,
+  ticksPerOption: number,
+): { value: T; accumulatedDelta: number } {
+  if (options.length === 0) {
+    return { value: currentValue, accumulatedDelta: 0 };
+  }
+
+  const currentIndex = options.indexOf(currentValue);
+  const baseIndex = currentIndex >= 0 ? currentIndex : 0;
+  const totalDelta = accumulatedDelta + delta;
+  const moveCount =
+    totalDelta > 0
+      ? Math.floor(totalDelta / ticksPerOption)
+      : Math.ceil(totalDelta / ticksPerOption);
+
+  if (moveCount === 0) {
+    return {
+      value: options[baseIndex] ?? currentValue,
+      accumulatedDelta: totalDelta,
+    };
+  }
+
+  const unclampedIndex = baseIndex + moveCount;
+  const nextIndex = clampNumber(unclampedIndex, 0, options.length - 1);
+  const appliedMoves = nextIndex - baseIndex;
+  const hitBoundary = nextIndex !== unclampedIndex;
+
+  return {
+    value: options[nextIndex] ?? currentValue,
+    accumulatedDelta: hitBoundary
+      ? 0
+      : totalDelta - appliedMoves * ticksPerOption,
+  };
+}
+
+function mapRelativeBooleanValue(
+  currentValue: boolean,
+  delta: number,
+): boolean {
+  if (delta === 0) {
+    return currentValue;
+  }
+
+  return delta > 0;
 }
 
 type MidiMapperSetterHooks = Pick<
@@ -105,6 +297,11 @@ export default class MidiMapper
   declare audioNode: undefined;
   private _midiOut: MidiOutput; // Will be used to send CC values on track change
   private readonly syncValues: MidiMapperSyncValues;
+  private readonly relativeNumberState = new Map<string, RelativeNumberState>();
+  private readonly relativeEnumState = new Map<
+    string,
+    RelativeEnumState<string | number>
+  >();
 
   constructor(engineId: string, params: ICreateModule<ModuleType.MidiMapper>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
@@ -135,6 +332,7 @@ export default class MidiMapper
       Math.min(value, this.props.tracks.length - 1),
       0,
     );
+    this.resetRelativeState();
 
     queueMicrotask(() => {
       this.syncControllerValues();
@@ -144,6 +342,7 @@ export default class MidiMapper
   };
 
   onAfterSetTracks: MidiMapperSetterHooks["onAfterSetTracks"] = () => {
+    this.resetRelativeState();
     queueMicrotask(() => {
       this.syncControllerValues();
     });
@@ -151,6 +350,7 @@ export default class MidiMapper
 
   onAfterSetGlobalMappings: MidiMapperSetterHooks["onAfterSetGlobalMappings"] =
     () => {
+      this.resetRelativeState();
       queueMicrotask(() => {
         this.syncControllerValues();
       });
@@ -201,6 +401,11 @@ export default class MidiMapper
     if (midiValue === undefined) return;
 
     const mode = mapping.mode;
+    const isRelativeMode =
+      mode === MidiMappingMode.incDec || mode === MidiMappingMode.incDecRev;
+    const relativeDelta = isRelativeMode
+      ? getRelativeDelta(midiValue, mapping)
+      : undefined;
 
     // Toggle mode: only respond to 127 (button press), ignore 0
     if (
@@ -211,6 +416,11 @@ export default class MidiMapper
       return;
     }
 
+    if (isRelativeMode && relativeDelta === 0) {
+      return;
+    }
+
+    const mappingKey = getMappingKey(mapping);
     const mappedModule = this.engine.findModule(mapping.moduleId);
     // @ts-expect-error TS7053 ignore this error
     const propSchema = moduleSchemas[mappedModule.moduleType][
@@ -226,57 +436,90 @@ export default class MidiMapper
         // @ts-expect-error TS7053 ignore this error
         const currentValue = mappedModule.props[propName] as number;
 
-        if (
-          mode === MidiMappingMode.incDec ||
-          mode === MidiMappingMode.incDecRev
-        ) {
-          midiValue = getMidiFromMappedValue({
-            value: currentValue,
+        if (relativeDelta !== undefined) {
+          const result = mapRelativeNumberValue({
+            currentValue,
             propSchema,
             mapping,
-            midiValue,
+            delta: relativeDelta,
+            relativeState: this.relativeNumberState.get(mappingKey),
           });
+          mappedValue = result.value;
+
+          if (result.relativeState) {
+            this.relativeNumberState.set(mappingKey, result.relativeState);
+          } else {
+            this.relativeNumberState.delete(mappingKey);
+          }
         } else if (mode === MidiMappingMode.directRev) {
           midiValue = 127 - midiValue;
         }
 
         if (mode === MidiMappingMode.toggleInc) {
-          mappedValue = currentValue + (propSchema.step ?? 1);
+          mappedValue = quantizeNumberValue(
+            currentValue + (propSchema.step ?? 1),
+            propSchema,
+          );
         } else if (mode === MidiMappingMode.toggleDec) {
-          mappedValue = currentValue - (propSchema.step ?? 1);
-        } else {
+          mappedValue = quantizeNumberValue(
+            currentValue - (propSchema.step ?? 1),
+            propSchema,
+          );
+        } else if (mappedValue === undefined) {
           const min = propSchema.min ?? 0;
           const max = propSchema.max ?? 1;
-          const normalizedMidi = midiValue / 127;
+          const normalizedMidi = midiValue / MIDI_MAX_VALUE;
           const curvedValue = Math.pow(normalizedMidi, propSchema.exp ?? 1);
-          mappedValue = min + curvedValue * (max - min);
-
-          // Round to step if defined
-          if (
-            propSchema.step !== undefined &&
-            (!propSchema.exp || propSchema.exp === 1)
-          ) {
-            const steps = Math.round((mappedValue - min) / propSchema.step);
-            mappedValue = min + steps * propSchema.step;
-          }
+          mappedValue = quantizeNumberValue(
+            min + curvedValue * (max - min),
+            propSchema,
+          );
         }
 
         break;
       }
       case "enum": {
-        const optionIndex = Math.floor(
-          (midiValue / 127) * propSchema.options.length,
-        );
-        const clampedIndex = Math.min(
-          optionIndex,
-          propSchema.options.length - 1,
-        );
-        mappedValue = propSchema.options[clampedIndex];
+        if (relativeDelta !== undefined) {
+          // @ts-expect-error TS7053 ignore this error
+          const currentValue = mappedModule.props[propName] as string | number;
+          const relativeState = this.relativeEnumState.get(mappingKey);
+          const result = mapRelativeEnumValue(
+            currentValue,
+            propSchema.options,
+            relativeDelta,
+            relativeState?.lastPropValue === currentValue
+              ? relativeState.accumulatedDelta
+              : 0,
+            getRelativeEnumTicks(mapping),
+          );
+          const nextEnumValue = result.value;
+          mappedValue = nextEnumValue;
+          this.relativeEnumState.set(mappingKey, {
+            accumulatedDelta: result.accumulatedDelta,
+            lastPropValue: nextEnumValue,
+          });
+        } else {
+          const optionIndex = Math.floor(
+            (midiValue / MIDI_MAX_VALUE) * propSchema.options.length,
+          );
+          const clampedIndex = Math.min(
+            optionIndex,
+            propSchema.options.length - 1,
+          );
+          mappedValue = propSchema.options[clampedIndex];
+        }
         break;
       }
-      case "boolean":
-        mappedValue = midiValue >= 64;
+      case "boolean": {
+        if (relativeDelta !== undefined) {
+          // @ts-expect-error TS7053 ignore this error
+          const currentValue = mappedModule.props[propName] as boolean;
+          mappedValue = mapRelativeBooleanValue(currentValue, relativeDelta);
+        } else {
+          mappedValue = midiValue >= DEFAULT_RELATIVE_THRESHOLD;
+        }
         break;
+      }
       case "string":
         throw Error("MidiMapper not support string type of values");
       case "array":
@@ -290,6 +533,11 @@ export default class MidiMapper
     mappedModule.props = { [propName]: mappedValue };
     mappedModule.triggerPropsUpdate();
   };
+
+  private resetRelativeState() {
+    this.relativeNumberState.clear();
+    this.relativeEnumState.clear();
+  }
 
   private checkAutoAssign(event: MidiEvent) {
     if (event.cc === undefined) return;

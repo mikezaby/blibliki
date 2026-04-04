@@ -158,7 +158,7 @@ function createMidiMapping(
     moduleId: resolvedSlot.binding.moduleId,
     moduleType: module.moduleType,
     propName: resolvedSlot.binding.propKey,
-    mode: MidiMappingMode.direct,
+    mode: MidiMappingMode.incDec,
   };
 }
 

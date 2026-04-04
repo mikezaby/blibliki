@@ -1,17 +1,40 @@
 import { describe, expect, it } from "vitest";
+import MidiEvent from "@/core/midi/MidiEvent";
 import MidiInputDevice from "@/core/midi/MidiInputDevice";
 import MidiOutputDevice from "@/core/midi/MidiOutputDevice";
 import { LaunchControlXL3 } from "@/core/midi/controllers/LaunchControlXL3";
 import { waitForMicrotasks } from "../../utils/waitForCondition";
 
 function createInputPort() {
+  const listeners = new Set<
+    (event: { data: Uint8Array; timeStamp: number }) => void
+  >();
+
   return {
-    id: "lcxl3-in",
-    name: "LCXL3 DAW In",
-    state: "connected" as const,
-    type: "input" as const,
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
+    port: {
+      id: "lcxl3-in",
+      name: "LCXL3 DAW In",
+      state: "connected" as const,
+      type: "input" as const,
+      addEventListener: (
+        callback: (event: { data: Uint8Array; timeStamp: number }) => void,
+      ) => {
+        listeners.add(callback);
+      },
+      removeEventListener: (
+        callback: (event: { data: Uint8Array; timeStamp: number }) => void,
+      ) => {
+        listeners.delete(callback);
+      },
+    },
+    emit(data: number[]) {
+      listeners.forEach((listener) => {
+        listener({
+          data: new Uint8Array(data),
+          timeStamp: 0,
+        });
+      });
+    },
   };
 }
 
@@ -30,7 +53,8 @@ function createOutputPort(sent: number[][]) {
 describe("LaunchControlXL3", () => {
   it("uses a darker play LED when stopped and a lighter one when playing", async (ctx) => {
     const sent: number[][] = [];
-    const input = new MidiInputDevice(createInputPort(), ctx.context);
+    const inputPort = createInputPort();
+    const input = new MidiInputDevice(inputPort.port, ctx.context);
     const output = new MidiOutputDevice(createOutputPort(sent));
 
     const controller = new LaunchControlXL3(ctx.engine.id, {
@@ -51,7 +75,8 @@ describe("LaunchControlXL3", () => {
 
   it("maps sequencer step states to distinct channel-button colors", async (ctx) => {
     const sent: number[][] = [];
-    const input = new MidiInputDevice(createInputPort(), ctx.context);
+    const inputPort = createInputPort();
+    const input = new MidiInputDevice(inputPort.port, ctx.context);
     const output = new MidiOutputDevice(createOutputPort(sent));
 
     const controller = new LaunchControlXL3(ctx.engine.id, {
@@ -70,6 +95,66 @@ describe("LaunchControlXL3", () => {
     expect(sent).toContainEqual([176, 39, 9]);
 
     controller.dispose();
+    input.disconnect();
+    output.disconnect();
+  });
+
+  it("enables relative mode for all encoder rows and normalizes incoming encoder CCs", async (ctx) => {
+    const sent: number[][] = [];
+    const inputPort = createInputPort();
+    const input = new MidiInputDevice(inputPort.port, ctx.context);
+    const output = new MidiOutputDevice(createOutputPort(sent));
+    const receivedEvents: MidiEvent[] = [];
+
+    input.addEventListener((event) => {
+      receivedEvents.push(event);
+    });
+
+    const controller = new LaunchControlXL3(ctx.engine.id, {
+      input,
+      output,
+    });
+
+    await waitForMicrotasks();
+
+    expect(sent).toContainEqual([182, 69, 127]);
+    expect(sent).toContainEqual([182, 72, 127]);
+    expect(sent).toContainEqual([182, 73, 127]);
+
+    inputPort.emit([0xbf, 77, 65]);
+    inputPort.emit([0xbf, 92, 63]);
+    inputPort.emit([0xbf, 100, 64]);
+
+    expect(
+      receivedEvents.map((event) => ({
+        cc: event.cc,
+        ccValue: event.ccValue,
+        channel: event.channel,
+      })),
+    ).toEqual([
+      {
+        cc: 13,
+        ccValue: 65,
+        channel: 15,
+      },
+      {
+        cc: 28,
+        ccValue: 63,
+        channel: 15,
+      },
+      {
+        cc: 36,
+        ccValue: 64,
+        channel: 15,
+      },
+    ]);
+
+    controller.dispose();
+
+    expect(sent).toContainEqual([182, 69, 0]);
+    expect(sent).toContainEqual([182, 72, 0]);
+    expect(sent).toContainEqual([182, 73, 0]);
+
     input.disconnect();
     output.disconnect();
   });

@@ -89,7 +89,7 @@ export function createInstrumentEncoderGlobalMappings(
           moduleId: runtimeIds.transportControlId,
           moduleType: ModuleType.TransportControl,
           propName: "bpm",
-          mode: MidiMappingMode.direct,
+          mode: MidiMappingMode.incDec,
         };
       case "swing":
         return {
@@ -97,7 +97,7 @@ export function createInstrumentEncoderGlobalMappings(
           moduleId: runtimeIds.transportControlId,
           moduleType: ModuleType.TransportControl,
           propName: "swing",
-          mode: MidiMappingMode.direct,
+          mode: MidiMappingMode.incDec,
         };
       case "masterFilterCutoff":
         return {
@@ -105,7 +105,7 @@ export function createInstrumentEncoderGlobalMappings(
           moduleId: runtimeIds.masterFilterId,
           moduleType: ModuleType.Filter,
           propName: "cutoff",
-          mode: MidiMappingMode.direct,
+          mode: MidiMappingMode.incDec,
         };
       case "masterFilterResonance":
         return {
@@ -113,7 +113,7 @@ export function createInstrumentEncoderGlobalMappings(
           moduleId: runtimeIds.masterFilterId,
           moduleType: ModuleType.Filter,
           propName: "Q",
-          mode: MidiMappingMode.direct,
+          mode: MidiMappingMode.incDec,
         };
       case "reverbSend":
         return {
@@ -121,7 +121,7 @@ export function createInstrumentEncoderGlobalMappings(
           moduleId: runtimeIds.globalReverbId,
           moduleType: ModuleType.Reverb,
           propName: "mix",
-          mode: MidiMappingMode.direct,
+          mode: MidiMappingMode.incDec,
         };
       case "delaySend":
         return {
@@ -129,7 +129,7 @@ export function createInstrumentEncoderGlobalMappings(
           moduleId: runtimeIds.globalDelayId,
           moduleType: ModuleType.Delay,
           propName: "mix",
-          mode: MidiMappingMode.direct,
+          mode: MidiMappingMode.incDec,
         };
       case "masterVolume":
         return {
@@ -137,7 +137,7 @@ export function createInstrumentEncoderGlobalMappings(
           moduleId: runtimeIds.masterVolumeId,
           moduleType: ModuleType.Gain,
           propName: "gain",
-          mode: MidiMappingMode.direct,
+          mode: MidiMappingMode.incDec,
         };
       case "inactive":
         return [];

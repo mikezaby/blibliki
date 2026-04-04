@@ -93,6 +93,12 @@ const CHANNEL_BUTTON_OFF_COLOR = Color.Gray6;
 const CHANNEL_BUTTON_PROGRAMMED_COLOR = 45;
 const CHANNEL_BUTTON_PLAYHEAD_COLOR = 16;
 const CHANNEL_BUTTON_SELECTED_COLOR = 9;
+const RELATIVE_MODE_ENABLED = 127;
+const RELATIVE_MODE_DISABLED = 0;
+const DAW_CONTROL_CHANNEL_STATUS = 0xb6;
+const ENCODER_CHANNEL_STATUS = 0xbf;
+const RELATIVE_ENCODER_OFFSET = 64;
+const RELATIVE_ENCODER_ROW_ENABLE_CCS = [69, 72, 73] as const;
 
 const VALUE_COLOR_RAMP = [
   Color.Gray6,
@@ -104,7 +110,35 @@ const VALUE_COLOR_RAMP = [
   Color.Gray0,
 ] as const;
 
+function normalizeRelativeEncoderControl(cc: number): number {
+  if (cc >= 77 && cc <= 84) return cc - RELATIVE_ENCODER_OFFSET;
+  if (cc >= 85 && cc <= 92) return cc - RELATIVE_ENCODER_OFFSET;
+  if (cc >= 93 && cc <= 100) return cc - RELATIVE_ENCODER_OFFSET;
+
+  return cc;
+}
+
 export class LaunchControlXL3 extends BaseController {
+  protected inputEventDataMutator = (
+    data: number[] | Uint8Array,
+  ): number[] | Uint8Array => {
+    const [status, cc, value] = data;
+    if (status === undefined || cc === undefined || value === undefined) {
+      return data;
+    }
+
+    if (status !== ENCODER_CHANNEL_STATUS) {
+      return data;
+    }
+
+    const normalizedCc = normalizeRelativeEncoderControl(cc);
+    if (normalizedCc === cc) {
+      return data;
+    }
+
+    return [status, normalizedCc, value];
+  };
+
   constructor(engineId: string, ports: MatchedControllerPorts) {
     super(engineId, ports);
     this.sendBigBlibliki();
@@ -113,10 +147,12 @@ export class LaunchControlXL3 extends BaseController {
 
   enterDawMode(): void {
     this.output.send([159, 12, 127]);
+    this.setRelativeEncoderMode(true);
     this.isInDawMode = true;
   }
 
   exitDawMode(): void {
+    this.setRelativeEncoderMode(false);
     this.output.send([159, 12, 0]);
     this.isInDawMode = false;
   }
@@ -204,6 +240,14 @@ export class LaunchControlXL3 extends BaseController {
   private sendBigBlibliki() {
     if (this.disposed) return;
 
-    this.output.send([0xb6, 0x70, 0x00]);
+    this.output.send([DAW_CONTROL_CHANNEL_STATUS, 0x70, 0x00]);
+  }
+
+  private setRelativeEncoderMode(enabled: boolean) {
+    const value = enabled ? RELATIVE_MODE_ENABLED : RELATIVE_MODE_DISABLED;
+
+    RELATIVE_ENCODER_ROW_ENABLE_CCS.forEach((cc) => {
+      this.output.directSend([DAW_CONTROL_CHANNEL_STATUS, cc, value]);
+    });
   }
 }

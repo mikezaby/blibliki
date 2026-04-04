@@ -102,6 +102,7 @@ describe("dashboard header logo layout", () => {
                 text: label;`);
     expect(source).toContain(`Rectangle {
             width: parent.width;
+            height: 100px;
             vertical-stretch: 1;
             background: transparent;
             border-width: 0px;`);

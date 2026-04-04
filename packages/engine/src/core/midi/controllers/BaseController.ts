@@ -9,6 +9,9 @@ export abstract class BaseController {
   protected output: MatchedControllerPorts["output"];
   protected isInDawMode = false;
   protected disposed = false;
+  protected inputEventDataMutator?:
+    | ((data: number[] | Uint8Array) => number[] | Uint8Array)
+    | undefined;
 
   constructor(engineId: string, ports: MatchedControllerPorts) {
     this.engineId = engineId;
@@ -23,6 +26,7 @@ export abstract class BaseController {
 
     queueMicrotask(() => {
       this.input.addEventListener(this.onMidiEvent);
+      this.input.eventDataMutator = this.inputEventDataMutator;
       this.output.eventDataMutator = this.eventDataMutator;
     });
   }
@@ -57,6 +61,7 @@ export abstract class BaseController {
 
   dispose() {
     this.input.removeEventListener(this.onMidiEvent);
+    this.input.eventDataMutator = undefined;
     this.output.eventDataMutator = undefined;
     this.exitDawMode();
     this.disposed = true;

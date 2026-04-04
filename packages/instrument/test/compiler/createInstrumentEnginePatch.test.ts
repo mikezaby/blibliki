@@ -223,6 +223,7 @@ describe("createInstrumentEnginePatch", () => {
     expect(midiMapperProps.tracks[0]?.mappings[0]).toEqual(
       expect.objectContaining({
         moduleId: "track-1.source.main",
+        mode: "incDec",
       }),
     );
     expect(midiMapperProps.tracks[7]?.name).toBe("track-8");
@@ -232,90 +233,105 @@ describe("createInstrumentEnginePatch", () => {
         moduleId: "instrument.runtime.transportControl",
         moduleType: ModuleType.TransportControl,
         propName: "bpm",
+        mode: "incDec",
       }),
       expect.objectContaining({
         cc: 14,
         moduleId: "instrument.runtime.transportControl",
         moduleType: ModuleType.TransportControl,
         propName: "swing",
+        mode: "incDec",
       }),
       expect.objectContaining({
         cc: 15,
         moduleId: "instrument.runtime.masterFilter",
         moduleType: ModuleType.Filter,
         propName: "cutoff",
+        mode: "incDec",
       }),
       expect.objectContaining({
         cc: 16,
         moduleId: "instrument.runtime.masterFilter",
         moduleType: ModuleType.Filter,
         propName: "Q",
+        mode: "incDec",
       }),
       expect.objectContaining({
         cc: 17,
         moduleId: "instrument.runtime.globalReverb",
         moduleType: ModuleType.Reverb,
         propName: "mix",
+        mode: "incDec",
       }),
       expect.objectContaining({
         cc: 18,
         moduleId: "instrument.runtime.globalDelay",
         moduleType: ModuleType.Delay,
         propName: "mix",
+        mode: "incDec",
       }),
       expect.objectContaining({
         cc: 20,
         moduleId: "instrument.runtime.masterVolume",
         moduleType: ModuleType.Gain,
         propName: "gain",
+        mode: "incDec",
       }),
       expect.objectContaining({
         cc: 5,
         moduleId: "track-1.trackGain.main",
         moduleType: ModuleType.Gain,
         propName: "gain",
+        mode: "direct",
       }),
       expect.objectContaining({
         cc: 6,
         moduleId: "track-2.trackGain.main",
         moduleType: ModuleType.Gain,
         propName: "gain",
+        mode: "direct",
       }),
       expect.objectContaining({
         cc: 7,
         moduleId: "track-3.trackGain.main",
         moduleType: ModuleType.Gain,
         propName: "gain",
+        mode: "direct",
       }),
       expect.objectContaining({
         cc: 8,
         moduleId: "track-4.trackGain.main",
         moduleType: ModuleType.Gain,
         propName: "gain",
+        mode: "direct",
       }),
       expect.objectContaining({
         cc: 9,
         moduleId: "track-5.trackGain.main",
         moduleType: ModuleType.Gain,
         propName: "gain",
+        mode: "direct",
       }),
       expect.objectContaining({
         cc: 10,
         moduleId: "track-6.trackGain.main",
         moduleType: ModuleType.Gain,
         propName: "gain",
+        mode: "direct",
       }),
       expect.objectContaining({
         cc: 11,
         moduleId: "track-7.trackGain.main",
         moduleType: ModuleType.Gain,
         propName: "gain",
+        mode: "direct",
       }),
       expect.objectContaining({
         cc: 12,
         moduleId: "track-8.trackGain.main",
         moduleType: ModuleType.Gain,
         propName: "gain",
+        mode: "direct",
       }),
     ]);
     expect(

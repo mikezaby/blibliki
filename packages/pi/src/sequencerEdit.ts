@@ -2,6 +2,7 @@ import {
   type IUpdateModule,
   MidiEvent,
   ModuleType,
+  Note,
   PlaybackMode,
   Resolution,
   TransportState,
@@ -23,8 +24,10 @@ const DURATION_OPTIONS = stepPropSchema.duration.options;
 const RESOLUTION_OPTIONS = Object.values(Resolution);
 const PLAYBACK_OPTIONS = Object.values(PlaybackMode);
 const DEFAULT_NEW_NOTE_VELOCITY = 100;
+const DEFAULT_NEW_NOTE = "C3";
 const PITCH_MIN_MIDI = 24;
 const PITCH_MAX_MIDI = 96;
+const RELATIVE_PIVOT = 64;
 const STEP_LED_OFF = 0;
 const STEP_LED_PROGRAMMED = 64;
 const STEP_LED_PLAYHEAD = 96;
@@ -59,36 +62,48 @@ type StepLedSyncEngine = {
   };
 };
 
-function clampPercentFromCc(value: number) {
-  return Math.max(0, Math.min(100, Math.round((value / 127) * 100)));
+function clampRelativeValue(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
 }
 
-function mapCcToEnum<T extends string>(
-  value: number,
+function getRelativeDelta(value: number) {
+  return value - RELATIVE_PIVOT;
+}
+
+function mapRelativeBoolean(currentValue: boolean, delta: number) {
+  if (delta === 0) {
+    return currentValue;
+  }
+
+  return delta > 0;
+}
+
+function mapRelativeNumber(
+  currentValue: number,
+  delta: number,
+  min: number,
+  max: number,
+) {
+  return clampRelativeValue(currentValue + delta, min, max);
+}
+
+function mapRelativeEnum<T extends string>(
+  currentValue: T,
+  delta: number,
   options: readonly T[],
   fallback: T,
 ) {
-  const index = Math.max(
-    0,
-    Math.min(
-      options.length - 1,
-      Math.round((value / 127) * (options.length - 1)),
-    ),
-  );
+  const currentIndex = options.indexOf(currentValue);
+  const fallbackIndex = options.indexOf(fallback);
+  const baseIndex =
+    currentIndex >= 0 ? currentIndex : Math.max(fallbackIndex, 0);
+  const index = clampRelativeValue(baseIndex + delta, 0, options.length - 1);
 
   return options[index] ?? fallback;
 }
 
-function mapCcToMicrotime(value: number) {
-  return Math.round((value / 127) * 200 - 100);
-}
-
-function mapCcToLoopLength(value: number) {
-  return Math.max(1, Math.min(4, Math.round((value / 127) * 3) + 1));
-}
-
-function mapCcToVelocity(value: number) {
-  return Math.max(0, Math.min(127, Math.round(value)));
+function mapRelativeVelocity(currentValue: number, delta: number) {
+  return clampRelativeValue(currentValue + delta, 0, 127);
 }
 
 function midiNumberToNoteName(midiNumber: number) {
@@ -98,16 +113,30 @@ function midiNumberToNoteName(midiNumber: number) {
   return `${noteName}${octave}`;
 }
 
-function mapCcToPitch(value: number) {
-  if (value <= 0) {
+function mapRelativePitch(
+  currentNote: string | null | undefined,
+  delta: number,
+) {
+  if (delta === 0) {
+    return currentNote ?? null;
+  }
+
+  if (!currentNote && delta < 0) {
     return null;
   }
 
-  const midiNumber =
-    PITCH_MIN_MIDI +
-    Math.round(((value - 1) / 126) * (PITCH_MAX_MIDI - PITCH_MIN_MIDI));
+  const baseMidi = currentNote
+    ? new Note(currentNote).midiNumber
+    : new Note(DEFAULT_NEW_NOTE).midiNumber - 1;
+  const nextMidi = baseMidi + delta;
 
-  return midiNumberToNoteName(midiNumber);
+  if (nextMidi < PITCH_MIN_MIDI) {
+    return null;
+  }
+
+  return midiNumberToNoteName(
+    clampRelativeValue(nextMidi, PITCH_MIN_MIDI, PITCH_MAX_MIDI),
+  );
 }
 
 function getActiveStepSequencerId(runtimePatch: CompiledInstrumentEnginePatch) {
@@ -543,6 +572,11 @@ export function applySeqEditEncoderEvent(
   }
 
   const { moduleId, props } = stepSequencer;
+  const delta = getRelativeDelta(ccValue);
+  if (delta === 0) {
+    return null;
+  }
+
   const velocityIndex = VELOCITY_CCS.indexOf(
     cc as (typeof VELOCITY_CCS)[number],
   );
@@ -550,7 +584,10 @@ export function applySeqEditEncoderEvent(
     return updateRuntimePatchStepSequencerProps(runtimePatch, moduleId, {
       patterns: updateActiveStep(props, runtimePatch, (step) =>
         updateStepNoteSlot(step, velocityIndex, {
-          velocity: mapCcToVelocity(ccValue),
+          velocity: mapRelativeVelocity(
+            step.notes[velocityIndex]?.velocity ?? DEFAULT_NEW_NOTE_VELOCITY,
+            delta,
+          ),
         }),
       ),
     });
@@ -561,7 +598,7 @@ export function applySeqEditEncoderEvent(
     return updateRuntimePatchStepSequencerProps(runtimePatch, moduleId, {
       patterns: updateActiveStep(props, runtimePatch, (step) =>
         updateStepNoteSlot(step, pitchIndex, {
-          note: mapCcToPitch(ccValue),
+          note: mapRelativePitch(step.notes[pitchIndex]?.note, delta),
         }),
       ),
     });
@@ -572,22 +609,23 @@ export function applySeqEditEncoderEvent(
       return updateRuntimePatchStepSequencerProps(runtimePatch, moduleId, {
         patterns: updateActiveStep(props, runtimePatch, (step) => ({
           ...step,
-          active: ccValue >= 64,
+          active: mapRelativeBoolean(step.active, delta),
         })),
       });
     case STEP_CONTROL_CCS[1]:
       return updateRuntimePatchStepSequencerProps(runtimePatch, moduleId, {
         patterns: updateActiveStep(props, runtimePatch, (step) => ({
           ...step,
-          probability: clampPercentFromCc(ccValue),
+          probability: mapRelativeNumber(step.probability, delta, 0, 100),
         })),
       });
     case STEP_CONTROL_CCS[2]:
       return updateRuntimePatchStepSequencerProps(runtimePatch, moduleId, {
         patterns: updateActiveStep(props, runtimePatch, (step) => ({
           ...step,
-          duration: mapCcToEnum(
-            ccValue,
+          duration: mapRelativeEnum(
+            step.duration,
+            delta,
             DURATION_OPTIONS,
             DURATION_OPTIONS[0] ?? "1/16",
           ),
@@ -597,24 +635,35 @@ export function applySeqEditEncoderEvent(
       return updateRuntimePatchStepSequencerProps(runtimePatch, moduleId, {
         patterns: updateActiveStep(props, runtimePatch, (step) => ({
           ...step,
-          microtimeOffset: mapCcToMicrotime(ccValue),
+          microtimeOffset: mapRelativeNumber(
+            step.microtimeOffset,
+            delta,
+            -100,
+            100,
+          ),
         })),
       });
     case STEP_CONTROL_CCS[4]:
       return updateRuntimePatchStepSequencerProps(runtimePatch, moduleId, {
-        resolution: mapCcToEnum(
-          ccValue,
+        resolution: mapRelativeEnum(
+          props.resolution,
+          delta,
           RESOLUTION_OPTIONS,
           Resolution.sixteenth,
         ),
       });
     case STEP_CONTROL_CCS[5]:
       return updateRuntimePatchStepSequencerProps(runtimePatch, moduleId, {
-        playbackMode: mapCcToEnum(ccValue, PLAYBACK_OPTIONS, PlaybackMode.loop),
+        playbackMode: mapRelativeEnum(
+          props.playbackMode,
+          delta,
+          PLAYBACK_OPTIONS,
+          PlaybackMode.loop,
+        ),
       });
     case STEP_CONTROL_CCS[7]:
       return updateRuntimePatchStepSequencerProps(runtimePatch, moduleId, {
-        loopLength: mapCcToLoopLength(ccValue),
+        loopLength: mapRelativeNumber(props.loopLength, delta, 1, 4),
       });
     default:
       return null;
