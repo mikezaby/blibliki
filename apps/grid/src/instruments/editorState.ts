@@ -1,6 +1,7 @@
 import type {
   EffectProfileId,
   InstrumentDocument,
+  InstrumentTrackControllerSlotValues,
   InstrumentSequencerStep,
   InstrumentTrackDocument,
 } from "@/instruments/document";
@@ -47,6 +48,29 @@ export function updateTrackFxChain(
   next.tracks[trackIndex] = {
     ...track,
     fxChain,
+  };
+
+  return next;
+}
+
+export function updateTrackControllerSlotValue(
+  document: InstrumentDocument,
+  trackIndex: number,
+  slotKey: string,
+  value: InstrumentTrackControllerSlotValues[string],
+): InstrumentDocument {
+  const next = cloneInstrumentDocument(document);
+  const track = next.tracks[trackIndex];
+  if (!track) {
+    return next;
+  }
+
+  next.tracks[trackIndex] = {
+    ...track,
+    controllerSlotValues: {
+      ...(track.controllerSlotValues ?? {}),
+      [slotKey]: value,
+    },
   };
 
   return next;

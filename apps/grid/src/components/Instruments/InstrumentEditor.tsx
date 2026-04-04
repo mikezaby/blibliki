@@ -1,3 +1,10 @@
+import { stepPropSchema } from "@blibliki/engine";
+import {
+  compileTrack,
+  createTrackFromDocument,
+  type CompiledLaunchControlXL3Page,
+  type SlotInitialValue,
+} from "@blibliki/instrument";
 import { Instrument, type IInstrument } from "@blibliki/models";
 import {
   Badge,
@@ -7,6 +14,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Fader,
   Input,
   Label,
   OptionSelect,
@@ -30,6 +38,7 @@ import type {
 import {
   cloneInstrumentDocument,
   updateSequencerStep,
+  updateTrackControllerSlotValue,
   updateTrackDocument,
   updateTrackFxChain,
 } from "@/instruments/editorState";
@@ -89,6 +98,21 @@ const RESOLUTION_OPTIONS = ["1/16", "1/8", "1/4", "1/2", "1"] as const;
 const PLAYBACK_MODE_OPTIONS = ["loop", "pingPong", "random"] as const;
 const LATENCY_HINT_OPTIONS = ["interactive", "playback"] as const;
 const DEFAULT_STEP_VELOCITY = 100;
+const TRACK_VOICES_MIN = 1;
+const TRACK_VOICES_MAX = 64;
+const CONTROLLER_PAGE_LABELS: Record<
+  CompiledLaunchControlXL3Page["pageKey"],
+  string
+> = {
+  sourceAmp: "Source + Amp",
+  filterMod: "Filter + Modulation",
+  fx: "FX Chain",
+};
+
+type ControllerSlot = Extract<
+  CompiledLaunchControlXL3Page["regions"][number]["slots"][number],
+  { kind: "slot" }
+>;
 
 function normalizeStepNoteName(value: string) {
   return value.trim().toUpperCase();
@@ -144,6 +168,48 @@ function formatSelectedStepNotes(
   return formatStepNotes(step?.notes ?? []);
 }
 
+function getControllerSlotId(
+  trackKey: string,
+  pageKey: CompiledLaunchControlXL3Page["pageKey"],
+  slot: ControllerSlot,
+) {
+  return `${trackKey}-${pageKey}-${slot.blockKey}-${slot.slotKey}`;
+}
+
+function getControllerSlotDocumentKey(slot: ControllerSlot) {
+  return `${slot.blockKey}.${slot.slotKey}`;
+}
+
+function getControllerEnumOptions(options: readonly (string | number)[]) {
+  return options.map((option) => ({
+    name: String(option),
+    value: option,
+  }));
+}
+
+function isSlotInitialValue(value: unknown): value is SlotInitialValue {
+  return (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  );
+}
+
+function getControllerSlotValue(
+  slot: ControllerSlot,
+  modulePropsById: Map<string, Record<string, unknown>>,
+) {
+  if (slot.initialValue !== undefined) {
+    return slot.initialValue;
+  }
+
+  const propValue = modulePropsById.get(slot.binding.moduleId)?.[
+    slot.binding.propKey
+  ];
+
+  return isSlotInitialValue(propValue) ? propValue : undefined;
+}
+
 type InstrumentEditorProps = {
   instrument: IInstrument;
 };
@@ -179,6 +245,25 @@ export default function InstrumentEditor({
     activeTrack?.sequencer.pages[activePageIndex] ??
     activeTrack?.sequencer.pages[0];
   const activeStep = activePage?.steps[activeStepIndex] ?? activePage?.steps[0];
+  const compiledActiveTrack = useMemo(() => {
+    if (!activeTrack) {
+      return;
+    }
+
+    return compileTrack(createTrackFromDocument(activeTrack));
+  }, [activeTrack]);
+  const controllerPages =
+    compiledActiveTrack?.launchControlXL3.resolvedPages ?? [];
+  const controllerModulePropsById = useMemo(
+    () =>
+      new Map(
+        (compiledActiveTrack?.engine.modules ?? []).map((module) => [
+          module.id,
+          module.props as Record<string, unknown>,
+        ]),
+      ),
+    [compiledActiveTrack],
+  );
 
   const trackOptions = useMemo(
     () =>
@@ -214,6 +299,20 @@ export default function InstrumentEditor({
         activePageIndex,
         activeStepIndex,
         step,
+      ),
+    );
+  };
+
+  const setControllerSlotValue = (
+    slot: ControllerSlot,
+    value: SlotInitialValue,
+  ) => {
+    setDocument((current) =>
+      updateTrackControllerSlotValue(
+        current,
+        activeTrackIndex,
+        getControllerSlotDocumentKey(slot),
+        value,
       ),
     );
   };
@@ -447,19 +546,14 @@ export default function InstrumentEditor({
                   </Stack>
 
                   <Stack gap={2}>
-                    <Label htmlFor="track-voices">Voices</Label>
-                    <Input
-                      id="track-voices"
-                      type="number"
-                      min={1}
-                      step={1}
+                    <Fader
+                      name="Voices"
                       value={activeTrack.voices ?? 8}
-                      onChange={(event) => {
-                        const voices = Number.parseInt(event.target.value, 10);
-                        if (!Number.isFinite(voices) || voices < 1) {
-                          return;
-                        }
-
+                      min={TRACK_VOICES_MIN}
+                      max={TRACK_VOICES_MAX}
+                      step={1}
+                      orientation="horizontal"
+                      onChange={(_, voices) => {
                         setTrackChanges({ voices });
                       }}
                     />
@@ -518,6 +612,163 @@ export default function InstrumentEditor({
                     </Stack>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Controller Slots</CardTitle>
+                <CardDescription>
+                  Set the initial values loaded into Pi for the same track
+                  controls exposed on the controller
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Stack gap={4}>
+                  {controllerPages.map((page) => (
+                    <Surface
+                      key={`${activeTrack.key}-${page.pageKey}`}
+                      tone="subtle"
+                      className="rounded-xl p-4"
+                    >
+                      <Stack gap={4}>
+                        <Stack gap={1}>
+                          <Text weight="semibold">
+                            {CONTROLLER_PAGE_LABELS[page.pageKey]}
+                          </Text>
+                          <Text tone="muted" size="xs">
+                            Controller page {page.controllerPage}
+                          </Text>
+                        </Stack>
+
+                        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                          {page.regions.map((region) => {
+                            const slots = region.slots.filter(
+                              (slot): slot is ControllerSlot =>
+                                slot.kind === "slot",
+                            );
+
+                            if (slots.length === 0) {
+                              return null;
+                            }
+
+                            return (
+                              <Surface
+                                key={`${page.pageKey}-${region.position}`}
+                                tone="canvas"
+                                className="rounded-lg p-4"
+                              >
+                                <Stack gap={3}>
+                                  <Text weight="medium">
+                                    {region.position === "top"
+                                      ? "Upper Row"
+                                      : "Lower Row"}
+                                  </Text>
+
+                                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    {slots.map((slot) => {
+                                      const inputId = getControllerSlotId(
+                                        activeTrack.key,
+                                        page.pageKey,
+                                        slot,
+                                      );
+                                      const slotValue = getControllerSlotValue(
+                                        slot,
+                                        controllerModulePropsById,
+                                      );
+
+                                      if (slot.valueSpec.kind === "number") {
+                                        return (
+                                          <Stack
+                                            gap={2}
+                                            key={`${slot.blockKey}-${slot.slotKey}`}
+                                          >
+                                            <Fader
+                                              id={inputId}
+                                              name={slot.label}
+                                              min={slot.valueSpec.min}
+                                              max={slot.valueSpec.max}
+                                              step={slot.valueSpec.step}
+                                              exp={slot.valueSpec.exp}
+                                              value={
+                                                typeof slotValue === "number"
+                                                  ? slotValue
+                                                  : undefined
+                                              }
+                                              orientation="horizontal"
+                                              onChange={(_, nextValue) => {
+                                                setControllerSlotValue(
+                                                  slot,
+                                                  nextValue,
+                                                );
+                                              }}
+                                            />
+                                          </Stack>
+                                        );
+                                      }
+
+                                      if (slot.valueSpec.kind === "boolean") {
+                                        return (
+                                          <Stack
+                                            gap={2}
+                                            key={`${slot.blockKey}-${slot.slotKey}`}
+                                          >
+                                            <Label htmlFor={inputId}>
+                                              {slot.label}
+                                            </Label>
+                                            <Switch
+                                              id={inputId}
+                                              aria-label={slot.label}
+                                              checked={slotValue === true}
+                                              color="info"
+                                              onCheckedChange={(checked) => {
+                                                setControllerSlotValue(
+                                                  slot,
+                                                  checked,
+                                                );
+                                              }}
+                                            />
+                                          </Stack>
+                                        );
+                                      }
+
+                                      return (
+                                        <Stack
+                                          gap={2}
+                                          key={`${slot.blockKey}-${slot.slotKey}`}
+                                        >
+                                          <Label>{slot.label}</Label>
+                                          <OptionSelect
+                                            label={`Select ${slot.label}`}
+                                            value={
+                                              typeof slotValue === "string" ||
+                                              typeof slotValue === "number"
+                                                ? slotValue
+                                                : slot.valueSpec.options[0]
+                                            }
+                                            options={getControllerEnumOptions(
+                                              slot.valueSpec.options,
+                                            )}
+                                            onChange={(value) => {
+                                              setControllerSlotValue(
+                                                slot,
+                                                value as SlotInitialValue,
+                                              );
+                                            }}
+                                          />
+                                        </Stack>
+                                      );
+                                    })}
+                                  </div>
+                                </Stack>
+                              </Surface>
+                            );
+                          })}
+                        </div>
+                      </Stack>
+                    </Surface>
+                  ))}
+                </Stack>
               </CardContent>
             </Card>
 
@@ -704,35 +955,32 @@ export default function InstrumentEditor({
                       </Stack>
 
                       <Stack gap={2}>
-                        <Label htmlFor="step-probability">Probability</Label>
-                        <Input
-                          id="step-probability"
-                          type="number"
-                          min="0"
-                          max="100"
+                        <Fader
+                          name="Probability"
                           value={activeStep.probability}
-                          onChange={(event) => {
+                          min={stepPropSchema.probability.min}
+                          max={stepPropSchema.probability.max}
+                          step={stepPropSchema.probability.step}
+                          orientation="horizontal"
+                          onChange={(_, probability) => {
                             setStep({
                               ...activeStep,
-                              probability: Number(event.target.value),
+                              probability,
                             });
                           }}
                         />
                       </Stack>
 
                       <Stack gap={2}>
-                        <Label htmlFor="step-velocity">Velocity</Label>
-                        <Input
-                          id="step-velocity"
-                          type="number"
-                          min="1"
-                          max="127"
+                        <Fader
+                          name="Velocity"
                           value={getStepVelocity(activeStep.notes)}
-                          onChange={(event) => {
-                            const velocity = clampStepVelocity(
-                              Number(event.target.value),
-                            );
-
+                          min={1}
+                          max={127}
+                          step={1}
+                          orientation="horizontal"
+                          onChange={(_, nextVelocity) => {
+                            const velocity = clampStepVelocity(nextVelocity);
                             setStep({
                               ...activeStep,
                               notes: activeStep.notes.map((note) => ({
@@ -745,15 +993,17 @@ export default function InstrumentEditor({
                       </Stack>
 
                       <Stack gap={2}>
-                        <Label htmlFor="step-microtime">Microtime</Label>
-                        <Input
-                          id="step-microtime"
-                          type="number"
+                        <Fader
+                          name="Microtime"
                           value={activeStep.microtimeOffset}
-                          onChange={(event) => {
+                          min={stepPropSchema.microtimeOffset.min}
+                          max={stepPropSchema.microtimeOffset.max}
+                          step={stepPropSchema.microtimeOffset.step}
+                          orientation="horizontal"
+                          onChange={(_, microtimeOffset) => {
                             setStep({
                               ...activeStep,
-                              microtimeOffset: Number(event.target.value),
+                              microtimeOffset,
                             });
                           }}
                         />

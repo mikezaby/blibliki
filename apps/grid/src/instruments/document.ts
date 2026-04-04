@@ -1,4 +1,5 @@
 import { PlaybackMode, Resolution } from "@blibliki/engine";
+import type { SlotInitialValue } from "@blibliki/instrument";
 
 export type InstrumentSequencerDivision =
   | "1/64"
@@ -73,6 +74,11 @@ export type InstrumentTrackSequencer = {
   playbackMode: PlaybackMode;
 };
 
+export type InstrumentTrackControllerSlotValues = Record<
+  string,
+  SlotInitialValue
+>;
+
 export type InstrumentTrackDocument = {
   key: string;
   name?: string;
@@ -82,6 +88,7 @@ export type InstrumentTrackDocument = {
   midiChannel: number;
   sourceProfileId: SourceProfileId;
   fxChain: [EffectProfileId, EffectProfileId, EffectProfileId, EffectProfileId];
+  controllerSlotValues?: InstrumentTrackControllerSlotValues;
   sequencer: InstrumentTrackSequencer;
 };
 

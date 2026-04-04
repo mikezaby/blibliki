@@ -11,6 +11,7 @@ export type {
   InstrumentDocument,
   InstrumentGlobalBlock,
   InstrumentNoteSource,
+  InstrumentTrackControllerSlotValues,
   InstrumentSequencerStep,
   InstrumentTrackDocument,
   SourceProfileId,

@@ -104,6 +104,18 @@ export default abstract class BaseBlock {
     return slot;
   }
 
+  updateSlot(key: string, changes: Partial<Omit<AnyBaseSlot, "key">>) {
+    const slot = this.findSlot(key);
+    const updated = {
+      ...slot,
+      ...changes,
+      key: slot.key,
+    } as AnyBaseSlot;
+
+    this._slots.set(key, updated);
+    return updated;
+  }
+
   removeSlot(key: string) {
     this._slots.delete(key);
   }

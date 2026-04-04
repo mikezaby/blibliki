@@ -34,6 +34,7 @@ vi.mock("@tanstack/react-router", () => ({
 describe("InstrumentEditor", () => {
   afterEach(() => {
     cleanup();
+    vi.restoreAllMocks();
   });
 
   it("renders a debug-in-grid entrypoint for the current instrument", () => {
@@ -75,6 +76,47 @@ describe("InstrumentEditor", () => {
     expect(toggle.closest(".ui-card-header")).not.toBeNull();
   });
 
+  it("renders numeric controls as faders instead of spinboxes", () => {
+    const document = createDefaultInstrumentDocument();
+    const firstTrack = document.tracks[0];
+
+    if (!firstTrack) {
+      throw new Error("Expected default instrument to include a first track");
+    }
+
+    document.tracks[0] = {
+      ...firstTrack,
+      sourceProfileId: "osc",
+      controllerSlotValues: {
+        "fx1.drive": 0.72,
+      },
+    } as typeof firstTrack & {
+      controllerSlotValues: Record<string, string | number | boolean>;
+    };
+
+    render(
+      <Provider store={store}>
+        <InstrumentEditor
+          instrument={{
+            id: "instrument-1",
+            name: "Broken Instrument",
+            userId: "user-1",
+            document,
+          }}
+        />
+      </Provider>,
+    );
+
+    expect(screen.getByRole("slider", { name: "Voices" })).toBeDefined();
+    expect(screen.getByRole("slider", { name: "Drive" })).toBeDefined();
+    expect(screen.getByRole("slider", { name: "Probability" })).toBeDefined();
+    expect(screen.queryByRole("spinbutton", { name: "Voices" })).toBeNull();
+    expect(screen.queryByRole("spinbutton", { name: "Drive" })).toBeNull();
+    expect(
+      screen.queryByRole("spinbutton", { name: "Probability" }),
+    ).toBeNull();
+  });
+
   it("allows editing the active track voices", () => {
     render(
       <Provider store={store}>
@@ -89,7 +131,9 @@ describe("InstrumentEditor", () => {
       </Provider>,
     );
 
-    const voicesInput = screen.getByLabelText("Voices") as HTMLInputElement;
+    const voicesInput = screen.getByRole("slider", {
+      name: "Voices",
+    }) as HTMLInputElement;
 
     expect(voicesInput.value).toBe("8");
 
@@ -138,6 +182,61 @@ describe("InstrumentEditor", () => {
     };
 
     expect(savedDocument.latencyHint).toBe("playback");
+  });
+
+  it("renders controller-editable track slots and saves their values", async () => {
+    const saveSpy = vi.spyOn(Instrument.prototype, "save").mockResolvedValue();
+    const document = createDefaultInstrumentDocument();
+    const firstTrack = document.tracks[0];
+
+    if (!firstTrack) {
+      throw new Error("Expected default instrument to include a first track");
+    }
+
+    document.tracks[0] = {
+      ...firstTrack,
+      sourceProfileId: "osc",
+      controllerSlotValues: {
+        "fx1.drive": 0.72,
+      },
+    } as typeof firstTrack & {
+      controllerSlotValues: Record<string, string | number | boolean>;
+    };
+
+    render(
+      <Provider store={store}>
+        <InstrumentEditor
+          instrument={{
+            id: "instrument-1",
+            name: "Broken Instrument",
+            userId: "user-1",
+            document,
+          }}
+        />
+      </Provider>,
+    );
+
+    const driveInput = screen.getByLabelText("Drive") as HTMLInputElement;
+
+    expect(driveInput.value).toBe("0.72");
+
+    fireEvent.change(driveInput, { target: { value: "0.91" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save Instrument" }));
+
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+
+    const savedInstrument = saveSpy.mock.instances[0] as Instrument;
+    const savedDocument = savedInstrument.document as {
+      tracks?: Array<{
+        controllerSlotValues?: Record<string, string | number | boolean>;
+      }>;
+    };
+
+    expect(savedDocument.tracks?.[0]?.controllerSlotValues).toMatchObject({
+      "fx1.drive": 0.91,
+    });
   });
 
   it("separates sequencer note names from step velocity editing", () => {

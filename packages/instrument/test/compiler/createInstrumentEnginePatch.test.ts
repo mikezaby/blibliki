@@ -465,4 +465,84 @@ describe("createInstrumentEnginePatch", () => {
     expect(globalDelay?.props).toMatchObject({ mix: 0 });
     expect(globalReverb?.props).toMatchObject({ mix: 0 });
   });
+
+  it("hydrates saved controller slot values into the initial runtime patch", () => {
+    const document = createDefaultInstrumentDocument();
+    const firstTrack = document.tracks[0];
+
+    if (!firstTrack) {
+      throw new Error("Expected default instrument to include a first track");
+    }
+
+    document.tracks[0] = {
+      ...firstTrack,
+      sourceProfileId: "osc",
+      fxChain: ["distortion", "chorus", "delay", "reverb"],
+      controllerSlotValues: {
+        "source.wave": "square",
+        "source.frequency": 220,
+        "source.lowGain": false,
+        "amp.attack": 0.35,
+        "filter.cutoff": 3200,
+        "filter.resonance": 7,
+        "lfo1.sync": true,
+        "fx1.drive": 0.72,
+      },
+    } as typeof firstTrack & {
+      controllerSlotValues: Record<string, string | number | boolean>;
+    };
+
+    const runtime = createInstrumentEnginePatch(document);
+    const modules = Object.fromEntries(
+      runtime.patch.modules.map((module) => [module.id, module]),
+    );
+    const firstCompiledTrack = runtime.compiledInstrument.tracks[0];
+
+    expect(modules["track-1.source.main"]?.props).toMatchObject({
+      wave: "square",
+      frequency: 220,
+      lowGain: false,
+    });
+    expect(modules["track-1.amp.envelope"]?.props).toMatchObject({
+      attack: 0.35,
+    });
+    expect(modules["track-1.filter.main"]?.props).toMatchObject({
+      cutoff: 3200,
+      Q: 7,
+    });
+    expect(modules["track-1.lfo1.main"]?.props).toMatchObject({
+      sync: true,
+    });
+    expect(modules["track-1.fx1.main"]?.props).toMatchObject({
+      drive: 0.72,
+    });
+
+    const sourceAmpPage =
+      firstCompiledTrack?.compiledTrack.launchControlXL3.resolvedPages.find(
+        (page) => page.pageKey === "sourceAmp",
+      );
+    const waveSlot = sourceAmpPage?.regions[0].slots.find(
+      (slot) =>
+        slot.kind === "slot" &&
+        slot.blockKey === "source" &&
+        slot.slotKey === "wave",
+    );
+    const lowGainSlot = sourceAmpPage?.regions[0].slots.find(
+      (slot) =>
+        slot.kind === "slot" &&
+        slot.blockKey === "source" &&
+        slot.slotKey === "lowGain",
+    );
+
+    expect(waveSlot).toEqual(
+      expect.objectContaining({
+        initialValue: "square",
+      }),
+    );
+    expect(lowGainSlot).toEqual(
+      expect.objectContaining({
+        initialValue: false,
+      }),
+    );
+  });
 });
