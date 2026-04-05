@@ -52,6 +52,7 @@ export const wavetablePropSchema: ModulePropSchema<IWavetableProps> = {
   tables: {
     kind: "array",
     label: "Tables",
+    shortLabel: "tbls",
   },
   position: {
     kind: "number",
@@ -59,6 +60,7 @@ export const wavetablePropSchema: ModulePropSchema<IWavetableProps> = {
     max: 1,
     step: 0.001,
     label: "Position",
+    shortLabel: "pos",
   },
   frequency: {
     kind: "number",
@@ -66,6 +68,7 @@ export const wavetablePropSchema: ModulePropSchema<IWavetableProps> = {
     max: 25000,
     step: 1,
     label: "Frequency",
+    shortLabel: "freq",
   },
   fine: {
     kind: "number",
@@ -73,6 +76,7 @@ export const wavetablePropSchema: ModulePropSchema<IWavetableProps> = {
     max: 1,
     step: 0.01,
     label: "Fine",
+    shortLabel: "fine",
   },
   coarse: {
     kind: "number",
@@ -80,6 +84,7 @@ export const wavetablePropSchema: ModulePropSchema<IWavetableProps> = {
     max: 12,
     step: 1,
     label: "Coarse",
+    shortLabel: "crs",
   },
   octave: {
     kind: "number",
@@ -87,10 +92,12 @@ export const wavetablePropSchema: ModulePropSchema<IWavetableProps> = {
     max: 2,
     step: 1,
     label: "Octave",
+    shortLabel: "oct",
   },
   lowGain: {
     kind: "boolean",
     label: `Use ${LOW_GAIN}db Gain`,
+    shortLabel: "low",
   },
 };
 

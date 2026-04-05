@@ -40,10 +40,12 @@ export const midiMapperPropSchema: ModulePropSchema<IMidiMapperProps> = {
   tracks: {
     kind: "array",
     label: "Midi mapping tracks",
+    shortLabel: "tracks",
   },
   activeTrack: {
     kind: "number",
     label: "Active track",
+    shortLabel: "active",
     min: 0,
     max: 100,
     step: 1,
@@ -51,6 +53,7 @@ export const midiMapperPropSchema: ModulePropSchema<IMidiMapperProps> = {
   globalMappings: {
     kind: "array",
     label: "Global midi mappings",
+    shortLabel: "global",
   },
 };
 

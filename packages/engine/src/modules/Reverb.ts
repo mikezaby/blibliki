@@ -1,5 +1,5 @@
 import { Context } from "@blibliki/utils";
-import { ModulePropSchema } from "@/core";
+import { EnumProp, ModulePropSchema } from "@/core";
 import { Module, SetterHooks } from "@/core/module/Module";
 import { WetDryMixer } from "@/utils";
 import { ICreateModule, ModuleType } from ".";
@@ -32,7 +32,7 @@ export type IReverb = Module<ModuleType.Reverb>;
 
 export const reverbPropSchema: ModulePropSchema<
   IReverbProps,
-  { type: { kind: "enum"; options: ReverbType[] } }
+  { type: EnumProp<ReverbType> }
 > = {
   mix: {
     kind: "number",
@@ -40,6 +40,7 @@ export const reverbPropSchema: ModulePropSchema<
     max: 1,
     step: 0.01,
     label: "Mix",
+    shortLabel: "mix",
   },
   decayTime: {
     kind: "number",
@@ -48,6 +49,7 @@ export const reverbPropSchema: ModulePropSchema<
     step: 0.1,
     exp: 2,
     label: "Decay Time",
+    shortLabel: "dec",
   },
   preDelay: {
     kind: "number",
@@ -55,6 +57,7 @@ export const reverbPropSchema: ModulePropSchema<
     max: 100,
     step: 1,
     label: "Pre-delay",
+    shortLabel: "pre",
   },
   type: {
     kind: "enum",
@@ -66,6 +69,8 @@ export const reverbPropSchema: ModulePropSchema<
       ReverbType.chamber,
       ReverbType.reflections,
     ],
+    label: "Type",
+    shortLabel: "type",
   },
 };
 

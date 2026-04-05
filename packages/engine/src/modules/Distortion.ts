@@ -21,6 +21,7 @@ export const distortionPropSchema: ModulePropSchema<IDistortionProps> = {
     max: 10,
     step: 0.1,
     label: "Drive",
+    shortLabel: "drv",
   },
   tone: {
     kind: "number",
@@ -29,6 +30,7 @@ export const distortionPropSchema: ModulePropSchema<IDistortionProps> = {
     step: 1,
     exp: 3,
     label: "Tone",
+    shortLabel: "tone",
   },
   mix: {
     kind: "number",
@@ -36,6 +38,7 @@ export const distortionPropSchema: ModulePropSchema<IDistortionProps> = {
     max: 1,
     step: 0.01,
     label: "Mix",
+    shortLabel: "mix",
   },
 };
 

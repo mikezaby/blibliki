@@ -15,6 +15,7 @@ export const midiChannelFilterPropSchema: ModulePropSchema<IMidiChannelFilterPro
       max: 16,
       step: 1,
       label: "Channel",
+      shortLabel: "ch",
     },
   };
 

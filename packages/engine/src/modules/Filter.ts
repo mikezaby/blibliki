@@ -41,6 +41,7 @@ export const filterPropSchema: ModulePropSchema<
     step: 1,
     exp: 5,
     label: "Cutoff",
+    shortLabel: "cut",
   },
   envelopeAmount: {
     kind: "number",
@@ -48,6 +49,7 @@ export const filterPropSchema: ModulePropSchema<
     max: 1,
     step: 0.01,
     label: "Envelope Amount",
+    shortLabel: "amt",
   },
   keyTrack: {
     kind: "number",
@@ -55,11 +57,13 @@ export const filterPropSchema: ModulePropSchema<
     max: 1,
     step: 0.01,
     label: "Key Track",
+    shortLabel: "k-tr",
   },
   type: {
     kind: "enum",
     options: ["lowpass", "highpass", "bandpass"] satisfies BiquadFilterType[],
     label: "Type",
+    shortLabel: "type",
   },
   Q: {
     kind: "number",
@@ -68,6 +72,7 @@ export const filterPropSchema: ModulePropSchema<
     step: 0.1,
     exp: 5,
     label: "Q",
+    shortLabel: "q",
   },
 };
 

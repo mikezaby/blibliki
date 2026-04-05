@@ -12,6 +12,7 @@ export const virtualMidiPropSchema: ModulePropSchema<IVirtualMidiProps> = {
   activeNotes: {
     kind: "array",
     label: "Active notes",
+    shortLabel: "notes",
   },
 };
 

@@ -17,6 +17,7 @@ export const constantPropSchema: ModulePropSchema<IConstantProps> = {
     max: Infinity,
     step: 0.01,
     label: "Value",
+    shortLabel: "V",
   },
 };
 

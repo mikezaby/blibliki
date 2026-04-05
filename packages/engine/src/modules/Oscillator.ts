@@ -49,6 +49,7 @@ export const oscillatorPropSchema: ModulePropSchema<
     kind: "enum",
     options: Object.values(OscillatorWave),
     label: "Waveform",
+    shortLabel: "wave",
   },
   frequency: {
     kind: "number",
@@ -56,6 +57,7 @@ export const oscillatorPropSchema: ModulePropSchema<
     max: 25000,
     step: 1,
     label: "Frequency",
+    shortLabel: "freq",
   },
   fine: {
     kind: "number",
@@ -63,6 +65,7 @@ export const oscillatorPropSchema: ModulePropSchema<
     max: 1,
     step: 0.01,
     label: "Fine",
+    shortLabel: "fine",
   },
   coarse: {
     kind: "number",
@@ -70,6 +73,7 @@ export const oscillatorPropSchema: ModulePropSchema<
     max: 12,
     step: 1,
     label: "Coarse",
+    shortLabel: "crs",
   },
   octave: {
     kind: "number",
@@ -77,10 +81,12 @@ export const oscillatorPropSchema: ModulePropSchema<
     max: 2,
     step: 1,
     label: "Octave",
+    shortLabel: "octv",
   },
   lowGain: {
     kind: "boolean",
     label: `Use ${LOW_GAIN}db Gain`,
+    shortLabel: "low",
   },
 };
 

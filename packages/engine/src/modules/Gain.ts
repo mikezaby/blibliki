@@ -17,6 +17,7 @@ export const gainPropSchema: ModulePropSchema<IGainProps> = {
     max: 2,
     step: 0.01,
     label: "Gain",
+    shortLabel: "gain",
   },
 };
 

@@ -17,6 +17,7 @@ export const stereoPannerPropSchema: ModulePropSchema<IStereoPannerProps> = {
     max: 1,
     step: 0.01,
     label: "Pan",
+    shortLabel: "pan",
   },
 };
 

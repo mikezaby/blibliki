@@ -1,7 +1,8 @@
 import { EmptyObject } from "@blibliki/utils";
 
 type BasePropType = {
-  label?: string;
+  label: string;
+  shortLabel: string;
   description?: string;
 };
 

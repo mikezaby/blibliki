@@ -24,6 +24,7 @@ export const scalePropSchema: ModulePropSchema<
     max: Infinity,
     step: 0.01,
     label: "Min",
+    shortLabel: "min",
   },
   max: {
     kind: "number",
@@ -31,6 +32,7 @@ export const scalePropSchema: ModulePropSchema<
     max: Infinity,
     step: 0.01,
     label: "Max",
+    shortLabel: "max",
   },
   current: {
     kind: "number",
@@ -38,10 +40,12 @@ export const scalePropSchema: ModulePropSchema<
     max: Infinity,
     step: 0.01,
     label: "Current",
+    shortLabel: "cur",
   },
   mode: {
     kind: "enum",
     label: "Mode",
+    shortLabel: "mode",
     options: ["exponential", "linear"],
   },
 };

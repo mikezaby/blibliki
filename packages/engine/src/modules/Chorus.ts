@@ -22,6 +22,7 @@ export const chorusPropSchema: ModulePropSchema<IChorusProps> = {
     step: 0.1,
     exp: 2, // Exponential scaling for better low-frequency control
     label: "Rate",
+    shortLabel: "rt",
   },
   depth: {
     kind: "number",
@@ -29,6 +30,7 @@ export const chorusPropSchema: ModulePropSchema<IChorusProps> = {
     max: 1,
     step: 0.01,
     label: "Depth",
+    shortLabel: "dpt",
   },
   mix: {
     kind: "number",
@@ -36,6 +38,7 @@ export const chorusPropSchema: ModulePropSchema<IChorusProps> = {
     max: 1,
     step: 0.01,
     label: "Mix",
+    shortLabel: "mix",
   },
   feedback: {
     kind: "number",
@@ -43,6 +46,7 @@ export const chorusPropSchema: ModulePropSchema<IChorusProps> = {
     max: 0.95,
     step: 0.01,
     label: "Feedback",
+    shortLabel: "fdbk",
   },
 };
 

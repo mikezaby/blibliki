@@ -23,22 +23,27 @@ export const midiInputPropSchema: ModulePropSchema<IMidiInputProps> = {
   selectedId: {
     kind: "string",
     label: "Midi device ID",
+    shortLabel: "id",
   },
   selectedName: {
     kind: "string",
     label: "Midi device name",
+    shortLabel: "name",
   },
   allIns: {
     kind: "boolean",
     label: "All ins",
+    shortLabel: "all",
   },
   excludedIds: {
     kind: "array",
     label: "Excluded MIDI device IDs",
+    shortLabel: "excl",
   },
   excludedNames: {
     kind: "array",
     label: "Excluded MIDI device names",
+    shortLabel: "ex-n",
   },
 };
 

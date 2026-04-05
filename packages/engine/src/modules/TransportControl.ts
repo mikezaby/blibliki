@@ -26,6 +26,7 @@ export const transportControlPropSchema: ModulePropSchema<ITransportControlProps
       max: 999,
       step: 1,
       label: "BPM",
+      shortLabel: "bpm",
     },
     swing: {
       kind: "number",
@@ -33,6 +34,7 @@ export const transportControlPropSchema: ModulePropSchema<ITransportControlProps
       max: MAX_SWING,
       step: 0.01,
       label: "Swing",
+      shortLabel: "swng",
     },
   };
 

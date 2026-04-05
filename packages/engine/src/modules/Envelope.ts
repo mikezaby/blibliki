@@ -34,6 +34,7 @@ export const customEnvelopePropSchema: ModulePropSchema<ICustomEnvelopeProps> =
       step: 0.01,
       exp: 7,
       label: "Attack",
+      shortLabel: "A",
     },
     attackCurve: {
       kind: "number",
@@ -41,6 +42,7 @@ export const customEnvelopePropSchema: ModulePropSchema<ICustomEnvelopeProps> =
       max: 1,
       step: 0.01,
       label: "Attack Curve",
+      shortLabel: "AC",
     },
     decay: {
       kind: "number",
@@ -49,6 +51,7 @@ export const customEnvelopePropSchema: ModulePropSchema<ICustomEnvelopeProps> =
       step: 0.01,
       exp: 6.6,
       label: "Decay",
+      shortLabel: "D",
     },
     sustain: {
       kind: "number",
@@ -56,6 +59,7 @@ export const customEnvelopePropSchema: ModulePropSchema<ICustomEnvelopeProps> =
       max: 1,
       step: 0.01,
       label: "Sustain",
+      shortLabel: "S",
     },
     release: {
       kind: "number",
@@ -64,6 +68,7 @@ export const customEnvelopePropSchema: ModulePropSchema<ICustomEnvelopeProps> =
       step: 0.01,
       exp: 5,
       label: "Release",
+      shortLabel: "R",
     },
   };
 

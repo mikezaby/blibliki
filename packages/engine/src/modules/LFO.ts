@@ -76,6 +76,7 @@ export const lfoPropSchema: ModulePropSchema<
   sync: {
     kind: "boolean",
     label: "Sync",
+    shortLabel: "sync",
   },
   frequency: {
     kind: "number",
@@ -83,17 +84,20 @@ export const lfoPropSchema: ModulePropSchema<
     max: 40,
     step: 0.01,
     exp: 3,
-    label: "Frequency (Hz)",
+    label: "Frequency",
+    shortLabel: "hz",
   },
   division: {
     kind: "enum",
     options: DIVISIONS,
     label: "Division",
+    shortLabel: "div",
   },
   waveform: {
     kind: "enum",
     options: Object.values(LFOWaveform),
     label: "Waveform",
+    shortLabel: "wave",
   },
   offset: {
     kind: "number",
@@ -101,6 +105,7 @@ export const lfoPropSchema: ModulePropSchema<
     max: 1,
     step: 0.01,
     label: "Offset",
+    shortLabel: "off",
   },
   amount: {
     kind: "number",
@@ -108,6 +113,7 @@ export const lfoPropSchema: ModulePropSchema<
     max: 1,
     step: 0.01,
     label: "Amount",
+    shortLabel: "amnt",
   },
   phase: {
     kind: "number",
@@ -115,6 +121,7 @@ export const lfoPropSchema: ModulePropSchema<
     max: 1,
     step: 0.01,
     label: "Phase",
+    shortLabel: "phase",
   },
 };
 

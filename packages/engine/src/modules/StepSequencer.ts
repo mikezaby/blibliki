@@ -76,10 +76,12 @@ export const stepSequencerPropSchema: ModulePropSchema<
     min: 0,
     max: 100,
     step: 1,
+    shortLabel: "ptrn",
   },
   activePageNo: {
     kind: "number",
     label: "Active page",
+    shortLabel: "page",
     min: 0,
     max: 100,
     step: 1,
@@ -87,6 +89,7 @@ export const stepSequencerPropSchema: ModulePropSchema<
   loopLength: {
     kind: "number",
     label: "Loop Length",
+    shortLabel: "len",
     min: 1,
     max: 16,
     step: 1,
@@ -97,24 +100,29 @@ export const stepSequencerPropSchema: ModulePropSchema<
     max: 16,
     step: 1,
     label: "Steps per Page",
+    shortLabel: "steps",
   },
   resolution: {
     kind: "enum",
     options: Object.values(Resolution),
     label: "Resolution",
+    shortLabel: "res",
   },
   playbackMode: {
     kind: "enum",
     options: Object.values(PlaybackMode),
     label: "Playback Mode",
+    shortLabel: "mode",
   },
   patternSequence: {
     kind: "string",
     label: "Pattern Sequence",
+    shortLabel: "seq",
   },
   enableSequence: {
     kind: "boolean",
     label: "Enable Sequence",
+    shortLabel: "en-seq",
   },
 };
 
@@ -154,6 +162,7 @@ export const stepPropSchema: ModulePropSchema<
   probability: {
     kind: "number",
     label: "Probability",
+    shortLabel: "prob",
     min: 0,
     max: 100,
     step: 1,
@@ -161,11 +170,13 @@ export const stepPropSchema: ModulePropSchema<
   duration: {
     kind: "enum",
     label: "Duration",
+    shortLabel: "dur",
     options: NOTE_DIVISIONS,
   },
   microtimeOffset: {
     kind: "number",
     label: "Microtiming",
+    shortLabel: "mt",
     min: -100,
     max: 100,
     step: 1,

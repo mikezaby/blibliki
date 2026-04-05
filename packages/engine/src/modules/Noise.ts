@@ -35,6 +35,7 @@ export const noisePropSchema: ModulePropSchema<
     kind: "enum",
     options: Object.values(NoiseType),
     label: "Type",
+    shortLabel: "type",
   },
 };
 

@@ -62,20 +62,24 @@ export const delayPropSchema: ModulePropSchema<
     max: 5000, // UI max for manual mode (long = 5s)
     step: 1,
     label: "Delay Time",
+    shortLabel: "time",
   },
   timeMode: {
     kind: "enum",
     options: [DelayTimeMode.short, DelayTimeMode.long],
     label: "Time Mode",
+    shortLabel: "mode",
   },
   sync: {
     kind: "boolean",
     label: "Sync",
+    shortLabel: "sync",
   },
   division: {
     kind: "enum",
     options: NOTE_DIVISIONS,
     label: "Division",
+    shortLabel: "div",
   },
   feedback: {
     kind: "number",
@@ -83,6 +87,7 @@ export const delayPropSchema: ModulePropSchema<
     max: 0.95,
     step: 0.01,
     label: "Feedback",
+    shortLabel: "fdbk",
   },
   mix: {
     kind: "number",
@@ -90,10 +95,12 @@ export const delayPropSchema: ModulePropSchema<
     max: 1,
     step: 0.01,
     label: "Mix",
+    shortLabel: "mix",
   },
   stereo: {
     kind: "boolean",
     label: "Stereo",
+    shortLabel: "st",
   },
 };
 

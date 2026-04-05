@@ -19,10 +19,12 @@ export const midiOutputPropSchema: ModulePropSchema<IMidiOutputProps> = {
   selectedId: {
     kind: "string",
     label: "Midi device ID",
+    shortLabel: "id",
   },
   selectedName: {
     kind: "string",
     label: "Midi device name",
+    shortLabel: "name",
   },
 };
 
