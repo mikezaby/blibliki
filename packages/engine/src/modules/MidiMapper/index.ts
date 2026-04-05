@@ -99,8 +99,7 @@ function getStepPrecision(step: number) {
 }
 
 function quantizeNumberValue(value: number, propSchema: NumberProp): number {
-  const min = propSchema.min ?? 0;
-  const max = propSchema.max ?? 1;
+  const { min, max } = propSchema;
   const clampedValue = clampNumber(value, min, max);
   const step = propSchema.step;
 
@@ -119,8 +118,7 @@ function getNormalizedNumberValue(
   value: number,
   propSchema: NumberProp,
 ): number {
-  const min = propSchema.min ?? 0;
-  const max = propSchema.max ?? 1;
+  const { min, max } = propSchema;
 
   if (max === min) {
     return 0;
@@ -137,8 +135,7 @@ function mapNormalizedToNumberValue(
   normalizedValue: number,
   propSchema: NumberProp,
 ): number {
-  const min = propSchema.min ?? 0;
-  const max = propSchema.max ?? 1;
+  const { min, max } = propSchema;
 
   if (max === min) {
     return min;
@@ -466,8 +463,7 @@ export default class MidiMapper
             propSchema,
           );
         } else if (mappedValue === undefined) {
-          const min = propSchema.min ?? 0;
-          const max = propSchema.max ?? 1;
+          const { min, max } = propSchema;
           const normalizedMidi = midiValue / MIDI_MAX_VALUE;
           const curvedValue = Math.pow(normalizedMidi, propSchema.exp ?? 1);
           mappedValue = quantizeNumberValue(

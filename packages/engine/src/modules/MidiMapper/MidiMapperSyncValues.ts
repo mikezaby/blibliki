@@ -68,8 +68,7 @@ export default class MidiMapperSyncValues {
       case "number": {
         if (typeof rawValue !== "number") return;
 
-        const min = propSchema.min ?? 0;
-        const max = propSchema.max ?? 1;
+        const { min, max } = propSchema;
         if (!Number.isFinite(min) || !Number.isFinite(max) || max === min) {
           return;
         }
