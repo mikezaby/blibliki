@@ -1,6 +1,6 @@
 import { ModuleType, OscillatorWave } from "@blibliki/engine";
 import BaseBlock from "@/blocks/BaseBlock";
-import { createModuleId, createModulePropSlot } from "@/blocks/helpers";
+import { createModuleId } from "@/blocks/helpers";
 
 const DEFAULT_OSC_PROPS = {
   wave: OscillatorWave.sawtooth,
@@ -42,6 +42,7 @@ export default class ThreeOscBlock extends BaseBlock {
       moduleType: ModuleType.Oscillator,
       voices,
       props: { ...OSC1_DEFAULTS },
+      slotSuffix: "1",
     });
 
     this.addModule({
@@ -50,6 +51,7 @@ export default class ThreeOscBlock extends BaseBlock {
       moduleType: ModuleType.Oscillator,
       voices,
       props: { ...OSC2_DEFAULTS },
+      slotSuffix: "2",
     });
 
     this.addModule({
@@ -58,6 +60,7 @@ export default class ThreeOscBlock extends BaseBlock {
       moduleType: ModuleType.Oscillator,
       voices,
       props: { ...OSC3_DEFAULTS },
+      slotSuffix: "3",
     });
 
     this.addModule({
@@ -100,80 +103,5 @@ export default class ThreeOscBlock extends BaseBlock {
       kind: "audio",
       plugs: [{ moduleId: mixId, ioName: "out" }],
     });
-
-    this.addOscSlots(osc1Id, "1", OSC1_DEFAULTS);
-    this.addOscSlots(osc2Id, "2", OSC2_DEFAULTS);
-    this.addOscSlots(osc3Id, "3", OSC3_DEFAULTS);
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "mix",
-        label: "Mix",
-        shortLabel: "MIX",
-        moduleType: ModuleType.Gain,
-        moduleId: mixId,
-        propKey: "gain",
-        initialValue: MIX_DEFAULT_GAIN,
-      }),
-    );
-  }
-
-  private addOscSlots(
-    moduleId: string,
-    suffix: string,
-    defaults: {
-      wave: OscillatorWave;
-      coarse: number;
-      fine: number;
-      octave: number;
-    },
-  ) {
-    this.addSlot(
-      createModulePropSlot({
-        key: `wave${suffix}`,
-        label: `Wave ${suffix}`,
-        shortLabel: `W${suffix}`,
-        moduleType: ModuleType.Oscillator,
-        moduleId,
-        propKey: "wave",
-        initialValue: defaults.wave,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: `coarse${suffix}`,
-        label: `Coarse ${suffix}`,
-        shortLabel: `C${suffix}`,
-        moduleType: ModuleType.Oscillator,
-        moduleId,
-        propKey: "coarse",
-        initialValue: defaults.coarse,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: `fine${suffix}`,
-        label: `Fine ${suffix}`,
-        shortLabel: `F${suffix}`,
-        moduleType: ModuleType.Oscillator,
-        moduleId,
-        propKey: "fine",
-        initialValue: defaults.fine,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: `octave${suffix}`,
-        label: `Octave ${suffix}`,
-        shortLabel: `O${suffix}`,
-        moduleType: ModuleType.Oscillator,
-        moduleId,
-        propKey: "octave",
-        initialValue: defaults.octave,
-      }),
-    );
   }
 }

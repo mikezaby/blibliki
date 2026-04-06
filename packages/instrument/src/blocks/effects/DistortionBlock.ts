@@ -1,6 +1,6 @@
 import { ModuleType } from "@blibliki/engine";
 import BaseBlock from "@/blocks/BaseBlock";
-import { createModuleId, createModulePropSlot } from "@/blocks/helpers";
+import { createModuleId } from "@/blocks/helpers";
 import type { BlockKey } from "@/types";
 
 type FxBlockKey = Extract<BlockKey, "fx1" | "fx2" | "fx3" | "fx4">;
@@ -36,41 +36,5 @@ export default class DistortionBlock extends BaseBlock {
       kind: "audio",
       plugs: [{ moduleId, ioName: "out" }],
     });
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "drive",
-        label: "Drive",
-        shortLabel: "DRV",
-        moduleType: ModuleType.Distortion,
-        moduleId,
-        propKey: "drive",
-        initialValue: DEFAULT_PROPS.drive,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "tone",
-        label: "Tone",
-        shortLabel: "TONE",
-        moduleType: ModuleType.Distortion,
-        moduleId,
-        propKey: "tone",
-        initialValue: DEFAULT_PROPS.tone,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "mix",
-        label: "Mix",
-        shortLabel: "MIX",
-        moduleType: ModuleType.Distortion,
-        moduleId,
-        propKey: "mix",
-        initialValue: DEFAULT_PROPS.mix,
-      }),
-    );
   }
 }

@@ -1,6 +1,6 @@
 import { ModuleType, NoiseType } from "@blibliki/engine";
 import BaseBlock from "@/blocks/BaseBlock";
-import { createModuleId, createModulePropSlot } from "@/blocks/helpers";
+import { createModuleId } from "@/blocks/helpers";
 
 const DEFAULT_TYPE = NoiseType.white;
 
@@ -30,17 +30,5 @@ export default class NoiseBlock extends BaseBlock {
       kind: "audio",
       plugs: [{ moduleId, ioName: "out" }],
     });
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "type",
-        label: "Type",
-        shortLabel: "TYPE",
-        moduleType: ModuleType.Noise,
-        moduleId,
-        propKey: "type",
-        initialValue: DEFAULT_TYPE,
-      }),
-    );
   }
 }

@@ -1,5 +1,7 @@
-import type { AnyBaseSlot } from "@/slots/BaseSlot";
+import { moduleSchemas, ModuleType, PropSchema } from "@blibliki/engine";
+import type { AnyBaseSlot, ModulePropKey, SlotInitialValue } from "@/slots/BaseSlot";
 import type { BlockKey } from "@/types";
+import { createModulePropSlot } from "./helpers";
 import type {
   BlockIO,
   BlockModule,
@@ -49,8 +51,27 @@ export default abstract class BaseBlock {
     return this._slots;
   }
 
-  addModule(module: BlockModule) {
+  addModule<T extends ModuleType>(module: BlockModule<T>) {
     this._modules.set(module.id, module);
+
+    Object.entries(moduleSchemas[module.moduleType]).forEach(
+      ([propKey, schema]) => {
+        const { label, shortLabel } = schema as PropSchema;
+
+        this.addSlot(
+          createModulePropSlot({
+            key: module.slotSuffix ? `${propKey}${module.slotSuffix}` : propKey,
+            label,
+            shortLabel,
+            moduleType: module.moduleType,
+            moduleId: module.id,
+            propKey: propKey as ModulePropKey<T>,
+            initialValue: module.props[propKey as ModulePropKey<T>] as SlotInitialValue | undefined,
+          }) as unknown as AnyBaseSlot,
+        );
+      },
+    );
+
     return module;
   }
 

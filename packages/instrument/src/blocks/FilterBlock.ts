@@ -1,6 +1,6 @@
 import { ModuleType } from "@blibliki/engine";
 import BaseBlock from "@/blocks/BaseBlock";
-import { createModuleId, createModulePropSlot } from "@/blocks/helpers";
+import { createModuleId } from "@/blocks/helpers";
 
 const DEFAULT_PROPS = {
   cutoff: 20_000,
@@ -88,94 +88,5 @@ export default class FilterBlock extends BaseBlock {
       kind: "audio",
       plugs: [{ moduleId, ioName: "out" }],
     });
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "cutoff",
-        label: "Cutoff",
-        shortLabel: "CUT",
-        moduleType: ModuleType.Filter,
-        moduleId,
-        propKey: "cutoff",
-        initialValue: DEFAULT_PROPS.cutoff,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "resonance",
-        label: "Resonance",
-        shortLabel: "RES",
-        moduleType: ModuleType.Filter,
-        moduleId,
-        propKey: "Q",
-        initialValue: DEFAULT_PROPS.Q,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "type",
-        label: "Type",
-        shortLabel: "TYPE",
-        moduleType: ModuleType.Filter,
-        moduleId,
-        propKey: "type",
-        initialValue: DEFAULT_PROPS.type,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "amount",
-        label: "Env Amount",
-        shortLabel: "AMT",
-        moduleType: ModuleType.Filter,
-        moduleId,
-        propKey: "envelopeAmount",
-        initialValue: DEFAULT_PROPS.envelopeAmount,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "attack",
-        label: "Attack",
-        shortLabel: "A",
-        moduleType: ModuleType.Envelope,
-        moduleId: envelopeId,
-        propKey: "attack",
-      }),
-    );
-    this.addSlot(
-      createModulePropSlot({
-        key: "decay",
-        label: "Decay",
-        shortLabel: "D",
-        moduleType: ModuleType.Envelope,
-        moduleId: envelopeId,
-        propKey: "decay",
-      }),
-    );
-    this.addSlot(
-      createModulePropSlot({
-        key: "sustain",
-        label: "Sustain",
-        shortLabel: "S",
-        moduleType: ModuleType.Envelope,
-        moduleId: envelopeId,
-        propKey: "sustain",
-      }),
-    );
-    this.addSlot(
-      createModulePropSlot({
-        key: "release",
-        label: "Release",
-        shortLabel: "R",
-        moduleType: ModuleType.Envelope,
-        moduleId: envelopeId,
-        propKey: "release",
-      }),
-    );
   }
 }

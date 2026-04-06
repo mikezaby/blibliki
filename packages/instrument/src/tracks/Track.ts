@@ -106,7 +106,7 @@ function createSourcePageSlots(
         "coarse2",
         "wave3",
         "coarse3",
-        "mix",
+        "gain",
       ]);
   }
 }
@@ -160,7 +160,7 @@ function createEffectPageSlots(
     case "reverb":
       return [
         slot(blockKey, "type"),
-        slot(blockKey, "decay"),
+        slot(blockKey, "decayTime"),
         slot(blockKey, "preDelay"),
         slot(blockKey, "mix"),
       ];
@@ -256,9 +256,9 @@ export default class Track extends BaseTrack {
 
     const filterModTop = [
       slot("filter", "cutoff"),
-      slot("filter", "resonance"),
+      slot("filter", "Q"),
       slot("filter", "type"),
-      slot("filter", "amount"),
+      slot("filter", "envelopeAmount"),
       slot("filter", "attack"),
       slot("filter", "decay"),
       slot("filter", "sustain"),

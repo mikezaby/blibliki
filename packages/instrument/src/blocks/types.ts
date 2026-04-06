@@ -28,6 +28,7 @@ export type BlockModule<T extends ModuleType = ModuleType> =
   ICreateModule<T> & {
     id: string;
     voices?: number;
+    slotSuffix?: string;
   };
 
 export type UpdateBlockModule<T extends ModuleType = ModuleType> = Partial<

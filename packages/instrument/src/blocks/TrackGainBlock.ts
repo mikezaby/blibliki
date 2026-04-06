@@ -1,6 +1,6 @@
 import { ModuleType } from "@blibliki/engine";
 import BaseBlock from "@/blocks/BaseBlock";
-import { createModuleId, createModulePropSlot } from "@/blocks/helpers";
+import { createModuleId } from "@/blocks/helpers";
 
 const DEFAULT_GAIN = 1;
 
@@ -30,17 +30,5 @@ export default class TrackGainBlock extends BaseBlock {
       kind: "audio",
       plugs: [{ moduleId, ioName: "out" }],
     });
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "gain",
-        label: "Track Gain",
-        shortLabel: "LVL",
-        moduleType: ModuleType.Gain,
-        moduleId,
-        propKey: "gain",
-        initialValue: DEFAULT_GAIN,
-      }),
-    );
   }
 }

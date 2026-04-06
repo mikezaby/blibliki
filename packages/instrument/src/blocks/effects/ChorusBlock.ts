@@ -1,6 +1,6 @@
 import { ModuleType } from "@blibliki/engine";
 import BaseBlock from "@/blocks/BaseBlock";
-import { createModuleId, createModulePropSlot } from "@/blocks/helpers";
+import { createModuleId } from "@/blocks/helpers";
 import type { BlockKey } from "@/types";
 
 type FxBlockKey = Extract<BlockKey, "fx1" | "fx2" | "fx3" | "fx4">;
@@ -42,53 +42,5 @@ export default class ChorusBlock extends BaseBlock {
       kind: "audio",
       plugs: [{ moduleId, ioName: "out" }],
     });
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "rate",
-        label: "Rate",
-        shortLabel: "RATE",
-        moduleType: ModuleType.Chorus,
-        moduleId,
-        propKey: "rate",
-        initialValue: DEFAULT_PROPS.rate,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "depth",
-        label: "Depth",
-        shortLabel: "DPT",
-        moduleType: ModuleType.Chorus,
-        moduleId,
-        propKey: "depth",
-        initialValue: DEFAULT_PROPS.depth,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "feedback",
-        label: "Feedback",
-        shortLabel: "FDBK",
-        moduleType: ModuleType.Chorus,
-        moduleId,
-        propKey: "feedback",
-        initialValue: DEFAULT_PROPS.feedback,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "mix",
-        label: "Mix",
-        shortLabel: "MIX",
-        moduleType: ModuleType.Chorus,
-        moduleId,
-        propKey: "mix",
-        initialValue: DEFAULT_PROPS.mix,
-      }),
-    );
   }
 }

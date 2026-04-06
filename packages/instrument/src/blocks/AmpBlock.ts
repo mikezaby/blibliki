@@ -1,6 +1,6 @@
 import { ModuleType } from "@blibliki/engine";
 import BaseBlock from "@/blocks/BaseBlock";
-import { createModuleId, createModulePropSlot } from "@/blocks/helpers";
+import { createModuleId } from "@/blocks/helpers";
 
 const DEFAULT_GAIN = 1;
 const DEFAULT_ENVELOPE_PROPS = {
@@ -63,57 +63,5 @@ export default class AmpBlock extends BaseBlock {
       kind: "audio",
       plugs: [{ moduleId: gainId, ioName: "out" }],
     });
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "gain",
-        label: "Gain",
-        shortLabel: "GAIN",
-        moduleType: ModuleType.Gain,
-        moduleId: gainId,
-        propKey: "gain",
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "attack",
-        label: "Attack",
-        shortLabel: "A",
-        moduleType: ModuleType.Envelope,
-        moduleId: envelopeId,
-        propKey: "attack",
-      }),
-    );
-    this.addSlot(
-      createModulePropSlot({
-        key: "decay",
-        label: "Decay",
-        shortLabel: "D",
-        moduleType: ModuleType.Envelope,
-        moduleId: envelopeId,
-        propKey: "decay",
-      }),
-    );
-    this.addSlot(
-      createModulePropSlot({
-        key: "sustain",
-        label: "Sustain",
-        shortLabel: "S",
-        moduleType: ModuleType.Envelope,
-        moduleId: envelopeId,
-        propKey: "sustain",
-      }),
-    );
-    this.addSlot(
-      createModulePropSlot({
-        key: "release",
-        label: "Release",
-        shortLabel: "R",
-        moduleType: ModuleType.Envelope,
-        moduleId: envelopeId,
-        propKey: "release",
-      }),
-    );
   }
 }

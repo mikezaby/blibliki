@@ -1,6 +1,6 @@
 import { ModuleType, ReverbType } from "@blibliki/engine";
 import BaseBlock from "@/blocks/BaseBlock";
-import { createModuleId, createModulePropSlot } from "@/blocks/helpers";
+import { createModuleId } from "@/blocks/helpers";
 import type { BlockKey } from "@/types";
 
 type FxBlockKey = Extract<BlockKey, "fx1" | "fx2" | "fx3" | "fx4">;
@@ -36,53 +36,5 @@ export default class ReverbBlock extends BaseBlock {
       kind: "audio",
       plugs: [{ moduleId, ioName: "out" }],
     });
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "type",
-        label: "Type",
-        shortLabel: "TYPE",
-        moduleType: ModuleType.Reverb,
-        moduleId,
-        propKey: "type",
-        initialValue: DEFAULT_PROPS.type,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "decay",
-        label: "Decay",
-        shortLabel: "DEC",
-        moduleType: ModuleType.Reverb,
-        moduleId,
-        propKey: "decayTime",
-        initialValue: DEFAULT_PROPS.decayTime,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "preDelay",
-        label: "Pre-delay",
-        shortLabel: "PRE",
-        moduleType: ModuleType.Reverb,
-        moduleId,
-        propKey: "preDelay",
-        initialValue: DEFAULT_PROPS.preDelay,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "mix",
-        label: "Mix",
-        shortLabel: "MIX",
-        moduleType: ModuleType.Reverb,
-        moduleId,
-        propKey: "mix",
-        initialValue: DEFAULT_PROPS.mix,
-      }),
-    );
   }
 }

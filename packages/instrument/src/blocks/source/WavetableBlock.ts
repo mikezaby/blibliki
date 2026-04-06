@@ -1,6 +1,6 @@
 import { ModuleType } from "@blibliki/engine";
 import BaseBlock from "@/blocks/BaseBlock";
-import { createModuleId, createModulePropSlot } from "@/blocks/helpers";
+import { createModuleId } from "@/blocks/helpers";
 
 const DEFAULT_PROPS = {
   position: 0,
@@ -48,77 +48,5 @@ export default class WavetableBlock extends BaseBlock {
       kind: "audio",
       plugs: [{ moduleId, ioName: "out" }],
     });
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "position",
-        label: "Position",
-        shortLabel: "POS",
-        moduleType: ModuleType.Wavetable,
-        moduleId,
-        propKey: "position",
-        initialValue: DEFAULT_PROPS.position,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "frequency",
-        label: "Frequency",
-        shortLabel: "FREQ",
-        moduleType: ModuleType.Wavetable,
-        moduleId,
-        propKey: "frequency",
-        initialValue: DEFAULT_PROPS.frequency,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "octave",
-        label: "Octave",
-        shortLabel: "OCT",
-        moduleType: ModuleType.Wavetable,
-        moduleId,
-        propKey: "octave",
-        initialValue: DEFAULT_PROPS.octave,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "coarse",
-        label: "Coarse",
-        shortLabel: "CRS",
-        moduleType: ModuleType.Wavetable,
-        moduleId,
-        propKey: "coarse",
-        initialValue: DEFAULT_PROPS.coarse,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "fine",
-        label: "Fine",
-        shortLabel: "FINE",
-        moduleType: ModuleType.Wavetable,
-        moduleId,
-        propKey: "fine",
-        initialValue: DEFAULT_PROPS.fine,
-      }),
-    );
-
-    this.addSlot(
-      createModulePropSlot({
-        key: "lowGain",
-        label: "Low Gain",
-        shortLabel: "LOW",
-        moduleType: ModuleType.Wavetable,
-        moduleId,
-        propKey: "lowGain",
-        initialValue: DEFAULT_PROPS.lowGain,
-      }),
-    );
   }
 }
