@@ -117,7 +117,6 @@ export default function PatternSelector({
         {/* Pattern Sequence Section */}
         <Stack direction="row" align="center" gap={2}>
           <CheckboxField
-            name="Pattern sequence"
             value={enableSequence}
             schema={schema.enableSequence}
             onChange={updateProp("enableSequence")}

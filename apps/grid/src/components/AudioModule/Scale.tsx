@@ -14,7 +14,6 @@ const Scale: ModuleComponent<ModuleType.Scale> = (props) => {
     <Stack gap={6}>
       <Container className="justify-start">
         <SelectField
-          name="mode"
           value={mode}
           schema={moduleSchemas[ModuleType.Scale].mode}
           onChange={updateProp("mode")}
@@ -22,19 +21,16 @@ const Scale: ModuleComponent<ModuleType.Scale> = (props) => {
       </Container>
       <Container>
         <InputField
-          name="min"
           value={min}
           schema={moduleSchemas[ModuleType.Scale].min}
           onChange={updateProp("min")}
         />
         <InputField
-          name="max"
           value={max}
           schema={moduleSchemas[ModuleType.Scale].max}
           onChange={updateProp("max")}
         />
         <InputField
-          name="current"
           value={current}
           schema={moduleSchemas[ModuleType.Scale].current}
           onChange={updateProp("current")}

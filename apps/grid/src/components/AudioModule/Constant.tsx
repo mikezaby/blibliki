@@ -12,7 +12,6 @@ const Constant: ModuleComponent<ModuleType.Constant> = (props) => {
   return (
     <Container>
       <InputField
-        name="value"
         value={value}
         schema={moduleSchemas[ModuleType.Constant].value}
         onChange={updateProp("value")}

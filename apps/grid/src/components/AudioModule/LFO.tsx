@@ -40,14 +40,12 @@ const LFO: ModuleComponent<ModuleType.LFO> = (props) => {
     <div className="flex flex-col gap-y-8">
       <Container className="justify-start">
         <SelectField
-          name="Waveform"
           value={waveform}
           schema={moduleSchemas[ModuleType.LFO].waveform}
           onChange={updateProp("waveform")}
         />
 
         <CheckboxField
-          name="Sync"
           value={sync}
           schema={schema.sync}
           onChange={updateProp("sync")}

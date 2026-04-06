@@ -113,7 +113,7 @@ export default function StepEditor({
         <section className="px-4 py-3">
           <div className="grid grid-cols-3 gap-4">
             <Fader
-              name={stepPropSchema.probability.label ?? "Probability"}
+              name={stepPropSchema.probability.label}
               value={step.probability}
               onChange={(_, value) => {
                 onUpdate({ probability: value });
@@ -125,7 +125,7 @@ export default function StepEditor({
             />
 
             <Fader
-              name={stepPropSchema.duration.label ?? "Duration"}
+              name={stepPropSchema.duration.label}
               value={stepPropSchema.duration.options.indexOf(step.duration)}
               onChange={(_, value) => {
                 const index = Math.round(value);
@@ -139,7 +139,7 @@ export default function StepEditor({
             />
 
             <Fader
-              name={stepPropSchema.microtimeOffset.label ?? "Microtiming"}
+              name={stepPropSchema.microtimeOffset.label}
               value={step.microtimeOffset}
               onChange={(_, value) => {
                 onUpdate({ microtimeOffset: value });

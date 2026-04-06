@@ -16,7 +16,6 @@ const MidiChannelFilter: ModuleComponent<ModuleType.MidiChannelFilter> = (
   return (
     <Container>
       <InputField
-        name="channel"
         value={channel}
         schema={schema.channel}
         onChange={updateProp("channel")}

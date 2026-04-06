@@ -42,7 +42,6 @@ const Oscillator: ModuleComponent<ModuleType.Oscillator> = (props) => {
     <div className="flex flex-col gap-y-8">
       <Container className="justify-start">
         <CheckboxField
-          name="Low gain"
           value={lowGain}
           schema={schema.lowGain}
           onChange={updateProp("lowGain")}

@@ -43,14 +43,12 @@ const Delay: ModuleComponent<ModuleType.Delay> = (props) => {
     <div className="flex flex-col gap-y-8">
       <Container className="justify-start">
         <CheckboxField
-          name="Sync"
           value={sync}
           schema={schema.sync}
           onChange={updateProp("sync")}
         />
 
         <SelectField
-          name="Time Mode"
           value={timeMode}
           schema={schema.timeMode}
           onChange={updateProp("timeMode")}
@@ -58,7 +56,6 @@ const Delay: ModuleComponent<ModuleType.Delay> = (props) => {
         />
 
         <CheckboxField
-          name="Stereo"
           value={stereo}
           schema={schema.stereo}
           onChange={updateProp("stereo")}

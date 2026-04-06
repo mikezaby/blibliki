@@ -12,7 +12,6 @@ const Noise: ModuleComponent<ModuleType.Noise> = (props) => {
   return (
     <Container>
       <SelectField
-        name="type"
         value={type}
         schema={moduleSchemas[ModuleType.Noise].type}
         onChange={updateProp("type")}

@@ -16,13 +16,11 @@ const TransportControl: ModuleComponent<ModuleType.TransportControl> = (
   return (
     <Container>
       <InputField
-        name="bpm"
         value={bpm}
         schema={schema.bpm}
         onChange={updateProp("bpm")}
       />
       <InputField
-        name="swing"
         value={swing}
         schema={schema.swing}
         onChange={updateProp("swing")}

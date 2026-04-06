@@ -17,7 +17,6 @@ import { ChangeEvent, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type FieldProps<T extends string | number | boolean | string[] | number[]> = {
-  name: string;
   value?: T;
   schema: PropSchema;
   onChange: (value: T) => void;
@@ -58,13 +57,12 @@ function FieldShell({
 }
 
 export const InputField = <T extends string | number>({
-  name,
   value,
   schema,
   onChange,
   className,
 }: InputProps<T>) => {
-  const label = schema.label ?? name;
+  const label = schema.label;
   const inputType = schema.kind === "string" ? "text" : "number";
 
   const internalOnChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -95,13 +93,12 @@ type SelectProps<T extends string | number> = FieldProps<T> & {
 };
 
 export const SelectField = <T extends string | number>({
-  name,
   value,
   schema,
   onChange,
   className,
 }: SelectProps<T>) => {
-  const label = schema.label ?? name;
+  const label = schema.label;
 
   return (
     <FieldShell label={label} className={className}>
@@ -122,13 +119,12 @@ type CheckboxProps = FieldProps<boolean> & {
 };
 
 export const CheckboxField = ({
-  name,
   value,
   schema,
   onChange,
   className,
 }: CheckboxProps) => {
-  const label = schema.label ?? name;
+  const label = schema.label;
 
   return (
     <FieldShell label={label} className={className}>

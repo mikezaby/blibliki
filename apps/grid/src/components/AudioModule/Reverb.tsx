@@ -35,7 +35,6 @@ const Reverb: ModuleComponent<ModuleType.Reverb> = (props) => {
     <div className="flex flex-col gap-y-8">
       <Container className="justify-start">
         <SelectField
-          name="Type"
           value={type}
           schema={schema.type}
           onChange={updateProp("type")}

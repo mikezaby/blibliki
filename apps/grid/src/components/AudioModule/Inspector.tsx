@@ -56,7 +56,6 @@ const Inspector: ModuleComponent<ModuleType.Inspector> = (props) => {
   return (
     <Stack gap={4}>
       <SelectField
-        name="fftSize"
         value={fftSize}
         schema={fftSchema}
         onChange={updateProp("fftSize")}
