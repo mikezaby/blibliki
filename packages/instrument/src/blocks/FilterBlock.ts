@@ -30,14 +30,14 @@ export default class FilterBlock extends BaseBlock {
       name: "FilterEnvelope",
       moduleType: ModuleType.Envelope,
       voices,
-      props: { value: 1 },
+      props: {},
     });
 
     this.addModule({
       id: constantId,
       name: "FilterEnvelopeConst",
       moduleType: ModuleType.Constant,
-      props: {},
+      props: { value: 1 },
     });
 
     this.addRoute({
