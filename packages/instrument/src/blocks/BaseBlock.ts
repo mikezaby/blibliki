@@ -1,5 +1,9 @@
 import { moduleSchemas, ModuleType, PropSchema } from "@blibliki/engine";
-import type { AnyBaseSlot, ModulePropKey, SlotInitialValue } from "@/slots/BaseSlot";
+import type {
+  AnyBaseSlot,
+  ModulePropKey,
+  SlotInitialValue,
+} from "@/slots/BaseSlot";
 import type { BlockKey } from "@/types";
 import { createModulePropSlot } from "./helpers";
 import type {
@@ -62,11 +66,13 @@ export default abstract class BaseBlock {
           createModulePropSlot({
             key: module.slotSuffix ? `${propKey}${module.slotSuffix}` : propKey,
             label,
-            shortLabel,
+            shortLabel: shortLabel.toUpperCase(),
             moduleType: module.moduleType,
             moduleId: module.id,
             propKey: propKey as ModulePropKey<T>,
-            initialValue: module.props[propKey as ModulePropKey<T>] as SlotInitialValue | undefined,
+            initialValue: module.props[propKey as ModulePropKey<T>] as
+              | SlotInitialValue
+              | undefined,
           }) as unknown as AnyBaseSlot,
         );
       },
