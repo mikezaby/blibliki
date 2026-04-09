@@ -9,6 +9,8 @@ import type {
 
 export const DEFAULT_ACTIVE_PAGE: TrackPageKey = "sourceAmp";
 const FADER_CCS = [5, 6, 7, 8, 9, 10, 11, 12] as const;
+const SEQ_EDIT_CC_MIN = 13;
+const SEQ_EDIT_CC_MAX = 36;
 
 export type InstrumentGlobalMappingRuntimeIds = {
   transportControlId: string;
@@ -42,6 +44,10 @@ function getTrackPageMappings(
   return pageMappings.mappings;
 }
 
+function isSeqEditOwnedCc(cc: number | undefined) {
+  return cc !== undefined && cc >= SEQ_EDIT_CC_MIN && cc <= SEQ_EDIT_CC_MAX;
+}
+
 export function createInstrumentMidiMapperProps(
   compiledInstrument: CompiledInstrument,
   navigation: InstrumentNavigationState,
@@ -52,7 +58,7 @@ export function createInstrumentMidiMapperProps(
     Math.min(navigation.activeTrackIndex, compiledInstrument.tracks.length - 1),
   );
 
-  return {
+  const props = {
     tracks: compiledInstrument.tracks.map((track, trackIndex) => ({
       name: track.name,
       mappings: getTrackPageMappings(
@@ -63,6 +69,23 @@ export function createInstrumentMidiMapperProps(
     })),
     activeTrack: activeTrackIndex,
     globalMappings,
+  };
+
+  if (navigation.mode !== "seqEdit") {
+    return props;
+  }
+
+  return {
+    ...props,
+    tracks: props.tracks.map((track) => ({
+      ...track,
+      mappings: track.mappings.filter(
+        (mapping) => !isSeqEditOwnedCc(mapping.cc),
+      ),
+    })),
+    globalMappings: props.globalMappings.filter(
+      (mapping) => !isSeqEditOwnedCc(mapping.cc),
+    ),
   };
 }
 

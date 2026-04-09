@@ -503,6 +503,72 @@ describe("createInstrumentControllerSession", () => {
     );
   });
 
+  it("pushes filtered midi mapper mappings into the engine when seq edit is enabled", () => {
+    const runtimePatch = createInstrumentEnginePatch(
+      createSequencedInstrumentDocument(),
+    );
+    const inputDevice = createControllerInputDevice();
+    const updateCalls: IUpdateModule<ModuleType>[] = [];
+    const modules = new Map(
+      runtimePatch.patch.modules.map((module) => [module.id, module]),
+    );
+
+    createInstrumentControllerSession(
+      {
+        findMidiInputDeviceByFuzzyName: () => ({
+          device: inputDevice,
+          score: 1,
+        }),
+        findModule: (id) => {
+          const module = modules.get(id);
+          if (!module) {
+            throw new Error(`Module ${id} not found`);
+          }
+
+          return module;
+        },
+        state: TransportState.stopped,
+        start: () => Promise.resolve(),
+        stop: () => undefined,
+        updateModule: (params) => {
+          updateCalls.push(params);
+          return params;
+        },
+      },
+      runtimePatch,
+    );
+
+    inputDevice.emit(MidiEvent.fromCC(63, 127, 0));
+    inputDevice.emit(MidiEvent.fromCC(106, 127, 0));
+
+    const midiMapperUpdate = updateCalls.find(
+      (call) => call.moduleType === ModuleType.MidiMapper,
+    );
+
+    expect(midiMapperUpdate).toBeDefined();
+    if (midiMapperUpdate?.moduleType !== ModuleType.MidiMapper) {
+      throw new Error("Expected midi mapper update");
+    }
+
+    const nextProps = midiMapperUpdate.changes.props as IMidiMapperProps;
+
+    expect(
+      nextProps.globalMappings.some(
+        (mapping) =>
+          mapping.cc !== undefined && mapping.cc >= 13 && mapping.cc <= 36,
+      ),
+    ).toBe(false);
+    expect(
+      nextProps.tracks[0]?.mappings.some(
+        (mapping) =>
+          mapping.cc !== undefined && mapping.cc >= 13 && mapping.cc <= 36,
+      ),
+    ).toBe(false);
+    expect(nextProps.globalMappings.some((mapping) => mapping.cc === 5)).toBe(
+      true,
+    );
+  });
+
   it("edits seq note-slot velocity and pitch from rows two and three", () => {
     const runtimePatch = createInstrumentEnginePatch(
       createSequencedInstrumentDocument(),

@@ -266,8 +266,6 @@ export function updateInstrumentRuntimeNavigation(
       navigation.selectedStepIndex ??
       runtimePatch.runtime.navigation.selectedStepIndex,
   });
-  const midiMapperProps = midiMapperModule.props as IMidiMapperProps;
-
   return {
     ...runtimePatch,
     runtime: {
@@ -283,7 +281,7 @@ export function updateInstrumentRuntimeNavigation(
               props: createInstrumentMidiMapperProps(
                 runtimePatch.compiledInstrument,
                 nextNavigation,
-                midiMapperProps.globalMappings,
+                runtimePatch.runtime.midiMapperGlobalMappings,
               ),
             }
           : module,

@@ -321,10 +321,6 @@ export function createInstrumentControllerSession(
       return;
     }
 
-    if (result.command.type === "navigation") {
-      engine.updateModule(createMidiMapperUpdate(currentRuntimePatch));
-    }
-
     if (
       result.command.type === "seqEdit.toggle" ||
       result.command.type === "seqEdit.page"
@@ -335,6 +331,13 @@ export function createInstrumentControllerSession(
         currentRuntimePatch = sequencerPageSync.runtimePatch;
         engine.updateModule(sequencerPageSync.update);
       }
+    }
+
+    if (
+      result.command.type === "navigation" ||
+      result.command.type === "seqEdit.toggle"
+    ) {
+      engine.updateModule(createMidiMapperUpdate(currentRuntimePatch));
     }
 
     if (

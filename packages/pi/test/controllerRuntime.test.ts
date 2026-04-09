@@ -237,6 +237,54 @@ describe("reduceInstrumentControllerEvent", () => {
     });
   });
 
+  it("disables encoder-row midi mappings while seq edit is active", () => {
+    const document = createSeededInstrumentDocument();
+    const firstTrack = document.tracks[0];
+    if (!firstTrack) {
+      throw new Error("Expected default instrument to include a first track");
+    }
+
+    document.tracks[0] = {
+      ...firstTrack,
+      noteSource: "stepSequencer",
+    };
+
+    const runtimePatch = createInstrumentEnginePatch(document);
+    const shifted = reduceInstrumentControllerEvent(
+      runtimePatch,
+      MidiEvent.fromCC(63, 127, 0),
+    );
+    const entered = reduceInstrumentControllerEvent(
+      shifted.runtimePatch,
+      MidiEvent.fromCC(106, 127, 0),
+    );
+
+    const midiMapper = entered.runtimePatch.patch.modules.find(
+      (module) => module.id === entered.runtimePatch.runtime.midiMapperId,
+    );
+    if (!midiMapper || midiMapper.moduleType !== ModuleType.MidiMapper) {
+      throw new Error("Expected instrument midi mapper module");
+    }
+
+    const midiMapperProps = midiMapper.props as IMidiMapperProps;
+
+    expect(
+      midiMapperProps.globalMappings.some(
+        (mapping) =>
+          mapping.cc !== undefined && mapping.cc >= 13 && mapping.cc <= 36,
+      ),
+    ).toBe(false);
+    expect(
+      midiMapperProps.tracks[0]?.mappings.some(
+        (mapping) =>
+          mapping.cc !== undefined && mapping.cc >= 13 && mapping.cc <= 36,
+      ),
+    ).toBe(false);
+    expect(
+      midiMapperProps.globalMappings.some((mapping) => mapping.cc === 5),
+    ).toBe(true);
+  });
+
   it("maps shifted track buttons to draft save and discard commands instead of navigation", () => {
     const runtimePatch = createInstrumentEnginePatch(
       createSeededInstrumentDocument(),

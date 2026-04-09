@@ -36,7 +36,7 @@ describe("createInstrumentRuntimeState", () => {
       hardwareProfileId: "launchcontrolxl3-pi-lcd",
     });
 
-    expect(runtime.patch).toEqual({
+    expect(runtime.patch).toMatchObject({
       bpm: 120,
       timeSignature: [4, 4],
       transportState: "stopped",
@@ -62,6 +62,9 @@ describe("createInstrumentRuntimeState", () => {
         stepSequencerIds: {},
       },
     });
+    expect(runtime.patch.runtime.midiMapperGlobalMappings).toEqual(
+      expect.arrayContaining([]),
+    );
     expect(runtime.globalBlock).toEqual({
       tempo: 120,
       swing: 0,

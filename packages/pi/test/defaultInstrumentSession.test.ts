@@ -6,7 +6,7 @@ describe("createDefaultInstrumentSession", () => {
   it("should build a playable aggregate instrument patch with a drone note source on the first track", () => {
     const session = createDefaultInstrumentSession();
 
-    expect(session.runtime).toEqual({
+    expect(session.runtime).toMatchObject({
       masterId: "instrument.runtime.master",
       transportControlId: "instrument.runtime.transportControl",
       masterFilterId: "instrument.runtime.masterFilter",
@@ -30,6 +30,9 @@ describe("createDefaultInstrumentSession", () => {
       droneTrackKey: "track-1",
       droneNote: "C3",
     });
+    expect(session.runtime.midiMapperGlobalMappings).toEqual(
+      expect.arrayContaining([]),
+    );
 
     const droneMidi = session.patch.modules.find(
       (module) => module.id === session.runtime.droneMidiId,

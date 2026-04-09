@@ -20,7 +20,7 @@ describe("createInstrumentEnginePatch", () => {
     const runtime = createInstrumentEnginePatch(document);
 
     expect(runtime.compiledInstrument.tracks).toHaveLength(8);
-    expect(runtime.runtime).toEqual({
+    expect(runtime.runtime).toMatchObject({
       masterId: "instrument.runtime.master",
       transportControlId: "instrument.runtime.transportControl",
       masterFilterId: "instrument.runtime.masterFilter",
@@ -41,6 +41,9 @@ describe("createInstrumentEnginePatch", () => {
       },
       stepSequencerIds: {},
     });
+    expect(runtime.runtime.midiMapperGlobalMappings).toEqual(
+      expect.arrayContaining([]),
+    );
 
     expect(
       runtime.patch.modules

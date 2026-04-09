@@ -582,6 +582,7 @@ export function createInstrumentEnginePatch(
       controllerOutputSelection === false
         ? undefined
         : createRuntimeModuleId("controllerOutput"),
+    midiMapperGlobalMappings: globalMappings,
     navigation,
     stepSequencerIds: Object.fromEntries(
       enabledTrackDocuments

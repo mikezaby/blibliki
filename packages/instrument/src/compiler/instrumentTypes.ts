@@ -97,6 +97,7 @@ export type CompiledInstrumentEnginePatch = {
     noteInputId?: string;
     controllerInputId?: string;
     controllerOutputId?: string;
+    midiMapperGlobalMappings: CompiledInstrumentMidiMapperProps["globalMappings"];
     navigation: InstrumentNavigationState;
     stepSequencerIds: Record<string, string>;
   };
