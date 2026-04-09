@@ -448,6 +448,57 @@ describe("Envelope", () => {
       });
 
       const retriggerPeak = readInspectorPeak(inspector);
+      expect(retriggerPeak).toBeLessThan(preRetriggerPeak - 0.2);
+    });
+
+    it("restarts immediately played overlapping notes when retrigger is enabled", async (ctx) => {
+      const envelope = new Envelope(ctx.engine.id, {
+        name: "envelope",
+        moduleType: ModuleType.Envelope,
+        props: {
+          attack: 0.05,
+          attackCurve: 0.5,
+          decay: 0.01,
+          sustain: 0.8,
+          release: 0.1,
+          retrigger: true,
+        },
+        voices: 1,
+        monoModuleConstructor: () => {
+          throw new Error("Not used in test");
+        },
+      });
+
+      const inspector = new Inspector(ctx.engine.id, {
+        name: "inspector",
+        moduleType: ModuleType.Inspector,
+        props: {
+          fftSize: 32,
+        },
+      });
+
+      await waitForMicrotasks();
+
+      const monoEnvelope = envelope.audioModules[0]!;
+      (monoEnvelope.audioNode as AudioWorkletNode).connect(inspector.audioNode);
+
+      const firstAttackTime = ctx.context.currentTime + 0.02;
+      monoEnvelope.triggerAttack(new Note("C4"), firstAttackTime);
+
+      await waitForAudioTime(ctx.context, firstAttackTime + 0.07, {
+        description:
+          "first envelope attack settling before immediate retrigger",
+        intervalMs: 1,
+      });
+
+      monoEnvelope.triggerAttack(new Note("E4"), ctx.context.currentTime);
+
+      await waitForAudioTime(ctx.context, ctx.context.currentTime + 0.01, {
+        description: "immediate second note attack with retrigger",
+        intervalMs: 1,
+      });
+
+      const retriggerPeak = readInspectorPeak(inspector);
       expect(retriggerPeak).toBeLessThan(0.4);
     });
 

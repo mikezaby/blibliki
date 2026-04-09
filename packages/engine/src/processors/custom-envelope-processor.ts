@@ -112,10 +112,9 @@ export const customEnvelopeProcessorURL = URL.createObjectURL(
 
               const isTriggered = this._trig >= 0.5;
               const wasTriggered = this._lasttrig >= 0.5;
-              const isReset = this._reset >= 0.5;
-              const wasReset = this._lastReset >= 0.5;
+              const resetChanged = this._reset !== this._lastReset;
 
-              if (isReset && !wasReset) {
+              if (resetChanged) {
                 if (atk <= 0) {
                   this._value = 1;
                   this._state = this._value > sus ? STATE_DECAY : STATE_SUSTAIN;

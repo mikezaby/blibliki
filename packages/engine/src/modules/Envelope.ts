@@ -95,6 +95,7 @@ class MonoCustomEnvelope
 {
   declare audioNode: ReturnType<typeof newAudioWorklet>;
   private gainNode!: GainNode;
+  private resetToggle = 0;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Envelope>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
@@ -197,7 +198,7 @@ class MonoCustomEnvelope
     this.triggerParam.setValueAtTime(1, triggeredAt);
 
     if (!hadActiveNotes || this.props.retrigger) {
-      this.pulseResetParam(triggeredAt);
+      this.toggleResetMarker(triggeredAt);
     }
   }
 
@@ -228,12 +229,10 @@ class MonoCustomEnvelope
     });
   }
 
-  private pulseResetParam(triggeredAt: ContextTime) {
-    const pulseDuration = 1 / this.context.audioContext.sampleRate;
-
+  private toggleResetMarker(triggeredAt: ContextTime) {
     this.resetParam.cancelScheduledValues(triggeredAt);
-    this.resetParam.setValueAtTime(1, triggeredAt);
-    this.resetParam.setValueAtTime(0, triggeredAt + pulseDuration);
+    this.resetToggle = this.resetToggle === 0 ? 1 : 0;
+    this.resetParam.setValueAtTime(this.resetToggle, triggeredAt);
   }
 }
 
