@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import Note from "@/core/Note";
 import { ModuleType } from "@/modules";
 import Constant from "@/modules/Constant";
 import Envelope from "@/modules/Envelope";
@@ -12,6 +13,7 @@ const DEFAULT_PROPS = {
   decay: 0.1,
   sustain: 0.7,
   release: 0.3,
+  retrigger: true,
 };
 
 describe("Envelope", () => {
@@ -45,6 +47,7 @@ describe("Envelope", () => {
       expect(envelope.props.decay).toBe(0.1);
       expect(envelope.props.sustain).toBe(0.7);
       expect(envelope.props.release).toBe(0.3);
+      expect(envelope.props.retrigger).toBe(true);
     });
 
     it("accepts custom ADSR values", (ctx) => {
@@ -57,6 +60,7 @@ describe("Envelope", () => {
           decay: 0.2,
           sustain: 0.5,
           release: 0.5,
+          retrigger: false,
         },
         voices: 1,
         monoModuleConstructor: () => {
@@ -68,6 +72,7 @@ describe("Envelope", () => {
       expect(envelope.props.decay).toBe(0.2);
       expect(envelope.props.sustain).toBe(0.5);
       expect(envelope.props.release).toBe(0.5);
+      expect(envelope.props.retrigger).toBe(false);
     });
   });
 
@@ -115,6 +120,7 @@ describe("Envelope", () => {
           decay: 0.1,
           sustain: 0.7,
           release: 0.1,
+          retrigger: true,
         },
         voices: 1,
         monoModuleConstructor: () => {
@@ -169,6 +175,7 @@ describe("Envelope", () => {
           decay: 0.02, // 20ms decay (fast)
           sustain: 0.5,
           release: 0.1,
+          retrigger: true,
         },
         voices: 1,
         monoModuleConstructor: () => {
@@ -219,6 +226,7 @@ describe("Envelope", () => {
           decay: 0.01, // 10ms decay (very fast)
           sustain: 0.8,
           release: 0.05, // 50ms release
+          retrigger: true,
         },
         voices: 1,
         monoModuleConstructor: () => {
@@ -279,6 +287,7 @@ describe("Envelope", () => {
           decay: 0.02,
           sustain: 0.7,
           release: 0.2, // Long release (200ms)
+          retrigger: true,
         },
         voices: 1,
         monoModuleConstructor: () => {
@@ -344,6 +353,7 @@ describe("Envelope", () => {
           decay: 0.04,
           sustain: 0.25,
           release: 0.04,
+          retrigger: true,
         },
         voices: 1,
         monoModuleConstructor: () => {
@@ -387,6 +397,110 @@ describe("Envelope", () => {
 
       const releasedPeak = readInspectorPeak(inspector);
       expect(releasedPeak).toBeLessThan(0.02);
+    });
+
+    it("restarts overlapping notes from the beginning by default", async (ctx) => {
+      const envelope = new Envelope(ctx.engine.id, {
+        name: "envelope",
+        moduleType: ModuleType.Envelope,
+        props: {
+          attack: 0.05,
+          attackCurve: 0.5,
+          decay: 0.01,
+          sustain: 0.8,
+          release: 0.1,
+          retrigger: true,
+        },
+        voices: 1,
+        monoModuleConstructor: () => {
+          throw new Error("Not used in test");
+        },
+      });
+
+      const inspector = new Inspector(ctx.engine.id, {
+        name: "inspector",
+        moduleType: ModuleType.Inspector,
+        props: {
+          fftSize: 32,
+        },
+      });
+
+      await waitForMicrotasks();
+
+      const monoEnvelope = envelope.audioModules[0]!;
+      (monoEnvelope.audioNode as AudioWorkletNode).connect(inspector.audioNode);
+
+      const firstAttackTime = ctx.context.currentTime + 0.02;
+      monoEnvelope.triggerAttack(new Note("C4"), firstAttackTime);
+
+      await waitForAudioTime(ctx.context, firstAttackTime + 0.07, {
+        description: "first envelope attack settling before retrigger",
+      });
+
+      const preRetriggerPeak = readInspectorPeak(inspector);
+      expect(preRetriggerPeak).toBeGreaterThan(0.65);
+
+      const retriggerTime = ctx.context.currentTime + 0.01;
+      monoEnvelope.triggerAttack(new Note("E4"), retriggerTime);
+
+      await waitForAudioTime(ctx.context, retriggerTime + 0.01, {
+        description: "second note attack after default retrigger",
+      });
+
+      const retriggerPeak = readInspectorPeak(inspector);
+      expect(retriggerPeak).toBeLessThan(0.4);
+    });
+
+    it("can keep overlapping notes legato when retrigger is disabled", async (ctx) => {
+      const envelope = new Envelope(ctx.engine.id, {
+        name: "envelope",
+        moduleType: ModuleType.Envelope,
+        props: {
+          attack: 0.05,
+          attackCurve: 0.5,
+          decay: 0.01,
+          sustain: 0.8,
+          release: 0.1,
+          retrigger: false,
+        },
+        voices: 1,
+        monoModuleConstructor: () => {
+          throw new Error("Not used in test");
+        },
+      });
+
+      const inspector = new Inspector(ctx.engine.id, {
+        name: "inspector",
+        moduleType: ModuleType.Inspector,
+        props: {
+          fftSize: 32,
+        },
+      });
+
+      await waitForMicrotasks();
+
+      const monoEnvelope = envelope.audioModules[0]!;
+      (monoEnvelope.audioNode as AudioWorkletNode).connect(inspector.audioNode);
+
+      const firstAttackTime = ctx.context.currentTime + 0.02;
+      monoEnvelope.triggerAttack(new Note("C4"), firstAttackTime);
+
+      await waitForAudioTime(ctx.context, firstAttackTime + 0.07, {
+        description: "first envelope attack settling before legato note",
+      });
+
+      const preLegatoPeak = readInspectorPeak(inspector);
+      expect(preLegatoPeak).toBeGreaterThan(0.65);
+
+      const secondNoteTime = ctx.context.currentTime + 0.01;
+      monoEnvelope.triggerAttack(new Note("E4"), secondNoteTime);
+
+      await waitForAudioTime(ctx.context, secondNoteTime + 0.01, {
+        description: "second note without retriggering",
+      });
+
+      const legatoPeak = readInspectorPeak(inspector);
+      expect(legatoPeak).toBeGreaterThan(0.65);
     });
   });
 
@@ -449,6 +563,21 @@ describe("Envelope", () => {
 
       envelope.props = { ...envelope.props, release: 0.8 };
       expect(envelope.props.release).toBe(0.8);
+    });
+
+    it("should update retrigger parameter", (ctx) => {
+      const envelope = new Envelope(ctx.engine.id, {
+        name: "envelope",
+        moduleType: ModuleType.Envelope,
+        props: { ...DEFAULT_PROPS, retrigger: true },
+        voices: 1,
+        monoModuleConstructor: () => {
+          throw new Error("Not used in test");
+        },
+      });
+
+      envelope.props = { ...envelope.props, retrigger: false };
+      expect(envelope.props.retrigger).toBe(false);
     });
   });
 });

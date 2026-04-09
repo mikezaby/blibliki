@@ -13,6 +13,8 @@ export const customEnvelopeProcessorURL = URL.createObjectURL(
         class CustomEnvelopeProcessor extends AudioWorkletProcessor {
           private _lasttrig = 0;
           private _trig = 0;
+          private _lastReset = 0;
+          private _reset = 0;
           private _state = STATE_IDLE;
           private _value = 0;
 
@@ -60,6 +62,13 @@ export const customEnvelopeProcessorURL = URL.createObjectURL(
                 maxValue: 1,
                 automationRate: "a-rate",
               },
+              {
+                name: "reset",
+                defaultValue: 0,
+                minValue: 0,
+                maxValue: 1,
+                automationRate: "a-rate",
+              },
             ];
           }
 
@@ -81,6 +90,7 @@ export const customEnvelopeProcessorURL = URL.createObjectURL(
                   );
 
             const trigs = parameters.trigger;
+            const resets = parameters.reset;
             const atk = parameters.attack![0]!;
             const dec = parameters.decay![0]!;
             const sus = parameters.sustain![0]!;
@@ -94,12 +104,26 @@ export const customEnvelopeProcessorURL = URL.createObjectURL(
             const relRatio = durationToTargetRatio(rel);
 
             if (trigs?.length === 1) this._trig = trigs[0]!;
+            if (resets?.length === 1) this._reset = resets[0]!;
 
             for (let i = 0; i < output[0].length; ++i) {
               if (trigs && trigs.length > 1) this._trig = trigs[i]!;
+              if (resets && resets.length > 1) this._reset = resets[i]!;
 
               const isTriggered = this._trig >= 0.5;
               const wasTriggered = this._lasttrig >= 0.5;
+              const isReset = this._reset >= 0.5;
+              const wasReset = this._lastReset >= 0.5;
+
+              if (isReset && !wasReset) {
+                if (atk <= 0) {
+                  this._value = 1;
+                  this._state = this._value > sus ? STATE_DECAY : STATE_SUSTAIN;
+                } else {
+                  this._value = 0;
+                  this._state = STATE_ATTACK;
+                }
+              }
 
               // Rising edge starts a fresh attack from the current value.
               if (isTriggered && !wasTriggered) {
@@ -168,6 +192,7 @@ export const customEnvelopeProcessorURL = URL.createObjectURL(
               }
 
               this._lasttrig = this._trig;
+              this._lastReset = this._reset;
             }
 
             return true;

@@ -15,6 +15,7 @@ export type ICustomEnvelopeProps = {
   decay: number;
   sustain: number;
   release: number;
+  retrigger: boolean;
 };
 
 const DEFAULT_PROPS: ICustomEnvelopeProps = {
@@ -23,6 +24,7 @@ const DEFAULT_PROPS: ICustomEnvelopeProps = {
   decay: 0.1,
   sustain: 1,
   release: 0.1,
+  retrigger: true,
 };
 
 export const customEnvelopePropSchema: ModulePropSchema<ICustomEnvelopeProps> =
@@ -69,6 +71,11 @@ export const customEnvelopePropSchema: ModulePropSchema<ICustomEnvelopeProps> =
       exp: 5,
       label: "Release",
       shortLabel: "R",
+    },
+    retrigger: {
+      kind: "boolean",
+      label: "Retrigger",
+      shortLabel: "RT",
     },
   };
 
@@ -146,6 +153,10 @@ class MonoCustomEnvelope
     return this.audioNode.parameters.get("trigger")!;
   }
 
+  get resetParam() {
+    return this.audioNode.parameters.get("reset")!;
+  }
+
   // Setter hooks that update AudioParams
   onAfterSetAttack: CustomEnvelopeSetterHooks["onAfterSetAttack"] = (value) => {
     this.attackParam.value = value;
@@ -174,10 +185,20 @@ class MonoCustomEnvelope
   };
 
   triggerAttack(note: Note, triggeredAt: ContextTime) {
+    const alreadyActive = this.activeNotes.some(
+      (activeNote) => activeNote.fullName === note.fullName,
+    );
+    const hadActiveNotes = this.activeNotes.length > 0;
+
     super.triggerAttack(note, triggeredAt);
+    if (alreadyActive) return;
 
     this.triggerParam.cancelScheduledValues(triggeredAt);
     this.triggerParam.setValueAtTime(1, triggeredAt);
+
+    if (!hadActiveNotes || this.props.retrigger) {
+      this.pulseResetParam(triggeredAt);
+    }
   }
 
   triggerRelease(note: Note, triggeredAt: ContextTime) {
@@ -205,6 +226,14 @@ class MonoCustomEnvelope
       name: "out",
       getAudioNode: () => this.gainNode,
     });
+  }
+
+  private pulseResetParam(triggeredAt: ContextTime) {
+    const pulseDuration = 1 / this.context.audioContext.sampleRate;
+
+    this.resetParam.cancelScheduledValues(triggeredAt);
+    this.resetParam.setValueAtTime(1, triggeredAt);
+    this.resetParam.setValueAtTime(0, triggeredAt + pulseDuration);
   }
 }
 

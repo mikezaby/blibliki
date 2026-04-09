@@ -6,11 +6,14 @@ import {
 import { Fader } from "@blibliki/ui";
 import { ModuleComponent } from "..";
 import Container from "../Container";
+import { CheckboxField } from "../attributes/Field";
+
+const schema = moduleSchemas[ModuleType.Envelope];
 
 const Envelope: ModuleComponent<ModuleType.Envelope> = (props) => {
   const {
     updateProp,
-    props: { attack, decay, sustain, release },
+    props: { attack, decay, sustain, release, retrigger },
   } = props;
 
   const onChange = (
@@ -24,33 +27,43 @@ const Envelope: ModuleComponent<ModuleType.Envelope> = (props) => {
   };
 
   return (
-    <Container>
-      <Fader
-        name="A"
-        onChange={onChange("attack")}
-        min={moduleSchemas[ModuleType.Envelope].attack.min}
-        max={moduleSchemas[ModuleType.Envelope].attack.max}
-        exp={moduleSchemas[ModuleType.Envelope].attack.exp}
-        value={attack}
-      />
-      <Fader
-        name="D"
-        onChange={onChange("decay")}
-        min={moduleSchemas[ModuleType.Envelope].decay.min}
-        max={moduleSchemas[ModuleType.Envelope].decay.max}
-        exp={moduleSchemas[ModuleType.Envelope].decay.exp}
-        value={decay}
-      />
-      <Fader name="S" onChange={updateProp("sustain")} value={sustain} />
-      <Fader
-        name="R"
-        onChange={onChange("release")}
-        min={moduleSchemas[ModuleType.Envelope].release.min}
-        max={moduleSchemas[ModuleType.Envelope].release.max}
-        exp={moduleSchemas[ModuleType.Envelope].release.exp}
-        value={release}
-      />
-    </Container>
+    <div className="flex flex-col gap-y-8">
+      <Container className="justify-start">
+        <CheckboxField
+          value={retrigger}
+          schema={schema.retrigger}
+          onChange={updateProp("retrigger")}
+        />
+      </Container>
+
+      <Container>
+        <Fader
+          name="A"
+          onChange={onChange("attack")}
+          min={schema.attack.min}
+          max={schema.attack.max}
+          exp={schema.attack.exp}
+          value={attack}
+        />
+        <Fader
+          name="D"
+          onChange={onChange("decay")}
+          min={schema.decay.min}
+          max={schema.decay.max}
+          exp={schema.decay.exp}
+          value={decay}
+        />
+        <Fader name="S" onChange={updateProp("sustain")} value={sustain} />
+        <Fader
+          name="R"
+          onChange={onChange("release")}
+          min={schema.release.min}
+          max={schema.release.max}
+          exp={schema.release.exp}
+          value={release}
+        />
+      </Container>
+    </div>
   );
 };
 
