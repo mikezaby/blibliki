@@ -3,8 +3,8 @@ import { ModuleType } from "@/modules";
 import Constant from "@/modules/Constant";
 import Envelope from "@/modules/Envelope";
 import Inspector from "@/modules/Inspector";
-import { waitForInspectorValue } from "../utils/audioWaits";
-import { waitForMicrotasks } from "../utils/waitForCondition";
+import { readInspectorPeak, waitForInspectorValue } from "../utils/audioWaits";
+import { waitForAudioTime, waitForMicrotasks } from "../utils/waitForCondition";
 
 const DEFAULT_PROPS = {
   attack: 0.01,
@@ -332,6 +332,61 @@ describe("Envelope", () => {
 
       // Should be back at sustain level after retriggering
       expect(value).toBeGreaterThan(0.5);
+    });
+
+    it("treats decay and release as durations that reach their targets", async (ctx) => {
+      const envelope = new Envelope(ctx.engine.id, {
+        name: "envelope",
+        moduleType: ModuleType.Envelope,
+        props: {
+          attack: 0.01,
+          attackCurve: 0.5,
+          decay: 0.04,
+          sustain: 0.25,
+          release: 0.04,
+        },
+        voices: 1,
+        monoModuleConstructor: () => {
+          throw new Error("Not used in test");
+        },
+      });
+
+      const inspector = new Inspector(ctx.engine.id, {
+        name: "inspector",
+        moduleType: ModuleType.Inspector,
+        props: {
+          fftSize: 32,
+        },
+      });
+
+      await waitForMicrotasks();
+
+      const monoEnvelope = envelope.audioModules[0]!;
+      const workletNode = monoEnvelope.audioNode as AudioWorkletNode;
+      const triggerParam = workletNode.parameters.get("trigger")!;
+      workletNode.connect(inspector.audioNode);
+
+      const attackStartTime = ctx.context.currentTime + 0.02;
+      const decaySettleTime = attackStartTime + 0.01 + 0.04 + 0.01;
+      const releaseStartTime = decaySettleTime + 0.03;
+
+      triggerParam.setValueAtTime(1, attackStartTime);
+      triggerParam.setValueAtTime(0, releaseStartTime);
+
+      await waitForAudioTime(ctx.context, decaySettleTime, {
+        description: "envelope decay duration to settle",
+      });
+
+      const sustainPeak = readInspectorPeak(inspector);
+      expect(sustainPeak).toBeGreaterThan(0.2);
+      expect(sustainPeak).toBeLessThan(0.3);
+
+      await waitForAudioTime(ctx.context, releaseStartTime + 0.04 + 0.01, {
+        description: "envelope release duration to settle",
+      });
+
+      const releasedPeak = readInspectorPeak(inspector);
+      expect(releasedPeak).toBeLessThan(0.02);
     });
   });
 
