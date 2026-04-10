@@ -8,6 +8,10 @@ import VoiceScheduler, {
 import Chorus, { chorusPropSchema, IChorusProps } from "./Chorus";
 import Constant, { constantPropSchema, IConstantProps } from "./Constant";
 import Delay, { delayPropSchema, IDelayProps } from "./Delay";
+import DrumMachine, {
+  drumMachinePropSchema,
+  IDrumMachineProps,
+} from "./DrumMachine";
 import Distortion, {
   distortionPropSchema,
   IDistortionProps,
@@ -94,6 +98,7 @@ export enum ModuleType {
   LFO = "LFO",
   Noise = "Noise",
   Reverb = "Reverb",
+  DrumMachine = "DrumMachine",
 }
 
 export type ModuleTypeToPropsMapping = {
@@ -122,6 +127,7 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.LFO]: ILFOProps;
   [ModuleType.Noise]: INoiseProps;
   [ModuleType.Reverb]: IReverbProps;
+  [ModuleType.DrumMachine]: IDrumMachineProps;
 };
 
 export type ModuleTypeToStateMapping = {
@@ -150,6 +156,7 @@ export type ModuleTypeToStateMapping = {
   [ModuleType.LFO]: never;
   [ModuleType.Noise]: never;
   [ModuleType.Reverb]: never;
+  [ModuleType.DrumMachine]: never;
 };
 
 export type ModuleTypeToModuleMapping = {
@@ -178,6 +185,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.LFO]: LFO;
   [ModuleType.Noise]: Noise;
   [ModuleType.Reverb]: Reverb;
+  [ModuleType.DrumMachine]: DrumMachine;
 };
 
 export const moduleSchemas = {
@@ -206,6 +214,7 @@ export const moduleSchemas = {
   [ModuleType.LFO]: lfoPropSchema,
   [ModuleType.Noise]: noisePropSchema,
   [ModuleType.Reverb]: reverbPropSchema,
+  [ModuleType.DrumMachine]: drumMachinePropSchema,
 };
 
 export type { IOscillator } from "./Oscillator";
@@ -260,6 +269,7 @@ export type { INoise } from "./Noise";
 export { NoiseType } from "./Noise";
 export type { IReverb, IReverbProps } from "./Reverb";
 export { ReverbType } from "./Reverb";
+export type { IDrumMachine, IDrumMachineProps } from "./DrumMachine";
 export { DelayTimeMode } from "./Delay";
 export type { IDelay, IDelayProps } from "./Delay";
 export type { IDistortion, IDistortionProps } from "./Distortion";
@@ -348,6 +358,8 @@ export function createModule(
       return Noise.create(Noise, engineId, params);
     case ModuleType.Reverb:
       return Reverb.create(Reverb, engineId, params);
+    case ModuleType.DrumMachine:
+      return DrumMachine.create(DrumMachine, engineId, params);
     default:
       assertNever(params);
   }

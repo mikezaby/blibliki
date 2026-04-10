@@ -99,4 +99,6 @@ export type {
   IWavetableDefinition,
   IWavetableProps,
   IWavetableState,
+  IDrumMachine,
+  IDrumMachineProps,
 } from "./modules";
