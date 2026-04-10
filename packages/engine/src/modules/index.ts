@@ -8,14 +8,14 @@ import VoiceScheduler, {
 import Chorus, { chorusPropSchema, IChorusProps } from "./Chorus";
 import Constant, { constantPropSchema, IConstantProps } from "./Constant";
 import Delay, { delayPropSchema, IDelayProps } from "./Delay";
-import DrumMachine, {
-  drumMachinePropSchema,
-  IDrumMachineProps,
-} from "./DrumMachine";
 import Distortion, {
   distortionPropSchema,
   IDistortionProps,
 } from "./Distortion";
+import DrumMachine, {
+  drumMachinePropSchema,
+  IDrumMachineProps,
+} from "./DrumMachine";
 import CustomEnvelope, {
   customEnvelopePropSchema,
   ICustomEnvelopeProps,

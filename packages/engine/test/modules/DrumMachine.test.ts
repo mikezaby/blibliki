@@ -8,10 +8,7 @@ import {
   waitForInspectorPeakAbove,
   waitForInspectorValue,
 } from "../utils/audioWaits";
-import {
-  waitForAudioTime,
-  waitForMicrotasks,
-} from "../utils/waitForCondition";
+import { waitForAudioTime, waitForMicrotasks } from "../utils/waitForCondition";
 
 const DRUM_MACHINE_MODULE_TYPE = "DrumMachine" as ModuleType;
 
@@ -72,7 +69,7 @@ function createDrumMachine(ctx: TestContext) {
     props: {} as never,
   });
 
-  return ctx.engine.findModule(serialized.id) as {
+  return ctx.engine.findModule(serialized.id) as unknown as {
     moduleType: ModuleType;
     props: Record<string, unknown>;
     inputs: { findByName: (name: string) => { ioType?: string } };
@@ -104,7 +101,10 @@ function connectOutputToInspector(
 }
 
 function readBufferDifference(a: Float32Array, b: Float32Array) {
-  return a.reduce((total, value, index) => total + Math.abs(value - (b[index] ?? 0)), 0);
+  return a.reduce(
+    (total, value, index) => total + Math.abs(value - (b[index] ?? 0)),
+    0,
+  );
 }
 
 describe("DrumMachine", () => {
@@ -190,6 +190,7 @@ describe("DrumMachine", () => {
     await waitForMicrotasks();
 
     connectOutputToInspector(drumMachine, "kick out", inspector);
+    drumMachine.props = { kickDecay: 0.08 };
 
     const lowVelocityAt = ctx.context.currentTime + 0.01;
     drumMachine.onMidiEvent(
@@ -294,7 +295,9 @@ describe("DrumMachine", () => {
     await waitForAudioTime(ctx.context.audioContext, secondTriggerAt + 0.03);
     const brightKickBuffer = Float32Array.from(inspector.getValues());
 
-    expect(readBufferDifference(darkKickBuffer, brightKickBuffer)).toBeGreaterThan(0.5);
+    expect(
+      readBufferDifference(darkKickBuffer, brightKickBuffer),
+    ).toBeGreaterThan(0.5);
   });
 
   it("chokes an active open hat when a closed hat is triggered", async (ctx) => {

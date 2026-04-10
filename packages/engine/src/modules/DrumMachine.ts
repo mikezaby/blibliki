@@ -260,11 +260,13 @@ export default class DrumMachine
     const voice = NOTE_TO_VOICE[note.midiNumber];
     if (!voice) return;
 
-    this.playVoice(voice, note.velocity ?? 1, triggeredAt);
+    this.playVoice(voice, note.velocity, triggeredAt);
   }
 
   dispose() {
-    this.activeOpenHats.forEach((voice) => voice.dispose());
+    this.activeOpenHats.forEach((voice) => {
+      voice.dispose();
+    });
     this.activeOpenHats.clear();
 
     Object.values(this.voiceBuses).forEach((voiceBus) => {
@@ -634,7 +636,10 @@ export default class DrumMachine
 
     return {
       outputGain,
-      peak: Math.max(MIN_ENVELOPE_GAIN, level * this.normalizeVelocity(velocity)),
+      peak: Math.max(
+        MIN_ENVELOPE_GAIN,
+        level * this.normalizeVelocity(velocity),
+      ),
       decay,
       tone,
     };
@@ -701,10 +706,7 @@ export default class DrumMachine
 
     const tailStart = triggeredAt + burstInterval * 3;
     gain.setValueAtTime(peak * 0.45, tailStart);
-    gain.exponentialRampToValueAtTime(
-      MIN_ENVELOPE_GAIN,
-      tailStart + decay,
-    );
+    gain.exponentialRampToValueAtTime(MIN_ENVELOPE_GAIN, tailStart + decay);
 
     return tailStart + decay + CLEANUP_TAIL;
   }
@@ -721,7 +723,11 @@ export default class DrumMachine
     const durationSeconds = 4;
     const sampleRate = this.context.audioContext.sampleRate;
     const length = sampleRate * durationSeconds;
-    const buffer = this.context.audioContext.createBuffer(1, length, sampleRate);
+    const buffer = this.context.audioContext.createBuffer(
+      1,
+      length,
+      sampleRate,
+    );
     const channel = buffer.getChannelData(0);
 
     for (let index = 0; index < length; index += 1) {
@@ -740,7 +746,7 @@ export default class DrumMachine
     onDispose,
   }: {
     outputGain: GainNode;
-    stoppers: Array<AudioBufferSourceNode | OscillatorNode>;
+    stoppers: (AudioBufferSourceNode | OscillatorNode)[];
     nodes: AudioNode[];
     cleanupAt: number;
     onDispose?: () => void;

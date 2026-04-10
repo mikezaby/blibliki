@@ -8,7 +8,8 @@ import { Fader } from "@blibliki/ui";
 import type { ModuleComponent } from ".";
 import Container from "./Container";
 
-type DrumMachinePropKey = keyof ModuleTypeToPropsMapping[ModuleType.DrumMachine];
+type DrumMachinePropKey =
+  keyof ModuleTypeToPropsMapping[ModuleType.DrumMachine];
 
 const schema = moduleSchemas[ModuleType.DrumMachine];
 
@@ -61,12 +62,12 @@ const VOICES = [
     decay: "closedHatDecay",
     tone: "closedHatTone",
   },
-] as const satisfies ReadonlyArray<{
+] as const satisfies readonly {
   label: string;
   level: DrumMachinePropKey;
   decay: DrumMachinePropKey;
   tone: DrumMachinePropKey;
-}>;
+}[];
 
 const DrumMachine: ModuleComponent<ModuleType.DrumMachine> = (props) => {
   const { updateProp, props: drumProps } = props;
@@ -76,7 +77,7 @@ const DrumMachine: ModuleComponent<ModuleType.DrumMachine> = (props) => {
     name: string,
     value: number,
   ) => {
-    const propSchema = schema[propKey] as NumberProp;
+    const propSchema: NumberProp = schema[propKey];
 
     return (
       <Fader
@@ -94,22 +95,20 @@ const DrumMachine: ModuleComponent<ModuleType.DrumMachine> = (props) => {
 
   return (
     <div className="flex flex-col gap-y-8">
-      <Container className="justify-start">
-        {renderFader("masterLevel", "Master", drumProps.masterLevel)}
-      </Container>
-
-      {VOICES.map(({ label, level, decay, tone }) => (
-        <div key={label} className="flex flex-col gap-y-2">
-          <div className="text-xs font-medium uppercase tracking-wide">
-            {label}
+      <Container>
+        {VOICES.map(({ label, level, decay, tone }) => (
+          <div key={label} className="flex flex-col gap-y-2">
+            <div className="text-xs font-medium uppercase tracking-wide">
+              {label}
+            </div>
+            <Container>
+              {renderFader(level, "Level", drumProps[level])}
+              {renderFader(decay, "Decay", drumProps[decay])}
+              {renderFader(tone, "Tone", drumProps[tone])}
+            </Container>
           </div>
-          <Container>
-            {renderFader(level, "Level", drumProps[level])}
-            {renderFader(decay, "Decay", drumProps[decay])}
-            {renderFader(tone, "Tone", drumProps[tone])}
-          </Container>
-        </div>
-      ))}
+        ))}
+      </Container>
     </div>
   );
 };
