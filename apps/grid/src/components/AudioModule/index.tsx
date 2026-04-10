@@ -4,6 +4,7 @@ import { useAppDispatch } from "@/hooks";
 import Chorus from "./Chorus";
 import Constant from "./Constant";
 import Delay from "./Delay";
+import DrumMachine from "./DrumMachine";
 import Distortion from "./Distortion";
 import Envelope from "./Envelope";
 import { Filter } from "./Filter";
@@ -77,6 +78,7 @@ const COMPONENT_MAPPING: {
   [ModuleType.LFO]: LFO,
   [ModuleType.Noise]: Noise,
   [ModuleType.Reverb]: Reverb,
+  [ModuleType.DrumMachine]: DrumMachine,
 };
 
 export default function AudioModule<T extends ModuleType>(audioModuleProps: {

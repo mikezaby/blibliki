@@ -10,4 +10,11 @@ describe("AvailableModules", () => {
       moduleType: ModuleType.TransportControl,
     });
   });
+
+  it("includes drum machine in the grid module registry", () => {
+    expect(AvailableModules[ModuleType.DrumMachine]).toEqual({
+      name: "Drum Machine",
+      moduleType: ModuleType.DrumMachine,
+    });
+  });
 });
