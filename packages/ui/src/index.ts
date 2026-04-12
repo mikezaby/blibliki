@@ -50,6 +50,7 @@ export {
   type MarkProps,
   type TOrientation,
 } from "./components/fader";
+export { Encoder, type EncoderProps } from "./components/encoder";
 export {
   Dialog,
   DialogPortal,

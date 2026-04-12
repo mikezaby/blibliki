@@ -7,6 +7,7 @@ import {
 } from "@blibliki/engine";
 import {
   Input,
+  Encoder,
   Label,
   OptionSelect,
   Stack,
@@ -63,27 +64,36 @@ export const InputField = <T extends string | number>({
   className,
 }: InputProps<T>) => {
   const label = schema.label;
-  const inputType = schema.kind === "string" ? "text" : "number";
+
+  if (schema.kind === "number") {
+    return (
+      <FieldShell label={label} className={className}>
+        <div className="flex justify-center">
+          <Encoder
+            name={label}
+            min={schema.min}
+            max={schema.max}
+            step={schema.step}
+            exp={schema.exp}
+            value={value as number | undefined}
+            onChange={(newValue) => {
+              onChange(newValue as T);
+            }}
+          />
+        </div>
+      </FieldShell>
+    );
+  }
+
+  const inputType = "text";
 
   const internalOnChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const newValue =
-      schema.kind === "string"
-        ? event.target.value
-        : Number(event.target.value);
-
-    onChange(newValue as T);
+    onChange(event.target.value as T);
   };
 
   return (
     <FieldShell label={label} className={className}>
-      <Input
-        type={inputType}
-        value={value}
-        onChange={internalOnChange}
-        className={
-          inputType === "number" ? "w-20 text-center font-mono" : undefined
-        }
-      />
+      <Input type={inputType} value={value} onChange={internalOnChange} />
     </FieldShell>
   );
 };

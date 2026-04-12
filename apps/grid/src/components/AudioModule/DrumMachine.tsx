@@ -4,9 +4,8 @@ import {
   type ModuleTypeToPropsMapping,
   type NumberProp,
 } from "@blibliki/engine";
-import { Fader } from "@blibliki/ui";
+import { Encoder, Surface } from "@blibliki/ui";
 import type { ModuleComponent } from ".";
-import Container from "./Container";
 
 type DrumMachinePropKey =
   keyof ModuleTypeToPropsMapping[ModuleType.DrumMachine];
@@ -69,46 +68,107 @@ const VOICES = [
   tone: DrumMachinePropKey;
 }[];
 
-const DrumMachine: ModuleComponent<ModuleType.DrumMachine> = (props) => {
-  const { updateProp, props: drumProps } = props;
+type EncoderControlProps = {
+  propKey: DrumMachinePropKey;
+  ariaName: string;
+  label?: string;
+  size?: "sm" | "md";
+  value: number;
+  onChange: (value: number) => void;
+};
 
-  const renderFader = (
-    propKey: DrumMachinePropKey,
-    name: string,
-    value: number,
-  ) => {
-    const propSchema: NumberProp = schema[propKey];
+function EncoderControl({
+  propKey,
+  ariaName,
+  label,
+  size = "sm",
+  value,
+  onChange,
+}: EncoderControlProps) {
+  const propSchema: NumberProp = schema[propKey];
 
-    return (
-      <Fader
-        key={`${name}-${propKey}`}
-        name={name}
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <Encoder
+        name={ariaName}
         min={propSchema.min}
         max={propSchema.max}
         step={propSchema.step}
         exp={propSchema.exp}
+        size={size}
         value={value}
-        onChange={updateProp(propKey)}
+        onChange={onChange}
       />
-    );
-  };
+      {label ? (
+        <div className="text-xs font-semibold uppercase tracking-[0.18em] opacity-70">
+          {label}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+const DrumMachine: ModuleComponent<ModuleType.DrumMachine> = (props) => {
+  const { updateProp, props: drumProps } = props;
 
   return (
-    <div className="flex flex-col gap-y-8">
-      <Container>
+    <div className="flex flex-col gap-4">
+      <Surface
+        tone="subtle"
+        border="subtle"
+        radius="md"
+        className="flex items-center justify-between gap-4 p-3"
+      >
+        <div className="text-xs font-semibold uppercase tracking-[0.22em] opacity-70">
+          Master
+        </div>
+        <EncoderControl
+          propKey="masterLevel"
+          ariaName="Master level"
+          size="md"
+          value={drumProps.masterLevel}
+          onChange={updateProp("masterLevel")}
+        />
+      </Surface>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {VOICES.map(({ label, level, decay, tone }) => (
-          <div key={label} className="flex flex-col gap-y-2">
-            <div className="text-xs font-medium uppercase tracking-wide">
+          <Surface
+            key={label}
+            tone="subtle"
+            border="subtle"
+            radius="md"
+            className="flex flex-col gap-3 p-3"
+          >
+            <div className="text-xs font-semibold uppercase tracking-[0.22em] opacity-70">
               {label}
             </div>
-            <Container>
-              {renderFader(level, "Level", drumProps[level])}
-              {renderFader(decay, "Decay", drumProps[decay])}
-              {renderFader(tone, "Tone", drumProps[tone])}
-            </Container>
-          </div>
+            <div className="flex items-start justify-between gap-3">
+              <EncoderControl
+                propKey={level}
+                ariaName={`${label} level`}
+                label="Level"
+                value={drumProps[level]}
+                onChange={updateProp(level)}
+              />
+              <EncoderControl
+                propKey={decay}
+                ariaName={`${label} decay`}
+                label="Decay"
+                value={drumProps[decay]}
+                onChange={updateProp(decay)}
+              />
+              <EncoderControl
+                propKey={tone}
+                ariaName={`${label} tone`}
+                label="Tone"
+                value={drumProps[tone]}
+                onChange={updateProp(tone)}
+              />
+            </div>
+          </Surface>
         ))}
-      </Container>
+      </div>
     </div>
   );
 };

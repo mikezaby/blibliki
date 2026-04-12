@@ -7,8 +7,8 @@ import AudioModule from "../../src/components/AudioModule";
 import { store } from "../../src/store";
 
 describe("DrumMachine AudioModule", () => {
-  it("renders grouped DrumMachine controls in Grid without throwing", () => {
-    render(
+  it("renders grouped encoder controls for DrumMachine in Grid", () => {
+    const { container } = render(
       <Provider store={store}>
         <AudioModule
           audioModule={{
@@ -50,5 +50,7 @@ describe("DrumMachine AudioModule", () => {
     expect(screen.getByText("Master")).toBeDefined();
     expect(screen.getByText("Kick")).toBeDefined();
     expect(screen.getByText("Closed Hat")).toBeDefined();
+    expect(container.querySelectorAll(".ui-fader")).toHaveLength(0);
+    expect(container.querySelectorAll(".ui-encoder")).toHaveLength(25);
   });
 });

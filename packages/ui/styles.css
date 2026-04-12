@@ -1218,6 +1218,150 @@
     height: 0.875rem;
   }
 
+  .ui-encoder {
+    --ui-encoder-size: 4rem;
+    --ui-encoder-value-size: 0.8125rem;
+    --ui-encoder-ring: color-mix(
+      in oklab,
+      var(--ui-color-primary-500),
+      transparent 55%
+    );
+    --ui-encoder-track: color-mix(
+      in oklab,
+      var(--ui-color-surface-raised-hover),
+      var(--ui-color-text-primary) 12%
+    );
+    --ui-encoder-core: color-mix(
+      in oklab,
+      var(--ui-color-surface-raised),
+      var(--ui-color-surface-0) 30%
+    );
+    --ui-encoder-shadow: color-mix(
+      in oklab,
+      var(--ui-color-text-primary),
+      transparent 86%
+    );
+
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--ui-encoder-size);
+    height: var(--ui-encoder-size);
+    border-radius: 9999px;
+    cursor: ns-resize;
+    user-select: none;
+    touch-action: none;
+    outline: none;
+    transition:
+      transform 120ms ease,
+      box-shadow 120ms ease,
+      opacity 120ms ease;
+  }
+
+  .ui-encoder--size-sm {
+    --ui-encoder-size: 3.25rem;
+    --ui-encoder-value-size: 0.6875rem;
+  }
+
+  .ui-encoder--size-md {
+    --ui-encoder-size: 4rem;
+    --ui-encoder-value-size: 0.8125rem;
+  }
+
+  .ui-encoder--disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .ui-encoder:hover:not(.ui-encoder--disabled) {
+    transform: translateY(-1px);
+  }
+
+  .ui-encoder:focus-visible {
+    box-shadow: 0 0 0 3px
+      color-mix(in oklab, var(--ui-color-primary-500), transparent 75%);
+  }
+
+  .ui-encoder__dial {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 9999px;
+    border: 1px solid
+      color-mix(in oklab, var(--ui-color-surface-raised-hover), transparent 12%);
+    background:
+      radial-gradient(
+        circle at 35% 30%,
+        color-mix(in oklab, white, transparent 32%),
+        transparent 34%
+      ),
+      conic-gradient(
+        from -135deg,
+        var(--ui-encoder-ring) 0deg,
+        var(--ui-encoder-ring) var(--ui-encoder-fill),
+        var(--ui-encoder-track) var(--ui-encoder-fill),
+        var(--ui-encoder-track) 270deg,
+        transparent 270deg
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in oklab, var(--ui-encoder-core), white 12%),
+        color-mix(in oklab, var(--ui-encoder-core), black 10%)
+      );
+    box-shadow:
+      inset 0 1px 0
+        color-mix(in oklab, var(--ui-color-text-primary), transparent 90%),
+      inset 0 -0.35rem 0.75rem color-mix(in oklab, black, transparent 88%),
+      0 0.35rem 0.8rem -0.4rem var(--ui-encoder-shadow);
+  }
+
+  .ui-encoder__dial::after {
+    content: "";
+    position: absolute;
+    inset: 0.4rem;
+    border-radius: 9999px;
+    border: 1px solid
+      color-mix(in oklab, var(--ui-color-surface-raised-hover), transparent 15%);
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--ui-color-surface-raised), white 10%),
+      color-mix(in oklab, var(--ui-color-surface-raised), black 14%)
+    );
+    box-shadow: inset 0 1px 0 color-mix(in oklab, white, transparent 75%);
+  }
+
+  .ui-encoder__indicator {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0.18rem;
+    height: calc(var(--ui-encoder-size) * 0.28);
+    border-radius: 9999px;
+    background: linear-gradient(
+      180deg,
+      var(--ui-color-primary-contrast),
+      color-mix(in oklab, var(--ui-color-primary-500), white 20%)
+    );
+    box-shadow: 0 0 0.6rem
+      color-mix(in oklab, var(--ui-color-primary-500), transparent 68%);
+    transform: translate(-50%, calc(-100% + 0.45rem))
+      rotate(var(--ui-encoder-angle));
+    transform-origin: center calc(100% - 0.18rem);
+    z-index: 1;
+  }
+
+  .ui-encoder__value {
+    position: relative;
+    z-index: 2;
+    font-size: var(--ui-encoder-value-size);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--ui-color-text-primary);
+  }
+
   .ui-fader {
     --ui-fader-track-size: 0.625rem;
     --ui-fader-thumb-size: 1rem;
