@@ -23,6 +23,7 @@ type DrumVoice =
   | "closedHat";
 
 type NoiseVoice = "cymbal" | "clap" | "openHat" | "closedHat";
+type SharedNoiseSourceKey = "percussive" | "metallic";
 
 const DRUM_VOICES = [
   "kick",
@@ -239,6 +240,7 @@ type KickSlot = DisposableVoice & {
 };
 
 type SnareSlot = DisposableVoice & {
+  noiseSource: AudioBufferSourceNode;
   filter: BiquadFilterNode;
   oscillator: OscillatorNode;
   bodyGain: GainNode;
@@ -255,6 +257,7 @@ type CowbellSlot = DisposableVoice & {
 };
 
 type NoiseSlot = DisposableVoice & {
+  noiseSource: AudioBufferSourceNode;
   filter: BiquadFilterNode;
 };
 
@@ -277,6 +280,10 @@ export default class DrumMachine
   private readonly masterBus: GainNode;
   private readonly voiceBuses: Record<DrumVoice, GainNode>;
   private readonly sharedNoiseSource: AudioBufferSourceNode;
+  private readonly sharedNoiseSources: Record<
+    SharedNoiseSourceKey,
+    AudioBufferSourceNode
+  >;
   private readonly voiceSlots: DrumVoiceSlots;
   private noiseBuffer?: AudioBuffer;
   private activeOpenHats = new Set<NoiseSlot>();
@@ -293,14 +300,17 @@ export default class DrumMachine
       gain: props.masterLevel,
     });
     this.voiceBuses = createVoiceBuses(this.context.audioContext);
-    this.sharedNoiseSource = this.createSharedNoiseSource();
+    this.sharedNoiseSources = this.createSharedNoiseSources();
+    this.sharedNoiseSource = this.sharedNoiseSources.percussive;
     this.voiceSlots = this.createVoiceSlots();
 
     Object.values(this.voiceBuses).forEach((voiceBus) => {
       voiceBus.connect(this.masterBus);
     });
 
-    this.sharedNoiseSource.start();
+    Object.values(this.sharedNoiseSources).forEach((noiseSource) => {
+      noiseSource.start();
+    });
 
     this.registerIOs();
   }
@@ -323,12 +333,14 @@ export default class DrumMachine
     this.activeOpenHats.clear();
 
     this.disposeVoiceSlots();
-    try {
-      this.sharedNoiseSource.stop();
-    } catch {
-      // Shared noise source may already be stopped during teardown races.
-    }
-    this.sharedNoiseSource.disconnect();
+    Object.values(this.sharedNoiseSources).forEach((noiseSource) => {
+      try {
+        noiseSource.stop();
+      } catch {
+        // Shared noise source may already be stopped during teardown races.
+      }
+      noiseSource.disconnect();
+    });
 
     Object.values(this.voiceBuses).forEach((voiceBus) => {
       voiceBus.disconnect();
@@ -705,6 +717,13 @@ export default class DrumMachine
     return releaseAt + CLEANUP_TAIL;
   }
 
+  private createSharedNoiseSources() {
+    return {
+      percussive: this.createSharedNoiseSource(),
+      metallic: this.createSharedNoiseSource(),
+    };
+  }
+
   private createSharedNoiseSource() {
     const noiseSource = new AudioBufferSourceNode(this.context.audioContext, {
       loop: true,
@@ -720,25 +739,40 @@ export default class DrumMachine
         this.createKickSlot(),
       ),
       snare: Array.from({ length: VOICE_POOL_SIZES.snare }, () =>
-        this.createSnareSlot(),
+        this.createSnareSlot(this.sharedNoiseSource),
       ),
       tom: Array.from({ length: VOICE_POOL_SIZES.tom }, () =>
         this.createTomSlot(),
       ),
       cymbal: Array.from({ length: VOICE_POOL_SIZES.cymbal }, () =>
-        this.createNoiseSlot("cymbal", "highpass", 0.7),
+        this.createNoiseSlot(
+          "cymbal",
+          this.sharedNoiseSources.metallic,
+          "highpass",
+          0.7,
+        ),
       ),
       cowbell: Array.from({ length: VOICE_POOL_SIZES.cowbell }, () =>
         this.createCowbellSlot(),
       ),
       clap: Array.from({ length: VOICE_POOL_SIZES.clap }, () =>
-        this.createNoiseSlot("clap", "bandpass", 0.8),
+        this.createNoiseSlot("clap", this.sharedNoiseSource, "bandpass", 0.8),
       ),
       openHat: Array.from({ length: VOICE_POOL_SIZES.openHat }, () =>
-        this.createNoiseSlot("openHat", "highpass", 0.8),
+        this.createNoiseSlot(
+          "openHat",
+          this.sharedNoiseSources.metallic,
+          "highpass",
+          0.8,
+        ),
       ),
       closedHat: Array.from({ length: VOICE_POOL_SIZES.closedHat }, () =>
-        this.createNoiseSlot("closedHat", "highpass", 1),
+        this.createNoiseSlot(
+          "closedHat",
+          this.sharedNoiseSources.metallic,
+          "highpass",
+          1,
+        ),
       ),
     };
   }
@@ -762,7 +796,7 @@ export default class DrumMachine
     };
   }
 
-  private createSnareSlot(): SnareSlot {
+  private createSnareSlot(noiseSource: AudioBufferSourceNode): SnareSlot {
     const outputGain = this.createSlotOutput("snare");
     const filter = new BiquadFilterNode(this.context.audioContext, {
       type: "highpass",
@@ -777,7 +811,7 @@ export default class DrumMachine
       gain: 0,
     });
 
-    this.sharedNoiseSource.connect(filter);
+    noiseSource.connect(filter);
     filter.connect(outputGain);
     oscillator.connect(bodyGain);
     bodyGain.connect(outputGain);
@@ -785,6 +819,7 @@ export default class DrumMachine
 
     return {
       outputGain,
+      noiseSource,
       filter,
       oscillator,
       bodyGain,
@@ -848,6 +883,7 @@ export default class DrumMachine
 
   private createNoiseSlot(
     voice: DrumVoice,
+    noiseSource: AudioBufferSourceNode,
     type: BiquadFilterType,
     q: number,
   ): NoiseSlot {
@@ -858,11 +894,12 @@ export default class DrumMachine
       Q: q,
     });
 
-    this.sharedNoiseSource.connect(filter);
+    noiseSource.connect(filter);
     filter.connect(outputGain);
 
     return {
       outputGain,
+      noiseSource,
       filter,
       activeUntil: 0,
       nodes: [filter, outputGain],

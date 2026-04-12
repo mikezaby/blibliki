@@ -328,6 +328,59 @@ describe("DrumMachine", () => {
     }
   });
 
+  it("preallocates separate percussive and metallic shared noise sources", async (ctx) => {
+    const drumMachine = createDrumMachine(ctx) as unknown as {
+      sharedNoiseSources?: {
+        percussive?: AudioBufferSourceNode;
+        metallic?: AudioBufferSourceNode;
+      };
+    };
+
+    await waitForMicrotasks();
+
+    expect(drumMachine.sharedNoiseSources?.percussive).toBeDefined();
+    expect(drumMachine.sharedNoiseSources?.metallic).toBeDefined();
+    expect(drumMachine.sharedNoiseSources?.percussive).not.toBe(
+      drumMachine.sharedNoiseSources?.metallic,
+    );
+    expect(drumMachine.sharedNoiseSources?.percussive?.loop).toBe(true);
+    expect(drumMachine.sharedNoiseSources?.metallic?.loop).toBe(true);
+  });
+
+  it("wires snare and clap to percussive noise and hats plus cymbal to metallic noise", async (ctx) => {
+    const drumMachine = createDrumMachine(ctx) as unknown as {
+      sharedNoiseSources: {
+        percussive: AudioBufferSourceNode;
+        metallic: AudioBufferSourceNode;
+      };
+      voiceSlots: {
+        snare: Array<{ noiseSource: AudioBufferSourceNode }>;
+        clap: Array<{ noiseSource: AudioBufferSourceNode }>;
+        cymbal: Array<{ noiseSource: AudioBufferSourceNode }>;
+        openHat: Array<{ noiseSource: AudioBufferSourceNode }>;
+        closedHat: Array<{ noiseSource: AudioBufferSourceNode }>;
+      };
+    };
+
+    await waitForMicrotasks();
+
+    expect(drumMachine.voiceSlots.snare[0]?.noiseSource).toBe(
+      drumMachine.sharedNoiseSources.percussive,
+    );
+    expect(drumMachine.voiceSlots.clap[0]?.noiseSource).toBe(
+      drumMachine.sharedNoiseSources.percussive,
+    );
+    expect(drumMachine.voiceSlots.cymbal[0]?.noiseSource).toBe(
+      drumMachine.sharedNoiseSources.metallic,
+    );
+    expect(drumMachine.voiceSlots.openHat[0]?.noiseSource).toBe(
+      drumMachine.sharedNoiseSources.metallic,
+    );
+    expect(drumMachine.voiceSlots.closedHat[0]?.noiseSource).toBe(
+      drumMachine.sharedNoiseSources.metallic,
+    );
+  });
+
   it("reuses a preallocated kick slot across multiple triggers", async (ctx) => {
     const drumMachine = createDrumMachine(ctx) as unknown as {
       props: Record<string, unknown>;
