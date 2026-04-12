@@ -44,6 +44,7 @@ export { default as ChorusBlock } from "./blocks/effects/ChorusBlock";
 export { default as DelayBlock } from "./blocks/effects/DelayBlock";
 export { default as DistortionBlock } from "./blocks/effects/DistortionBlock";
 export { default as ReverbBlock } from "./blocks/effects/ReverbBlock";
+export { default as DrumMachineBlock } from "./blocks/source/DrumMachineBlock";
 export { default as NoiseBlock } from "./blocks/source/NoiseBlock";
 export { default as OscBlock } from "./blocks/source/OscBlock";
 export { default as ThreeOscBlock } from "./blocks/source/ThreeOscBlock";

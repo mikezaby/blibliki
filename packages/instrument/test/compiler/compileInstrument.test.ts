@@ -1,3 +1,4 @@
+import { ModuleType } from "@blibliki/engine";
 import { describe, expect, it } from "vitest";
 import { compileInstrument } from "@/compiler/compileInstrument";
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
@@ -186,5 +187,39 @@ describe("compileInstrument", () => {
     );
 
     expect(sourceModule?.voices).toBe(3);
+  });
+
+  it("compiles a drum machine source profile into the track engine patch", () => {
+    const document = createDefaultInstrumentDocument();
+    document.tracks[0] = {
+      ...document.tracks[0]!,
+      sourceProfileId: "drumMachine",
+    };
+
+    const compiled = compileInstrument(document);
+    const compiledTrack = compiled.tracks[0];
+    const sourceModule = compiledTrack?.compiledTrack.engine.modules.find(
+      (module) => module.id === "track-1.source.main",
+    );
+    const sourceAmpPage = compiledTrack?.compiledTrack.pages.find(
+      (page) => page.key === "sourceAmp",
+    );
+
+    expect(compiledTrack?.sourceProfileId).toBe("drumMachine");
+    expect(sourceModule?.moduleType).toBe(ModuleType.DrumMachine);
+    const topSlotKeys = sourceAmpPage?.regions[0]?.slots.map((slot) =>
+      slot.kind === "slot" ? slot.slotKey : "empty",
+    );
+
+    expect(topSlotKeys).toEqual([
+      "kickLevel",
+      "snareLevel",
+      "clapLevel",
+      "closedHatLevel",
+      "tomLevel",
+      "openHatLevel",
+      "cymbalLevel",
+      "cowbellLevel",
+    ]);
   });
 });

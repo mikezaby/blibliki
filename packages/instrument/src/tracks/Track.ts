@@ -6,6 +6,7 @@ import ChorusBlock from "@/blocks/effects/ChorusBlock";
 import DelayBlock from "@/blocks/effects/DelayBlock";
 import DistortionBlock from "@/blocks/effects/DistortionBlock";
 import ReverbBlock from "@/blocks/effects/ReverbBlock";
+import DrumMachineBlock from "@/blocks/source/DrumMachineBlock";
 import NoiseBlock from "@/blocks/source/NoiseBlock";
 import OscBlock from "@/blocks/source/OscBlock";
 import ThreeOscBlock from "@/blocks/source/ThreeOscBlock";
@@ -69,6 +70,8 @@ function createSourceBlock(sourceProfileId: SourceProfileId, voices: number) {
       return new NoiseBlock();
     case "threeOsc":
       return new ThreeOscBlock(voices);
+    case "drumMachine":
+      return new DrumMachineBlock();
   }
 }
 
@@ -107,6 +110,17 @@ function createSourcePageSlots(
         "wave3",
         "coarse3",
         "gain",
+      ]);
+    case "drumMachine":
+      return createSlots("source", [
+        "kickLevel",
+        "snareLevel",
+        "clapLevel",
+        "closedHatLevel",
+        "tomLevel",
+        "openHatLevel",
+        "cymbalLevel",
+        "cowbellLevel",
       ]);
   }
 }

@@ -1,3 +1,4 @@
+import { ModuleType } from "@blibliki/engine";
 import { describe, expect, it } from "vitest";
 import Track from "@/tracks/Track";
 import type { TrackPageKey } from "@/types";
@@ -168,5 +169,28 @@ describe("Track", () => {
     expect(fxModules["fx2.main"]?.props).toMatchObject({ mix: 0 });
     expect(fxModules["fx3.main"]?.props).toMatchObject({ mix: 0 });
     expect(fxModules["fx4.main"]?.props).toMatchObject({ mix: 0 });
+  });
+
+  it("maps the drum machine source profile into the normal track flow", () => {
+    const track = new Track("track-1", {
+      sourceProfileId: "drumMachine",
+    });
+    const serialized = track.serialize();
+    const sourceModule = serialized.blocks
+      .flatMap((block) => block.modules)
+      .find((module) => module.id === "source.main");
+    const sourceAmpPage = track.findPage("sourceAmp");
+
+    expect(sourceModule?.moduleType).toBe(ModuleType.DrumMachine);
+    expect(sourceAmpPage.regions[0].slots).toEqual([
+      { kind: "slot", blockKey: "source", slotKey: "kickLevel" },
+      { kind: "slot", blockKey: "source", slotKey: "snareLevel" },
+      { kind: "slot", blockKey: "source", slotKey: "clapLevel" },
+      { kind: "slot", blockKey: "source", slotKey: "closedHatLevel" },
+      { kind: "slot", blockKey: "source", slotKey: "tomLevel" },
+      { kind: "slot", blockKey: "source", slotKey: "openHatLevel" },
+      { kind: "slot", blockKey: "source", slotKey: "cymbalLevel" },
+      { kind: "slot", blockKey: "source", slotKey: "cowbellLevel" },
+    ]);
   });
 });
