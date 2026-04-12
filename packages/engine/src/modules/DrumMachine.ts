@@ -22,6 +22,8 @@ type DrumVoice =
   | "openHat"
   | "closedHat";
 
+type NoiseVoice = "cymbal" | "clap" | "openHat" | "closedHat";
+
 const DRUM_VOICES = [
   "kick",
   "snare",
@@ -90,8 +92,21 @@ const VOICE_PROP_KEYS = {
 >;
 
 const MIN_ENVELOPE_GAIN = 0.0001;
+const IDLE_GAIN = 0;
 const ATTACK_TIME = 0.002;
 const CLEANUP_TAIL = 0.1;
+const ENVELOPE_IDLE_DELAY = 0.001;
+
+const VOICE_POOL_SIZES: Record<DrumVoice, number> = {
+  kick: 2,
+  snare: 2,
+  tom: 2,
+  cymbal: 2,
+  cowbell: 2,
+  clap: 2,
+  openHat: 2,
+  closedHat: 2,
+};
 
 export type IDrumMachineProps = {
   masterLevel: number;
@@ -214,9 +229,44 @@ const createVoiceBuses = (
 
 type DisposableVoice = {
   outputGain: GainNode;
-  cleanupAt: number;
-  stop: (when: number) => void;
-  dispose: () => void;
+  activeUntil: number;
+  nodes: AudioNode[];
+  stoppers: OscillatorNode[];
+};
+
+type KickSlot = DisposableVoice & {
+  oscillator: OscillatorNode;
+};
+
+type SnareSlot = DisposableVoice & {
+  filter: BiquadFilterNode;
+  oscillator: OscillatorNode;
+  bodyGain: GainNode;
+};
+
+type TomSlot = DisposableVoice & {
+  oscillator: OscillatorNode;
+};
+
+type CowbellSlot = DisposableVoice & {
+  filter: BiquadFilterNode;
+  oscillatorA: OscillatorNode;
+  oscillatorB: OscillatorNode;
+};
+
+type NoiseSlot = DisposableVoice & {
+  filter: BiquadFilterNode;
+};
+
+type DrumVoiceSlots = {
+  kick: KickSlot[];
+  snare: SnareSlot[];
+  tom: TomSlot[];
+  cymbal: NoiseSlot[];
+  cowbell: CowbellSlot[];
+  clap: NoiseSlot[];
+  openHat: NoiseSlot[];
+  closedHat: NoiseSlot[];
 };
 
 export default class DrumMachine
@@ -226,8 +276,10 @@ export default class DrumMachine
   declare audioNode: undefined;
   private readonly masterBus: GainNode;
   private readonly voiceBuses: Record<DrumVoice, GainNode>;
+  private readonly sharedNoiseSource: AudioBufferSourceNode;
+  private readonly voiceSlots: DrumVoiceSlots;
   private noiseBuffer?: AudioBuffer;
-  private activeOpenHats = new Set<DisposableVoice>();
+  private activeOpenHats = new Set<NoiseSlot>();
 
   constructor(engineId: string, params: ICreateModule<ModuleType.DrumMachine>) {
     const props = { ...DEFAULT_PROPS, ...params.props };
@@ -241,10 +293,14 @@ export default class DrumMachine
       gain: props.masterLevel,
     });
     this.voiceBuses = createVoiceBuses(this.context.audioContext);
+    this.sharedNoiseSource = this.createSharedNoiseSource();
+    this.voiceSlots = this.createVoiceSlots();
 
     Object.values(this.voiceBuses).forEach((voiceBus) => {
       voiceBus.connect(this.masterBus);
     });
+
+    this.sharedNoiseSource.start();
 
     this.registerIOs();
   }
@@ -264,10 +320,15 @@ export default class DrumMachine
   }
 
   dispose() {
-    this.activeOpenHats.forEach((voice) => {
-      voice.dispose();
-    });
     this.activeOpenHats.clear();
+
+    this.disposeVoiceSlots();
+    try {
+      this.sharedNoiseSource.stop();
+    } catch {
+      // Shared noise source may already be stopped during teardown races.
+    }
+    this.sharedNoiseSource.disconnect();
 
     Object.values(this.voiceBuses).forEach((voiceBus) => {
       voiceBus.disconnect();
@@ -330,287 +391,176 @@ export default class DrumMachine
   }
 
   private triggerKick(velocity: number, triggeredAt: ContextTime) {
-    const { outputGain, peak, decay, tone } = this.createVoiceOutput(
+    const slot = this.acquireVoiceSlot("kick", triggeredAt);
+    const { peak, decay, tone } = this.getTriggeredVoiceSettings(
       "kick",
       velocity,
     );
-    const oscillator = new OscillatorNode(this.context.audioContext, {
-      type: "sine",
-      frequency: 140 + tone * 60,
-    });
 
-    oscillator.frequency.setValueAtTime(180 + tone * 60, triggeredAt);
-    oscillator.frequency.exponentialRampToValueAtTime(
+    slot.oscillator.frequency.cancelScheduledValues(triggeredAt);
+    slot.oscillator.frequency.setValueAtTime(180 + tone * 60, triggeredAt);
+    slot.oscillator.frequency.exponentialRampToValueAtTime(
       45 + tone * 10,
       triggeredAt + Math.max(0.03, decay * 0.2),
     );
-    oscillator.connect(outputGain);
 
-    const cleanupAt = this.scheduleDecayEnvelope(
-      outputGain,
+    slot.activeUntil = this.scheduleDecayEnvelope(
+      slot.outputGain,
       peak,
       triggeredAt,
       Math.max(0.12, decay * 0.6),
     );
-
-    oscillator.start(triggeredAt);
-    this.createDisposableVoice({
-      outputGain,
-      stoppers: [oscillator],
-      nodes: [oscillator, outputGain],
-      cleanupAt,
-    });
   }
 
   private triggerSnare(velocity: number, triggeredAt: ContextTime) {
-    const { outputGain, peak, decay, tone } = this.createVoiceOutput(
+    const slot = this.acquireVoiceSlot("snare", triggeredAt);
+    const { peak, decay, tone } = this.getTriggeredVoiceSettings(
       "snare",
       velocity,
     );
-    const noiseSource = this.createNoiseSource();
-    const noiseFilter = new BiquadFilterNode(this.context.audioContext, {
-      type: "highpass",
-      frequency: 1200 + tone * 5000,
-      Q: 0.7,
-    });
-    const bodyOscillator = new OscillatorNode(this.context.audioContext, {
-      type: "triangle",
-      frequency: 180 + tone * 120,
-    });
-    const bodyGain = new GainNode(this.context.audioContext, {
-      gain: peak * 0.4,
-    });
 
-    noiseSource.connect(noiseFilter);
-    noiseFilter.connect(outputGain);
-    bodyOscillator.connect(bodyGain);
-    bodyGain.connect(outputGain);
+    slot.filter.frequency.cancelScheduledValues(triggeredAt);
+    slot.filter.frequency.setValueAtTime(1200 + tone * 5000, triggeredAt);
 
-    bodyOscillator.frequency.setValueAtTime(220 + tone * 100, triggeredAt);
-    bodyOscillator.frequency.exponentialRampToValueAtTime(
+    slot.oscillator.frequency.cancelScheduledValues(triggeredAt);
+    slot.oscillator.frequency.setValueAtTime(220 + tone * 100, triggeredAt);
+    slot.oscillator.frequency.exponentialRampToValueAtTime(
       120 + tone * 40,
       triggeredAt + Math.max(0.02, decay * 0.12),
     );
+    slot.bodyGain.gain.cancelScheduledValues(triggeredAt);
+    slot.bodyGain.gain.setValueAtTime(peak * 0.4, triggeredAt);
 
-    const cleanupAt = this.scheduleDecayEnvelope(
-      outputGain,
+    slot.activeUntil = this.scheduleDecayEnvelope(
+      slot.outputGain,
       peak,
       triggeredAt,
       Math.max(0.08, decay * 0.55),
     );
-
-    noiseSource.start(triggeredAt);
-    bodyOscillator.start(triggeredAt);
-    this.createDisposableVoice({
-      outputGain,
-      stoppers: [noiseSource, bodyOscillator],
-      nodes: [noiseSource, noiseFilter, bodyOscillator, bodyGain, outputGain],
-      cleanupAt,
-    });
   }
 
   private triggerTom(velocity: number, triggeredAt: ContextTime) {
-    const { outputGain, peak, decay, tone } = this.createVoiceOutput(
+    const slot = this.acquireVoiceSlot("tom", triggeredAt);
+    const { peak, decay, tone } = this.getTriggeredVoiceSettings(
       "tom",
       velocity,
     );
-    const oscillator = new OscillatorNode(this.context.audioContext, {
-      type: "sine",
-      frequency: 110 + tone * 110,
-    });
 
-    oscillator.frequency.setValueAtTime(170 + tone * 120, triggeredAt);
-    oscillator.frequency.exponentialRampToValueAtTime(
+    slot.oscillator.frequency.cancelScheduledValues(triggeredAt);
+    slot.oscillator.frequency.setValueAtTime(170 + tone * 120, triggeredAt);
+    slot.oscillator.frequency.exponentialRampToValueAtTime(
       90 + tone * 40,
       triggeredAt + Math.max(0.04, decay * 0.2),
     );
-    oscillator.connect(outputGain);
 
-    const cleanupAt = this.scheduleDecayEnvelope(
-      outputGain,
+    slot.activeUntil = this.scheduleDecayEnvelope(
+      slot.outputGain,
       peak,
       triggeredAt,
       Math.max(0.12, decay * 0.7),
     );
-
-    oscillator.start(triggeredAt);
-    this.createDisposableVoice({
-      outputGain,
-      stoppers: [oscillator],
-      nodes: [oscillator, outputGain],
-      cleanupAt,
-    });
   }
 
   private triggerCowbell(velocity: number, triggeredAt: ContextTime) {
-    const { outputGain, peak, decay, tone } = this.createVoiceOutput(
+    const slot = this.acquireVoiceSlot("cowbell", triggeredAt);
+    const { peak, decay, tone } = this.getTriggeredVoiceSettings(
       "cowbell",
       velocity,
     );
-    const filter = new BiquadFilterNode(this.context.audioContext, {
-      type: "bandpass",
-      frequency: 1200 + tone * 1800,
-      Q: 1.4,
-    });
-    const oscillatorA = new OscillatorNode(this.context.audioContext, {
-      type: "square",
-      frequency: 540 + tone * 80,
-    });
-    const oscillatorB = new OscillatorNode(this.context.audioContext, {
-      type: "square",
-      frequency: 845 + tone * 120,
-    });
 
-    oscillatorA.connect(filter);
-    oscillatorB.connect(filter);
-    filter.connect(outputGain);
+    slot.filter.frequency.cancelScheduledValues(triggeredAt);
+    slot.filter.frequency.setValueAtTime(1200 + tone * 1800, triggeredAt);
+    slot.oscillatorA.frequency.cancelScheduledValues(triggeredAt);
+    slot.oscillatorA.frequency.setValueAtTime(540 + tone * 80, triggeredAt);
+    slot.oscillatorB.frequency.cancelScheduledValues(triggeredAt);
+    slot.oscillatorB.frequency.setValueAtTime(845 + tone * 120, triggeredAt);
 
-    const cleanupAt = this.scheduleDecayEnvelope(
-      outputGain,
+    slot.activeUntil = this.scheduleDecayEnvelope(
+      slot.outputGain,
       peak,
       triggeredAt,
       Math.max(0.08, decay * 0.45),
     );
-
-    oscillatorA.start(triggeredAt);
-    oscillatorB.start(triggeredAt);
-    this.createDisposableVoice({
-      outputGain,
-      stoppers: [oscillatorA, oscillatorB],
-      nodes: [oscillatorA, oscillatorB, filter, outputGain],
-      cleanupAt,
-    });
   }
 
   private triggerClap(velocity: number, triggeredAt: ContextTime) {
-    const { outputGain, peak, decay, tone } = this.createVoiceOutput(
+    const slot = this.acquireVoiceSlot("clap", triggeredAt);
+    const { peak, decay, tone } = this.getTriggeredVoiceSettings(
       "clap",
       velocity,
     );
-    const noiseSource = this.createNoiseSource();
-    const filter = new BiquadFilterNode(this.context.audioContext, {
-      type: "bandpass",
-      frequency: 1500 + tone * 4200,
-      Q: 0.8,
-    });
 
-    noiseSource.connect(filter);
-    filter.connect(outputGain);
+    slot.filter.frequency.cancelScheduledValues(triggeredAt);
+    slot.filter.frequency.setValueAtTime(1500 + tone * 4200, triggeredAt);
 
-    const cleanupAt = this.scheduleClapEnvelope(
-      outputGain,
+    slot.activeUntil = this.scheduleClapEnvelope(
+      slot.outputGain,
       peak,
       triggeredAt,
       Math.max(0.12, decay * 0.55),
     );
-
-    noiseSource.start(triggeredAt);
-    this.createDisposableVoice({
-      outputGain,
-      stoppers: [noiseSource],
-      nodes: [noiseSource, filter, outputGain],
-      cleanupAt,
-    });
   }
 
   private triggerCymbal(velocity: number, triggeredAt: ContextTime) {
-    const { outputGain, peak, decay, tone } = this.createVoiceOutput(
+    const slot = this.acquireVoiceSlot("cymbal", triggeredAt);
+    const { peak, decay, tone } = this.getTriggeredVoiceSettings(
       "cymbal",
       velocity,
     );
-    const noiseSource = this.createNoiseSource();
-    const filter = new BiquadFilterNode(this.context.audioContext, {
-      type: "highpass",
-      frequency: 3200 + tone * 5200,
-      Q: 0.7,
-    });
 
-    noiseSource.connect(filter);
-    filter.connect(outputGain);
+    slot.filter.frequency.cancelScheduledValues(triggeredAt);
+    slot.filter.frequency.setValueAtTime(3200 + tone * 5200, triggeredAt);
 
-    const cleanupAt = this.scheduleDecayEnvelope(
-      outputGain,
+    slot.activeUntil = this.scheduleDecayEnvelope(
+      slot.outputGain,
       peak,
       triggeredAt,
       Math.max(0.25, decay * 0.9),
     );
-
-    noiseSource.start(triggeredAt);
-    this.createDisposableVoice({
-      outputGain,
-      stoppers: [noiseSource],
-      nodes: [noiseSource, filter, outputGain],
-      cleanupAt,
-    });
   }
 
   private triggerOpenHat(velocity: number, triggeredAt: ContextTime) {
-    const { outputGain, peak, decay, tone } = this.createVoiceOutput(
+    this.pruneActiveOpenHats(triggeredAt);
+
+    const slot = this.acquireVoiceSlot("openHat", triggeredAt);
+    const { peak, decay, tone } = this.getTriggeredVoiceSettings(
       "openHat",
       velocity,
     );
-    const noiseSource = this.createNoiseSource();
-    const filter = new BiquadFilterNode(this.context.audioContext, {
-      type: "highpass",
-      frequency: 4200 + tone * 5000,
-      Q: 0.8,
-    });
 
-    noiseSource.connect(filter);
-    filter.connect(outputGain);
+    slot.filter.frequency.cancelScheduledValues(triggeredAt);
+    slot.filter.frequency.setValueAtTime(4200 + tone * 5000, triggeredAt);
 
-    const cleanupAt = this.scheduleDecayEnvelope(
-      outputGain,
+    slot.activeUntil = this.scheduleDecayEnvelope(
+      slot.outputGain,
       peak,
       triggeredAt,
       Math.max(0.2, decay * 0.8),
     );
-
-    noiseSource.start(triggeredAt);
-    const voice = this.createDisposableVoice({
-      outputGain,
-      stoppers: [noiseSource],
-      nodes: [noiseSource, filter, outputGain],
-      cleanupAt,
-      onDispose: () => {
-        this.activeOpenHats.delete(voice);
-      },
-    });
-    this.activeOpenHats.add(voice);
+    this.activeOpenHats.add(slot);
   }
 
   private triggerClosedHat(velocity: number, triggeredAt: ContextTime) {
-    const { outputGain, peak, decay, tone } = this.createVoiceOutput(
+    const slot = this.acquireVoiceSlot("closedHat", triggeredAt);
+    const { peak, decay, tone } = this.getTriggeredVoiceSettings(
       "closedHat",
       velocity,
     );
-    const noiseSource = this.createNoiseSource();
-    const filter = new BiquadFilterNode(this.context.audioContext, {
-      type: "highpass",
-      frequency: 5000 + tone * 5500,
-      Q: 1,
-    });
 
-    noiseSource.connect(filter);
-    filter.connect(outputGain);
+    slot.filter.frequency.cancelScheduledValues(triggeredAt);
+    slot.filter.frequency.setValueAtTime(5000 + tone * 5500, triggeredAt);
 
-    const cleanupAt = this.scheduleDecayEnvelope(
-      outputGain,
+    slot.activeUntil = this.scheduleDecayEnvelope(
+      slot.outputGain,
       peak,
       triggeredAt,
       Math.max(0.05, decay * 0.3),
     );
-
-    noiseSource.start(triggeredAt);
-    this.createDisposableVoice({
-      outputGain,
-      stoppers: [noiseSource],
-      nodes: [noiseSource, filter, outputGain],
-      cleanupAt,
-    });
   }
 
   private chokeOpenHats(triggeredAt: ContextTime) {
+    this.pruneActiveOpenHats(triggeredAt);
+
     this.activeOpenHats.forEach((voice) => {
       const releaseAt = triggeredAt + 0.05;
       voice.outputGain.gain.cancelScheduledValues(triggeredAt);
@@ -622,20 +572,18 @@ export default class DrumMachine
         MIN_ENVELOPE_GAIN,
         releaseAt,
       );
-      voice.stop(releaseAt);
+      voice.outputGain.gain.setValueAtTime(
+        IDLE_GAIN,
+        releaseAt + ENVELOPE_IDLE_DELAY,
+      );
+      voice.activeUntil = releaseAt + CLEANUP_TAIL;
     });
   }
 
-  private createVoiceOutput(voice: DrumVoice, velocity: number) {
+  private getTriggeredVoiceSettings(voice: DrumVoice, velocity: number) {
     const { level, decay, tone } = this.getVoiceSettings(voice);
-    const outputGain = new GainNode(this.context.audioContext, {
-      gain: MIN_ENVELOPE_GAIN,
-    });
-
-    outputGain.connect(this.voiceBuses[voice]);
 
     return {
-      outputGain,
       peak: Math.max(
         MIN_ENVELOPE_GAIN,
         level * this.normalizeVelocity(velocity),
@@ -659,24 +607,67 @@ export default class DrumMachine
     return 0.2 + clampedVelocity * 0.8;
   }
 
+  private acquireVoiceSlot(voice: "kick", triggeredAt: ContextTime): KickSlot;
+  private acquireVoiceSlot(voice: "snare", triggeredAt: ContextTime): SnareSlot;
+  private acquireVoiceSlot(voice: "tom", triggeredAt: ContextTime): TomSlot;
+  private acquireVoiceSlot(
+    voice: NoiseVoice,
+    triggeredAt: ContextTime,
+  ): NoiseSlot;
+  private acquireVoiceSlot(
+    voice: "cowbell",
+    triggeredAt: ContextTime,
+  ): CowbellSlot;
+  private acquireVoiceSlot(voice: DrumVoice, triggeredAt: ContextTime) {
+    const slots = this.voiceSlots[voice] as DisposableVoice[];
+    const slot =
+      slots.find((candidate) => candidate.activeUntil <= triggeredAt) ??
+      slots.reduce((oldest, candidate) =>
+        candidate.activeUntil < oldest.activeUntil ? candidate : oldest,
+      );
+
+    if (voice === "openHat") {
+      this.activeOpenHats.delete(slot as unknown as NoiseSlot);
+    }
+
+    this.resetVoiceSlot(slot, triggeredAt);
+
+    return slot;
+  }
+
+  private resetVoiceSlot(slot: DisposableVoice, triggeredAt: ContextTime) {
+    slot.outputGain.gain.cancelScheduledValues(triggeredAt);
+    slot.outputGain.gain.setValueAtTime(IDLE_GAIN, triggeredAt);
+    slot.activeUntil = triggeredAt;
+  }
+
+  private pruneActiveOpenHats(triggeredAt: ContextTime) {
+    this.activeOpenHats.forEach((slot) => {
+      if (slot.activeUntil <= triggeredAt) {
+        this.activeOpenHats.delete(slot);
+      }
+    });
+  }
+
   private scheduleDecayEnvelope(
     outputGain: GainNode,
     peak: number,
     triggeredAt: ContextTime,
     decay: number,
   ) {
+    const releaseAt = triggeredAt + decay;
+
     outputGain.gain.cancelScheduledValues(triggeredAt);
+    outputGain.gain.setValueAtTime(IDLE_GAIN, triggeredAt);
     outputGain.gain.setValueAtTime(MIN_ENVELOPE_GAIN, triggeredAt);
     outputGain.gain.exponentialRampToValueAtTime(
       peak,
       triggeredAt + ATTACK_TIME,
     );
-    outputGain.gain.exponentialRampToValueAtTime(
-      MIN_ENVELOPE_GAIN,
-      triggeredAt + decay,
-    );
+    outputGain.gain.exponentialRampToValueAtTime(MIN_ENVELOPE_GAIN, releaseAt);
+    outputGain.gain.setValueAtTime(IDLE_GAIN, releaseAt + ENVELOPE_IDLE_DELAY);
 
-    return triggeredAt + decay + CLEANUP_TAIL;
+    return releaseAt + CLEANUP_TAIL;
   }
 
   private scheduleClapEnvelope(
@@ -687,12 +678,15 @@ export default class DrumMachine
   ) {
     const gain = outputGain.gain;
     const burstInterval = 0.018;
+    const tailStart = triggeredAt + burstInterval * 3;
+    const releaseAt = tailStart + decay;
 
     gain.cancelScheduledValues(triggeredAt);
-    gain.setValueAtTime(MIN_ENVELOPE_GAIN, triggeredAt);
+    gain.setValueAtTime(IDLE_GAIN, triggeredAt);
 
     [1, 0.75, 0.55].forEach((multiplier, index) => {
       const burstStart = triggeredAt + index * burstInterval;
+      gain.setValueAtTime(IDLE_GAIN, burstStart);
       gain.setValueAtTime(MIN_ENVELOPE_GAIN, burstStart);
       gain.exponentialRampToValueAtTime(
         peak * multiplier,
@@ -704,17 +698,185 @@ export default class DrumMachine
       );
     });
 
-    const tailStart = triggeredAt + burstInterval * 3;
     gain.setValueAtTime(peak * 0.45, tailStart);
-    gain.exponentialRampToValueAtTime(MIN_ENVELOPE_GAIN, tailStart + decay);
+    gain.exponentialRampToValueAtTime(MIN_ENVELOPE_GAIN, releaseAt);
+    gain.setValueAtTime(IDLE_GAIN, releaseAt + ENVELOPE_IDLE_DELAY);
 
-    return tailStart + decay + CLEANUP_TAIL;
+    return releaseAt + CLEANUP_TAIL;
   }
 
-  private createNoiseSource() {
-    const noiseSource = new AudioBufferSourceNode(this.context.audioContext);
+  private createSharedNoiseSource() {
+    const noiseSource = new AudioBufferSourceNode(this.context.audioContext, {
+      loop: true,
+    });
     noiseSource.buffer = this.getNoiseBuffer();
+    noiseSource.loop = true;
     return noiseSource;
+  }
+
+  private createVoiceSlots(): DrumVoiceSlots {
+    return {
+      kick: Array.from({ length: VOICE_POOL_SIZES.kick }, () =>
+        this.createKickSlot(),
+      ),
+      snare: Array.from({ length: VOICE_POOL_SIZES.snare }, () =>
+        this.createSnareSlot(),
+      ),
+      tom: Array.from({ length: VOICE_POOL_SIZES.tom }, () =>
+        this.createTomSlot(),
+      ),
+      cymbal: Array.from({ length: VOICE_POOL_SIZES.cymbal }, () =>
+        this.createNoiseSlot("cymbal", "highpass", 0.7),
+      ),
+      cowbell: Array.from({ length: VOICE_POOL_SIZES.cowbell }, () =>
+        this.createCowbellSlot(),
+      ),
+      clap: Array.from({ length: VOICE_POOL_SIZES.clap }, () =>
+        this.createNoiseSlot("clap", "bandpass", 0.8),
+      ),
+      openHat: Array.from({ length: VOICE_POOL_SIZES.openHat }, () =>
+        this.createNoiseSlot("openHat", "highpass", 0.8),
+      ),
+      closedHat: Array.from({ length: VOICE_POOL_SIZES.closedHat }, () =>
+        this.createNoiseSlot("closedHat", "highpass", 1),
+      ),
+    };
+  }
+
+  private createKickSlot(): KickSlot {
+    const outputGain = this.createSlotOutput("kick");
+    const oscillator = new OscillatorNode(this.context.audioContext, {
+      type: "sine",
+      frequency: 140,
+    });
+
+    oscillator.connect(outputGain);
+    oscillator.start();
+
+    return {
+      outputGain,
+      oscillator,
+      activeUntil: 0,
+      nodes: [oscillator, outputGain],
+      stoppers: [oscillator],
+    };
+  }
+
+  private createSnareSlot(): SnareSlot {
+    const outputGain = this.createSlotOutput("snare");
+    const filter = new BiquadFilterNode(this.context.audioContext, {
+      type: "highpass",
+      frequency: 1200,
+      Q: 0.7,
+    });
+    const oscillator = new OscillatorNode(this.context.audioContext, {
+      type: "triangle",
+      frequency: 180,
+    });
+    const bodyGain = new GainNode(this.context.audioContext, {
+      gain: 0,
+    });
+
+    this.sharedNoiseSource.connect(filter);
+    filter.connect(outputGain);
+    oscillator.connect(bodyGain);
+    bodyGain.connect(outputGain);
+    oscillator.start();
+
+    return {
+      outputGain,
+      filter,
+      oscillator,
+      bodyGain,
+      activeUntil: 0,
+      nodes: [filter, oscillator, bodyGain, outputGain],
+      stoppers: [oscillator],
+    };
+  }
+
+  private createTomSlot(): TomSlot {
+    const outputGain = this.createSlotOutput("tom");
+    const oscillator = new OscillatorNode(this.context.audioContext, {
+      type: "sine",
+      frequency: 110,
+    });
+
+    oscillator.connect(outputGain);
+    oscillator.start();
+
+    return {
+      outputGain,
+      oscillator,
+      activeUntil: 0,
+      nodes: [oscillator, outputGain],
+      stoppers: [oscillator],
+    };
+  }
+
+  private createCowbellSlot(): CowbellSlot {
+    const outputGain = this.createSlotOutput("cowbell");
+    const filter = new BiquadFilterNode(this.context.audioContext, {
+      type: "bandpass",
+      frequency: 1200,
+      Q: 1.4,
+    });
+    const oscillatorA = new OscillatorNode(this.context.audioContext, {
+      type: "square",
+      frequency: 540,
+    });
+    const oscillatorB = new OscillatorNode(this.context.audioContext, {
+      type: "square",
+      frequency: 845,
+    });
+
+    oscillatorA.connect(filter);
+    oscillatorB.connect(filter);
+    filter.connect(outputGain);
+    oscillatorA.start();
+    oscillatorB.start();
+
+    return {
+      outputGain,
+      filter,
+      oscillatorA,
+      oscillatorB,
+      activeUntil: 0,
+      nodes: [filter, oscillatorA, oscillatorB, outputGain],
+      stoppers: [oscillatorA, oscillatorB],
+    };
+  }
+
+  private createNoiseSlot(
+    voice: DrumVoice,
+    type: BiquadFilterType,
+    q: number,
+  ): NoiseSlot {
+    const outputGain = this.createSlotOutput(voice);
+    const filter = new BiquadFilterNode(this.context.audioContext, {
+      type,
+      frequency: 1200,
+      Q: q,
+    });
+
+    this.sharedNoiseSource.connect(filter);
+    filter.connect(outputGain);
+
+    return {
+      outputGain,
+      filter,
+      activeUntil: 0,
+      nodes: [filter, outputGain],
+      stoppers: [],
+    };
+  }
+
+  private createSlotOutput(voice: DrumVoice) {
+    const outputGain = new GainNode(this.context.audioContext, {
+      gain: IDLE_GAIN,
+    });
+
+    outputGain.connect(this.voiceBuses[voice]);
+    return outputGain;
   }
 
   private getNoiseBuffer() {
@@ -738,79 +900,25 @@ export default class DrumMachine
     return buffer;
   }
 
-  private createDisposableVoice({
-    outputGain,
-    stoppers,
-    nodes,
-    cleanupAt,
-    onDispose,
-  }: {
-    outputGain: GainNode;
-    stoppers: (AudioBufferSourceNode | OscillatorNode)[];
-    nodes: AudioNode[];
-    cleanupAt: number;
-    onDispose?: () => void;
-  }): DisposableVoice {
-    let cleanupTimer: ReturnType<typeof setTimeout> | undefined;
-    let isDisposed = false;
-
-    const dispose = () => {
-      if (isDisposed) return;
-      isDisposed = true;
-      if (cleanupTimer) clearTimeout(cleanupTimer);
-
-      stoppers.forEach((node) => {
-        try {
-          node.stop();
-        } catch {
-          // Node may have already stopped naturally.
-        }
-      });
-
-      nodes.forEach((node) => {
-        try {
-          node.disconnect();
-        } catch {
-          // Ignore disconnect errors during cleanup.
-        }
-      });
-
-      onDispose?.();
-    };
-
-    const scheduleCleanup = (at: number) => {
-      if (cleanupTimer) clearTimeout(cleanupTimer);
-      cleanupTimer = setTimeout(
-        dispose,
-        Math.max(
-          0,
-          (at - this.context.audioContext.currentTime) * 1000 +
-            CLEANUP_TAIL * 1000,
-        ),
-      );
-    };
-
-    const voice: DisposableVoice = {
-      outputGain,
-      cleanupAt,
-      stop: (when) => {
-        stoppers.forEach((node) => {
+  private disposeVoiceSlots() {
+    DRUM_VOICES.forEach((voice) => {
+      this.voiceSlots[voice].forEach((slot) => {
+        slot.stoppers.forEach((node) => {
           try {
-            node.stop(when);
+            node.stop();
           } catch {
-            // Ignore invalid stop races.
+            // Nodes may already be stopped during teardown races.
           }
         });
-        scheduleCleanup(when);
-      },
-      dispose,
-    };
 
-    stoppers.forEach((node) => {
-      node.stop(cleanupAt);
+        slot.nodes.forEach((node) => {
+          try {
+            node.disconnect();
+          } catch {
+            // Ignore disconnect errors during cleanup.
+          }
+        });
+      });
     });
-    scheduleCleanup(cleanupAt);
-
-    return voice;
   }
 }

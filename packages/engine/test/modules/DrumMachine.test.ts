@@ -62,6 +62,17 @@ const FIXED_NOTE_MAP = [
   { note: "G#2", output: "cowbell out" }, // MIDI 56
 ];
 
+const VOICE_SLOT_NAMES = [
+  "kick",
+  "snare",
+  "tom",
+  "cymbal",
+  "cowbell",
+  "clap",
+  "openHat",
+  "closedHat",
+];
+
 function createDrumMachine(ctx: TestContext) {
   const serialized = ctx.engine.addModule({
     name: "drum machine",
@@ -298,6 +309,58 @@ describe("DrumMachine", () => {
     expect(
       readBufferDifference(darkKickBuffer, brightKickBuffer),
     ).toBeGreaterThan(0.5);
+  });
+
+  it("preallocates fixed voice slots and a shared looping noise source", async (ctx) => {
+    const drumMachine = createDrumMachine(ctx) as unknown as {
+      sharedNoiseSource?: AudioBufferSourceNode;
+      voiceSlots?: Partial<Record<string, unknown[]>>;
+    };
+
+    await waitForMicrotasks();
+
+    expect(drumMachine.sharedNoiseSource).toBeDefined();
+    expect(drumMachine.sharedNoiseSource?.loop).toBe(true);
+
+    for (const voice of VOICE_SLOT_NAMES) {
+      expect(drumMachine.voiceSlots?.[voice]).toBeDefined();
+      expect(drumMachine.voiceSlots?.[voice]?.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("reuses a preallocated kick slot across multiple triggers", async (ctx) => {
+    const drumMachine = createDrumMachine(ctx) as unknown as {
+      props: Record<string, unknown>;
+      voiceSlots: {
+        kick: Array<{
+          outputGain: GainNode;
+          oscillator: OscillatorNode;
+        }>;
+      };
+      onMidiEvent: (event: MidiEvent) => void;
+    };
+
+    await waitForMicrotasks();
+
+    drumMachine.props = { kickDecay: 0.08 };
+
+    const kickSlot = drumMachine.voiceSlots.kick[0];
+    expect(kickSlot).toBeDefined();
+    if (!kickSlot) {
+      throw new Error("Expected a preallocated kick slot");
+    }
+    const initialOutputGain = kickSlot.outputGain;
+    const initialOscillator = kickSlot.oscillator;
+
+    drumMachine.onMidiEvent(
+      MidiEvent.fromNote("C1", true, ctx.context.currentTime + 0.01),
+    );
+    drumMachine.onMidiEvent(
+      MidiEvent.fromNote("C1", true, ctx.context.currentTime + 0.25),
+    );
+
+    expect(drumMachine.voiceSlots.kick[0]?.outputGain).toBe(initialOutputGain);
+    expect(drumMachine.voiceSlots.kick[0]?.oscillator).toBe(initialOscillator);
   });
 
   it("chokes an active open hat when a closed hat is triggered", async (ctx) => {
