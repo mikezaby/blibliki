@@ -201,4 +201,65 @@ describe("createInstrumentSession", () => {
     ]);
     expect(disposeCalls).toBe(1);
   });
+
+  it("passes the created session and source document into the engine loader", async () => {
+    const document = createDefaultInstrumentDocument();
+    const engineLoader = describeEngineLoader();
+
+    const started = await startInstrumentSession(document, {
+      noteInput: false,
+      controllerInput: false,
+      controllerOutput: false,
+      engineLoader: engineLoader.load,
+    });
+
+    expect(engineLoader.calls).toHaveLength(1);
+    expect(engineLoader.calls[0]?.patch).toEqual(started.session.patch);
+    expect(engineLoader.calls[0]?.session).toEqual(started.session);
+    expect(engineLoader.calls[0]?.document).toEqual(document);
+
+    started.dispose();
+  });
 });
+
+function describeEngineLoader() {
+  const calls: {
+    patch: ReturnType<typeof createInstrumentSession>["patch"];
+    session: ReturnType<typeof createInstrumentSession>;
+    document: ReturnType<typeof createDefaultInstrumentDocument>;
+  }[] = [];
+
+  return {
+    calls,
+    load: (
+      patch: ReturnType<typeof createInstrumentSession>["patch"],
+      session: ReturnType<typeof createInstrumentSession>,
+      document: ReturnType<typeof createDefaultInstrumentDocument>,
+    ) => {
+      calls.push({ patch, session, document });
+
+      const modules = new Map(
+        patch.modules.map((module) => [module.id, module]),
+      );
+
+      return Promise.resolve({
+        state: TransportState.stopped,
+        start: () => Promise.resolve(),
+        stop: () => undefined,
+        dispose: () => undefined,
+        triggerVirtualMidi: () => undefined,
+        findMidiInputDeviceByFuzzyName: () => null,
+        findModule: (id: string) => {
+          const module = modules.get(id);
+          if (!module) {
+            throw new Error(`Module ${id} not found`);
+          }
+
+          return module;
+        },
+        updateModule: (params: unknown) => params,
+        onPropsUpdate: () => undefined,
+      });
+    },
+  };
+}

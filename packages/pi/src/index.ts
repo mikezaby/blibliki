@@ -75,6 +75,32 @@ export { createInstrumentControllerSession } from "./instrumentControllerSession
 export { instrumentDisplayStateToProtocol } from "./displayProtocol.js";
 export { createOscDisplayPublisher } from "./oscDisplayPublisher.js";
 export {
+  createPcmExportNode,
+  createPcmImportNode,
+  loadMultiprocessAudioBridgeProcessors,
+  pcmExportProcessorURL,
+  pcmImportProcessorURL,
+  type PcmChunkMessage,
+  type PcmImportNode,
+} from "./multiprocessAudioBridge.js";
+export {
+  createMultiprocessInstrumentEngine,
+  createMultiprocessTrackWorkerController,
+  createMultiprocessTrackWorkerSpecs,
+  createTrackAudioSourcePlugs,
+  createTrackWorkerPropSync,
+  getTrackKeyFromModuleId,
+  loadInstrumentEngineWithContext,
+  wireTrackAudioImports,
+  type CreateMultiprocessInstrumentEngineOptions,
+  type MultiprocessTrackWorkerEvent,
+  type MultiprocessTrackWorkerHandle,
+  type MultiprocessTrackWorkerMessage,
+  type MultiprocessTrackWorkerSpec,
+  type SpawnedMultiprocessTrackWorkerHandle,
+  type TrackAudioSourcePlugs,
+} from "./multiprocessInstrumentEngine.js";
+export {
   createTerminalDisplaySession,
   renderInstrumentDisplayStateToTerminal,
 } from "./terminalDisplay.js";
@@ -129,12 +155,16 @@ export async function startConfiguredDevice(
 
   const displayOutput = createDisplayOutput();
   const onDisplayStateChange = instrumentSessionOptions?.onDisplayStateChange;
+  const multiprocessEnabled =
+    instrumentSessionOptions?.multiprocess ??
+    process.env.BLIBLIKI_PI_MULTIPROCESS === "1";
 
   try {
     return await startDeployment(device, {
       ...deviceDeploymentDependencies,
       instrumentSessionOptions: {
         ...instrumentSessionOptions,
+        multiprocess: multiprocessEnabled,
         onDisplayStateChange: (displayState) => {
           displayOutput.render(displayState);
           onDisplayStateChange?.(displayState);

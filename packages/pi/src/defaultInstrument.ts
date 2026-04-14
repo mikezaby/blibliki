@@ -206,6 +206,7 @@ export async function startDefaultInstrument(
     noteInput: false,
     controllerInput: options.controllerInput,
     controllerOutput: options.controllerOutput,
+    multiprocess: process.env.BLIBLIKI_PI_MULTIPROCESS === "1",
     drone: {
       trackKey: droneTrack.key,
       note: options.droneNote ?? DEFAULT_DRONE_NOTE,

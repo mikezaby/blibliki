@@ -48,7 +48,10 @@ export type DeviceDeploymentDependencies = {
   startInstrumentSession?: typeof startInstrumentSession;
   instrumentSessionOptions?: Pick<
     StartInstrumentSessionOptions,
-    "onDisplayStateChange" | "onRuntimePatchChange" | "onDocumentChange"
+    | "onDisplayStateChange"
+    | "onRuntimePatchChange"
+    | "onDocumentChange"
+    | "multiprocess"
   >;
 };
 

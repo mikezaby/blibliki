@@ -17,6 +17,10 @@ import {
   type InstrumentControllerSession,
 } from "@/instrumentControllerSession";
 import { createSavedInstrumentDocument } from "@/instrumentPersistence";
+import {
+  createMultiprocessInstrumentEngine,
+  type CreateMultiprocessInstrumentEngineOptions,
+} from "@/multiprocessInstrumentEngine";
 
 export type InstrumentSessionDrone = {
   trackKey: string;
@@ -72,7 +76,10 @@ export type StartInstrumentSessionOptions = InstrumentSessionOptions &
       | undefined;
     engineLoader?: (
       patch: InstrumentSession["patch"],
+      session: InstrumentSession,
+      document: InstrumentDocument,
     ) => Promise<InstrumentSessionEngine>;
+    multiprocess?: boolean | CreateMultiprocessInstrumentEngineOptions;
   };
 
 export type StartedInstrumentSession = {
@@ -209,7 +216,20 @@ export async function startInstrumentSession(
   options: StartInstrumentSessionOptions = {},
 ): Promise<StartedInstrumentSession> {
   const session = createInstrumentSession(document, options);
-  const engine = await (options.engineLoader ?? loadEngine)(session.patch);
+  const engineLoader =
+    options.multiprocess === false
+      ? (options.engineLoader ?? loadEngine)
+      : options.multiprocess
+        ? (_patch: InstrumentSession["patch"]) =>
+            createMultiprocessInstrumentEngine(
+              document,
+              session,
+              typeof options.multiprocess === "object"
+                ? options.multiprocess
+                : {},
+            )
+        : (options.engineLoader ?? loadEngine);
+  const engine = await engineLoader(session.patch, session, document);
 
   const createSavedDocumentSnapshot = (
     runtimePatch: CompiledInstrumentEnginePatch,

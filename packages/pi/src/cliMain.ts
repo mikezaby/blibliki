@@ -54,6 +54,7 @@ Environment:
   BLIBLIKI_PI_CONTROL_PORT   Pi control UDP port for resync requests (default 41235)
   BLIBLIKI_PI_DISPLAY_DEBUG  Enable OSC publisher debug logs (0 or 1)
   BLIBLIKI_PI_DISPLAY_TARGET_CLASS  standard (default) or compact-standard
+  BLIBLIKI_PI_MULTIPROCESS  Enable real multiprocess track workers on normal startup (0 or 1)
 `;
 }
 
