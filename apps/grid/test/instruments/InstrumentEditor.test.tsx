@@ -142,6 +142,35 @@ describe("InstrumentEditor", () => {
     expect(voicesInput.value).toBe("12");
   });
 
+  it("offers the drum machine source profile in the track editor", () => {
+    render(
+      <Provider store={store}>
+        <InstrumentEditor
+          instrument={{
+            id: "instrument-1",
+            name: "Broken Instrument",
+            userId: "user-1",
+            document: createDefaultInstrumentDocument(),
+          }}
+        />
+      </Provider>,
+    );
+
+    const sourceProfileValue = screen.getByText("unassigned");
+    const sourceProfileTrigger =
+      sourceProfileValue.closest('[role="combobox"]') ??
+      sourceProfileValue.closest("button");
+
+    if (!(sourceProfileTrigger instanceof HTMLElement)) {
+      throw new Error("Expected source profile trigger button");
+    }
+
+    sourceProfileTrigger.focus();
+    fireEvent.keyDown(sourceProfileTrigger, { key: "ArrowDown" });
+
+    expect(screen.getByRole("option", { name: "drumMachine" })).toBeDefined();
+  });
+
   it("saves the selected latency mode with the instrument document", async () => {
     const saveSpy = vi.spyOn(Instrument.prototype, "save").mockResolvedValue();
 

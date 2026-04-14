@@ -34,7 +34,8 @@ export type SourceProfileId =
   | "osc"
   | "wavetable"
   | "noise"
-  | "threeOsc";
+  | "threeOsc"
+  | "drumMachine";
 
 export type EffectProfileId = "distortion" | "chorus" | "delay" | "reverb";
 export type InstrumentLatencyHint = "interactive" | "playback";

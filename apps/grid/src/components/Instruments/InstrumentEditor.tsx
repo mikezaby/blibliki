@@ -50,6 +50,7 @@ const SOURCE_PROFILE_OPTIONS: SourceProfileId[] = [
   "wavetable",
   "noise",
   "threeOsc",
+  "drumMachine",
 ];
 const NOTE_SOURCE_OPTIONS: InstrumentTrackDocument["noteSource"][] = [
   "externalMidi",
