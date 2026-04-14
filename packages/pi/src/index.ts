@@ -43,6 +43,24 @@ export {
   startDefaultInstrument,
 } from "./defaultInstrument.js";
 export {
+  createTrackProcessBenchmark,
+  createTrackProcessBenchmarkWorkerController,
+  createTrackProcessBenchmarkWorkerSpecs,
+  loadTrackProcessBenchmarkEngine,
+  type CreateTrackProcessBenchmarkOptions,
+  type TrackProcessBenchmark,
+  type TrackProcessBenchmarkContextOptions,
+  type TrackProcessBenchmarkEngine,
+  type TrackProcessBenchmarkWorkerEvent,
+  type TrackProcessBenchmarkWorkerHandle,
+  type TrackProcessBenchmarkWorkerMessage,
+  type TrackProcessBenchmarkWorkerSpec,
+} from "./trackProcessBenchmark.js";
+export {
+  startTrackProcessBenchmark,
+  type StartTrackProcessBenchmarkDependencies,
+} from "./startTrackProcessBenchmark.js";
+export {
   createConfiguredDisplayOutput,
   type DisplayOutput,
 } from "./displayOutput.js";

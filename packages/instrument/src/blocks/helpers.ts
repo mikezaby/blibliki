@@ -58,6 +58,14 @@ export function getValueSpecForModuleProp<T extends ModuleType>(
   }
 }
 
+export function isSupportedControllerPropSchema(schema: PropSchema): boolean {
+  return (
+    schema.kind === "number" ||
+    schema.kind === "enum" ||
+    schema.kind === "boolean"
+  );
+}
+
 export function createModulePropSlot<T extends ModuleType>({
   key,
   label,

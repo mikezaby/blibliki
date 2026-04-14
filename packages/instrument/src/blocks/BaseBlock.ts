@@ -5,7 +5,10 @@ import type {
   SlotInitialValue,
 } from "@/slots/BaseSlot";
 import type { BlockKey } from "@/types";
-import { createModulePropSlot } from "./helpers";
+import {
+  createModulePropSlot,
+  isSupportedControllerPropSchema,
+} from "./helpers";
 import type {
   BlockIO,
   BlockModule,
@@ -60,6 +63,10 @@ export default abstract class BaseBlock {
 
     Object.entries(moduleSchemas[module.moduleType]).forEach(
       ([propKey, schema]) => {
+        if (!isSupportedControllerPropSchema(schema as PropSchema)) {
+          return;
+        }
+
         const { label, shortLabel } = schema as PropSchema;
 
         this.addSlot(

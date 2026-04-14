@@ -110,7 +110,7 @@ describe("createInstrumentRuntimeState", () => {
     if (topFirstSlot.kind !== "slot") {
       throw new Error("Expected top first slot to be populated");
     }
-    expect(topFirstSlot.label).toBe("Wave");
+    expect(topFirstSlot.label).toBe("Waveform");
     expect(topFirstSlot.shortLabel).toBe("WAVE");
     expect(topFirstSlot.binding).toEqual({
       kind: "module-prop",

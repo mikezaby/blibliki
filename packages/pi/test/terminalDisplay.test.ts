@@ -126,7 +126,7 @@ describe("renderInstrumentDisplayStateToTerminal", () => {
       /SOURCE[\s\S]*\n.*WAVE.*FREQ.*OCT.*CRS.*FINE.*LOW.*\n.*sine.*440.*0.*0.*0.*ON.*--.*--.*\n.*o.*----.*\n/,
     );
     expect(rendered).toMatch(
-      /AMP[\s\S]*\n.*A.*D.*S.*R.*GAIN.*\n.*--.*--.*--.*--.*--.*--.*--.*--.*\n.*----.*\n\+/,
+      /AMP[\s\S]*\n.*A.*D.*S.*R.*GAIN.*\n.*0\.01.*0.*1.*0\.05.*--.*--.*--.*1.*\n.*o.*----.*\n\+/,
     );
   });
 

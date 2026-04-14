@@ -487,7 +487,7 @@ describe("createInstrumentEnginePatch", () => {
         "source.lowGain": false,
         "amp.attack": 0.35,
         "filter.cutoff": 3200,
-        "filter.resonance": 7,
+        "filter.Q": 7,
         "lfo1.sync": true,
         "fx1.drive": 0.72,
       },

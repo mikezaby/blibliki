@@ -49,18 +49,24 @@ describe("ThreeOscBlock", () => {
 
     expect(Array.from(block.slots.keys())).toEqual([
       "wave1",
-      "coarse1",
+      "frequency1",
       "fine1",
+      "coarse1",
       "octave1",
+      "lowGain1",
       "wave2",
-      "coarse2",
+      "frequency2",
       "fine2",
+      "coarse2",
       "octave2",
+      "lowGain2",
       "wave3",
-      "coarse3",
+      "frequency3",
       "fine3",
+      "coarse3",
       "octave3",
-      "mix",
+      "lowGain3",
+      "gain",
     ]);
   });
 });
