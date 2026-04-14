@@ -50,122 +50,124 @@ export default function Header() {
   }, [togglePlay]);
 
   return (
-    <Surface
-      tone="panel"
-      border="subtle"
-      radius="none"
-      className="flex h-12 items-center border-x-0 border-t-0 px-4"
-    >
-      <Stack direction="row" align="center" gap={2} className="mr-4">
-        <Text asChild size="lg" weight="semibold" className="tracking-tight">
-          <h1>Blibliki</h1>
-        </Text>
-      </Stack>
-
-      <Stack direction="row" align="center" gap={2}>
-        <FileMenu />
-      </Stack>
-
-      <Stack direction="row" align="center" gap={3} className="ml-6 min-w-70">
-        <Divider orientation="vertical" className="h-6" />
+    <div className="overflow-x-auto">
+      <Surface
+        tone="panel"
+        border="subtle"
+        radius="none"
+        className="flex h-12 min-w-[920px] items-center border-x-0 border-t-0 px-4"
+      >
+        <Stack direction="row" align="center" gap={2} className="mr-4">
+          <Text asChild size="lg" weight="semibold" className="tracking-tight">
+            <h1>Blibliki</h1>
+          </Text>
+        </Stack>
 
         <Stack direction="row" align="center" gap={2}>
-          <Label className={fieldLabelClassName}>Project</Label>
-          <Input
-            size="sm"
-            className="w-40 font-medium"
-            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-              dispatch(setPatchName(event.target.value))
-            }
-            value={patchName}
-            placeholder="Untitled Patch"
-          />
+          <FileMenu />
         </Stack>
-      </Stack>
 
-      <Stack
-        direction="row"
-        align="center"
-        justify="center"
-        gap={4}
-        className="flex-1"
-      >
-        <Stack direction="row" align="center" gap={3}>
+        <Stack direction="row" align="center" gap={3} className="ml-6 min-w-70">
+          <Divider orientation="vertical" className="h-6" />
+
           <Stack direction="row" align="center" gap={2}>
-            <Label className={fieldLabelClassName}>BPM</Label>
+            <Label className={fieldLabelClassName}>Project</Label>
             <Input
               size="sm"
-              className="w-18 text-center font-mono"
-              type="number"
-              min="10"
-              max="999"
-              onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                dispatch(setBpm(+event.target.value));
-              }}
-              value={bpm}
+              className="w-40 font-medium"
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                dispatch(setPatchName(event.target.value))
+              }
+              value={patchName}
+              placeholder="Untitled Patch"
             />
           </Stack>
+        </Stack>
+
+        <Stack
+          direction="row"
+          align="center"
+          justify="center"
+          gap={4}
+          className="flex-1"
+        >
+          <Stack direction="row" align="center" gap={3}>
+            <Stack direction="row" align="center" gap={2}>
+              <Label className={fieldLabelClassName}>BPM</Label>
+              <Input
+                size="sm"
+                className="w-18 text-center font-mono"
+                type="number"
+                min="10"
+                max="999"
+                onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                  dispatch(setBpm(+event.target.value));
+                }}
+                value={bpm}
+              />
+            </Stack>
+
+            <Divider orientation="vertical" className="h-6" />
+
+            <IconButton
+              aria-label={isStarted ? "Stop transport" : "Start transport"}
+              icon={
+                isStarted ? (
+                  <Square className="w-4 h-4" />
+                ) : (
+                  <Play className="w-4 h-4 ml-0.5" />
+                )
+              }
+              onClick={togglePlay}
+              variant="contained"
+              color="neutral"
+            />
+          </Stack>
+        </Stack>
+
+        <Stack
+          direction="row"
+          align="center"
+          gap={3}
+          justify="end"
+          className="min-w-50"
+        >
+          <Divider orientation="vertical" className="h-6" />
+
+          <ThemePresetSelector />
+          <ColorSchemeToggle />
+          <Button asChild variant="text" color="neutral" size="sm">
+            <a
+              href="https://github.com/mikezaby/blibliki"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Github />
+            </a>
+          </Button>
 
           <Divider orientation="vertical" className="h-6" />
 
-          <IconButton
-            aria-label={isStarted ? "Stop transport" : "Start transport"}
-            icon={
-              isStarted ? (
-                <Square className="w-4 h-4" />
-              ) : (
-                <Play className="w-4 h-4 ml-0.5" />
-              )
-            }
-            onClick={togglePlay}
-            variant="contained"
-            color="neutral"
-          />
+          <SignedIn>
+            <UserButton userProfileUrl="/user" />
+          </SignedIn>
+          <SignedOut>
+            <Button
+              variant="text"
+              color="neutral"
+              size="sm"
+              onClick={() => {
+                openSignIn();
+              }}
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Sign In</span>
+            </Button>
+          </SignedOut>
         </Stack>
-      </Stack>
-
-      <Stack
-        direction="row"
-        align="center"
-        gap={3}
-        justify="end"
-        className="min-w-50"
-      >
-        <Divider orientation="vertical" className="h-6" />
-
-        <ThemePresetSelector />
-        <ColorSchemeToggle />
-        <Button asChild variant="text" color="neutral" size="sm">
-          <a
-            href="https://github.com/mikezaby/blibliki"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <Github />
-          </a>
-        </Button>
-
-        <Divider orientation="vertical" className="h-6" />
-
-        <SignedIn>
-          <UserButton userProfileUrl="/user" />
-        </SignedIn>
-        <SignedOut>
-          <Button
-            variant="text"
-            color="neutral"
-            size="sm"
-            onClick={() => {
-              openSignIn();
-            }}
-          >
-            <LogIn className="w-4 h-4" />
-            <span>Sign In</span>
-          </Button>
-        </SignedOut>
-      </Stack>
-      {modalName === "patch" && <LoadModal />}
-    </Surface>
+        {modalName === "patch" && <LoadModal />}
+      </Surface>
+    </div>
   );
 }
 

@@ -156,4 +156,18 @@ describe("Header navigation", () => {
     expect(menu.className).toContain("max-h-none");
     expect(menu.className).toContain("overflow-visible");
   });
+
+  it("keeps the desktop header width and enables horizontal scrolling on narrow windows", () => {
+    const { container } = render(
+      <Provider store={store}>
+        <Header />
+      </Provider>,
+    );
+
+    const scrollContainer = container.querySelector(".overflow-x-auto");
+    expect(scrollContainer).not.toBeNull();
+
+    const headerSurface = container.querySelector(".min-w-\\[920px\\]");
+    expect(headerSurface).not.toBeNull();
+  });
 });
