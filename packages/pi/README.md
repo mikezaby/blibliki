@@ -161,8 +161,6 @@ PipeWire's JACK layer. On macOS, run it directly.
 `@blibliki/pi` can publish display state to the independent `apps/pi-display`
 process over OSC.
 
-### Display-first workflow
-
 Start the display listener first from the worktree root:
 
 ```bash
@@ -173,23 +171,6 @@ SLINT_BACKEND=winit BLIBLIKI_DISPLAY_DEBUG=1 pnpm -C apps/pi-display start
 On Raspberry Pi without X11 or Wayland, use `SLINT_BACKEND=linuxkms-software` instead. If you omit `SLINT_BACKEND`, Slint may auto-select a direct-display backend on the Pi.
 
 Then start the Pi runtime in OSC mode:
-
-```bash
-cd /Users/mikezaby/projects/blibliki/blibliki/.worktrees/pi-display-osc
-BLIBLIKI_PI_DISPLAY_MODE=osc \
-BLIBLIKI_PI_DISPLAY_HOST=127.0.0.1 \
-BLIBLIKI_PI_DISPLAY_PORT=41234 \
-BLIBLIKI_PI_CONTROL_PORT=41235 \
-BLIBLIKI_PI_DISPLAY_DEBUG=1 \
-pnpm -C packages/pi start-default
-```
-
-This is the easiest local setup because `start-default` does not depend on
-Firestore or the Grid deployment target.
-
-### Firestore-driven runtime
-
-If you want the normal configured device path instead:
 
 ```bash
 cd /Users/mikezaby/projects/blibliki/blibliki/.worktrees/pi-display-osc

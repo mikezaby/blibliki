@@ -1,9 +1,7 @@
-import { startDefaultInstrument } from "./defaultInstrument.js";
 import { main, setupFirebase } from "./index.js";
 
 export type CliDependencies = {
   main: typeof main;
-  startDefaultInstrument: typeof startDefaultInstrument;
   setupFirebase: typeof setupFirebase;
   log: (message: string) => void;
   error: (error: unknown) => void;
@@ -12,7 +10,6 @@ export type CliDependencies = {
 
 const DEFAULT_DEPENDENCIES: CliDependencies = {
   main,
-  startDefaultInstrument,
   setupFirebase,
   log: console.log,
   error: console.error,
@@ -27,7 +24,6 @@ Blibliki Pi - Audio engine for Raspberry Pi and other devices
 
 Usage:
   blibliki-pi                    Start from the device deployment target in Firestore
-  blibliki-pi start-default      Start the default local instrument runtime
   blibliki-pi setup-firebase [url]  Setup Firebase configuration from Grid app
   blibliki-pi --help             Show this help message
 
@@ -36,7 +32,6 @@ Options:
 
 Examples:
   blibliki-pi
-  blibliki-pi start-default
   blibliki-pi http://192.168.1.100:5173
   BLIBLIKI_PI_DISPLAY_MODE=osc blibliki-pi
   blibliki-pi setup-firebase
@@ -66,13 +61,14 @@ export async function runCli(
     return;
   }
 
-  if (args[0] === "start-default") {
-    await dependencies.startDefaultInstrument().catch(handleError);
+  if (args[0] === "--help" || args[0] === "-h") {
+    dependencies.log(getCliHelpText());
     return;
   }
 
-  if (args[0] === "--help" || args[0] === "-h") {
-    dependencies.log(getCliHelpText());
+  if (args[0] && !args[0].startsWith("http")) {
+    dependencies.error(`Unknown command: ${args[0]}`);
+    dependencies.exit(1);
     return;
   }
 

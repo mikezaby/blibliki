@@ -7,7 +7,6 @@ describe("runCli", () => {
 
     await runCli([], {
       main,
-      startDefaultInstrument: vi.fn(),
       setupFirebase: vi.fn(),
       exit: vi.fn(),
       error: vi.fn(),
@@ -22,7 +21,6 @@ describe("runCli", () => {
 
     await runCli(["http://192.168.1.2:5173"], {
       main,
-      startDefaultInstrument: vi.fn(),
       setupFirebase: vi.fn(),
       exit: vi.fn(),
       error: vi.fn(),
@@ -39,7 +37,6 @@ describe("runCli", () => {
 
     await runCli(["setup-firebase", "http://localhost:5173"], {
       main: vi.fn(),
-      startDefaultInstrument: vi.fn(),
       setupFirebase,
       exit: vi.fn(),
       error: vi.fn(),
@@ -49,30 +46,31 @@ describe("runCli", () => {
     expect(setupFirebase).toHaveBeenCalledWith("http://localhost:5173");
   });
 
-  it("starts the default instrument runtime from the explicit start-default subcommand", async () => {
-    const startDefaultInstrument = vi.fn().mockResolvedValue(undefined);
+  it("rejects the removed start-default subcommand", async () => {
+    const error = vi.fn();
+    const exit = vi.fn();
 
     await runCli(["start-default"], {
       main: vi.fn(),
-      startDefaultInstrument,
       setupFirebase: vi.fn(),
-      exit: vi.fn(),
-      error: vi.fn(),
+      exit,
+      error,
       log: vi.fn(),
     });
 
-    expect(startDefaultInstrument).toHaveBeenCalledWith();
+    expect(error).toHaveBeenCalledWith("Unknown command: start-default");
+    expect(exit).toHaveBeenCalledWith(1);
   });
 });
 
 describe("getCliHelpText", () => {
-  it("documents firestore-driven startup, default instrument startup, and the display env configuration", () => {
+  it("documents firestore-driven startup and the display env configuration without start-default", () => {
     const helpText = getCliHelpText();
 
     expect(helpText).toContain(
       "Start from the device deployment target in Firestore",
     );
-    expect(helpText).toContain("start-default");
+    expect(helpText).not.toContain("start-default");
     expect(helpText).toContain("BLIBLIKI_PI_DISPLAY_MODE");
     expect(helpText).toContain("BLIBLIKI_PI_DISPLAY_PORT");
     expect(helpText).toContain("BLIBLIKI_PI_DISPLAY_DEBUG");

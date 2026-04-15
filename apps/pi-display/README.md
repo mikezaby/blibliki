@@ -159,7 +159,7 @@ BLIBLIKI_PI_DISPLAY_HOST=127.0.0.1 \
 BLIBLIKI_PI_DISPLAY_PORT=41234 \
 BLIBLIKI_PI_CONTROL_PORT=41235 \
 BLIBLIKI_PI_DISPLAY_DEBUG=1 \
-pnpm -C packages/pi start-default
+pnpm -C packages/pi start
 ```
 
 Use the compact layout family:
@@ -172,7 +172,7 @@ BLIBLIKI_PI_DISPLAY_PORT=41234 \
 BLIBLIKI_PI_CONTROL_PORT=41235 \
 BLIBLIKI_PI_DISPLAY_DEBUG=1 \
 BLIBLIKI_PI_DISPLAY_TARGET_CLASS=compact-standard \
-pnpm -C packages/pi start-default
+pnpm -C packages/pi start
 ```
 
 ## Useful Environment Variables
@@ -217,5 +217,5 @@ pnpm -C packages/pi start-default
 ### The display reacts to fixtures but not to the Pi engine
 
 - make sure `BLIBLIKI_PI_DISPLAY_MODE=osc` is set
-- use `pnpm -C packages/pi start-default` first, because it is the fastest local engine path
+- use `pnpm -C packages/pi start` so the display follows the real configured-device runtime
 - enable `BLIBLIKI_PI_DISPLAY_DEBUG=1` and inspect outgoing publish logs

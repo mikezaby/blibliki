@@ -39,10 +39,6 @@ export {
   type StartInstrumentSessionOptions,
 } from "./instrumentSession.js";
 export {
-  createDefaultInstrumentSession,
-  startDefaultInstrument,
-} from "./defaultInstrument.js";
-export {
   createConfiguredDisplayOutput,
   type DisplayOutput,
 } from "./displayOutput.js";
