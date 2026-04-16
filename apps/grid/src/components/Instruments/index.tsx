@@ -74,6 +74,7 @@ export default function Instruments() {
       await navigate({
         to: "/instrument/$instrumentId",
         params: { instrumentId: instrument.id },
+        search: { mode: undefined },
       });
     } catch (error) {
       const errorMessage =
@@ -250,6 +251,7 @@ export default function Instruments() {
                           <Link
                             to="/instrument/$instrumentId"
                             params={{ instrumentId: instrument.id }}
+                            search={{ mode: undefined }}
                           >
                             Open Instrument
                           </Link>

@@ -128,7 +128,7 @@ describe("createInstrumentDisplayState", () => {
     expect(displayState.upperBand.slots[0]).toEqual(
       expect.objectContaining({
         kind: "slot",
-        label: "Wave",
+        label: "Waveform",
         shortLabel: "WAVE",
         cc: 21,
         valueText: "sine",
@@ -151,7 +151,7 @@ describe("createInstrumentDisplayState", () => {
         label: "Attack",
         shortLabel: "A",
         cc: 29,
-        valueText: "--",
+        valueText: "0.01",
       }),
     );
     if (displayState.lowerBand.slots[0].kind !== "slot") {
@@ -169,7 +169,7 @@ describe("createInstrumentDisplayState", () => {
         label: "Gain",
         shortLabel: "GAIN",
         cc: 36,
-        valueText: "--",
+        valueText: "1",
       }),
     );
     if (displayState.lowerBand.slots[7].kind !== "slot") {

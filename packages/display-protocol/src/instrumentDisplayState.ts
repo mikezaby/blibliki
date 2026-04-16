@@ -1,0 +1,293 @@
+import { TransportState } from "@blibliki/engine";
+import type { InstrumentDisplayState, ValueSpec } from "@blibliki/instrument";
+import type {
+  DisplayBandState,
+  DisplayCellValue,
+  DisplayProtocolState,
+  DisplayTargetClass,
+  DisplayVisualScale,
+} from "./state";
+
+const EMPTY_VALUE_TEXT = "--";
+const DISPLAY_BRAND = "Blibliki";
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function normalizeNumericValue(value: number) {
+  if (value >= 20 && value <= 20000) {
+    return {
+      normalized: clamp(
+        (Math.log10(value) - Math.log10(20)) /
+          (Math.log10(20000) - Math.log10(20)),
+        0,
+        1,
+      ),
+      scale: "log" as DisplayVisualScale,
+    };
+  }
+
+  if (value >= 0 && value <= 1) {
+    return {
+      normalized: value,
+      scale: "linear" as DisplayVisualScale,
+    };
+  }
+
+  if (value >= 0 && value <= 100) {
+    return {
+      normalized: value / 100,
+      scale: "linear" as DisplayVisualScale,
+    };
+  }
+
+  if (value >= 0 && value <= 127) {
+    return {
+      normalized: value / 127,
+      scale: "linear" as DisplayVisualScale,
+    };
+  }
+
+  return {
+    normalized: 0.5,
+    scale: "linear" as DisplayVisualScale,
+  };
+}
+
+function normalizeSchemaNumberValue(value: number, valueSpec: ValueSpec) {
+  if (valueSpec.kind !== "number") {
+    return;
+  }
+
+  const { min, max, exp } = valueSpec;
+  if (min === undefined || max === undefined || max === min) {
+    return;
+  }
+
+  const normalized = clamp((value - min) / (max - min), 0, 1);
+  return {
+    normalized:
+      exp !== undefined && exp !== 1
+        ? Math.pow(normalized, 1 / exp)
+        : normalized,
+    scale: "linear" as DisplayVisualScale,
+  };
+}
+
+function parseDisplayValue(
+  source:
+    | InstrumentDisplayState["globalBand"]["slots"][number]
+    | Extract<
+        InstrumentDisplayState["upperBand"]["slots"][number],
+        { kind: "slot" }
+      >
+    | { valueText: "--" },
+): DisplayCellValue {
+  const valueText = source.valueText;
+  const trimmed = valueText.trim();
+  if (trimmed === EMPTY_VALUE_TEXT) {
+    return {
+      kind: "text",
+      raw: trimmed,
+      formatted: valueText,
+      visualNormalized: null,
+      visualScale: "linear",
+    };
+  }
+
+  if (
+    "valueSpec" in source &&
+    source.valueSpec?.kind === "boolean" &&
+    typeof source.rawValue === "boolean"
+  ) {
+    return {
+      kind: "boolean",
+      raw: source.rawValue,
+      formatted: valueText,
+      visualNormalized: source.rawValue ? 1 : 0,
+      visualScale: "linear",
+    };
+  }
+
+  if (
+    "valueSpec" in source &&
+    source.valueSpec?.kind === "enum" &&
+    (typeof source.rawValue === "string" || typeof source.rawValue === "number")
+  ) {
+    const optionIndex = source.valueSpec.options.findIndex(
+      (option: string | number) => option === source.rawValue,
+    );
+    const optionCount = source.valueSpec.options.length;
+    const visualNormalized =
+      optionIndex < 0 || optionCount <= 1 ? 0 : optionIndex / (optionCount - 1);
+
+    return {
+      kind: "enum",
+      raw: `${source.rawValue}`,
+      formatted: valueText,
+      visualNormalized,
+      visualScale: "linear",
+    };
+  }
+
+  if (
+    "valueSpec" in source &&
+    source.valueSpec?.kind === "number" &&
+    typeof source.rawValue === "number"
+  ) {
+    const normalized = normalizeSchemaNumberValue(
+      source.rawValue,
+      source.valueSpec,
+    );
+    if (normalized) {
+      return {
+        kind: "number",
+        raw: source.rawValue,
+        formatted: valueText,
+        visualNormalized: normalized.normalized,
+        visualScale: normalized.scale,
+      };
+    }
+  }
+
+  const normalizedText = trimmed.toUpperCase();
+  if (normalizedText === "ON" || normalizedText === "OFF") {
+    return {
+      kind: "boolean",
+      raw: normalizedText === "ON",
+      formatted: valueText,
+      visualNormalized: normalizedText === "ON" ? 1 : 0,
+      visualScale: "linear",
+    };
+  }
+
+  const percentMatch = trimmed.match(/^(-?\d+(?:\.\d+)?)%$/);
+  if (percentMatch) {
+    const raw = Number(percentMatch[1]);
+    return {
+      kind: "number",
+      raw,
+      formatted: valueText,
+      visualNormalized: clamp(raw / 100, 0, 1),
+      visualScale: "linear",
+    };
+  }
+
+  const bpmMatch = trimmed.match(/^(-?\d+(?:\.\d+)?)\s*BPM$/i);
+  if (bpmMatch) {
+    const raw = Number(bpmMatch[1]);
+    return {
+      kind: "number",
+      raw,
+      formatted: valueText,
+      visualNormalized: clamp(raw / 240, 0, 1),
+      visualScale: "linear",
+    };
+  }
+
+  const numeric = Number(trimmed);
+  if (Number.isFinite(numeric)) {
+    const normalized = normalizeNumericValue(numeric);
+    return {
+      kind: "number",
+      raw: numeric,
+      formatted: valueText,
+      visualNormalized: normalized.normalized,
+      visualScale: normalized.scale,
+    };
+  }
+
+  return {
+    kind: "enum",
+    raw: trimmed,
+    formatted: valueText,
+    visualNormalized: 0.5,
+    visualScale: "linear",
+  };
+}
+
+function getPageSummary(displayState: InstrumentDisplayState) {
+  return `Page ${displayState.header.controllerPage}: ${displayState.upperBand.title} / ${displayState.lowerBand.title}`;
+}
+
+function mapGlobalBand(displayState: InstrumentDisplayState): DisplayBandState {
+  return {
+    key: "global",
+    title: "GLOBAL",
+    cells: displayState.globalBand.slots.map(
+      (slot: (typeof displayState.globalBand.slots)[number]) => ({
+        key: slot.key,
+        label: slot.shortLabel,
+        inactive: slot.inactive ?? false,
+        empty: false,
+        value: parseDisplayValue(slot),
+      }),
+    ),
+  };
+}
+
+function mapDisplayBand(
+  key: DisplayBandState["key"],
+  band: InstrumentDisplayState["upperBand"],
+): DisplayBandState {
+  return {
+    key,
+    title: band.title,
+    cells: band.slots.map(
+      (slot: (typeof band.slots)[number], index: number) => {
+        if (slot.kind === "empty") {
+          return {
+            key: `${key}-${index}`,
+            label: EMPTY_VALUE_TEXT,
+            inactive: false,
+            empty: true,
+            value: parseDisplayValue({ valueText: EMPTY_VALUE_TEXT }),
+          };
+        }
+
+        return {
+          key: `${slot.blockKey}.${slot.slotKey}`,
+          label: slot.shortLabel,
+          inactive: slot.inactive ?? false,
+          empty: false,
+          value: parseDisplayValue(slot),
+        };
+      },
+    ),
+  };
+}
+
+export function instrumentDisplayStateToProtocol(
+  displayState: InstrumentDisplayState,
+  revision = 0,
+  targetClass: DisplayTargetClass = "standard",
+): DisplayProtocolState {
+  const headerCenter =
+    displayState.notice?.title ?? displayState.header.trackName;
+  const headerRight =
+    displayState.notice?.message ?? getPageSummary(displayState);
+
+  return {
+    revision,
+    screen: {
+      orientation: "landscape",
+      targetClass,
+    },
+    header: {
+      left: DISPLAY_BRAND,
+      center: headerCenter,
+      right: headerRight,
+      transport:
+        displayState.header.transportState === TransportState.playing
+          ? "PLAY"
+          : "STOP",
+      mode: displayState.header.mode === "seqEdit" ? "SEQ" : "PERF",
+    },
+    bands: [
+      mapGlobalBand(displayState),
+      mapDisplayBand("upper", displayState.upperBand),
+      mapDisplayBand("lower", displayState.lowerBand),
+    ],
+  };
+}

@@ -19,15 +19,30 @@ vi.mock("@tanstack/react-router", () => ({
     children,
     to,
     params,
+    search,
   }: {
     children: ReactNode;
     to: string;
     params?: Record<string, string>;
+    search?: Record<string, unknown>;
   }) => {
     const instrumentId = params?.instrumentId ?? "";
     const href = to.replace("$instrumentId", instrumentId);
+    const searchParams = new URLSearchParams();
 
-    return <a href={href}>{children}</a>;
+    Object.entries(search ?? {}).forEach(([key, value]) => {
+      if (value === undefined) {
+        return;
+      }
+
+      searchParams.set(key, String(value));
+    });
+
+    return (
+      <a href={searchParams.size > 0 ? `${href}?${searchParams}` : href}>
+        {children}
+      </a>
+    );
   },
 }));
 
@@ -54,6 +69,25 @@ describe("InstrumentEditor", () => {
     expect(
       screen.getByRole("link", { name: "Debug in Grid" }).getAttribute("href"),
     ).toBe("/instrument/instrument-1/debug");
+  });
+
+  it("renders a performance entrypoint for the current instrument", () => {
+    render(
+      <Provider store={store}>
+        <InstrumentEditor
+          instrument={{
+            id: "instrument-1",
+            name: "Broken Instrument",
+            userId: "user-1",
+            document: createDefaultInstrumentDocument(),
+          }}
+        />
+      </Provider>,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "Performance" }).getAttribute("href"),
+    ).toBe("/instrument/instrument-1?mode=performance");
   });
 
   it("renders the track enabled switch in the active track card header", () => {

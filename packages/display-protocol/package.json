@@ -32,5 +32,9 @@
     "@types/node": "25.1.0",
     "vite-tsconfig-paths": "catalog:vite",
     "vitest": "catalog:test"
+  },
+  "dependencies": {
+    "@blibliki/engine": "workspace:^",
+    "@blibliki/instrument": "workspace:^"
   }
 }

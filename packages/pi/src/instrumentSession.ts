@@ -2,20 +2,18 @@ import { Engine, type IEngineSerialize } from "@blibliki/engine";
 import { ModuleType as EngineModuleType } from "@blibliki/engine";
 import {
   createInstrumentEnginePatch,
+  createInstrumentControllerSession,
   createTrackFromDocument,
+  type CreateInstrumentControllerSessionOptions,
   type CompiledInstrumentEnginePatch,
+  type InstrumentControllerEngine,
+  type InstrumentControllerSession,
   type CreateInstrumentEnginePatchOptions,
   type InstrumentDisplayNotice,
   type InstrumentDisplayState,
   type InstrumentDocument,
   type InstrumentTrackDocument,
 } from "@blibliki/instrument";
-import {
-  createInstrumentControllerSession,
-  type CreateInstrumentControllerSessionOptions,
-  type InstrumentControllerEngine,
-  type InstrumentControllerSession,
-} from "@/instrumentControllerSession";
 import { createSavedInstrumentDocument } from "@/instrumentPersistence";
 
 export type InstrumentSessionDrone = {

@@ -387,8 +387,18 @@ export default function InstrumentEditor({
           <Stack direction="row" gap={3} className="flex-wrap">
             <Button asChild variant="outlined" color="neutral">
               <Link
+                to="/instrument/$instrumentId"
+                params={{ instrumentId: instrument.id }}
+                search={{ mode: "performance" }}
+              >
+                Performance
+              </Link>
+            </Button>
+            <Button asChild variant="outlined" color="neutral">
+              <Link
                 to="/instrument/$instrumentId/debug"
                 params={{ instrumentId: instrument.id }}
+                search={{ mode: undefined }}
               >
                 Debug in Grid
               </Link>

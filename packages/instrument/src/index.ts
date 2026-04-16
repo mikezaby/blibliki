@@ -107,6 +107,33 @@ export type {
   InstrumentDisplayNotice,
   InstrumentDisplayState,
 } from "./runtime/displayState";
+export {
+  createInstrumentRuntimeState,
+  createInstrumentDisplayState as createRuntimeDisplayState,
+  navigateInstrumentRuntime,
+  updateInstrumentRuntimeNavigation,
+} from "./runtime/instrumentRuntime";
+export type {
+  InstrumentNavigationAction,
+  InstrumentRuntimeState,
+} from "./runtime/instrumentRuntime";
+export { createLiveInstrumentDisplayState } from "./runtime/liveDisplayState";
+export type { LiveDisplayEngine } from "./runtime/liveDisplayState";
+export { reduceInstrumentControllerEvent } from "./runtime/controllerRuntime";
+export type { InstrumentControllerResult } from "./runtime/controllerRuntime";
+export { createSavedInstrumentDocument } from "./runtime/savedInstrumentDocument";
+export {
+  applySeqEditEncoderEvent,
+  createSeqEditDisplayState,
+  createSeqEditPageSync,
+  syncSeqEditStepButtonLeds,
+} from "./runtime/sequencerEdit";
+export { createInstrumentControllerSession } from "./runtime/instrumentControllerSession";
+export type {
+  CreateInstrumentControllerSessionOptions,
+  InstrumentControllerEngine,
+  InstrumentControllerSession,
+} from "./runtime/instrumentControllerSession";
 export { compileTrack } from "./compiler/compileTrack";
 export { compileInstrument } from "./compiler/compileInstrument";
 export {

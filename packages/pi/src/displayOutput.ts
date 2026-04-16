@@ -2,10 +2,10 @@ import {
   DEFAULT_DISPLAY_OSC_HOST,
   DEFAULT_DISPLAY_OSC_PORT,
   DEFAULT_PI_OSC_PORT,
+  instrumentDisplayStateToProtocol,
   type DisplayTargetClass,
 } from "@blibliki/display-protocol";
 import type { InstrumentDisplayState } from "@blibliki/instrument";
-import { instrumentDisplayStateToProtocol } from "@/displayProtocol";
 import {
   createOscDisplayPublisher,
   type CreateOscDisplayPublisherOptions,

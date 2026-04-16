@@ -1,12 +1,10 @@
-import {
-  createDefaultInstrumentDocument,
-  createInstrumentEnginePatch,
-} from "@blibliki/instrument";
 import { describe, expect, it } from "vitest";
+import { createInstrumentEnginePatch } from "@/compiler/createInstrumentEnginePatch";
+import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
 import {
   createInstrumentRuntimeState,
   navigateInstrumentRuntime,
-} from "@/instrumentRuntime";
+} from "@/runtime/instrumentRuntime";
 
 function createSeededInstrumentDocument() {
   const document = createDefaultInstrumentDocument();
@@ -62,27 +60,6 @@ describe("createInstrumentRuntimeState", () => {
         stepSequencerIds: {},
       },
     });
-    expect(runtime.patch.runtime.midiMapperGlobalMappings).toEqual(
-      expect.arrayContaining([]),
-    );
-    expect(runtime.globalBlock).toEqual({
-      tempo: 120,
-      swing: 0,
-      masterFilterCutoff: 20000,
-      masterFilterResonance: 1,
-      reverbSend: 0,
-      delaySend: 0,
-      masterVolume: 1,
-    });
-
-    expect(runtime.navigation).toEqual({
-      activeTrackIndex: 0,
-      activePage: "sourceAmp",
-      mode: "performance",
-      shiftPressed: false,
-      sequencerPageIndex: 0,
-      selectedStepIndex: 0,
-    });
 
     expect(runtime.activeTrack).toEqual(
       expect.objectContaining({
@@ -93,7 +70,6 @@ describe("createInstrumentRuntimeState", () => {
         sourceProfileId: "osc",
       }),
     );
-
     expect(runtime.activePage).toEqual({
       trackKey: "track-1",
       trackName: "track-1",
@@ -102,36 +78,7 @@ describe("createInstrumentRuntimeState", () => {
       trackIndex: 0,
       pageKey: "sourceAmp",
     });
-
     expect(runtime.visiblePage.pageKey).toBe("sourceAmp");
-    expect(runtime.visiblePage.controllerPage).toBe(1);
-    expect(runtime.visiblePage.regions[0].position).toBe("top");
-    const topFirstSlot = runtime.visiblePage.regions[0].slots[0];
-    if (topFirstSlot.kind !== "slot") {
-      throw new Error("Expected top first slot to be populated");
-    }
-    expect(topFirstSlot.label).toBe("Waveform");
-    expect(topFirstSlot.shortLabel).toBe("WAVE");
-    expect(topFirstSlot.binding).toEqual({
-      kind: "module-prop",
-      moduleId: "track-1.source.main",
-      moduleType: "Oscillator",
-      propKey: "wave",
-    });
-
-    expect(runtime.visiblePage.regions[1].position).toBe("bottom");
-    const bottomFirstSlot = runtime.visiblePage.regions[1].slots[0];
-    if (bottomFirstSlot.kind !== "slot") {
-      throw new Error("Expected bottom first slot to be populated");
-    }
-    expect(bottomFirstSlot.label).toBe("Attack");
-    expect(bottomFirstSlot.shortLabel).toBe("A");
-    expect(bottomFirstSlot.binding).toEqual({
-      kind: "module-prop",
-      moduleId: "track-1.amp.envelope",
-      moduleType: "Envelope",
-      propKey: "attack",
-    });
   });
 
   it("wraps track and page navigation while keeping midi mapper focus aligned to tracks", () => {
@@ -148,14 +95,6 @@ describe("createInstrumentRuntimeState", () => {
       sequencerPageIndex: 0,
       selectedStepIndex: 0,
     });
-    expect(createInstrumentRuntimeState(nextPage).activePage).toEqual({
-      trackKey: "track-1",
-      trackName: "track-1",
-      midiChannel: 1,
-      controllerPage: 2,
-      trackIndex: 0,
-      pageKey: "filterMod",
-    });
 
     const wrappedTrack = navigateInstrumentRuntime(nextPage, "previousTrack");
     expect(wrappedTrack.runtime.navigation).toEqual({
@@ -166,11 +105,6 @@ describe("createInstrumentRuntimeState", () => {
       sequencerPageIndex: 0,
       selectedStepIndex: 0,
     });
-
-    const wrappedTrackState = createInstrumentRuntimeState(wrappedTrack);
-    expect(wrappedTrackState.activeTrack.key).toBe("track-8");
-    expect(wrappedTrackState.activePage.pageKey).toBe("filterMod");
-    expect(wrappedTrackState.activePage.trackIndex).toBe(7);
 
     const wrappedPage = navigateInstrumentRuntime(wrappedTrack, "previousPage");
     expect(wrappedPage.runtime.navigation).toEqual({

@@ -1,6 +1,9 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { isInstrumentDebugPath } from "../../src/routes/instrument.$instrumentId";
+import {
+  isInstrumentDebugPath,
+  normalizeInstrumentViewMode,
+} from "../../src/routes/instrument.$instrumentId";
 
 describe("isInstrumentDebugPath", () => {
   it("returns true for the instrument debug url", () => {
@@ -13,5 +16,17 @@ describe("isInstrumentDebugPath", () => {
     expect(
       isInstrumentDebugPath("/instrument/instrument-1", "instrument-1"),
     ).toBe(false);
+  });
+});
+
+describe("normalizeInstrumentViewMode", () => {
+  it("returns performance for the performance query mode", () => {
+    expect(normalizeInstrumentViewMode({ mode: "performance" })).toBe(
+      "performance",
+    );
+  });
+
+  it("falls back to editor for unknown query mode", () => {
+    expect(normalizeInstrumentViewMode({ mode: "unexpected" })).toBe("editor");
   });
 });

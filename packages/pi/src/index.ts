@@ -44,13 +44,15 @@ export {
 } from "./displayOutput.js";
 export {
   createInstrumentRuntimeState,
-  createInstrumentDisplayState,
+  createRuntimeDisplayState as createInstrumentDisplayState,
   navigateInstrumentRuntime,
   updateInstrumentRuntimeNavigation,
-} from "./instrumentRuntime.js";
-export { createLiveInstrumentDisplayState } from "./liveDisplayState.js";
-export { createInstrumentControllerSession } from "./instrumentControllerSession.js";
-export { instrumentDisplayStateToProtocol } from "./displayProtocol.js";
+} from "@blibliki/instrument";
+export {
+  createLiveInstrumentDisplayState,
+  createInstrumentControllerSession,
+} from "@blibliki/instrument";
+export { instrumentDisplayStateToProtocol } from "@blibliki/display-protocol";
 export { createOscDisplayPublisher } from "./oscDisplayPublisher.js";
 export {
   createTerminalDisplaySession,
@@ -58,14 +60,16 @@ export {
 } from "./terminalDisplay.js";
 export { createUdpOscDisplayTransport } from "./udpOscTransport.js";
 export { startDeviceDeployment } from "./deviceStartup.js";
-export { reduceInstrumentControllerEvent } from "./controllerRuntime.js";
+export { reduceInstrumentControllerEvent } from "@blibliki/instrument";
 export type {
   InstrumentNavigationAction,
   InstrumentRuntimeState,
-} from "./instrumentRuntime.js";
-export type { LiveDisplayEngine } from "./liveDisplayState.js";
-export type { InstrumentControllerSession } from "./instrumentControllerSession.js";
-export type { InstrumentControllerResult } from "./controllerRuntime.js";
+} from "@blibliki/instrument";
+export type {
+  InstrumentControllerSession,
+  InstrumentControllerResult,
+  LiveDisplayEngine,
+} from "@blibliki/instrument";
 export type { OscDisplayPublisher } from "./oscDisplayPublisher.js";
 export type {
   TerminalDisplaySession,

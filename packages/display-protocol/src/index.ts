@@ -1,6 +1,7 @@
 export { DISPLAY_OSC_ADDRESSES, DISPLAY_OSC_NAMESPACE } from "./addresses";
 export { decodeDisplayOscPacket, encodeDisplayOscMessage } from "./codec";
 export type { DisplayOscMessage } from "./codec";
+export { instrumentDisplayStateToProtocol } from "./instrumentDisplayState";
 export {
   createDebugBandMessage,
   createDebugFullState,

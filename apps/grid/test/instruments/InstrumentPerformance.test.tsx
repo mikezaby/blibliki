@@ -1,0 +1,273 @@
+// @vitest-environment jsdom
+import { act, cleanup, render, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import InstrumentPerformance from "../../src/components/Instruments/InstrumentPerformance";
+import { createDefaultInstrumentDocument } from "../../src/instruments/document";
+
+const {
+  loadEngineMock,
+  createInstrumentEnginePatchMock,
+  createInstrumentControllerSessionMock,
+  createSavedInstrumentDocumentMock,
+  instrumentFindMock,
+  instrumentSaveMock,
+} = vi.hoisted(() => ({
+  loadEngineMock: vi.fn(),
+  createInstrumentEnginePatchMock: vi.fn(),
+  createInstrumentControllerSessionMock: vi.fn(),
+  createSavedInstrumentDocumentMock: vi.fn(),
+  instrumentFindMock: vi.fn(),
+  instrumentSaveMock: vi.fn(),
+}));
+
+vi.mock("@tanstack/react-router", () => ({
+  Link: ({
+    children,
+    to,
+    params,
+  }: {
+    children: ReactNode;
+    to: string;
+    params?: Record<string, string>;
+  }) => (
+    <a href={to.replace("$instrumentId", params?.instrumentId ?? "")}>
+      {children}
+    </a>
+  ),
+}));
+
+vi.mock("@blibliki/engine", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@blibliki/engine")>();
+
+  return {
+    ...actual,
+    Engine: {
+      load: loadEngineMock,
+    },
+  };
+});
+
+vi.mock("@blibliki/instrument", () => ({
+  createInstrumentEnginePatch: createInstrumentEnginePatchMock,
+  createInstrumentControllerSession: createInstrumentControllerSessionMock,
+  createSavedInstrumentDocument: createSavedInstrumentDocumentMock,
+}));
+
+vi.mock("@blibliki/models", () => {
+  class MockInstrument {
+    static find = instrumentFindMock;
+
+    id: string;
+    name: string;
+    userId: string;
+    document: Record<string, unknown>;
+
+    constructor(props: {
+      id: string;
+      name: string;
+      userId: string;
+      document: Record<string, unknown>;
+    }) {
+      this.id = props.id;
+      this.name = props.name;
+      this.userId = props.userId;
+      this.document = props.document;
+    }
+
+    save = instrumentSaveMock;
+
+    serialize() {
+      return {
+        id: this.id,
+        name: this.name,
+        userId: this.userId,
+        document: this.document,
+      };
+    }
+  }
+
+  return {
+    Instrument: MockInstrument,
+  };
+});
+
+describe("InstrumentPerformance", () => {
+  const instrument = {
+    id: "instrument-1",
+    name: "Instrument One",
+    userId: "user-1",
+    document: createDefaultInstrumentDocument(),
+  };
+  const remoteDocument = {
+    ...createDefaultInstrumentDocument(),
+    name: "Remote Instrument",
+  };
+  const runtimePatch = {
+    patch: {
+      bpm: 120,
+      timeSignature: [4, 4] as [number, number],
+      modules: [],
+      routes: [],
+    },
+    runtime: {
+      navigation: {
+        activeTrackIndex: 0,
+        activePage: "sourceAmp",
+        mode: "performance",
+        shiftPressed: false,
+        sequencerPageIndex: 0,
+        selectedStepIndex: 0,
+      },
+    },
+    compiledInstrument: {},
+  };
+  const displayState = {
+    header: {
+      instrumentName: "Instrument One",
+      trackName: "track-1",
+      pageKey: "sourceAmp",
+      controllerPage: 1,
+      midiChannel: 1,
+      transportState: "stopped",
+      mode: "performance",
+    },
+    globalBand: { slots: [] },
+    upperBand: { title: "SOURCE", slots: [] },
+    lowerBand: { title: "AMP", slots: [] },
+  };
+  const engine = {
+    serialize: vi.fn(() => ({
+      bpm: 120,
+      timeSignature: [4, 4],
+      modules: [],
+      routes: [],
+    })),
+    dispose: vi.fn(),
+    context: {
+      close: vi.fn(),
+    },
+    start: vi.fn(),
+    stop: vi.fn(),
+  };
+
+  beforeEach(() => {
+    loadEngineMock.mockReset();
+    createInstrumentEnginePatchMock.mockReset();
+    createInstrumentControllerSessionMock.mockReset();
+    createSavedInstrumentDocumentMock.mockReset();
+    instrumentFindMock.mockReset();
+    instrumentSaveMock.mockReset();
+
+    loadEngineMock.mockResolvedValue(engine);
+    createInstrumentEnginePatchMock.mockReturnValue(runtimePatch);
+    createSavedInstrumentDocumentMock.mockImplementation(
+      (document) => document,
+    );
+    createInstrumentControllerSessionMock.mockImplementation(
+      (_engine, _runtimePatch, options) => ({
+        getDisplayState: () => displayState,
+        dispose: vi.fn(),
+        options,
+      }),
+    );
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it("saves the current performance draft to Firestore when requested", async () => {
+    const handleInstrumentChange = vi.fn();
+
+    render(
+      <InstrumentPerformance
+        instrument={instrument}
+        onInstrumentChange={handleInstrumentChange}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(createInstrumentControllerSessionMock).toHaveBeenCalledTimes(1);
+    });
+
+    const firstCall = createInstrumentControllerSessionMock.mock.calls[0];
+    const options = firstCall?.[2] as {
+      onPersistenceAction?: (
+        action: "saveDraft" | "discardDraft",
+        runtimePatch: typeof runtimePatch,
+      ) => Promise<unknown>;
+    };
+
+    await act(async () => {
+      const notice = await options.onPersistenceAction?.(
+        "saveDraft",
+        runtimePatch,
+      );
+      expect(notice).toEqual({
+        title: "SAVE COMPLETE",
+        message: "Firestore updated",
+        tone: "success",
+      });
+    });
+
+    expect(instrumentSaveMock).toHaveBeenCalledTimes(1);
+    expect(handleInstrumentChange).toHaveBeenCalledWith(instrument);
+  });
+
+  it("reloads the remote instrument after discard and restarts with a reload notice", async () => {
+    instrumentFindMock.mockResolvedValue({
+      serialize: () => ({
+        ...instrument,
+        document: remoteDocument,
+      }),
+      document: remoteDocument,
+    });
+
+    const handleInstrumentChange = vi.fn();
+
+    render(
+      <InstrumentPerformance
+        instrument={instrument}
+        onInstrumentChange={handleInstrumentChange}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(createInstrumentControllerSessionMock).toHaveBeenCalledTimes(1);
+    });
+
+    const firstCall = createInstrumentControllerSessionMock.mock.calls[0];
+    const options = firstCall?.[2] as {
+      onPersistenceAction?: (
+        action: "saveDraft" | "discardDraft",
+        runtimePatch: typeof runtimePatch,
+      ) => Promise<unknown>;
+    };
+
+    await act(async () => {
+      await options.onPersistenceAction?.("discardDraft", runtimePatch);
+    });
+
+    await waitFor(() => {
+      expect(instrumentFindMock).toHaveBeenCalledWith("instrument-1");
+      expect(createInstrumentControllerSessionMock).toHaveBeenCalledTimes(2);
+    });
+
+    const secondCall = createInstrumentControllerSessionMock.mock.calls[1];
+    const secondOptions = secondCall?.[2] as {
+      initialDisplayNotice?: unknown;
+    };
+
+    expect(secondOptions.initialDisplayNotice).toEqual({
+      title: "REMOTE RELOADED",
+      message: "Local draft discarded",
+      tone: "success",
+    });
+    expect(handleInstrumentChange).toHaveBeenCalledWith({
+      ...instrument,
+      document: remoteDocument,
+    });
+  });
+});
