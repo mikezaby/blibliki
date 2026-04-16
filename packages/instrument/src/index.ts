@@ -5,7 +5,6 @@ export { default as LfoBlock } from "./blocks/LfoBlock";
 export { default as TrackGainBlock } from "./blocks/TrackGainBlock";
 export { default as InstrumentDocumentModel } from "./document/InstrumentDocument";
 export { createDefaultInstrumentDocument } from "./document/defaultDocument";
-export { createDefaultPlayableInstrumentDocument } from "./document/playableDocument";
 export type {
   EffectProfileId,
   InstrumentDocument,
