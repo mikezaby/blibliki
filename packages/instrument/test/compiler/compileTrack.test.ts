@@ -249,7 +249,7 @@ describe("compileTrack", () => {
       blockKey: "source",
       blockType: "osc",
       slotKey: "wave",
-      label: "Wave",
+      label: "Waveform",
       shortLabel: "WAVE",
       binding: {
         kind: "module-prop",

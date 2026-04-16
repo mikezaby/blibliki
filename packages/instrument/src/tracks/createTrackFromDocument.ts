@@ -2,6 +2,14 @@ import type { InstrumentTrackDocument } from "@/document/types";
 import type { BlockKey } from "@/types";
 import Track from "./Track";
 
+function normalizeControllerSlotKey(blockKey: BlockKey, slotKey: string) {
+  if (blockKey === "filter" && slotKey === "resonance") {
+    return "Q";
+  }
+
+  return slotKey;
+}
+
 function applyControllerSlotValues(
   track: Track,
   slotValues: InstrumentTrackDocument["controllerSlotValues"],
@@ -20,7 +28,10 @@ function applyControllerSlotValues(
     }
 
     const blockKey = controllerSlotKey.slice(0, separatorIndex) as BlockKey;
-    const slotKey = controllerSlotKey.slice(separatorIndex + 1);
+    const slotKey = normalizeControllerSlotKey(
+      blockKey,
+      controllerSlotKey.slice(separatorIndex + 1),
+    );
     const block = track.blocks.get(blockKey);
     if (!block) {
       continue;

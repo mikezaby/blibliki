@@ -60,7 +60,15 @@ export default abstract class BaseBlock {
 
     Object.entries(moduleSchemas[module.moduleType]).forEach(
       ([propKey, schema]) => {
-        const { label, shortLabel } = schema as PropSchema;
+        const propSchema = schema as PropSchema;
+        const { label, shortLabel } = propSchema;
+        if (
+          propSchema.kind !== "number" &&
+          propSchema.kind !== "enum" &&
+          propSchema.kind !== "boolean"
+        ) {
+          return;
+        }
 
         this.addSlot(
           createModulePropSlot({
