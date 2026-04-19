@@ -158,4 +158,47 @@ describe("LaunchControlXL3", () => {
     input.disconnect();
     output.disconnect();
   });
+
+  it("keeps the hardware in daw mode while a newer controller instance is still active", async (ctx) => {
+    const sent: number[][] = [];
+    const inputPort = createInputPort();
+    const outputPort = createOutputPort(sent);
+    const inputA = new MidiInputDevice(inputPort.port, ctx.context);
+    const outputA = new MidiOutputDevice(outputPort);
+    const controllerA = new LaunchControlXL3(ctx.engine.id, {
+      input: inputA,
+      output: outputA,
+    });
+
+    await waitForMicrotasks();
+
+    const inputB = new MidiInputDevice(inputPort.port, ctx.context);
+    const outputB = new MidiOutputDevice(outputPort);
+    const controllerB = new LaunchControlXL3(ctx.engine.id, {
+      input: inputB,
+      output: outputB,
+    });
+
+    await waitForMicrotasks();
+
+    const sentCountBeforeDispose = sent.length;
+    controllerA.dispose();
+
+    expect(sent.slice(sentCountBeforeDispose)).not.toContainEqual([182, 69, 0]);
+    expect(sent.slice(sentCountBeforeDispose)).not.toContainEqual([182, 72, 0]);
+    expect(sent.slice(sentCountBeforeDispose)).not.toContainEqual([182, 73, 0]);
+    expect(sent.slice(sentCountBeforeDispose)).not.toContainEqual([159, 12, 0]);
+
+    controllerB.dispose();
+
+    expect(sent).toContainEqual([182, 69, 0]);
+    expect(sent).toContainEqual([182, 72, 0]);
+    expect(sent).toContainEqual([182, 73, 0]);
+    expect(sent).toContainEqual([159, 12, 0]);
+
+    inputA.disconnect();
+    outputA.disconnect();
+    inputB.disconnect();
+    outputB.disconnect();
+  });
 });
