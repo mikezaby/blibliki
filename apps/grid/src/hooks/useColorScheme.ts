@@ -6,20 +6,24 @@ export enum ColorScheme {
   System = "system",
 }
 
+export const COLOR_SCHEME_STORAGE_KEY = "color-scheme";
+
 const getSystemScheme = (): ColorScheme => {
   return window.matchMedia("(prefers-color-scheme: dark)").matches
     ? ColorScheme.Dark
     : ColorScheme.Light;
 };
 
-const getInitialScheme = (): ColorScheme => {
+export const readStoredColorScheme = (): ColorScheme => {
   if (typeof window === "undefined") return ColorScheme.Light;
 
-  const stored = localStorage.getItem("color-scheme") as ColorScheme | null;
+  const stored = localStorage.getItem(
+    COLOR_SCHEME_STORAGE_KEY,
+  ) as ColorScheme | null;
   return stored ?? ColorScheme.System;
 };
 
-const setThemeToRootElement = (scheme: ColorScheme) => {
+export const applyColorSchemeToRoot = (scheme: ColorScheme) => {
   let applied: ColorScheme = scheme;
 
   if (scheme === ColorScheme.System) {
@@ -35,11 +39,11 @@ const setThemeToRootElement = (scheme: ColorScheme) => {
 };
 
 export function useColorScheme() {
-  const [scheme, setScheme] = useState<ColorScheme>(getInitialScheme);
+  const [scheme, setScheme] = useState<ColorScheme>(readStoredColorScheme);
 
   useEffect(() => {
-    setThemeToRootElement(scheme);
-    localStorage.setItem("color-scheme", scheme);
+    applyColorSchemeToRoot(scheme);
+    localStorage.setItem(COLOR_SCHEME_STORAGE_KEY, scheme);
   }, [scheme]);
 
   useEffect(() => {
@@ -47,7 +51,7 @@ export function useColorScheme() {
 
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = () => {
-      setThemeToRootElement(ColorScheme.System);
+      applyColorSchemeToRoot(ColorScheme.System);
     };
     media.addEventListener("change", onChange);
 

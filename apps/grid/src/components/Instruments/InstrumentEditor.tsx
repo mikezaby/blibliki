@@ -387,9 +387,8 @@ export default function InstrumentEditor({
           <Stack direction="row" gap={3} className="flex-wrap">
             <Button asChild variant="outlined" color="neutral">
               <Link
-                to="/instrument/$instrumentId"
+                to="/instrument/$instrumentId/performance"
                 params={{ instrumentId: instrument.id }}
-                search={{ mode: "performance" }}
               >
                 Performance
               </Link>

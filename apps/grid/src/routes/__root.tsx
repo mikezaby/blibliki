@@ -1,14 +1,14 @@
 /// <reference types="vite/client" />
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import { Outlet, createRootRoute } from "@tanstack/react-router";
+import { Outlet, createRootRoute, useLocation } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import Providers from "@/Providers";
-import { ColorSchemeBlockingScript } from "@/components/ColorSchemeBlockingScript";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { NotificationContainer } from "@/components/Notification";
 import { RouterErrorComponent } from "@/components/RouterErrorComponent";
 import Header from "@/components/layout/Header";
 import { initialize } from "@/globalSlice";
+import { isInstrumentPerformanceRoutePath } from "./-instrumentRoutePath";
 
 export const Route = createRootRoute({
   beforeLoad: () => {
@@ -19,14 +19,16 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
+  const location = useLocation();
+  const showHeader = !isInstrumentPerformanceRoutePath(location.pathname);
+
   return (
     <Providers>
-      <Header />
+      {showHeader ? <Header /> : null}
       <ErrorBoundary>
         <Outlet />
       </ErrorBoundary>
       <NotificationContainer />
-      <ColorSchemeBlockingScript />
 
       <TanStackDevtools
         config={{

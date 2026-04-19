@@ -376,7 +376,6 @@ export default function InstrumentPerformance({
                   <Link
                     to="/instrument/$instrumentId"
                     params={{ instrumentId: instrument.id }}
-                    search={{ mode: undefined }}
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Back to Editor

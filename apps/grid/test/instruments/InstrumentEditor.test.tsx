@@ -87,7 +87,7 @@ describe("InstrumentEditor", () => {
 
     expect(
       screen.getByRole("link", { name: "Performance" }).getAttribute("href"),
-    ).toBe("/instrument/instrument-1?mode=performance");
+    ).toBe("/instrument/instrument-1/performance");
   });
 
   it("renders the track enabled switch in the active track card header", () => {

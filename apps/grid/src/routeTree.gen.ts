@@ -14,6 +14,7 @@ import { Route as DevicesRouteImport } from './routes/devices'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PatchPatchIdRouteImport } from './routes/patch.$patchId'
 import { Route as InstrumentInstrumentIdRouteImport } from './routes/instrument.$instrumentId'
+import { Route as InstrumentInstrumentIdPerformanceRouteImport } from './routes/instrument.$instrumentId.performance'
 import { Route as InstrumentInstrumentIdDebugRouteImport } from './routes/instrument.$instrumentId.debug'
 
 const InstrumentsRoute = InstrumentsRouteImport.update({
@@ -41,6 +42,12 @@ const InstrumentInstrumentIdRoute = InstrumentInstrumentIdRouteImport.update({
   path: '/instrument/$instrumentId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InstrumentInstrumentIdPerformanceRoute =
+  InstrumentInstrumentIdPerformanceRouteImport.update({
+    id: '/performance',
+    path: '/performance',
+    getParentRoute: () => InstrumentInstrumentIdRoute,
+  } as any)
 const InstrumentInstrumentIdDebugRoute =
   InstrumentInstrumentIdDebugRouteImport.update({
     id: '/debug',
@@ -55,6 +62,7 @@ export interface FileRoutesByFullPath {
   '/instrument/$instrumentId': typeof InstrumentInstrumentIdRouteWithChildren
   '/patch/$patchId': typeof PatchPatchIdRoute
   '/instrument/$instrumentId/debug': typeof InstrumentInstrumentIdDebugRoute
+  '/instrument/$instrumentId/performance': typeof InstrumentInstrumentIdPerformanceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -63,6 +71,7 @@ export interface FileRoutesByTo {
   '/instrument/$instrumentId': typeof InstrumentInstrumentIdRouteWithChildren
   '/patch/$patchId': typeof PatchPatchIdRoute
   '/instrument/$instrumentId/debug': typeof InstrumentInstrumentIdDebugRoute
+  '/instrument/$instrumentId/performance': typeof InstrumentInstrumentIdPerformanceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -72,6 +81,7 @@ export interface FileRoutesById {
   '/instrument/$instrumentId': typeof InstrumentInstrumentIdRouteWithChildren
   '/patch/$patchId': typeof PatchPatchIdRoute
   '/instrument/$instrumentId/debug': typeof InstrumentInstrumentIdDebugRoute
+  '/instrument/$instrumentId/performance': typeof InstrumentInstrumentIdPerformanceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -82,6 +92,7 @@ export interface FileRouteTypes {
     | '/instrument/$instrumentId'
     | '/patch/$patchId'
     | '/instrument/$instrumentId/debug'
+    | '/instrument/$instrumentId/performance'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -90,6 +101,7 @@ export interface FileRouteTypes {
     | '/instrument/$instrumentId'
     | '/patch/$patchId'
     | '/instrument/$instrumentId/debug'
+    | '/instrument/$instrumentId/performance'
   id:
     | '__root__'
     | '/'
@@ -98,6 +110,7 @@ export interface FileRouteTypes {
     | '/instrument/$instrumentId'
     | '/patch/$patchId'
     | '/instrument/$instrumentId/debug'
+    | '/instrument/$instrumentId/performance'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InstrumentInstrumentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/instrument/$instrumentId/performance': {
+      id: '/instrument/$instrumentId/performance'
+      path: '/performance'
+      fullPath: '/instrument/$instrumentId/performance'
+      preLoaderRoute: typeof InstrumentInstrumentIdPerformanceRouteImport
+      parentRoute: typeof InstrumentInstrumentIdRoute
+    }
     '/instrument/$instrumentId/debug': {
       id: '/instrument/$instrumentId/debug'
       path: '/debug'
@@ -157,11 +177,14 @@ declare module '@tanstack/react-router' {
 
 interface InstrumentInstrumentIdRouteChildren {
   InstrumentInstrumentIdDebugRoute: typeof InstrumentInstrumentIdDebugRoute
+  InstrumentInstrumentIdPerformanceRoute: typeof InstrumentInstrumentIdPerformanceRoute
 }
 
 const InstrumentInstrumentIdRouteChildren: InstrumentInstrumentIdRouteChildren =
   {
     InstrumentInstrumentIdDebugRoute: InstrumentInstrumentIdDebugRoute,
+    InstrumentInstrumentIdPerformanceRoute:
+      InstrumentInstrumentIdPerformanceRoute,
   }
 
 const InstrumentInstrumentIdRouteWithChildren =

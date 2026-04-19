@@ -32,7 +32,11 @@ import type { RootState, AppDispatch } from "@/store";
 export const useAppDispatch: () => AppDispatch = useDispatch;
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 
-export { ColorScheme, useColorScheme } from "./useColorScheme";
+export {
+  ColorScheme,
+  COLOR_SCHEME_STORAGE_KEY,
+  useColorScheme,
+} from "./useColorScheme";
 export {
   DEFAULT_GRID_THEME_PRESET,
   THEME_PRESET_ROOT_ATTRIBUTE,

@@ -9,7 +9,10 @@ import {
 } from "./hooks/useThemePreset";
 import { getRouter } from "./router";
 import "./styles/index.css";
+import { applyStoredAppearanceToRoot } from "./theme/bootstrapAppearance";
 import { themePresets, type GridThemePresetId } from "./theme/presets";
+
+applyStoredAppearanceToRoot();
 
 const router = getRouter();
 const getModeFromDocument = (): UIMode =>
