@@ -36,9 +36,79 @@ type BandCell =
   | InstrumentDisplayState["globalBand"]["slots"][number]
   | InstrumentDisplayState["upperBand"]["slots"][number];
 
+type BandKey = "global" | "upper" | "lower";
+
+type CellVisualValue = {
+  kind: "number" | "enum" | "boolean" | "text";
+  visualNormalized: number | null;
+  showEncoder: boolean;
+  empty: boolean;
+};
+
+const EMPTY_SLOT_TEXT = "--";
+const ENCODER_CENTER = 32;
+const ENCODER_RADIUS = 24;
+const ENCODER_START_ANGLE = 135;
+const ENCODER_SWEEP_ANGLE = 270;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function toRadians(angle: number) {
+  return (angle * Math.PI) / 180;
+}
+
+function createEncoderPoint(radius: number, angle: number) {
+  const radians = toRadians(angle);
+
+  return {
+    x: ENCODER_CENTER + radius * Math.cos(radians),
+    y: ENCODER_CENTER + radius * Math.sin(radians),
+  };
+}
+
+function formatPointValue(value: number) {
+  return value.toFixed(2);
+}
+
+function createEncoderArcPath(normalized: number | null) {
+  if (normalized === null || normalized <= 0) {
+    return "";
+  }
+
+  const safeNormalized = clamp(normalized, 0, 1);
+  const start = createEncoderPoint(ENCODER_RADIUS, ENCODER_START_ANGLE);
+  const endAngle = ENCODER_START_ANGLE + safeNormalized * ENCODER_SWEEP_ANGLE;
+  const end = createEncoderPoint(ENCODER_RADIUS, endAngle);
+  const largeArc = safeNormalized > 2 / 3 ? 1 : 0;
+
+  return `M ${formatPointValue(start.x)} ${formatPointValue(start.y)} A ${ENCODER_RADIUS} ${ENCODER_RADIUS} 0 ${largeArc} 1 ${formatPointValue(end.x)} ${formatPointValue(end.y)}`;
+}
+
+function createFullEncoderTrackPath() {
+  const start = createEncoderPoint(ENCODER_RADIUS, ENCODER_START_ANGLE);
+  const midpoint = createEncoderPoint(
+    ENCODER_RADIUS,
+    ENCODER_START_ANGLE + 180,
+  );
+  const end = createEncoderPoint(
+    ENCODER_RADIUS,
+    ENCODER_START_ANGLE + ENCODER_SWEEP_ANGLE,
+  );
+
+  return [
+    `M ${formatPointValue(start.x)} ${formatPointValue(start.y)}`,
+    `A ${ENCODER_RADIUS} ${ENCODER_RADIUS} 0 1 1 ${formatPointValue(midpoint.x)} ${formatPointValue(midpoint.y)}`,
+    `A ${ENCODER_RADIUS} ${ENCODER_RADIUS} 0 0 1 ${formatPointValue(end.x)} ${formatPointValue(end.y)}`,
+  ].join(" ");
+}
+
+const ENCODER_TRACK_PATH = createFullEncoderTrackPath();
+
 function renderCellValue(slot: BandCell) {
   if ("kind" in slot && slot.kind === "empty") {
-    return "--";
+    return EMPTY_SLOT_TEXT;
   }
 
   return slot.valueText;
@@ -46,18 +116,184 @@ function renderCellValue(slot: BandCell) {
 
 function renderCellLabel(slot: BandCell) {
   if ("kind" in slot && slot.kind === "empty") {
-    return "--";
+    return EMPTY_SLOT_TEXT;
   }
 
   return slot.shortLabel;
 }
 
+function isEmptyCell(slot: BandCell) {
+  return "kind" in slot && slot.kind === "empty";
+}
+
 function isInactiveCell(slot: BandCell) {
-  if ("kind" in slot && slot.kind === "empty") {
+  if (isEmptyCell(slot)) {
     return true;
   }
 
   return slot.inactive === true;
+}
+
+function normalizeNumericValue(value: number) {
+  if (value >= 20 && value <= 20000) {
+    return clamp(
+      (Math.log10(value) - Math.log10(20)) /
+        (Math.log10(20000) - Math.log10(20)),
+      0,
+      1,
+    );
+  }
+
+  if (value >= 0 && value <= 1) {
+    return value;
+  }
+
+  if (value >= 0 && value <= 100) {
+    return value / 100;
+  }
+
+  if (value >= 0 && value <= 127) {
+    return value / 127;
+  }
+
+  return 0.5;
+}
+
+function parseCellVisualValue(slot: BandCell): CellVisualValue {
+  if (isEmptyCell(slot)) {
+    return {
+      kind: "text",
+      visualNormalized: null,
+      showEncoder: true,
+      empty: true,
+    };
+  }
+
+  const valueText = renderCellValue(slot);
+  const trimmedValue = valueText.trim();
+  if (trimmedValue === EMPTY_SLOT_TEXT) {
+    return {
+      kind: "text",
+      visualNormalized: null,
+      showEncoder: false,
+      empty: false,
+    };
+  }
+
+  if (
+    slot.valueSpec?.kind === "boolean" &&
+    typeof slot.rawValue === "boolean"
+  ) {
+    return {
+      kind: "boolean",
+      visualNormalized: slot.rawValue ? 1 : 0,
+      showEncoder: false,
+      empty: false,
+    };
+  }
+
+  if (
+    slot.valueSpec?.kind === "enum" &&
+    (typeof slot.rawValue === "string" || typeof slot.rawValue === "number")
+  ) {
+    const optionIndex = slot.valueSpec.options.findIndex(
+      (option) => option === slot.rawValue,
+    );
+    const optionCount = slot.valueSpec.options.length;
+
+    return {
+      kind: "enum",
+      visualNormalized:
+        optionIndex < 0 || optionCount <= 1
+          ? 0.5
+          : optionIndex / (optionCount - 1),
+      showEncoder: false,
+      empty: false,
+    };
+  }
+
+  if (slot.valueSpec?.kind === "number" && typeof slot.rawValue === "number") {
+    const { min, max, exp } = slot.valueSpec;
+    if (min !== undefined && max !== undefined && min !== max) {
+      const normalized = clamp((slot.rawValue - min) / (max - min), 0, 1);
+
+      return {
+        kind: "number",
+        visualNormalized:
+          exp !== undefined && exp !== 1
+            ? Math.pow(normalized, 1 / exp)
+            : normalized,
+        showEncoder: true,
+        empty: false,
+      };
+    }
+
+    return {
+      kind: "number",
+      visualNormalized: normalizeNumericValue(slot.rawValue),
+      showEncoder: true,
+      empty: false,
+    };
+  }
+
+  const normalizedText = trimmedValue.toUpperCase();
+  if (normalizedText === "ON" || normalizedText === "OFF") {
+    return {
+      kind: "boolean",
+      visualNormalized: normalizedText === "ON" ? 1 : 0,
+      showEncoder: false,
+      empty: false,
+    };
+  }
+
+  const percentMatch = trimmedValue.match(/^(-?\d+(?:\.\d+)?)%$/);
+  if (percentMatch) {
+    return {
+      kind: "number",
+      visualNormalized: clamp(Number(percentMatch[1]) / 100, 0, 1),
+      showEncoder: true,
+      empty: false,
+    };
+  }
+
+  const bpmMatch = trimmedValue.match(/^(-?\d+(?:\.\d+)?)\s*BPM$/i);
+  if (bpmMatch) {
+    return {
+      kind: "number",
+      visualNormalized: clamp(Number(bpmMatch[1]) / 240, 0, 1),
+      showEncoder: true,
+      empty: false,
+    };
+  }
+
+  const numericValue = Number(trimmedValue);
+  if (Number.isFinite(numericValue)) {
+    return {
+      kind: "number",
+      visualNormalized: normalizeNumericValue(numericValue),
+      showEncoder: true,
+      empty: false,
+    };
+  }
+
+  return {
+    kind: "enum",
+    visualNormalized: 0.5,
+    showEncoder: false,
+    empty: false,
+  };
+}
+
+function getCellKey(slot: BandCell, bandKey: BandKey, index: number) {
+  if (isEmptyCell(slot)) {
+    return `${bandKey}-${index}`;
+  }
+
+  if ("blockKey" in slot) {
+    return `${slot.blockKey}.${slot.slotKey}`;
+  }
+
+  return `global.${slot.key}`;
 }
 
 function getNoticeToneStyles(tone?: "info" | "success" | "warning" | "error") {
@@ -83,7 +319,7 @@ function ConsoleStat({
   valueClassName?: string;
 }) {
   return (
-    <div className="rounded-2xl bg-zinc-950/75 px-4 py-3 shadow-inner">
+    <div className="px-4 py-3 shadow-inner">
       <Text
         asChild
         size="xs"
@@ -104,10 +340,55 @@ function ConsoleStat({
   );
 }
 
+function EncoderGlyph({
+  normalized,
+  inactive,
+  accent,
+}: {
+  normalized: number | null;
+  inactive: boolean;
+  accent: boolean;
+}) {
+  const activeArcPath = createEncoderArcPath(normalized);
+
+  return (
+    <svg
+      viewBox="0 0 64 64"
+      aria-hidden="true"
+      className="h-9 w-16 overflow-visible"
+    >
+      <path
+        d={ENCODER_TRACK_PATH}
+        fill="none"
+        stroke={inactive ? "rgb(63 63 70 / 0.45)" : "rgb(113 113 122 / 0.5)"}
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
+      {activeArcPath ? (
+        <path
+          d={activeArcPath}
+          fill="none"
+          stroke={
+            inactive
+              ? "rgb(82 82 91 / 0.5)"
+              : accent
+                ? "rgb(190 242 100 / 0.95)"
+                : "rgb(244 244 245 / 0.92)"
+          }
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+      ) : null}
+    </svg>
+  );
+}
+
 function PerformanceBand({
+  bandKey,
   title,
   slots,
 }: {
+  bandKey: BandKey;
   title: string;
   slots: readonly BandCell[];
 }) {
@@ -136,37 +417,65 @@ function PerformanceBand({
             </Text>
           </div>
         ) : (
-          slots.map((slot, index) => (
-            <div
-              key={`${title}-${index}-${renderCellLabel(slot)}`}
-              className={cn(
-                "rounded-2xl border px-3 py-4 transition-colors",
-                isInactiveCell(slot)
-                  ? "border-zinc-900 bg-zinc-950/80 text-zinc-600"
-                  : "border-zinc-700 bg-zinc-900 text-zinc-50 shadow-inner",
-              )}
-            >
-              <Text
-                asChild
-                size="xs"
+          slots.map((slot, index) => {
+            const inactive = isInactiveCell(slot);
+            const visual = parseCellVisualValue(slot);
+            const slotKey = getCellKey(slot, bandKey, index);
+
+            return (
+              <div
+                key={`${title}-${index}-${renderCellLabel(slot)}`}
+                data-slot-key={slotKey}
+                data-slot-layout={visual.showEncoder ? "encoder" : "text"}
                 className={cn(
-                  "font-mono uppercase tracking-[0.2em]",
-                  isInactiveCell(slot) ? "text-zinc-700" : "text-zinc-500",
+                  "rounded-2xl px-3 py-4 transition-colors",
+                  inactive
+                    ? "bg-zinc-950/30 text-zinc-600"
+                    : "bg-zinc-900/35 text-zinc-50",
                 )}
               >
-                <span>{renderCellLabel(slot)}</span>
-              </Text>
-              <Text
-                asChild
-                className={cn(
-                  "mt-3 block font-mono text-lg font-semibold uppercase tracking-[0.06em]",
-                  isInactiveCell(slot) ? "text-zinc-500" : "text-zinc-100",
-                )}
-              >
-                <span>{renderCellValue(slot)}</span>
-              </Text>
-            </div>
-          ))
+                <Text
+                  asChild
+                  size="xs"
+                  className={cn(
+                    "block text-center font-mono uppercase tracking-[0.2em]",
+                    inactive ? "text-zinc-700" : "text-zinc-500",
+                  )}
+                >
+                  <span>{renderCellLabel(slot)}</span>
+                </Text>
+
+                <div
+                  className={cn(
+                    "mt-3 flex min-h-[4.75rem] w-full",
+                    visual.showEncoder
+                      ? "flex-col items-center justify-between gap-2"
+                      : "items-center justify-center",
+                  )}
+                >
+                  {visual.showEncoder ? (
+                    <EncoderGlyph
+                      normalized={visual.visualNormalized}
+                      inactive={inactive}
+                      accent={bandKey === "upper" && !visual.empty}
+                    />
+                  ) : null}
+                  <Text
+                    asChild
+                    className={cn(
+                      "block text-center font-mono font-semibold uppercase",
+                      visual.showEncoder
+                        ? "text-lg tracking-[0.06em]"
+                        : "text-xl tracking-[0.12em]",
+                      inactive ? "text-zinc-500" : "text-zinc-100",
+                    )}
+                  >
+                    <span>{renderCellValue(slot)}</span>
+                  </Text>
+                </div>
+              </div>
+            );
+          })
         )}
       </div>
     </section>
@@ -449,36 +758,27 @@ export default function InstrumentPerformance({
               </div>
 
               <div className="mt-6 grid gap-5 xl:grid-cols-[18rem_minmax(0,1fr)]">
-                <aside className="rounded-3xl bg-zinc-950/80 p-4 shadow-inner">
-                  <Text
-                    asChild
-                    size="xs"
-                    className="font-mono uppercase tracking-[0.3em] text-zinc-500"
-                  >
-                    <h2>Status Rail</h2>
-                  </Text>
-                  <div className="mt-4 grid gap-3">
-                    <ConsoleStat label="Track" value={trackName} />
-                    <ConsoleStat
-                      label="Page Bank"
-                      value={pageBankLabel}
-                      valueClassName="text-sm"
-                    />
-                    <ConsoleStat
-                      label="MIDI"
-                      value={
-                        displayState
-                          ? `Channel ${displayState.header.midiChannel}`
-                          : "--"
-                      }
-                    />
-                  </div>
+                <aside>
+                  <ConsoleStat label="Track" value={trackName} />
+                  <ConsoleStat
+                    label="Page Bank"
+                    value={pageBankLabel}
+                    valueClassName="text-sm"
+                  />
+                  <ConsoleStat
+                    label="MIDI"
+                    value={
+                      displayState
+                        ? `Channel ${displayState.header.midiChannel}`
+                        : "--"
+                    }
+                  />
                 </aside>
 
-                <div className="instrument-performance-display rounded-3xl border border-zinc-700 p-4 shadow-inner sm:p-5">
+                <div className="instrument-performance-display">
                   <div className="relative z-10">
                     {state.status === "loading" ? (
-                      <div className="rounded-3xl border border-dashed border-zinc-700 bg-zinc-950/80 px-5 py-10">
+                      <div className="px-5 py-10">
                         <Text
                           asChild
                           className="font-mono text-lg uppercase tracking-[0.18em] text-lime-100"
@@ -541,14 +841,17 @@ export default function InstrumentPerformance({
                         ) : null}
 
                         <PerformanceBand
+                          bandKey="global"
                           title="Global Controls"
                           slots={displayState.globalBand.slots}
                         />
                         <PerformanceBand
+                          bandKey="upper"
                           title={displayState.upperBand.title}
                           slots={displayState.upperBand.slots}
                         />
                         <PerformanceBand
+                          bandKey="lower"
                           title={displayState.lowerBand.title}
                           slots={displayState.lowerBand.slots}
                         />

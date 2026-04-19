@@ -318,6 +318,108 @@ describe("InstrumentPerformance", () => {
     expect(engine.stop).toHaveBeenCalledTimes(1);
   });
 
+  it("uses borderless slot lanes with encoder glyphs only for numeric-style values", async () => {
+    displayState = {
+      ...displayState,
+      globalBand: {
+        slots: [
+          {
+            key: "tempo",
+            label: "Tempo",
+            shortLabel: "BPM",
+            cc: 13,
+            valueText: "120 BPM",
+            rawValue: 120,
+            valueSpec: { kind: "number", min: 20, max: 240, step: 1 },
+          },
+          {
+            key: "active",
+            label: "Active",
+            shortLabel: "ACT",
+            cc: 14,
+            valueText: "ON",
+            rawValue: true,
+            valueSpec: { kind: "boolean" },
+          },
+        ],
+      },
+      upperBand: {
+        title: "SOURCE",
+        slots: [
+          {
+            kind: "slot",
+            blockKey: "source",
+            slotKey: "freq",
+            label: "Frequency",
+            shortLabel: "FREQ",
+            cc: 21,
+            valueText: "440",
+            rawValue: 440,
+            valueSpec: { kind: "number", min: 20, max: 20000, exp: 2 },
+          },
+          {
+            kind: "slot",
+            blockKey: "source",
+            slotKey: "wave",
+            label: "Wave",
+            shortLabel: "WAVE",
+            cc: 22,
+            valueText: "sine",
+            rawValue: "sine",
+            valueSpec: { kind: "enum", options: ["sine", "square"] },
+          },
+          { kind: "empty", valueText: "--" },
+        ],
+      },
+      lowerBand: {
+        title: "AMP",
+        slots: [],
+      },
+    };
+
+    const { container } = render(
+      <InstrumentPerformance instrument={instrument} />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("FREQ")).toBeTruthy();
+    });
+
+    expect(
+      container
+        .querySelector('[data-slot-key="global.tempo"]')
+        ?.getAttribute("data-slot-layout"),
+    ).toBe("encoder");
+    expect(
+      container
+        .querySelector('[data-slot-key="global.active"]')
+        ?.getAttribute("data-slot-layout"),
+    ).toBe("text");
+    expect(
+      container
+        .querySelector('[data-slot-key="source.freq"]')
+        ?.getAttribute("data-slot-layout"),
+    ).toBe("encoder");
+    expect(
+      container
+        .querySelector('[data-slot-key="source.wave"]')
+        ?.getAttribute("data-slot-layout"),
+    ).toBe("text");
+    expect(
+      container
+        .querySelector('[data-slot-key="upper-2"]')
+        ?.getAttribute("data-slot-layout"),
+    ).toBe("encoder");
+
+    expect(
+      Array.from(container.querySelectorAll("[data-slot-key]")).every(
+        (slot) => {
+          return !slot.className.includes("border");
+        },
+      ),
+    ).toBe(true);
+  });
+
   it("toggles fullscreen mode for the performance surface", async () => {
     render(<InstrumentPerformance instrument={instrument} />);
 
