@@ -94,3 +94,83 @@ g.selected path.react-flow__edge-path {
     var(--ui-color-secondary-500) 42%
   );
 }
+
+.instrument-performance-stage {
+  background:
+    radial-gradient(
+      circle at top,
+      color-mix(
+          in oklab,
+          var(--ui-color-border-subtle),
+          var(--ui-color-text-primary) 12%
+        )
+        0%,
+      transparent 32%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--ui-color-surface-1), black 72%) 0%,
+      color-mix(in oklab, var(--ui-color-surface-0), black 82%) 100%
+    );
+}
+
+.instrument-performance-faceplate {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--ui-color-surface-2), black 60%) 0%,
+    color-mix(in oklab, var(--ui-color-surface-0), black 78%) 100%
+  );
+}
+
+.instrument-performance-display {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--ui-color-surface-0), black 88%) 0%,
+    color-mix(in oklab, var(--ui-color-surface-1), black 84%) 100%
+  );
+}
+
+.instrument-performance-display::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at top,
+      color-mix(in oklab, var(--ui-color-success-500), transparent 90%),
+      transparent 30%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--ui-color-success-500), transparent 96%),
+      transparent 30%,
+      rgb(0 0 0 / 0.18)
+    );
+}
+
+.instrument-performance-display::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.16;
+  background-image: linear-gradient(
+    to bottom,
+    transparent,
+    transparent 8px,
+    rgb(255 255 255 / 0.18) 9px,
+    transparent 10px
+  );
+  background-size: 100% 10px;
+}
+
+.instrument-performance-title {
+  text-wrap: balance;
+}
+
+.instrument-performance-focus {
+  text-shadow: 0 0 18px rgb(190 242 100 / 0.18);
+}

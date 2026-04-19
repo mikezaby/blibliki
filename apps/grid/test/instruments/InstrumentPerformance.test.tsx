@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, render, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import InstrumentPerformance from "../../src/components/Instruments/InstrumentPerformance";
@@ -124,7 +124,7 @@ describe("InstrumentPerformance", () => {
   };
   const displayState = {
     header: {
-      instrumentName: "Instrument One",
+      instrumentName: "DEFAULT INSTRUMENT",
       trackName: "track-1",
       pageKey: "sourceAmp",
       controllerPage: 1,
@@ -176,6 +176,32 @@ describe("InstrumentPerformance", () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+  });
+
+  it("renders the runtime inside a hardware-style performance console", async () => {
+    render(<InstrumentPerformance instrument={instrument} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Performance Console")).toBeTruthy();
+    });
+
+    expect(screen.getByText("Instrument One")).toBeTruthy();
+    expect(screen.queryByText("DEFAULT INSTRUMENT")).toBeNull();
+    expect(
+      screen.queryByText("Performer-first control surface for live sets."),
+    ).toBeNull();
+    expect(screen.queryByText("Display Focus")).toBeNull();
+    expect(screen.getByText("Track")).toBeTruthy();
+    expect(screen.getAllByText("track-1")).toHaveLength(1);
+    expect(screen.getByText("Page Bank")).toBeTruthy();
+    expect(screen.getByText("SOURCE / AMP")).toBeTruthy();
+    expect(screen.queryByText("Mode")).toBeNull();
+    expect(screen.getAllByText("Transport").length).toBe(1);
+    expect(
+      screen
+        .getByRole("button", { name: "Start Engine" })
+        .hasAttribute("disabled"),
+    ).toBe(false);
   });
 
   it("saves the current performance draft to Firestore when requested", async () => {
