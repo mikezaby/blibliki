@@ -230,7 +230,9 @@ describe("InstrumentPerformance", () => {
   });
 
   it("renders the runtime inside a hardware-style performance console", async () => {
-    render(<InstrumentPerformance instrument={instrument} />);
+    const { container } = render(
+      <InstrumentPerformance instrument={instrument} />,
+    );
 
     await waitFor(() => {
       expect(screen.getByText("Instrument One")).toBeTruthy();
@@ -250,6 +252,31 @@ describe("InstrumentPerformance", () => {
     expect(screen.queryByText("Mode")).toBeNull();
     expect(screen.getAllByText("Transport").length).toBe(1);
     expect(screen.queryByText("Runtime")).toBeNull();
+    expect(
+      container
+        .querySelector(".instrument-performance-faceplate")
+        ?.className.includes("border"),
+    ).toBe(false);
+    expect(
+      screen
+        .getByText("Status Rail")
+        .closest("aside")
+        ?.className.includes("border"),
+    ).toBe(false);
+    expect(
+      screen.getByText("Track").parentElement?.className.includes("border"),
+    ).toBe(false);
+    expect(
+      screen
+        .getByText("Global Controls")
+        .closest("section")
+        ?.className.includes("border"),
+    ).toBe(false);
+    expect(
+      container
+        .querySelector(".instrument-performance-display")
+        ?.className.includes("border"),
+    ).toBe(true);
     expect(
       screen.getByRole("button", { name: "Start" }).hasAttribute("disabled"),
     ).toBe(false);

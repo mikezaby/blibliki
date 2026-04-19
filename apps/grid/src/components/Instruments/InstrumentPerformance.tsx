@@ -83,7 +83,7 @@ function ConsoleStat({
   valueClassName?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950/75 px-4 py-3 shadow-inner">
+    <div className="rounded-2xl bg-zinc-950/75 px-4 py-3 shadow-inner">
       <Text
         asChild
         size="xs"
@@ -112,7 +112,7 @@ function PerformanceBand({
   slots: readonly BandCell[];
 }) {
   return (
-    <section className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-4 shadow-inner">
+    <section className="rounded-3xl bg-zinc-950/80 p-4 shadow-inner">
       <div className="flex items-center justify-between gap-3">
         <Text
           asChild
@@ -377,8 +377,8 @@ export default function InstrumentPerformance({
         className="instrument-performance-stage w-full h-screen flex items-center px-4 py-5 sm:px-6 sm:py-8"
       >
         <div className="mx-auto w-full max-w-screen-2xl">
-          <div className="rounded-3xl border border-zinc-800/80 bg-zinc-900/90 p-3 shadow-2xl sm:p-5">
-            <div className="instrument-performance-faceplate rounded-3xl border border-zinc-800 p-4 sm:p-6">
+          <div className="rounded-3xl bg-zinc-900/90 p-3 shadow-2xl sm:p-5">
+            <div className="instrument-performance-faceplate rounded-3xl p-4 sm:p-6">
               <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
                 <div className="max-w-3xl">
                   <Text
@@ -449,7 +449,7 @@ export default function InstrumentPerformance({
               </div>
 
               <div className="mt-6 grid gap-5 xl:grid-cols-[18rem_minmax(0,1fr)]">
-                <aside className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-4 shadow-inner">
+                <aside className="rounded-3xl bg-zinc-950/80 p-4 shadow-inner">
                   <Text
                     asChild
                     size="xs"
