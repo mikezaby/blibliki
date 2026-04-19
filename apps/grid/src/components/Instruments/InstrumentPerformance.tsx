@@ -10,7 +10,7 @@ import {
 import { Instrument, type IInstrument } from "@blibliki/models";
 import { Button, Surface, Text } from "@blibliki/ui";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Play, Square } from "lucide-react";
+import { ArrowLeft, Maximize2, Minimize2, Play, Square } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -205,6 +205,7 @@ export default function InstrumentPerformance({
   const [state, setState] = useState<PerformanceState>({
     status: "loading",
   });
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const documentRef = useRef(instrument.document as InstrumentDocument);
 
   useEffect(() => {
@@ -324,6 +325,23 @@ export default function InstrumentPerformance({
     };
   }, [sessionSource, onInstrumentChange]);
 
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const syncFullscreenState = () => {
+      setIsFullscreen(document.fullscreenElement === document.documentElement);
+    };
+
+    syncFullscreenState();
+    document.addEventListener("fullscreenchange", syncFullscreenState);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", syncFullscreenState);
+    };
+  }, []);
+
   const displayState = state.displayState;
   const pageBankLabel = displayState
     ? `${displayState.upperBand.title} / ${displayState.lowerBand.title}`
@@ -334,191 +352,227 @@ export default function InstrumentPerformance({
   const isTransportRunning =
     displayState?.header.transportState === TransportState.playing;
   const isSequencerEdit = displayState?.header.mode === "seqEdit";
+  const canToggleFullscreen =
+    typeof document !== "undefined" &&
+    typeof document.exitFullscreen === "function" &&
+    typeof HTMLElement !== "undefined" &&
+    typeof document.documentElement.requestFullscreen === "function";
+
+  const handleFullscreenToggle = async () => {
+    if (!canToggleFullscreen) {
+      return;
+    }
+
+    if (document.fullscreenElement === document.documentElement) {
+      await document.exitFullscreen();
+      return;
+    }
+
+    await document.documentElement.requestFullscreen();
+  };
 
   return (
-    <Surface
-      tone="canvas"
-      className="instrument-performance-stage min-h-screen px-4 py-5 sm:px-6 sm:py-8"
-    >
-      <div className="mx-auto w-full max-w-screen-2xl">
-        <div className="rounded-3xl border border-zinc-800/80 bg-zinc-900/90 p-3 shadow-2xl sm:p-5">
-          <div className="instrument-performance-faceplate rounded-3xl border border-zinc-800 p-4 sm:p-6">
-            <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
-              <div className="max-w-3xl">
-                <Text
-                  asChild
-                  size="xs"
-                  className="font-mono uppercase tracking-[0.32em] text-zinc-500"
-                >
-                  <span>Performance Console</span>
-                </Text>
-                <Text
-                  asChild
-                  weight="semibold"
-                  className="instrument-performance-title mt-2 block font-mono text-xl uppercase leading-tight tracking-[0.22em] text-zinc-300 sm:text-2xl"
-                >
-                  <h1>{instrumentName}</h1>
-                </Text>
-                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-                  <StatusLamp active={isRuntimeReady} label="Runtime" />
-                  <StatusLamp active={isTransportRunning} label="Transport" />
-                  <StatusLamp active={isSequencerEdit} label="Step Edit" />
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  asChild
-                  variant="text"
-                  color="neutral"
-                  className="rounded-full border border-zinc-700 bg-zinc-950 px-4 font-mono uppercase tracking-[0.14em] text-zinc-200 hover:bg-zinc-900"
-                >
-                  <Link
-                    to="/instrument/$instrumentId"
-                    params={{ instrumentId: instrument.id }}
+    <div className="flex min-h-screen bg-zinc-950">
+      <Surface
+        tone="canvas"
+        className="instrument-performance-stage w-full h-screen flex items-center px-4 py-5 sm:px-6 sm:py-8"
+      >
+        <div className="mx-auto w-full max-w-screen-2xl">
+          <div className="rounded-3xl border border-zinc-800/80 bg-zinc-900/90 p-3 shadow-2xl sm:p-5">
+            <div className="instrument-performance-faceplate rounded-3xl border border-zinc-800 p-4 sm:p-6">
+              <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+                <div className="max-w-3xl">
+                  <Text
+                    asChild
+                    size="xs"
+                    className="font-mono uppercase tracking-[0.32em] text-zinc-500"
                   >
-                    <ArrowLeft className="h-4 w-4" />
-                    Back to Editor
-                  </Link>
-                </Button>
-                <Button
-                  color="neutral"
-                  disabled={state.status !== "ready" || !state.engine}
-                  onClick={() => {
-                    void state.engine?.start();
-                  }}
-                  className="rounded-full border border-zinc-600 bg-zinc-50 px-5 font-mono uppercase tracking-[0.14em] text-zinc-950 shadow-[0_6px_20px_rgba(255,255,255,0.08)]"
-                >
-                  <Play className="h-4 w-4 fill-current" />
-                  Start Engine
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="neutral"
-                  disabled={state.status !== "ready" || !state.engine}
-                  onClick={() => {
-                    state.engine?.stop();
-                  }}
-                  className="rounded-full border-zinc-600 px-5 font-mono uppercase tracking-[0.14em] text-zinc-200 hover:border-zinc-400 hover:bg-zinc-900"
-                >
-                  <Square className="h-3.5 w-3.5 fill-current" />
-                  Stop Engine
-                </Button>
-              </div>
-            </div>
-
-            <div className="mt-6 grid gap-5 xl:grid-cols-[18rem_minmax(0,1fr)]">
-              <aside className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-4 shadow-inner">
-                <Text
-                  asChild
-                  size="xs"
-                  className="font-mono uppercase tracking-[0.3em] text-zinc-500"
-                >
-                  <h2>Status Rail</h2>
-                </Text>
-                <div className="mt-4 grid gap-3">
-                  <ConsoleStat label="Track" value={trackName} />
-                  <ConsoleStat
-                    label="Page Bank"
-                    value={pageBankLabel}
-                    valueClassName="text-sm"
-                  />
-                  <ConsoleStat
-                    label="MIDI"
-                    value={
-                      displayState
-                        ? `Channel ${displayState.header.midiChannel}`
-                        : "--"
-                    }
-                  />
+                    <span>Performance Console</span>
+                  </Text>
+                  <Text
+                    asChild
+                    weight="semibold"
+                    className="instrument-performance-title mt-2 block font-mono text-xl uppercase leading-tight tracking-[0.22em] text-zinc-300 sm:text-2xl"
+                  >
+                    <h1>{instrumentName}</h1>
+                  </Text>
+                  <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+                    <StatusLamp active={isRuntimeReady} label="Runtime" />
+                    <StatusLamp active={isTransportRunning} label="Transport" />
+                    <StatusLamp active={isSequencerEdit} label="Step Edit" />
+                  </div>
                 </div>
-              </aside>
 
-              <div className="instrument-performance-display rounded-3xl border border-zinc-700 p-4 shadow-inner sm:p-5">
-                <div className="relative z-10">
-                  {state.status === "loading" ? (
-                    <div className="rounded-3xl border border-dashed border-zinc-700 bg-zinc-950/80 px-5 py-10">
-                      <Text
-                        asChild
-                        className="font-mono text-lg uppercase tracking-[0.18em] text-lime-100"
-                      >
-                        <h2>Booting Runtime</h2>
-                      </Text>
-                      <Text
-                        asChild
-                        className="mt-3 block font-mono text-sm uppercase tracking-[0.12em] text-zinc-500"
-                      >
-                        <p>
-                          Initializing engine, MIDI devices, and controller
-                          session.
-                        </p>
-                      </Text>
-                    </div>
-                  ) : null}
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    asChild
+                    variant="text"
+                    color="neutral"
+                    className="rounded-full border border-zinc-700 bg-zinc-950 px-4 font-mono uppercase tracking-[0.14em] text-zinc-200 hover:bg-zinc-900"
+                  >
+                    <Link
+                      to="/instrument/$instrumentId"
+                      params={{ instrumentId: instrument.id }}
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      Back to Editor
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="neutral"
+                    disabled={!canToggleFullscreen}
+                    onClick={() => {
+                      void handleFullscreenToggle();
+                    }}
+                    className="rounded-full border-zinc-600 px-5 font-mono uppercase tracking-[0.14em] text-zinc-200 hover:border-zinc-400 hover:bg-zinc-900"
+                  >
+                    {isFullscreen ? (
+                      <Minimize2 className="h-4 w-4" />
+                    ) : (
+                      <Maximize2 className="h-4 w-4" />
+                    )}
+                    {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                  </Button>
+                  <Button
+                    color="neutral"
+                    disabled={state.status !== "ready" || !state.engine}
+                    onClick={() => {
+                      void state.engine?.start();
+                    }}
+                    className="rounded-full border border-zinc-600 bg-zinc-50 px-5 font-mono uppercase tracking-[0.14em] text-zinc-950 shadow-[0_6px_20px_rgba(255,255,255,0.08)]"
+                  >
+                    <Play className="h-4 w-4 fill-current" />
+                    Start Engine
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="neutral"
+                    disabled={state.status !== "ready" || !state.engine}
+                    onClick={() => {
+                      state.engine?.stop();
+                    }}
+                    className="rounded-full border-zinc-600 px-5 font-mono uppercase tracking-[0.14em] text-zinc-200 hover:border-zinc-400 hover:bg-zinc-900"
+                  >
+                    <Square className="h-3.5 w-3.5 fill-current" />
+                    Stop Engine
+                  </Button>
+                </div>
+              </div>
 
-                  {state.status === "error" ? (
-                    <div className="rounded-3xl border border-red-500/40 bg-red-950/40 px-5 py-10">
-                      <Text
-                        asChild
-                        className="font-mono text-lg uppercase tracking-[0.18em] text-red-50"
-                      >
-                        <h2>Runtime Fault</h2>
-                      </Text>
-                      <Text
-                        asChild
-                        className="mt-3 block font-mono text-sm uppercase tracking-[0.12em] text-red-200/80"
-                      >
-                        <p>{state.error}</p>
-                      </Text>
-                    </div>
-                  ) : null}
+              <div className="mt-6 grid gap-5 xl:grid-cols-[18rem_minmax(0,1fr)]">
+                <aside className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-4 shadow-inner">
+                  <Text
+                    asChild
+                    size="xs"
+                    className="font-mono uppercase tracking-[0.3em] text-zinc-500"
+                  >
+                    <h2>Status Rail</h2>
+                  </Text>
+                  <div className="mt-4 grid gap-3">
+                    <ConsoleStat label="Track" value={trackName} />
+                    <ConsoleStat
+                      label="Page Bank"
+                      value={pageBankLabel}
+                      valueClassName="text-sm"
+                    />
+                    <ConsoleStat
+                      label="MIDI"
+                      value={
+                        displayState
+                          ? `Channel ${displayState.header.midiChannel}`
+                          : "--"
+                      }
+                    />
+                  </div>
+                </aside>
 
-                  {displayState ? (
-                    <div className="space-y-4">
-                      {displayState.notice ? (
-                        <div
-                          className={cn(
-                            "rounded-2xl border px-4 py-3 shadow-inner",
-                            getNoticeToneStyles(displayState.notice.tone),
-                          )}
+                <div className="instrument-performance-display rounded-3xl border border-zinc-700 p-4 shadow-inner sm:p-5">
+                  <div className="relative z-10">
+                    {state.status === "loading" ? (
+                      <div className="rounded-3xl border border-dashed border-zinc-700 bg-zinc-950/80 px-5 py-10">
+                        <Text
+                          asChild
+                          className="font-mono text-lg uppercase tracking-[0.18em] text-lime-100"
                         >
-                          <Text
-                            asChild
-                            className="font-mono text-sm font-semibold uppercase tracking-[0.16em]"
+                          <h2>Booting Runtime</h2>
+                        </Text>
+                        <Text
+                          asChild
+                          className="mt-3 block font-mono text-sm uppercase tracking-[0.12em] text-zinc-500"
+                        >
+                          <p>
+                            Initializing engine, MIDI devices, and controller
+                            session.
+                          </p>
+                        </Text>
+                      </div>
+                    ) : null}
+
+                    {state.status === "error" ? (
+                      <div className="rounded-3xl border border-red-500/40 bg-red-950/40 px-5 py-10">
+                        <Text
+                          asChild
+                          className="font-mono text-lg uppercase tracking-[0.18em] text-red-50"
+                        >
+                          <h2>Runtime Fault</h2>
+                        </Text>
+                        <Text
+                          asChild
+                          className="mt-3 block font-mono text-sm uppercase tracking-[0.12em] text-red-200/80"
+                        >
+                          <p>{state.error}</p>
+                        </Text>
+                      </div>
+                    ) : null}
+
+                    {displayState ? (
+                      <div className="space-y-4">
+                        {displayState.notice ? (
+                          <div
+                            className={cn(
+                              "rounded-2xl border px-4 py-3 shadow-inner",
+                              getNoticeToneStyles(displayState.notice.tone),
+                            )}
                           >
-                            <span>{displayState.notice.title}</span>
-                          </Text>
-                          {displayState.notice.message ? (
                             <Text
                               asChild
-                              className="mt-2 block font-mono text-xs uppercase tracking-[0.1em] opacity-80"
+                              className="font-mono text-sm font-semibold uppercase tracking-[0.16em]"
                             >
-                              <span>{displayState.notice.message}</span>
+                              <span>{displayState.notice.title}</span>
                             </Text>
-                          ) : null}
-                        </div>
-                      ) : null}
+                            {displayState.notice.message ? (
+                              <Text
+                                asChild
+                                className="mt-2 block font-mono text-xs uppercase tracking-[0.1em] opacity-80"
+                              >
+                                <span>{displayState.notice.message}</span>
+                              </Text>
+                            ) : null}
+                          </div>
+                        ) : null}
 
-                      <PerformanceBand
-                        title="Global Controls"
-                        slots={displayState.globalBand.slots}
-                      />
-                      <PerformanceBand
-                        title={displayState.upperBand.title}
-                        slots={displayState.upperBand.slots}
-                      />
-                      <PerformanceBand
-                        title={displayState.lowerBand.title}
-                        slots={displayState.lowerBand.slots}
-                      />
-                    </div>
-                  ) : null}
+                        <PerformanceBand
+                          title="Global Controls"
+                          slots={displayState.globalBand.slots}
+                        />
+                        <PerformanceBand
+                          title={displayState.upperBand.title}
+                          slots={displayState.upperBand.slots}
+                        />
+                        <PerformanceBand
+                          title={displayState.lowerBand.title}
+                          slots={displayState.lowerBand.slots}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </Surface>
+      </Surface>
+    </div>
   );
 }

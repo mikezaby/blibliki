@@ -1,5 +1,12 @@
 // @vitest-environment jsdom
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import InstrumentPerformance from "../../src/components/Instruments/InstrumentPerformance";
@@ -93,6 +100,10 @@ vi.mock("@blibliki/models", () => {
 });
 
 describe("InstrumentPerformance", () => {
+  let fullscreenElement: Element | null;
+  let requestFullscreenMock: ReturnType<typeof vi.fn>;
+  let exitFullscreenMock: ReturnType<typeof vi.fn>;
+
   const instrument = {
     id: "instrument-1",
     name: "Instrument One",
@@ -152,6 +163,31 @@ describe("InstrumentPerformance", () => {
   };
 
   beforeEach(() => {
+    fullscreenElement = null;
+    requestFullscreenMock = vi.fn(async function (this: Element) {
+      fullscreenElement = this;
+      document.dispatchEvent(new Event("fullscreenchange"));
+    });
+    exitFullscreenMock = vi.fn(async () => {
+      fullscreenElement = null;
+      document.dispatchEvent(new Event("fullscreenchange"));
+    });
+
+    Object.defineProperty(document, "fullscreenElement", {
+      configurable: true,
+      get: () => fullscreenElement,
+    });
+    Object.defineProperty(document, "exitFullscreen", {
+      configurable: true,
+      writable: true,
+      value: exitFullscreenMock,
+    });
+    Object.defineProperty(HTMLElement.prototype, "requestFullscreen", {
+      configurable: true,
+      writable: true,
+      value: requestFullscreenMock,
+    });
+
     loadEngineMock.mockReset();
     createInstrumentEnginePatchMock.mockReset();
     createInstrumentControllerSessionMock.mockReset();
@@ -202,6 +238,38 @@ describe("InstrumentPerformance", () => {
         .getByRole("button", { name: "Start Engine" })
         .hasAttribute("disabled"),
     ).toBe(false);
+    expect(
+      screen
+        .getByRole("button", { name: "Fullscreen" })
+        .hasAttribute("disabled"),
+    ).toBe(false);
+  });
+
+  it("toggles fullscreen mode for the performance surface", async () => {
+    render(<InstrumentPerformance instrument={instrument} />);
+
+    const fullscreenButton = await screen.findByRole("button", {
+      name: "Fullscreen",
+    });
+
+    fireEvent.click(fullscreenButton);
+
+    await waitFor(() => {
+      expect(requestFullscreenMock).toHaveBeenCalledTimes(1);
+      expect(requestFullscreenMock.mock.instances[0]).toBe(
+        document.documentElement,
+      );
+      expect(
+        screen.getByRole("button", { name: "Exit Fullscreen" }),
+      ).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Exit Fullscreen" }));
+
+    await waitFor(() => {
+      expect(exitFullscreenMock).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole("button", { name: "Fullscreen" })).toBeTruthy();
+    });
   });
 
   it("saves the current performance draft to Firestore when requested", async () => {
