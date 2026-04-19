@@ -372,7 +372,7 @@ function EncoderGlyph({
             inactive
               ? "rgb(82 82 91 / 0.5)"
               : accent
-                ? "rgb(190 242 100 / 0.95)"
+                ? "rgb(232 121 249 / 0.95)"
                 : "rgb(244 244 245 / 0.92)"
           }
           strokeWidth="4"

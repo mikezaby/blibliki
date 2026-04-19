@@ -257,12 +257,9 @@ describe("InstrumentPerformance", () => {
         .querySelector(".instrument-performance-faceplate")
         ?.className.includes("border"),
     ).toBe(false);
-    expect(
-      screen
-        .getByText("Status Rail")
-        .closest("aside")
-        ?.className.includes("border"),
-    ).toBe(false);
+    expect(container.querySelector("aside")?.className.includes("border")).toBe(
+      false,
+    );
     expect(
       screen.getByText("Track").parentElement?.className.includes("border"),
     ).toBe(false);
@@ -273,10 +270,8 @@ describe("InstrumentPerformance", () => {
         ?.className.includes("border"),
     ).toBe(false);
     expect(
-      container
-        .querySelector(".instrument-performance-display")
-        ?.className.includes("border"),
-    ).toBe(true);
+      container.querySelector(".instrument-performance-display"),
+    ).toBeTruthy();
     expect(
       screen.getByRole("button", { name: "Start" }).hasAttribute("disabled"),
     ).toBe(false);
@@ -410,6 +405,11 @@ describe("InstrumentPerformance", () => {
         .querySelector('[data-slot-key="upper-2"]')
         ?.getAttribute("data-slot-layout"),
     ).toBe("encoder");
+    expect(
+      container.querySelector(
+        '[data-slot-key="source.freq"] path[stroke="rgb(232 121 249 / 0.95)"]',
+      ),
+    ).toBeTruthy();
 
     expect(
       Array.from(container.querySelectorAll("[data-slot-key]")).every(
