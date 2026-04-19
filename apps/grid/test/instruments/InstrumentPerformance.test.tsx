@@ -133,7 +133,7 @@ describe("InstrumentPerformance", () => {
     },
     compiledInstrument: {},
   };
-  const displayState = {
+  let displayState = {
     header: {
       instrumentName: "DEFAULT INSTRUMENT",
       trackName: "track-1",
@@ -163,6 +163,21 @@ describe("InstrumentPerformance", () => {
   };
 
   beforeEach(() => {
+    displayState = {
+      header: {
+        instrumentName: "DEFAULT INSTRUMENT",
+        trackName: "track-1",
+        pageKey: "sourceAmp",
+        controllerPage: 1,
+        midiChannel: 1,
+        transportState: "stopped",
+        mode: "performance",
+      },
+      globalBand: { slots: [] },
+      upperBand: { title: "SOURCE", slots: [] },
+      lowerBand: { title: "AMP", slots: [] },
+    };
+
     fullscreenElement = null;
     requestFullscreenMock = vi.fn(async function (this: Element) {
       fullscreenElement = this;
@@ -218,9 +233,10 @@ describe("InstrumentPerformance", () => {
     render(<InstrumentPerformance instrument={instrument} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Performance Console")).toBeTruthy();
+      expect(screen.getByText("Instrument One")).toBeTruthy();
     });
 
+    expect(screen.queryByText("Performance Console")).toBeNull();
     expect(screen.getByText("Instrument One")).toBeTruthy();
     expect(screen.queryByText("DEFAULT INSTRUMENT")).toBeNull();
     expect(
@@ -233,16 +249,46 @@ describe("InstrumentPerformance", () => {
     expect(screen.getByText("SOURCE / AMP")).toBeTruthy();
     expect(screen.queryByText("Mode")).toBeNull();
     expect(screen.getAllByText("Transport").length).toBe(1);
+    expect(screen.queryByText("Runtime")).toBeNull();
     expect(
-      screen
-        .getByRole("button", { name: "Start Engine" })
-        .hasAttribute("disabled"),
+      screen.getByRole("button", { name: "Start" }).hasAttribute("disabled"),
     ).toBe(false);
     expect(
       screen
         .getByRole("button", { name: "Fullscreen" })
         .hasAttribute("disabled"),
     ).toBe(false);
+  });
+
+  it("toggles transport from the single start and stop button", async () => {
+    render(<InstrumentPerformance instrument={instrument} />);
+
+    const startButton = await screen.findByRole("button", {
+      name: "Start",
+    });
+
+    fireEvent.click(startButton);
+
+    expect(engine.start).toHaveBeenCalledTimes(1);
+
+    displayState = {
+      ...displayState,
+      header: {
+        ...displayState.header,
+        transportState: "playing",
+      },
+    };
+
+    cleanup();
+    render(<InstrumentPerformance instrument={instrument} />);
+
+    const stopButton = await screen.findByRole("button", {
+      name: "Stop",
+    });
+
+    fireEvent.click(stopButton);
+
+    expect(engine.stop).toHaveBeenCalledTimes(1);
   });
 
   it("toggles fullscreen mode for the performance surface", async () => {

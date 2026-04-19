@@ -348,7 +348,6 @@ export default function InstrumentPerformance({
     : "--";
   const trackName = displayState?.header.trackName ?? "Waiting for runtime";
   const instrumentName = instrument.name;
-  const isRuntimeReady = state.status === "ready";
   const isTransportRunning =
     displayState?.header.transportState === TransportState.playing;
   const isSequencerEdit = displayState?.header.mode === "seqEdit";
@@ -384,20 +383,12 @@ export default function InstrumentPerformance({
                 <div className="max-w-3xl">
                   <Text
                     asChild
-                    size="xs"
-                    className="font-mono uppercase tracking-[0.32em] text-zinc-500"
-                  >
-                    <span>Performance Console</span>
-                  </Text>
-                  <Text
-                    asChild
                     weight="semibold"
-                    className="instrument-performance-title mt-2 block font-mono text-xl uppercase leading-tight tracking-[0.22em] text-zinc-300 sm:text-2xl"
+                    className="instrument-performance-title block font-mono text-xl uppercase leading-tight tracking-[0.22em] text-zinc-300 sm:text-2xl"
                   >
                     <h1>{instrumentName}</h1>
                   </Text>
                   <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-                    <StatusLamp active={isRuntimeReady} label="Runtime" />
                     <StatusLamp active={isTransportRunning} label="Transport" />
                     <StatusLamp active={isSequencerEdit} label="Step Edit" />
                   </div>
@@ -438,24 +429,21 @@ export default function InstrumentPerformance({
                     color="neutral"
                     disabled={state.status !== "ready" || !state.engine}
                     onClick={() => {
+                      if (isTransportRunning) {
+                        state.engine?.stop();
+                        return;
+                      }
+
                       void state.engine?.start();
                     }}
                     className="rounded-full border border-zinc-600 bg-zinc-50 px-5 font-mono uppercase tracking-[0.14em] text-zinc-950 shadow-[0_6px_20px_rgba(255,255,255,0.08)]"
                   >
-                    <Play className="h-4 w-4 fill-current" />
-                    Start Engine
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="neutral"
-                    disabled={state.status !== "ready" || !state.engine}
-                    onClick={() => {
-                      state.engine?.stop();
-                    }}
-                    className="rounded-full border-zinc-600 px-5 font-mono uppercase tracking-[0.14em] text-zinc-200 hover:border-zinc-400 hover:bg-zinc-900"
-                  >
-                    <Square className="h-3.5 w-3.5 fill-current" />
-                    Stop Engine
+                    {isTransportRunning ? (
+                      <Square className="h-3.5 w-3.5 fill-current" />
+                    ) : (
+                      <Play className="h-4 w-4 fill-current" />
+                    )}
+                    {isTransportRunning ? "Stop" : "Start"}
                   </Button>
                 </div>
               </div>
