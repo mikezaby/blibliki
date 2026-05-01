@@ -23,8 +23,8 @@
     "tokens.css"
   ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "lint:palette": "node scripts/check-css-palette.mjs",
     "lint": "pnpm run lint:palette && eslint src",
     "tsc": "tsc --noEmit",

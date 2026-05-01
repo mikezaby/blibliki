@@ -203,7 +203,7 @@ For comprehensive guides and examples:
 Run the usual scripts from the package root:
 
 ```sh
-pnpm run build    # bundle with tsup
+pnpm run build    # bundle with tsdown
 pnpm run lint     # check sources with eslint
 pnpm run tsc      # type-check
 ```
