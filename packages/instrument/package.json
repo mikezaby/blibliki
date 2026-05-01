@@ -23,7 +23,7 @@
     "format:check": "prettier . --check"
   },
   "devDependencies": {
-    "@types/node": "25.1.0",
+    "@types/node": "catalog:node",
     "vite-tsconfig-paths": "catalog:vite",
     "vitest": "catalog:test"
   },
