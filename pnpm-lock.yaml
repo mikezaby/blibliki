@@ -329,8 +329,8 @@ importers:
         specifier: ^3.6.1
         version: 3.6.1
       es-toolkit:
-        specifier: 1.44.0
-        version: 1.44.0
+        specifier: catalog:utils
+        version: 1.46.1
     devDependencies:
       '@types/audioworklet':
         specifier: catalog:web-audio
