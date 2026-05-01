@@ -30,7 +30,7 @@ export function UIProvider({
     <div
       className={cn(mode === "dark" && "dark", className)}
       data-theme={mode}
-      style={variables as React.CSSProperties}
+      style={variables}
     >
       {children}
     </div>

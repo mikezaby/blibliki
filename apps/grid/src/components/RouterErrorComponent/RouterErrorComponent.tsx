@@ -1,10 +1,9 @@
-import { ErrorComponentProps, useRouter } from "@tanstack/react-router";
+import { useRouter, type ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { useAppDispatch } from "@/hooks";
 import { addNotification } from "@/notificationsSlice";
+import { store } from "@/store";
 
 export function RouterErrorComponent({ error, reset }: ErrorComponentProps) {
-  const dispatch = useAppDispatch();
   const router = useRouter();
 
   useEffect(() => {
@@ -14,7 +13,7 @@ export function RouterErrorComponent({ error, reset }: ErrorComponentProps) {
         ? error.message
         : "An error occurred while loading this page";
 
-    dispatch(
+    store.dispatch(
       addNotification({
         type: "error",
         title: "Route Error",
@@ -22,7 +21,7 @@ export function RouterErrorComponent({ error, reset }: ErrorComponentProps) {
         duration: 10000, // 10 seconds for route errors
       }),
     );
-  }, [error, dispatch]);
+  }, [error]);
 
   // Navigate back to home page on route error
   useEffect(() => {

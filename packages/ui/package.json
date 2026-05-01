@@ -46,9 +46,13 @@
     "tailwind-merge": "catalog:tailwindcss"
   },
   "peerDependencies": {
-    "react": ">=19"
+    "react": ">=19",
+    "react-dom": ">=19"
   },
   "devDependencies": {
-    "@types/react": "catalog:react-19"
+    "@types/react": "catalog:react-19",
+    "@types/react-dom": "catalog:react-19",
+    "react": "catalog:react-19",
+    "react-dom": "catalog:react-19"
   }
 }
