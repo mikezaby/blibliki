@@ -8,7 +8,7 @@ import {
   Surface,
   Text,
 } from "@blibliki/ui";
-import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/react";
+import { useClerk, UserButton } from "@clerk/react";
 import { LogIn, Play, Square } from "lucide-react";
 import { ChangeEvent, useCallback, useEffect } from "react";
 import { start, stop, setBpm } from "@/globalSlice";
@@ -22,7 +22,7 @@ import { shouldToggleTransportOnSpace } from "./transportKeyboardShortcut";
 
 export default function Header() {
   const dispatch = useAppDispatch();
-  const { openSignIn } = useClerk();
+  const { openSignIn, isSignedIn } = useClerk();
 
   const { isStarted, bpm } = useAppSelector((state) => state.global);
   const { modalName } = useAppSelector((state) => state.modal);
@@ -148,10 +148,9 @@ export default function Header() {
 
           <Divider orientation="vertical" className="h-6" />
 
-          <SignedIn>
+          {isSignedIn ? (
             <UserButton userProfileUrl="/user" />
-          </SignedIn>
-          <SignedOut>
+          ) : (
             <Button
               variant="text"
               color="neutral"
@@ -163,7 +162,7 @@ export default function Header() {
               <LogIn className="w-4 h-4" />
               <span>Sign In</span>
             </Button>
-          </SignedOut>
+          )}
         </Stack>
         {modalName === "patch" && <LoadModal />}
       </Surface>
