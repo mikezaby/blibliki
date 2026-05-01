@@ -32,6 +32,6 @@
   },
   "dependencies": {
     "@blibliki/utils": "workspace:^",
-    "es-toolkit": "1.44.0"
+    "es-toolkit": "catalog:utils"
   }
 }
