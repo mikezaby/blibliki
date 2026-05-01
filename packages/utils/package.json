@@ -51,12 +51,12 @@
   },
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
-    "@types/node": "25.1.0",
+    "@types/node": "catalog:node",
     "vitest": "catalog:test"
   },
   "dependencies": {
     "crypto-js": "^4.2.0",
-    "es-toolkit": "1.44.0",
-    "node-web-audio-api": "1.0.7"
+    "es-toolkit": "catalog:utils",
+    "node-web-audio-api": "catalog:web-audio"
   }
 }

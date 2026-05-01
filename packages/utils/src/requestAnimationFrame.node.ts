@@ -1,3 +1,5 @@
+import { setImmediate } from "node:timers";
+
 // Node.js polyfill for requestAnimationFrame
 // Targets ~60fps (16.67ms per frame)
 const TARGET_FPS = 60;

@@ -2,13 +2,18 @@ packages:
   - packages/*
   - apps/*
 catalogs:
+  utils:
+    "es-toolkit": 1.46.1
+  node:
+    "@types/node": 25.6.0
   web-audio:
     "@types/audioworklet": 0.0.93
+    "node-web-audio-api": 1.0.9
   vite:
     vite: 7.3.1
     "vite-tsconfig-paths": 6.0.5
   test:
-    vitest: 4.0.18
+    vitest: 4.1.5
   tailwindcss:
     "@tailwindcss/vite": 4.1.18
     "tailwind-merge": 3.4.0
