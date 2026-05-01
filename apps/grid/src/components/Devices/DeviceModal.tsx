@@ -9,7 +9,7 @@ import {
   Surface,
   Text,
 } from "@blibliki/ui";
-import { useUser } from "@clerk/clerk-react";
+import { useUser } from "@clerk/react";
 import { Cpu, Save } from "lucide-react";
 import { useState } from "react";
 import Modal, { close as closeModal } from "@/components/Modal";

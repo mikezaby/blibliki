@@ -11,7 +11,7 @@ import {
   Surface,
   Text,
 } from "@blibliki/ui";
-import { useUser } from "@clerk/clerk-react";
+import { useUser } from "@clerk/react";
 import { Plus, Trash2, Edit2, Cpu, Copy, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { open } from "@/components/Modal/modalSlice";

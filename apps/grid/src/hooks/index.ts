@@ -4,7 +4,7 @@ import {
   type ModuleTypeToStateMapping,
 } from "@blibliki/engine";
 import { IInstrument, IPatch, Instrument, Patch } from "@blibliki/models";
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@clerk/react";
 import type {
   Connection,
   Edge,

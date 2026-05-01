@@ -1,4 +1,4 @@
-import { ClerkProvider } from "@clerk/clerk-react";
+import { ClerkProvider } from "@clerk/react";
 import { ReactNode } from "react";
 import { Provider } from "react-redux";
 import { store } from "@/store";

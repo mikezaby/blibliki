@@ -8,7 +8,7 @@ import {
   Surface,
   Text,
 } from "@blibliki/ui";
-import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/react";
 import { LogIn, Play, Square } from "lucide-react";
 import { ChangeEvent, useCallback, useEffect } from "react";
 import { start, stop, setBpm } from "@/globalSlice";

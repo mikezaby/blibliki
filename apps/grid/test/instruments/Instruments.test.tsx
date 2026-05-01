@@ -23,7 +23,7 @@ const {
   instrumentFindMock: vi.fn(),
 }));
 
-vi.mock("@clerk/clerk-react", () => ({
+vi.mock("@clerk/react", () => ({
   useUser: () => ({ user: { id: "user-1" } }),
 }));
 

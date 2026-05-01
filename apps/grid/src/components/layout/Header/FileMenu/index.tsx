@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@blibliki/ui";
-import { useUser } from "@clerk/clerk-react";
+import { useUser } from "@clerk/react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Plus,

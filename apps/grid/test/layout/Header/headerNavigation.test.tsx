@@ -89,7 +89,7 @@ vi.mock("@tanstack/react-router", () => ({
   }),
 }));
 
-vi.mock("@clerk/clerk-react", () => ({
+vi.mock("@clerk/react", () => ({
   SignedIn: ({ children }: { children: ReactNode }) => <>{children}</>,
   SignedOut: () => null,
   UserButton: () => <div>User</div>,
