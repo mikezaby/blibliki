@@ -7,11 +7,11 @@ catalogs:
   node:
     "@types/node": 25.6.0
   web-audio:
-    "@types/audioworklet": 0.0.93
+    "@types/audioworklet": 0.0.99
     "node-web-audio-api": 1.0.9
   vite:
     vite: 7.3.1
-    "vite-tsconfig-paths": 6.0.5
+    "vite-tsconfig-paths": 6.1.1
   test:
     vitest: 4.1.5
   tailwindcss:
