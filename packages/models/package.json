@@ -27,13 +27,13 @@
   },
   "devDependencies": {
     "@types/audioworklet": "catalog:web-audio",
-    "@types/node": "25.1.0"
+    "@types/node": "catalog:node"
   },
   "dependencies": {
     "@blibliki/engine": "workspace:^",
     "@blibliki/instrument": "workspace:^",
     "@blibliki/utils": "workspace:^",
-    "es-toolkit": "1.44.0",
-    "firebase": "12.8.0"
+    "es-toolkit": "catalog:utils",
+    "firebase": "12.12.1"
   }
 }
