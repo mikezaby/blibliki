@@ -128,7 +128,7 @@ describe("createInstrumentControllerSession", () => {
             throw new Error(`Module ${id} not found`);
           }
 
-          return module as never;
+          return module;
         },
         state: TransportState.stopped,
         start: () => Promise.resolve(),
@@ -198,7 +198,7 @@ describe("createInstrumentControllerSession", () => {
     );
 
     const sourceModule = modules.get("track-1.source.main");
-    if (!sourceModule || sourceModule.moduleType !== ModuleType.Oscillator) {
+    if (sourceModule?.moduleType !== ModuleType.Oscillator) {
       throw new Error(
         "Expected the seeded runtime to expose source oscillator",
       );
@@ -462,8 +462,7 @@ describe("createInstrumentControllerSession", () => {
 
     const stepSequencerModule = modules.get("track-1.runtime.stepSequencer");
     if (
-      !stepSequencerModule ||
-      stepSequencerModule.moduleType !== ModuleType.StepSequencer
+      stepSequencerModule?.moduleType !== ModuleType.StepSequencer
     ) {
       throw new Error("Expected live step sequencer module");
     }
@@ -626,8 +625,7 @@ describe("createInstrumentControllerSession", () => {
 
     const stepSequencerModule = modules.get("track-1.runtime.stepSequencer");
     if (
-      !stepSequencerModule ||
-      stepSequencerModule.moduleType !== ModuleType.StepSequencer
+      stepSequencerModule?.moduleType !== ModuleType.StepSequencer
     ) {
       throw new Error("Expected live step sequencer module");
     }
@@ -731,8 +729,7 @@ describe("createInstrumentControllerSession", () => {
 
     const stepSequencerModule = modules.get("track-1.runtime.stepSequencer");
     if (
-      !stepSequencerModule ||
-      stepSequencerModule.moduleType !== ModuleType.StepSequencer
+      stepSequencerModule?.moduleType !== ModuleType.StepSequencer
     ) {
       throw new Error("Expected live step sequencer module");
     }
@@ -981,7 +978,7 @@ describe("createInstrumentControllerSession", () => {
             throw new Error(`Module ${id} not found`);
           }
 
-          return module as never;
+          return module;
         },
         state: TransportState.stopped,
         start: () => Promise.resolve(),

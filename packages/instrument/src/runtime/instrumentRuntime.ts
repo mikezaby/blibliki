@@ -112,7 +112,7 @@ function getMidiMapperActiveTrackIndex(
     (module) => module.id === runtimePatch.runtime.midiMapperId,
   );
 
-  if (!midiMapper || midiMapper.moduleType !== ModuleType.MidiMapper) {
+  if (midiMapper?.moduleType !== ModuleType.MidiMapper) {
     return 0;
   }
 
@@ -201,7 +201,7 @@ export function createInstrumentRuntimeState(
     },
     patch: {
       bpm: runtimePatch.patch.bpm,
-      timeSignature: runtimePatch.patch.timeSignature as [number, number],
+      timeSignature: runtimePatch.patch.timeSignature,
       transportState: TransportState.stopped,
       runtime: runtimePatch.runtime,
     },
@@ -242,8 +242,7 @@ export function updateInstrumentRuntimeNavigation(
 
   const midiMapperModule = runtimePatch.patch.modules[midiMapperModuleIndex];
   if (
-    !midiMapperModule ||
-    midiMapperModule.moduleType !== ModuleType.MidiMapper
+    midiMapperModule?.moduleType !== ModuleType.MidiMapper
   ) {
     throw new Error("Instrument runtime midi mapper module is invalid");
   }

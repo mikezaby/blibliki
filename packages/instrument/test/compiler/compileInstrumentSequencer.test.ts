@@ -148,7 +148,7 @@ describe("createInstrumentEnginePatch noteSource", () => {
           })),
         ],
       },
-    } as typeof firstTrack;
+    };
 
     const runtime = createInstrumentEnginePatch(document);
     const stepSequencer = runtime.patch.modules.find(
@@ -156,8 +156,7 @@ describe("createInstrumentEnginePatch noteSource", () => {
     );
 
     if (
-      !stepSequencer ||
-      stepSequencer.moduleType !== ModuleType.StepSequencer
+      stepSequencer?.moduleType !== ModuleType.StepSequencer
     ) {
       throw new Error("Expected compiled step sequencer module");
     }

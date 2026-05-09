@@ -32,7 +32,7 @@ class WebMidiInputPort implements IMidiInputPort {
   }
 
   get state(): "connected" | "disconnected" {
-    return this.input.state as "connected" | "disconnected";
+    return this.input.state;
   }
 
   addEventListener(callback: MidiMessageCallback): void {
@@ -84,7 +84,7 @@ class WebMidiOutputPort implements IMidiOutputPort {
   }
 
   get state(): "connected" | "disconnected" {
-    return this.output.state as "connected" | "disconnected";
+    return this.output.state;
   }
 
   send(data: number[] | Uint8Array, timestamp?: number): void {
@@ -130,8 +130,8 @@ class WebMidiAccess implements IMidiAccess {
       const midiPort: IMidiPort = {
         id: port.id,
         name: port.name ?? `Device ${port.id}`,
-        state: port.state as "connected" | "disconnected",
-        type: port.type as "input" | "output",
+        state: port.state,
+        type: port.type,
       };
 
       if (port.type === "input") {

@@ -26,7 +26,7 @@ export type CreateUdpOscDisplayTransportOptions = {
 };
 
 function createSocket(): UdpOscDisplayTransportSocket {
-  return createDgramSocket("udp4") as UdpOscDisplayTransportSocket;
+  return createDgramSocket("udp4");
 }
 
 export function createUdpOscDisplayTransport({

@@ -135,7 +135,7 @@ function getSelectedMidiName(
   const module = runtimePatch.patch.modules.find(
     (candidate) => candidate.id === moduleId,
   );
-  if (!module || module.moduleType !== ModuleType.MidiInput) {
+  if (module?.moduleType !== ModuleType.MidiInput) {
     return;
   }
 
@@ -149,7 +149,7 @@ function getMidiMapperProps(runtimePatch: CompiledInstrumentEnginePatch) {
   const midiMapper = runtimePatch.patch.modules.find(
     (module) => module.id === runtimePatch.runtime.midiMapperId,
   );
-  if (!midiMapper || midiMapper.moduleType !== ModuleType.MidiMapper) {
+  if (midiMapper?.moduleType !== ModuleType.MidiMapper) {
     throw new Error(
       "Instrument runtime patch is missing the midi mapper module",
     );

@@ -5,12 +5,14 @@ type ModalProps = {
   isOpen: boolean;
 };
 
+const initialState: ModalProps = {
+  modalName: null,
+  isOpen: false,
+};
+
 export const modalSlice = createSlice({
   name: "modal",
-  initialState: {
-    modalName: null,
-    isOpen: false,
-  } as ModalProps,
+  initialState,
   reducers: {
     open: (state, action: PayloadAction<string>) => {
       state.modalName = action.payload;

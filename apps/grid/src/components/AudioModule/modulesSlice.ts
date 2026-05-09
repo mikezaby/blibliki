@@ -208,7 +208,7 @@ const pickRequestedModuleChanges = (
   const filteredChangesRecord = filteredChanges as Record<string, unknown>;
 
   (["name", "props", "voices"] as const).forEach((key) => {
-    if (!hasOwn(requestedChanges as object, key)) return;
+    if (!hasOwn(requestedChanges, key)) return;
     if (!hasOwn(serializedModuleRecord, key)) return;
     filteredChangesRecord[key] = serializedModuleRecord[key];
   });
@@ -234,7 +234,7 @@ export const updatePlainModule =
       dispatch(
         updateModuleProps({
           id,
-          changes: { props: props as ModuleSerializedProps },
+          changes: { props: props },
         }),
       );
     }

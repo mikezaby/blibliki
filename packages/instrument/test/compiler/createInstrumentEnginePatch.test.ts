@@ -214,7 +214,7 @@ describe("createInstrumentEnginePatch", () => {
       (module) => module.id === runtime.runtime.midiMapperId,
     );
     expect(midiMapper).toBeDefined();
-    if (!midiMapper || midiMapper.moduleType !== ModuleType.MidiMapper) {
+    if (midiMapper?.moduleType !== ModuleType.MidiMapper) {
       throw new Error("Expected instrument midi mapper module");
     }
 
@@ -392,7 +392,7 @@ describe("createInstrumentEnginePatch", () => {
       (module) => module.id === runtime.runtime.midiMapperId,
     );
     expect(midiMapper).toBeDefined();
-    if (!midiMapper || midiMapper.moduleType !== ModuleType.MidiMapper) {
+    if (midiMapper?.moduleType !== ModuleType.MidiMapper) {
       throw new Error("Expected instrument midi mapper module");
     }
 
@@ -491,8 +491,6 @@ describe("createInstrumentEnginePatch", () => {
         "lfo1.sync": true,
         "fx1.drive": 0.72,
       },
-    } as typeof firstTrack & {
-      controllerSlotValues: Record<string, string | number | boolean>;
     };
 
     const runtime = createInstrumentEnginePatch(document);

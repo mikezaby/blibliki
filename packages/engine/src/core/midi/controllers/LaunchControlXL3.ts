@@ -164,7 +164,7 @@ export class LaunchControlXL3 extends BaseController {
   protected onMidiEvent = (event: MidiEvent) => {
     if (event.cc === undefined || event.ccValue === undefined) return;
 
-    switch (event.cc as Control) {
+    switch (event.cc) {
       case Control.Play: {
         if (event.ccValue === 127) {
           this.toggle();

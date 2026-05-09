@@ -59,7 +59,7 @@ function getModuleProps(
 
   const module = patch.modules.find((candidate) => candidate.id === moduleId);
 
-  return module?.props as Record<string, unknown> | undefined;
+  return module?.props;
 }
 
 function createSavedGlobalBlock(

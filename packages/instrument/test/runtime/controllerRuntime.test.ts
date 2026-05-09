@@ -46,7 +46,7 @@ describe("reduceInstrumentControllerEvent", () => {
     const midiMapper = result.runtimePatch.patch.modules.find(
       (module) => module.id === result.runtimePatch.runtime.midiMapperId,
     );
-    if (!midiMapper || midiMapper.moduleType !== ModuleType.MidiMapper) {
+    if (midiMapper?.moduleType !== ModuleType.MidiMapper) {
       throw new Error("Expected instrument midi mapper module");
     }
 

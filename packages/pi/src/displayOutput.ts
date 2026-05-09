@@ -10,7 +10,6 @@ import {
   createOscDisplayPublisher,
   type CreateOscDisplayPublisherOptions,
   type OscDisplayPublisher,
-  type OscDisplayPublisherTransport,
 } from "@/oscDisplayPublisher";
 import {
   createTerminalDisplaySession,
@@ -91,7 +90,7 @@ function createOscDisplayOutput(
   );
   const transport = dependencies.createUdpOscDisplayTransport({
     controlPort,
-  }) as OscDisplayPublisherTransport;
+  });
   const publisher = dependencies.createOscDisplayPublisher({
     transport,
     host,

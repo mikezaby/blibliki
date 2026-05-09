@@ -78,7 +78,7 @@ async function saveLoadedInstrumentDocument(
     throw new Error("Remote instrument save is unavailable");
   }
 
-  instrument.document = document as Record<string, unknown>;
+  instrument.document = document;
   await instrument.save();
 }
 

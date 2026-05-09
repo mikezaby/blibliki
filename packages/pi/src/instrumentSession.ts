@@ -199,7 +199,7 @@ export function createInstrumentSession(
 async function loadEngine(
   patch: InstrumentSession["patch"],
 ): Promise<InstrumentSessionEngine> {
-  return (await Engine.load(patch)) as InstrumentSessionEngine;
+  return (await Engine.load(patch));
 }
 
 export async function startInstrumentSession(

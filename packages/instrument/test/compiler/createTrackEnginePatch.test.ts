@@ -220,7 +220,7 @@ describe("createTrackEnginePatch", () => {
       (module) => module.id === runtime.runtime.midiMapperId,
     );
     expect(midiMapper).toBeDefined();
-    if (!midiMapper || midiMapper.moduleType !== ModuleType.MidiMapper) {
+    if (midiMapper?.moduleType !== ModuleType.MidiMapper) {
       throw new Error("Expected Track Midi Mapper module");
     }
 

@@ -32,7 +32,7 @@ export function createOscListener(
 ): OscListener {
   const socket = (
     dependencies.createSocket ??
-    (() => createSocket("udp4") as OscListenerSocket)
+    (() => createSocket("udp4"))
   )();
   let started = false;
 

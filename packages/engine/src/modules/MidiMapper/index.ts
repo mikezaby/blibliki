@@ -58,9 +58,9 @@ export const midiMapperPropSchema: ModulePropSchema<IMidiMapperProps> = {
 };
 
 const DEFAULT_PROPS: IMidiMapperProps = {
-  tracks: [{ name: "Track 1", mappings: [{} as MidiMapping<ModuleType>] }],
+  tracks: [{ name: "Track 1", mappings: [{}] }],
   activeTrack: 0,
-  globalMappings: [{} as MidiMapping<ModuleType>],
+  globalMappings: [{}],
 };
 
 const DEFAULT_RELATIVE_THRESHOLD = 64;

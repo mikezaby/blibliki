@@ -73,7 +73,7 @@ describe("createSavedInstrumentDocument", () => {
       "drive",
     );
 
-    if (!driveSlot || driveSlot.kind !== "slot") {
+    if (driveSlot?.kind !== "slot") {
       throw new Error("Expected an fx1.drive controller slot");
     }
 

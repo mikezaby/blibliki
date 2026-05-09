@@ -9,7 +9,7 @@ describe("loadSlintRuntime", () => {
 
     await expect(
       loadSlintRuntime(() => Promise.resolve(runtime as never)),
-    ).resolves.toBe(runtime as never);
+    ).resolves.toBe(runtime);
   });
 
   it("wraps known native library failures with a clearer macOS hint", async () => {

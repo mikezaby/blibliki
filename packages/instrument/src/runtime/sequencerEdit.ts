@@ -160,7 +160,7 @@ function getStepSequencerProps(
   const module = runtimePatch.patch.modules.find(
     (candidate) => candidate.id === moduleId,
   );
-  if (!module || module.moduleType !== ModuleType.StepSequencer) {
+  if (module?.moduleType !== ModuleType.StepSequencer) {
     return null;
   }
 
@@ -194,7 +194,7 @@ function updateRuntimePatchStepSequencerProps(
   const module = runtimePatch.patch.modules.find(
     (candidate) => candidate.id === moduleId,
   );
-  if (!module || module.moduleType !== ModuleType.StepSequencer) {
+  if (module?.moduleType !== ModuleType.StepSequencer) {
     throw new Error("Active track is missing a step sequencer module");
   }
 

@@ -67,7 +67,7 @@ describe("display protocol fixtures", () => {
     expect(
       readDebugFixtureTargetClass({
         BLIBLIKI_DEBUG_TARGET_CLASS: "compact-standard",
-      } as NodeJS.ProcessEnv),
+      }),
     ).toBe("compact-standard");
   });
 

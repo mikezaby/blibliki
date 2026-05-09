@@ -156,7 +156,7 @@ function applyGridNodeChanges<NodeType extends Node>(
       case "select":
         nextNodes = nextNodes.map((node) =>
           node.id === change.id
-            ? ({ ...node, selected: change.selected } as NodeType)
+            ? ({ ...node, selected: change.selected })
             : node,
         );
         break;
@@ -167,7 +167,7 @@ function applyGridNodeChanges<NodeType extends Node>(
                 ...node,
                 position: change.position ?? node.position,
                 dragging: change.dragging ?? node.dragging,
-              } as NodeType)
+              })
             : node,
         );
         break;
@@ -198,7 +198,7 @@ function applyGridNodeChanges<NodeType extends Node>(
             nextNode.height = change.dimensions?.height ?? node.height;
           }
 
-          return nextNode as NodeType;
+          return nextNode;
         });
         break;
     }
@@ -229,7 +229,7 @@ function applyGridEdgeChanges<EdgeType extends Edge>(
       case "select":
         nextEdges = nextEdges.map((edge) =>
           edge.id === change.id
-            ? ({ ...edge, selected: change.selected } as EdgeType)
+            ? ({ ...edge, selected: change.selected })
             : edge,
         );
         break;
