@@ -1,6 +1,13 @@
 packages:
   - packages/*
   - apps/*
+allowBuilds:
+  '@clerk/shared': set this to true or false
+  '@firebase/util': set this to true or false
+  '@julusian/midi': set this to true or false
+  esbuild: set this to true or false
+  protobufjs: set this to true or false
+  slint-ui: set this to true or false
 catalogs:
   utils:
     "es-toolkit": 1.46.1
