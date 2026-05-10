@@ -241,9 +241,7 @@ export function updateInstrumentRuntimeNavigation(
   }
 
   const midiMapperModule = runtimePatch.patch.modules[midiMapperModuleIndex];
-  if (
-    midiMapperModule?.moduleType !== ModuleType.MidiMapper
-  ) {
+  if (midiMapperModule?.moduleType !== ModuleType.MidiMapper) {
     throw new Error("Instrument runtime midi mapper module is invalid");
   }
 

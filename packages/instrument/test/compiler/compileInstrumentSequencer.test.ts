@@ -155,9 +155,7 @@ describe("createInstrumentEnginePatch noteSource", () => {
       (module) => module.id === "track-1.runtime.stepSequencer",
     );
 
-    if (
-      stepSequencer?.moduleType !== ModuleType.StepSequencer
-    ) {
+    if (stepSequencer?.moduleType !== ModuleType.StepSequencer) {
       throw new Error("Expected compiled step sequencer module");
     }
 

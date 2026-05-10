@@ -155,19 +155,17 @@ function applyGridNodeChanges<NodeType extends Node>(
         break;
       case "select":
         nextNodes = nextNodes.map((node) =>
-          node.id === change.id
-            ? ({ ...node, selected: change.selected })
-            : node,
+          node.id === change.id ? { ...node, selected: change.selected } : node,
         );
         break;
       case "position":
         nextNodes = nextNodes.map((node) =>
           node.id === change.id
-            ? ({
+            ? {
                 ...node,
                 position: change.position ?? node.position,
                 dragging: change.dragging ?? node.dragging,
-              })
+              }
             : node,
         );
         break;
@@ -228,9 +226,7 @@ function applyGridEdgeChanges<EdgeType extends Edge>(
         break;
       case "select":
         nextEdges = nextEdges.map((edge) =>
-          edge.id === change.id
-            ? ({ ...edge, selected: change.selected })
-            : edge,
+          edge.id === change.id ? { ...edge, selected: change.selected } : edge,
         );
         break;
     }

@@ -461,9 +461,7 @@ describe("createInstrumentControllerSession", () => {
     expect(stepSequencerUpdate?.id).toBe("track-1.runtime.stepSequencer");
 
     const stepSequencerModule = modules.get("track-1.runtime.stepSequencer");
-    if (
-      stepSequencerModule?.moduleType !== ModuleType.StepSequencer
-    ) {
+    if (stepSequencerModule?.moduleType !== ModuleType.StepSequencer) {
       throw new Error("Expected live step sequencer module");
     }
 
@@ -624,9 +622,7 @@ describe("createInstrumentControllerSession", () => {
     inputDevice.emit(MidiEvent.fromCC(22, 74, 0));
 
     const stepSequencerModule = modules.get("track-1.runtime.stepSequencer");
-    if (
-      stepSequencerModule?.moduleType !== ModuleType.StepSequencer
-    ) {
+    if (stepSequencerModule?.moduleType !== ModuleType.StepSequencer) {
       throw new Error("Expected live step sequencer module");
     }
 
@@ -728,9 +724,7 @@ describe("createInstrumentControllerSession", () => {
     inputDevice.emit(MidiEvent.fromCC(29, 0, 0));
 
     const stepSequencerModule = modules.get("track-1.runtime.stepSequencer");
-    if (
-      stepSequencerModule?.moduleType !== ModuleType.StepSequencer
-    ) {
+    if (stepSequencerModule?.moduleType !== ModuleType.StepSequencer) {
       throw new Error("Expected live step sequencer module");
     }
 

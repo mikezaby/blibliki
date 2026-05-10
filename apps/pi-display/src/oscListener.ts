@@ -30,10 +30,7 @@ export function createOscListener(
   logger: DisplayLogger,
   dependencies: OscListenerDependencies = {},
 ): OscListener {
-  const socket = (
-    dependencies.createSocket ??
-    (() => createSocket("udp4"))
-  )();
+  const socket = (dependencies.createSocket ?? (() => createSocket("udp4")))();
   let started = false;
 
   return {
