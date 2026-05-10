@@ -24,13 +24,13 @@
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@trivago/prettier-plugin-sort-imports": "6.0.2",
-    "eslint": "10.2.1",
+    "eslint": "10.3.0",
     "eslint-plugin-react-hooks": "7.1.1",
-    "eslint-plugin-react-refresh": "^0.4.26",
+    "eslint-plugin-react-refresh": "0.5.2",
     "prettier": "3.8.3",
-    "tsdown": "0.21.10",
+    "tsdown": "0.22.0",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.59.1"
+    "typescript-eslint": "8.59.2"
   },
   "dependencies": {
     "tsx": "^4.21.0"
