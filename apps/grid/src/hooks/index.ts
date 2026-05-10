@@ -77,7 +77,14 @@ export function usePatches(): IPatch[] {
   return patches;
 }
 
-export function useInstruments(): IInstrument[] {
+export type UseInstrumentsResult = {
+  instruments: IInstrument[];
+  addInstrument: (instrument: Instrument) => Promise<IInstrument>;
+  updateInstrument: (instrument: Instrument) => Promise<IInstrument>;
+  deleteInstrument: (instrumentId: string) => Promise<void>;
+};
+
+export function useInstruments(): UseInstrumentsResult {
   const [instruments, setInstruments] = useState<IInstrument[]>([]);
 
   useEffect(() => {
@@ -86,7 +93,61 @@ export function useInstruments(): IInstrument[] {
     });
   }, []);
 
-  return instruments;
+  const addInstrument = useCallback(async (instrument: Instrument) => {
+    await instrument.save();
+    const serializedInstrument = instrument.serialize();
+
+    setInstruments((current) => [...current, serializedInstrument]);
+
+    return serializedInstrument;
+  }, []);
+
+  const updateInstrument = useCallback(async (instrument: Instrument) => {
+    await instrument.save();
+    const serializedInstrument = instrument.serialize();
+
+    setInstruments((current) => {
+      const existingIndex = current.findIndex(
+        ({ id }) => id === serializedInstrument.id,
+      );
+
+      if (existingIndex === -1) {
+        return [...current, serializedInstrument];
+      }
+
+      return current.map((currentInstrument) =>
+        currentInstrument.id === serializedInstrument.id
+          ? serializedInstrument
+          : currentInstrument,
+      );
+    });
+
+    return serializedInstrument;
+  }, []);
+
+  const deleteInstrument = useCallback(
+    async (instrumentId: string) => {
+      const instrument = instruments.find(({ id }) => id === instrumentId);
+
+      if (!instrument) {
+        return;
+      }
+
+      await new Instrument(instrument).delete();
+
+      setInstruments((current) =>
+        current.filter(({ id }) => id !== instrumentId),
+      );
+    },
+    [instruments],
+  );
+
+  return {
+    instruments,
+    addInstrument,
+    updateInstrument,
+    deleteInstrument,
+  };
 }
 
 export function usePatch() {

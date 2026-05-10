@@ -42,7 +42,7 @@ function DeviceForm({ device, isNew, deviceId, onClose }: DeviceFormProps) {
   const dispatch = useAppDispatch();
   const { user } = useUser();
   const patches = usePatches();
-  const instruments = useInstruments();
+  const { instruments } = useInstruments();
   const deploymentTarget = normalizeDeviceDeploymentTarget(device ?? {});
 
   const [formData, setFormData] = useState({

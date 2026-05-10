@@ -1,4 +1,10 @@
-import dagre from "@dagrejs/dagre";
+import {
+  Graph,
+  layout,
+  type EdgeLabel,
+  type GraphLabel,
+  type NodeLabel,
+} from "@dagrejs/dagre";
 import type { Edge, Node } from "@xyflow/react";
 
 const DEFAULT_NODE_WIDTH = 280;
@@ -19,7 +25,7 @@ export function layoutDebugNodes(
   nodes: readonly Node[],
   edges: readonly Edge[],
 ) {
-  const graph = new dagre.graphlib.Graph();
+  const graph = new Graph<GraphLabel, NodeLabel, EdgeLabel>();
   graph.setDefaultEdgeLabel(() => ({}));
   graph.setGraph({
     rankdir: "LR",
@@ -47,7 +53,7 @@ export function layoutDebugNodes(
     }
   }
 
-  dagre.layout(graph);
+  layout(graph);
 
   return nodes.map((node) => {
     const graphNode = graph.node(node.id) as

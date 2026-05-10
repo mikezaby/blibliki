@@ -1,4 +1,4 @@
-import { Instrument, type IInstrument } from "@blibliki/models";
+import type { IInstrument } from "@blibliki/models";
 import {
   Badge,
   Button,
@@ -20,7 +20,7 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAppDispatch, useInstruments } from "@/hooks";
 import { createNewInstrumentForUser } from "@/instruments/createInstrument";
 import type { InstrumentDocument } from "@/instruments/document";
@@ -38,18 +38,11 @@ export default function Instruments() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { user } = useUser();
-  const instruments = useInstruments();
+  const { instruments, addInstrument, deleteInstrument } = useInstruments();
   const [creating, setCreating] = useState(false);
-  const [visibleInstruments, setVisibleInstruments] = useState<IInstrument[]>(
-    [],
-  );
   const [deletingInstrumentId, setDeletingInstrumentId] = useState<
     string | null
   >(null);
-
-  useEffect(() => {
-    setVisibleInstruments(instruments);
-  }, [instruments]);
 
   const handleCreate = async () => {
     if (!user?.id || creating) {
@@ -60,7 +53,7 @@ export default function Instruments() {
 
     try {
       const instrument = createNewInstrumentForUser(user.id);
-      await instrument.save();
+      const savedInstrument = await addInstrument(instrument);
 
       dispatch(
         addNotification({
@@ -73,7 +66,7 @@ export default function Instruments() {
 
       await navigate({
         to: "/instrument/$instrumentId",
-        params: { instrumentId: instrument.id },
+        params: { instrumentId: savedInstrument.id },
         search: { mode: undefined },
       });
     } catch (error) {
@@ -108,12 +101,7 @@ export default function Instruments() {
     setDeletingInstrumentId(instrument.id);
 
     try {
-      const instrumentRecord = await Instrument.find(instrument.id);
-      await instrumentRecord.delete();
-
-      setVisibleInstruments((current) =>
-        current.filter(({ id }) => id !== instrument.id),
-      );
+      await deleteInstrument(instrument.id);
 
       dispatch(
         addNotification({
@@ -165,7 +153,7 @@ export default function Instruments() {
           </Button>
         </Stack>
 
-        {visibleInstruments.length === 0 ? (
+        {instruments.length === 0 ? (
           <Card className="border-2 border-dashed">
             <CardContent className="py-16">
               <Stack align="center" justify="center" gap={4}>
@@ -188,7 +176,7 @@ export default function Instruments() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {visibleInstruments.map((instrument) => {
+            {instruments.map((instrument) => {
               const document = instrument.document as InstrumentDocument;
               const canDelete = instrument.userId === user?.id;
               const isDeleting = deletingInstrumentId === instrument.id;

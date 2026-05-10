@@ -82,7 +82,7 @@ vi.mock("@blibliki/models", () => ({
     async save() {}
 
     async delete() {
-      await instrumentDeleteMock();
+      await instrumentDeleteMock(this.id);
     }
 
     serialize() {
@@ -131,11 +131,6 @@ describe("Instruments", () => {
         }),
       },
     ]);
-    instrumentFindMock.mockResolvedValue({
-      id: "instrument-1",
-      name: "Bass Rig",
-      delete: instrumentDeleteMock.mockResolvedValue(undefined),
-    });
     vi.spyOn(window, "confirm").mockReturnValue(true);
 
     render(
@@ -149,10 +144,9 @@ describe("Instruments", () => {
     fireEvent.click(screen.getByRole("button", { name: "Delete Bass Rig" }));
 
     await waitFor(() => {
-      expect(instrumentFindMock).toHaveBeenCalledWith("instrument-1");
+      expect(instrumentDeleteMock).toHaveBeenCalledWith("instrument-1");
     });
 
-    expect(instrumentDeleteMock).toHaveBeenCalledTimes(1);
     expect(screen.queryByText("Bass Rig")).toBeNull();
   });
 });

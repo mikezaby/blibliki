@@ -25,7 +25,7 @@ import {
 } from "@blibliki/ui";
 import { Link } from "@tanstack/react-router";
 import { Save } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useAppDispatch } from "@/hooks";
 import type {
   EffectProfileId,
@@ -218,28 +218,24 @@ type InstrumentEditorProps = {
 export default function InstrumentEditor({
   instrument,
 }: InstrumentEditorProps) {
+  return <InstrumentEditorForm key={instrument.id} instrument={instrument} />;
+}
+
+function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
   const dispatch = useAppDispatch();
-  const [name, setName] = useState(instrument.name);
-  const [document, setDocument] = useState<InstrumentDocument>(() =>
-    cloneInstrumentDocument(instrument.document as InstrumentDocument),
+  const initialDocument = useMemo(
+    () => cloneInstrumentDocument(instrument.document as InstrumentDocument),
+    [instrument],
   );
+  const [name, setName] = useState(instrument.name);
+  const [document, setDocument] = useState<InstrumentDocument>(initialDocument);
   const [activeTrackIndex, setActiveTrackIndex] = useState(0);
   const [activePageIndex, setActivePageIndex] = useState(0);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
-  const [stepNotesInput, setStepNotesInput] = useState("");
+  const [stepNotesInput, setStepNotesInput] = useState(() =>
+    formatSelectedStepNotes(initialDocument, 0, 0, 0),
+  );
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    const nextDocument = cloneInstrumentDocument(
-      instrument.document as InstrumentDocument,
-    );
-    setName(instrument.name);
-    setDocument(nextDocument);
-    setActiveTrackIndex(0);
-    setActivePageIndex(0);
-    setActiveStepIndex(0);
-    setStepNotesInput(formatSelectedStepNotes(nextDocument, 0, 0, 0));
-  }, [instrument]);
 
   const activeTrack = document.tracks[activeTrackIndex] ?? document.tracks[0];
   const activePage =
