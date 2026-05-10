@@ -67,7 +67,7 @@ export const lfoProcessorURL = URL.createObjectURL(
               const currentPhase = (this.phase + phaseOffset) % 1.0;
 
               // Generate sample based on waveform type
-              let sample = 0;
+              let sample: number;
               switch (waveformIdx) {
                 case 0: // Sine
                   sample = Math.sin(2 * Math.PI * currentPhase);

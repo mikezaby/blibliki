@@ -98,6 +98,8 @@ const RELATIVE_MODE_DISABLED = 0;
 const DAW_CONTROL_CHANNEL_STATUS = 0xb6;
 const ENCODER_CHANNEL_STATUS = 0xbf;
 const RELATIVE_ENCODER_OFFSET = 64;
+const PLAY_CC: number = Control.Play;
+const RECORD_CC: number = Control.Record;
 const RELATIVE_ENCODER_ROW_ENABLE_CCS = [69, 72, 73] as const;
 
 const VALUE_COLOR_RAMP = [
@@ -165,13 +167,13 @@ export class LaunchControlXL3 extends BaseController {
     if (event.cc === undefined || event.ccValue === undefined) return;
 
     switch (event.cc) {
-      case Control.Play: {
+      case PLAY_CC: {
         if (event.ccValue === 127) {
           this.toggle();
         }
         break;
       }
-      case Control.Record:
+      case RECORD_CC:
         break;
       default:
         this.setColor(event.cc, this.getColor(event.cc, event.ccValue));
