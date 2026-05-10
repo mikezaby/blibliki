@@ -22,7 +22,6 @@ export async function loadSlintRuntime(
       throw error;
     }
 
-    const reason = error instanceof Error ? error.message : String(error);
-    throw new Error(`${MACOS_GETTEXT_HINT} Original error: ${reason}`);
+    throw new Error(MACOS_GETTEXT_HINT, { cause: error });
   }
 }

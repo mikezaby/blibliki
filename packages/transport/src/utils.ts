@@ -94,7 +94,7 @@ export function swing(time: Ticks, amount: NormalRange): Ticks {
     Using the lerp/unlerp functions here makes it clear what's going on,
     though, so we'll keep them for now.
   */
-  let tn = 0;
+  let tn;
   if (t <= 0.5) {
     tn = lerp(unlerp(t, 0.0, 0.5), 0.0, amount);
   } else {
