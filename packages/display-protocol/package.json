@@ -16,7 +16,8 @@
   ],
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch",
+    "clean:dist": "rm -rf ./dist",
+    "dev": "tsdown --watch --no-clean",
     "debug:dump": "tsx src/bin/dumpOsc.ts",
     "debug:send-band": "tsx src/bin/sendBandFixture.ts",
     "debug:send-full": "tsx src/bin/sendFullFixture.ts",

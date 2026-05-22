@@ -7,6 +7,7 @@
     "generate:firebase-config": "node scripts/generate-firebase-config.js",
     "dev": "pnpm run generate:firebase-config && vite dev --port 4000",
     "build": "pnpm run generate:firebase-config && vite build",
+    "clean:dist": "rm -rf ./dist",
     "preview": "vite preview",
     "test": "vitest run",
     "test:ui": "vitest run test/ui",

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc --noEmit",
+    "clean:dist": "rm -rf ./dist",
     "dev": "tsx src/dev.ts",
     "start": "NODE_ENV=production tsx src/main.ts",
     "test": "vitest",

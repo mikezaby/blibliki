@@ -19,7 +19,8 @@
   ],
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch",
+    "clean:dist": "rm -rf ./dist",
+    "dev": "tsdown --watch --no-clean",
     "start": "NODE_ENV=development tsx src/cli.ts",
     "lint": "eslint src test",
     "test": "vitest",

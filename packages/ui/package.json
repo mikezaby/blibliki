@@ -24,7 +24,8 @@
   ],
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch",
+    "clean:dist": "rm -rf ./dist",
+    "dev": "tsdown --watch --no-clean",
     "lint:palette": "node scripts/check-css-palette.mjs",
     "lint": "pnpm run lint:palette && eslint src",
     "tsc": "tsc --noEmit",
