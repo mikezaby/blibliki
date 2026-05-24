@@ -1,3 +1,4 @@
+import type { MidiEvent } from "@blibliki/engine";
 import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
 import type { InstrumentDisplayState } from "@/display/InstrumentDisplayState";
 import { createLaunchControlXL3SequencerDisplayState } from "./LaunchControlXL3SequencerDisplay";
@@ -15,6 +16,9 @@ export type {
   LaunchControlXL3SequencerEditEngine,
   LaunchControlXL3SequencerEditUpdate,
 };
+
+export type SeqEditUpdate = LaunchControlXL3SequencerEditUpdate;
+export type SeqEditStepLedSyncEngine = LaunchControlXL3SequencerEditEngine;
 
 export class LaunchControlXL3SequencerEdit {
   syncStepButtonLeds(
@@ -51,3 +55,34 @@ export class LaunchControlXL3SequencerEdit {
 
 export const launchControlXL3SequencerEdit =
   new LaunchControlXL3SequencerEdit();
+
+export function syncSeqEditStepButtonLeds(
+  engine: SeqEditStepLedSyncEngine,
+  runtimePatch: CompiledInstrumentEnginePatch,
+) {
+  launchControlXL3SequencerEdit.syncStepButtonLeds(engine, runtimePatch);
+}
+
+export function createSeqEditDisplayState(
+  runtimePatch: CompiledInstrumentEnginePatch,
+) {
+  return launchControlXL3SequencerEdit.createDisplayState(runtimePatch);
+}
+
+export function createSeqEditPageSync(
+  runtimePatch: CompiledInstrumentEnginePatch,
+) {
+  return launchControlXL3SequencerEdit.createPageSync(runtimePatch);
+}
+
+export function applySeqEditEncoderEvent(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  cc: NonNullable<MidiEvent["cc"]>,
+  ccValue: NonNullable<MidiEvent["ccValue"]>,
+) {
+  return launchControlXL3SequencerEdit.applyEncoderEvent(
+    runtimePatch,
+    cc,
+    ccValue,
+  );
+}

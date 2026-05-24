@@ -103,7 +103,10 @@ export type {
   CreateInstrumentRuntimeStateOptions,
   InstrumentRuntimeState,
 } from "./Instrument";
-export { InstrumentSession } from "./InstrumentSession";
+export {
+  createInstrumentControllerSession,
+  InstrumentSession,
+} from "./InstrumentSession";
 export type {
   CreateInstrumentControllerSessionOptions,
   InstrumentControllerEngine,
@@ -124,25 +127,26 @@ export {
   createInstrumentDisplayState as createRuntimeDisplayState,
   navigateInstrumentRuntime,
   updateInstrumentRuntimeNavigation,
-} from "./runtime/instrumentRuntime";
-export type { InstrumentNavigationAction } from "./runtime/instrumentRuntime";
-export { reduceInstrumentControllerEvent } from "./runtime/controllerRuntime";
-export type { InstrumentControllerResult } from "./runtime/controllerRuntime";
+} from "./InstrumentRuntime";
+export type { InstrumentNavigationAction } from "./InstrumentRuntime";
+export { reduceInstrumentControllerEvent } from "./InstrumentControlSurface";
+export type { InstrumentControllerResult } from "./InstrumentControlSurface";
 export { createSavedInstrumentDocument } from "./document/SavedInstrumentDocument";
+export { LaunchControlXL3Surface } from "./surfaces/launchControlXL3/LaunchControlXL3Surface";
+export type { LaunchControlXL3Result } from "./surfaces/launchControlXL3/LaunchControlXL3Surface";
 export {
   applySeqEditEncoderEvent,
   createSeqEditDisplayState,
   createSeqEditPageSync,
+  LaunchControlXL3SequencerEdit,
   syncSeqEditStepButtonLeds,
-} from "./runtime/sequencerEdit";
-export { LaunchControlXL3Surface } from "./surfaces/launchControlXL3/LaunchControlXL3Surface";
-export type { LaunchControlXL3Result } from "./surfaces/launchControlXL3/LaunchControlXL3Surface";
-export { LaunchControlXL3SequencerEdit } from "./surfaces/launchControlXL3/LaunchControlXL3SequencerEdit";
+} from "./surfaces/launchControlXL3/LaunchControlXL3SequencerEdit";
 export type {
   LaunchControlXL3SequencerEditEngine,
   LaunchControlXL3SequencerEditUpdate,
+  SeqEditStepLedSyncEngine,
+  SeqEditUpdate,
 } from "./surfaces/launchControlXL3/LaunchControlXL3SequencerEdit";
-export { createInstrumentControllerSession } from "./runtime/instrumentControllerSession";
 export { compileTrack } from "./compiler/compileTrack";
 export { compileInstrument } from "./compiler/compileInstrument";
 export {

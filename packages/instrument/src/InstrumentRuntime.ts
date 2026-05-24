@@ -7,6 +7,7 @@ import type {
   CompiledInstrumentEnginePatch,
   InstrumentNavigationState,
 } from "@/compiler/instrumentTypes";
+import type { InstrumentNavigationAction } from "@/core/InstrumentNavigation";
 import type { InstrumentDisplayState } from "@/display/InstrumentDisplayState";
 
 export type { InstrumentNavigationAction } from "@/core/InstrumentNavigation";
@@ -39,7 +40,7 @@ export function updateInstrumentRuntimeNavigation(
 
 export function navigateInstrumentRuntime(
   runtimePatch: CompiledInstrumentEnginePatch,
-  action: import("@/core/InstrumentNavigation").InstrumentNavigationAction,
+  action: InstrumentNavigationAction,
 ): CompiledInstrumentEnginePatch {
   return Instrument.fromRuntimePatch(runtimePatch)
     .navigate(action)
