@@ -11,16 +11,16 @@ import type {
   InstrumentNavigationState,
 } from "@/compiler/instrumentTypes";
 import type { CompiledLaunchControlXL3Page } from "@/compiler/types";
+import {
+  InstrumentNavigation,
+  type InstrumentNavigationAction,
+} from "@/core/InstrumentNavigation";
 import type { InstrumentGlobalBlock } from "@/document/types";
 import type { InstrumentDisplayState } from "@/runtime/displayState";
 import { createInstrumentDisplayState as createDisplayState } from "@/runtime/displayState";
 import type { TrackPageKey } from "@/types";
 
-export type InstrumentNavigationAction =
-  | "nextTrack"
-  | "previousTrack"
-  | "nextPage"
-  | "previousPage";
+export type { InstrumentNavigationAction } from "@/core/InstrumentNavigation";
 
 export type InstrumentRuntimeState = {
   document: {
@@ -47,64 +47,6 @@ type CreateInstrumentRuntimeStateOptions = {
   activePage?: TrackPageKey;
 };
 
-function isSequencerTrack(
-  runtimePatch: CompiledInstrumentEnginePatch,
-  activeTrackIndex: number,
-) {
-  return (
-    runtimePatch.compiledInstrument.tracks[activeTrackIndex]?.noteSource ===
-    "stepSequencer"
-  );
-}
-
-function clampStepIndex(stepIndex: number) {
-  return Math.max(0, Math.min(stepIndex, 15));
-}
-
-function wrapSequencerPageIndex(pageIndex: number) {
-  return wrapIndex(pageIndex, 4);
-}
-
-function getPageKeys(runtimePatch: CompiledInstrumentEnginePatch) {
-  const firstTrack = runtimePatch.compiledInstrument.tracks[0];
-  if (!firstTrack) {
-    throw new Error("Instrument has no tracks");
-  }
-
-  return firstTrack.compiledTrack.pages.map((page) => page.key);
-}
-
-function wrapIndex(nextIndex: number, length: number) {
-  return ((nextIndex % length) + length) % length;
-}
-
-function normalizeNavigation(
-  runtimePatch: CompiledInstrumentEnginePatch,
-  navigation: InstrumentNavigationState,
-): InstrumentNavigationState {
-  const activeTrackIndex = wrapIndex(
-    navigation.activeTrackIndex,
-    runtimePatch.compiledInstrument.tracks.length,
-  );
-  const pageKeys = getPageKeys(runtimePatch);
-  const activePage = pageKeys.includes(navigation.activePage)
-    ? navigation.activePage
-    : runtimePatch.runtime.navigation.activePage;
-  const sequencerTrack = isSequencerTrack(runtimePatch, activeTrackIndex);
-
-  return {
-    activeTrackIndex,
-    activePage,
-    mode:
-      sequencerTrack && navigation.mode === "seqEdit"
-        ? "seqEdit"
-        : "performance",
-    shiftPressed: navigation.shiftPressed,
-    sequencerPageIndex: wrapSequencerPageIndex(navigation.sequencerPageIndex),
-    selectedStepIndex: clampStepIndex(navigation.selectedStepIndex),
-  };
-}
-
 function getMidiMapperActiveTrackIndex(
   runtimePatch: CompiledInstrumentEnginePatch,
 ) {
@@ -119,55 +61,6 @@ function getMidiMapperActiveTrackIndex(
   return (midiMapper.props as IMidiMapperProps).activeTrack;
 }
 
-function resolveActivePage(
-  runtimePatch: CompiledInstrumentEnginePatch,
-  navigation: InstrumentNavigationState,
-): CompiledInstrumentLaunchControlXL3PageSummary {
-  const activePage =
-    runtimePatch.compiledInstrument.launchControlXL3.pages.find(
-      (page) =>
-        page.trackIndex === navigation.activeTrackIndex &&
-        page.pageKey === navigation.activePage,
-    ) ?? runtimePatch.compiledInstrument.launchControlXL3.pages[0];
-
-  if (!activePage) {
-    throw new Error("Instrument has no LaunchControlXL3 pages");
-  }
-
-  return activePage;
-}
-
-function resolveActiveTrack(
-  runtimePatch: CompiledInstrumentEnginePatch,
-  activeTrackIndex: number,
-) {
-  const activeTrack = runtimePatch.compiledInstrument.tracks[activeTrackIndex];
-
-  if (!activeTrack) {
-    throw new Error(`Track ${activeTrackIndex} not found in instrument`);
-  }
-
-  return activeTrack;
-}
-
-function resolveVisiblePage(
-  activeTrack: CompiledInstrumentTrack,
-  activePage: CompiledInstrumentLaunchControlXL3PageSummary,
-) {
-  const visiblePage =
-    activeTrack.compiledTrack.launchControlXL3.resolvedPages.find(
-      (page) => page.pageKey === activePage.pageKey,
-    );
-
-  if (!visiblePage) {
-    throw new Error(
-      `Page ${activePage.pageKey} not found for track ${activeTrack.key}`,
-    );
-  }
-
-  return visiblePage;
-}
-
 function getMidiMapperModuleIndex(runtimePatch: CompiledInstrumentEnginePatch) {
   return runtimePatch.patch.modules.findIndex(
     (module) => module.id === runtimePatch.runtime.midiMapperId,
@@ -178,19 +71,13 @@ export function createInstrumentRuntimeState(
   runtimePatch: CompiledInstrumentEnginePatch,
   options: CreateInstrumentRuntimeStateOptions = {},
 ): InstrumentRuntimeState {
-  const navigation = normalizeNavigation(runtimePatch, {
+  const navigation = InstrumentNavigation.fromRuntimePatch(runtimePatch, {
     ...runtimePatch.runtime.navigation,
     activeTrackIndex:
       options.activeTrackIndex ?? getMidiMapperActiveTrackIndex(runtimePatch),
     activePage:
       options.activePage ?? runtimePatch.runtime.navigation.activePage,
   });
-  const activePage = resolveActivePage(runtimePatch, navigation);
-  const activeTrack = resolveActiveTrack(
-    runtimePatch,
-    navigation.activeTrackIndex,
-  );
-  const visiblePage = resolveVisiblePage(activeTrack, activePage);
 
   return {
     document: {
@@ -206,10 +93,10 @@ export function createInstrumentRuntimeState(
       runtime: runtimePatch.runtime,
     },
     globalBlock: runtimePatch.compiledInstrument.globalBlock,
-    navigation,
-    activeTrack,
-    activePage,
-    visiblePage,
+    navigation: navigation.serialize(),
+    activeTrack: navigation.activeTrack,
+    activePage: navigation.activePage,
+    visiblePage: navigation.visiblePage,
   };
 }
 
@@ -245,22 +132,9 @@ export function updateInstrumentRuntimeNavigation(
     throw new Error("Instrument runtime midi mapper module is invalid");
   }
 
-  const nextNavigation = normalizeNavigation(runtimePatch, {
-    activeTrackIndex:
-      navigation.activeTrackIndex ??
-      runtimePatch.runtime.navigation.activeTrackIndex,
-    activePage:
-      navigation.activePage ?? runtimePatch.runtime.navigation.activePage,
-    mode: navigation.mode ?? runtimePatch.runtime.navigation.mode,
-    shiftPressed:
-      navigation.shiftPressed ?? runtimePatch.runtime.navigation.shiftPressed,
-    sequencerPageIndex:
-      navigation.sequencerPageIndex ??
-      runtimePatch.runtime.navigation.sequencerPageIndex,
-    selectedStepIndex:
-      navigation.selectedStepIndex ??
-      runtimePatch.runtime.navigation.selectedStepIndex,
-  });
+  const nextNavigation = InstrumentNavigation.fromRuntimePatch(runtimePatch)
+    .withChanges(navigation)
+    .serialize();
 
   return {
     ...runtimePatch,
@@ -290,51 +164,9 @@ export function navigateInstrumentRuntime(
   runtimePatch: CompiledInstrumentEnginePatch,
   action: InstrumentNavigationAction,
 ): CompiledInstrumentEnginePatch {
-  const currentNavigation = runtimePatch.runtime.navigation;
-  if (currentNavigation.mode === "seqEdit") {
-    switch (action) {
-      case "nextTrack":
-        return updateInstrumentRuntimeNavigation(runtimePatch, {
-          activeTrackIndex: currentNavigation.activeTrackIndex + 1,
-        });
-      case "previousTrack":
-        return updateInstrumentRuntimeNavigation(runtimePatch, {
-          activeTrackIndex: currentNavigation.activeTrackIndex - 1,
-        });
-      case "nextPage":
-        return updateInstrumentRuntimeNavigation(runtimePatch, {
-          sequencerPageIndex: currentNavigation.sequencerPageIndex + 1,
-        });
-      case "previousPage":
-        return updateInstrumentRuntimeNavigation(runtimePatch, {
-          sequencerPageIndex: currentNavigation.sequencerPageIndex - 1,
-        });
-    }
-  }
+  const nextNavigation = InstrumentNavigation.fromRuntimePatch(runtimePatch)
+    .navigate(action)
+    .serialize();
 
-  const pageKeys = getPageKeys(runtimePatch);
-  const currentPageIndex = pageKeys.indexOf(currentNavigation.activePage);
-
-  switch (action) {
-    case "nextTrack":
-      return updateInstrumentRuntimeNavigation(runtimePatch, {
-        activeTrackIndex: currentNavigation.activeTrackIndex + 1,
-      });
-    case "previousTrack":
-      return updateInstrumentRuntimeNavigation(runtimePatch, {
-        activeTrackIndex: currentNavigation.activeTrackIndex - 1,
-      });
-    case "nextPage":
-      return updateInstrumentRuntimeNavigation(runtimePatch, {
-        activePage:
-          pageKeys[wrapIndex(currentPageIndex + 1, pageKeys.length)] ??
-          currentNavigation.activePage,
-      });
-    case "previousPage":
-      return updateInstrumentRuntimeNavigation(runtimePatch, {
-        activePage:
-          pageKeys[wrapIndex(currentPageIndex - 1, pageKeys.length)] ??
-          currentNavigation.activePage,
-      });
-  }
+  return updateInstrumentRuntimeNavigation(runtimePatch, nextNavigation);
 }
