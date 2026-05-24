@@ -137,6 +137,11 @@ export {
 } from "./runtime/sequencerEdit";
 export { LaunchControlXL3Surface } from "./surfaces/launchControlXL3/LaunchControlXL3Surface";
 export type { LaunchControlXL3Result } from "./surfaces/launchControlXL3/LaunchControlXL3Surface";
+export { LaunchControlXL3SequencerEdit } from "./surfaces/launchControlXL3/LaunchControlXL3SequencerEdit";
+export type {
+  LaunchControlXL3SequencerEditEngine,
+  LaunchControlXL3SequencerEditUpdate,
+} from "./surfaces/launchControlXL3/LaunchControlXL3SequencerEdit";
 export { createInstrumentControllerSession } from "./runtime/instrumentControllerSession";
 export { compileTrack } from "./compiler/compileTrack";
 export { compileInstrument } from "./compiler/compileInstrument";
