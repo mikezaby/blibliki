@@ -5,24 +5,17 @@ import {
   excludeControllerFromAllNoteInputs,
   normalizePortSelection,
 } from "@/core/midiPortSelection";
-import {
-  createInstrumentRuntimeModuleId,
-  createTrackRuntimeModuleId,
-} from "@/core/runtimeIds";
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
-import type {
-  InstrumentDocument,
-  InstrumentTrackDocument,
-} from "@/document/types";
+import type { InstrumentDocument } from "@/document/types";
 import { createTrackFromDocument } from "@/tracks/createTrackFromDocument";
 import { compileInstrument } from "./compileInstrument";
 import {
   createInstrumentEncoderGlobalMappings,
   createInstrumentFaderGlobalMappings,
   createInstrumentMidiMapperProps,
-  DEFAULT_ACTIVE_PAGE,
 } from "./createInstrumentMidiMapperProps";
 import { toEngineSerializableModule } from "./engineSerialization";
+import { DEFAULT_INSTRUMENT_TIME_SIGNATURE } from "./instrumentRuntimeDefaults";
 import {
   createGlobalDelayModule,
   createGlobalReverbModule,
@@ -40,34 +33,26 @@ import {
   createMasterRoutes,
   createTrackNoteRuntime,
 } from "./instrumentRuntimeRoutes";
+import {
+  createInstrumentGlobalMappingRuntimeIds,
+  createInstrumentRuntimeState,
+  createInstrumentStepSequencerIds,
+  isInstrumentTrackEnabled,
+  normalizeInstrumentMasterOptions,
+  normalizeInstrumentNavigation,
+} from "./instrumentRuntimeState";
 import type {
   CompiledInstrumentEnginePatch,
   CreateInstrumentEnginePatchOptions,
-  InstrumentNavigationState,
 } from "./instrumentTypes";
-
-const DEFAULT_TIME_SIGNATURE = [4, 4] as const;
-
-function isTrackEnabled(trackDocument: InstrumentTrackDocument) {
-  return trackDocument.enabled !== false;
-}
-
-function normalizeActiveTrackIndex(
-  trackCount: number,
-  activeTrackIndex: number,
-) {
-  if (trackCount <= 0) {
-    return 0;
-  }
-
-  return Math.min(Math.max(activeTrackIndex, 0), trackCount - 1);
-}
 
 export function createInstrumentEnginePatch(
   document: InstrumentDocument = createDefaultInstrumentDocument(),
   options: CreateInstrumentEnginePatchOptions = {},
 ): CompiledInstrumentEnginePatch {
-  const enabledTrackDocuments = document.tracks.filter(isTrackEnabled);
+  const enabledTrackDocuments = document.tracks.filter(
+    isInstrumentTrackEnabled,
+  );
   const compiledInstrument = compileInstrument(document, {
     trackVoices: options.trackVoices,
   });
@@ -93,67 +78,35 @@ export function createInstrumentEnginePatch(
     baseNoteInputSelection,
     controllerInputSelection,
   );
-  const requestedActiveTrackIndex =
-    options.navigation?.activeTrackIndex ??
-    options.midiMapper?.activeTrack ??
-    0;
-  const navigation: InstrumentNavigationState = {
-    activeTrackIndex: normalizeActiveTrackIndex(
-      compiledInstrument.tracks.length,
-      requestedActiveTrackIndex,
-    ),
-    activePage: options.navigation?.activePage ?? DEFAULT_ACTIVE_PAGE,
-    mode: options.navigation?.mode ?? "performance",
-    shiftPressed: options.navigation?.shiftPressed ?? false,
-    sequencerPageIndex: options.navigation?.sequencerPageIndex ?? 0,
-    selectedStepIndex: options.navigation?.selectedStepIndex ?? 0,
-  };
-  const masterOptions =
-    options.master === false ? false : (options.master ?? {});
-  const globalMappingRuntimeIds = {
-    transportControlId: createInstrumentRuntimeModuleId("transportControl"),
-    masterFilterId: createInstrumentRuntimeModuleId("masterFilter"),
-    globalDelayId: createInstrumentRuntimeModuleId("globalDelay"),
-    globalReverbId: createInstrumentRuntimeModuleId("globalReverb"),
-    masterVolumeId: createInstrumentRuntimeModuleId("masterVolume"),
-  } as const;
+  const navigation = normalizeInstrumentNavigation(
+    compiledInstrument.tracks.length,
+    options,
+  );
+  const masterOptions = normalizeInstrumentMasterOptions(options.master);
+  const globalMappingRuntimeIds = createInstrumentGlobalMappingRuntimeIds();
   const globalMappings = [
     ...createInstrumentEncoderGlobalMappings(globalMappingRuntimeIds),
     ...createInstrumentFaderGlobalMappings(compiledInstrument),
     ...(options.midiMapper?.globalMappings ?? []),
   ];
+  const stepSequencerIds = createInstrumentStepSequencerIds(
+    enabledTrackDocuments,
+  );
 
-  const runtime = {
-    masterId:
-      masterOptions === false
-        ? undefined
-        : (masterOptions.id ?? createInstrumentRuntimeModuleId("master")),
-    ...globalMappingRuntimeIds,
-    midiMapperId:
-      options.midiMapper?.id ?? createInstrumentRuntimeModuleId("midiMapper"),
-    noteInputId:
-      noteInputSelection === false || !hasExternalMidiTracks
-        ? undefined
-        : createInstrumentRuntimeModuleId("noteInput"),
-    controllerInputId:
-      controllerInputSelection === false
-        ? undefined
-        : createInstrumentRuntimeModuleId("controllerInput"),
-    controllerOutputId:
-      controllerOutputSelection === false
-        ? undefined
-        : createInstrumentRuntimeModuleId("controllerOutput"),
-    midiMapperGlobalMappings: globalMappings,
+  const runtime = createInstrumentRuntimeState({
+    createOptions: options,
+    masterOptions,
+    globalMappingRuntimeIds,
+    selections: {
+      noteInputSelection,
+      controllerInputSelection,
+      controllerOutputSelection,
+    },
+    hasExternalMidiTracks,
+    globalMappings,
     navigation,
-    stepSequencerIds: Object.fromEntries(
-      enabledTrackDocuments
-        .filter((track) => track.noteSource === "stepSequencer")
-        .map((track) => [
-          track.key,
-          createTrackRuntimeModuleId(track.key, "stepSequencer"),
-        ]),
-    ) as Record<string, string>,
-  };
+    stepSequencerIds,
+  });
   const trackNoteRuntimes = enabledTrackDocuments.map((trackDocument, index) =>
     createTrackNoteRuntime(
       trackInstances[index]!,
@@ -267,7 +220,9 @@ export function createInstrumentEnginePatch(
     runtime,
     patch: {
       bpm: options.bpm ?? document.globalBlock.tempo,
-      timeSignature: options.timeSignature ?? [...DEFAULT_TIME_SIGNATURE],
+      timeSignature: options.timeSignature ?? [
+        ...DEFAULT_INSTRUMENT_TIME_SIGNATURE,
+      ],
       modules: patchModules.map(toEngineSerializableModule),
       routes: [
         ...compiledInstrument.tracks.flatMap(
