@@ -103,6 +103,12 @@ export type {
   CreateInstrumentRuntimeStateOptions,
   InstrumentRuntimeState,
 } from "./Instrument";
+export { InstrumentSession } from "./InstrumentSession";
+export type {
+  CreateInstrumentControllerSessionOptions,
+  InstrumentControllerEngine,
+  InstrumentControllerSession,
+} from "./InstrumentSession";
 export { createInstrumentDisplayState } from "./runtime/displayState";
 export type {
   CreateInstrumentDisplayStateInput,
@@ -130,11 +136,6 @@ export {
   syncSeqEditStepButtonLeds,
 } from "./runtime/sequencerEdit";
 export { createInstrumentControllerSession } from "./runtime/instrumentControllerSession";
-export type {
-  CreateInstrumentControllerSessionOptions,
-  InstrumentControllerEngine,
-  InstrumentControllerSession,
-} from "./runtime/instrumentControllerSession";
 export { compileTrack } from "./compiler/compileTrack";
 export { compileInstrument } from "./compiler/compileInstrument";
 export {
