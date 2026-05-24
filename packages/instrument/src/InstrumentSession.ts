@@ -6,7 +6,6 @@ import {
   TransportState,
 } from "@blibliki/engine";
 import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
-import { reduceInstrumentControllerEvent } from "@/runtime/controllerRuntime";
 import type {
   InstrumentDisplayNotice,
   InstrumentDisplayState,
@@ -15,11 +14,8 @@ import {
   createLiveInstrumentDisplayState,
   type LiveDisplayEngine,
 } from "@/runtime/liveDisplayState";
-import {
-  applySeqEditEncoderEvent,
-  createSeqEditPageSync,
-  syncSeqEditStepButtonLeds,
-} from "@/runtime/sequencerEdit";
+import { launchControlXL3SequencerEdit } from "@/surfaces/launchControlXL3/LaunchControlXL3SequencerEdit";
+import { launchControlXL3Surface } from "@/surfaces/launchControlXL3/LaunchControlXL3Surface";
 
 const NAVIGATION_LED_CCS = [102, 103, 106, 107] as const;
 const NAVIGATION_LED_ON = 127;
@@ -270,7 +266,10 @@ export class InstrumentSession implements InstrumentControllerSession {
       return;
     }
 
-    syncSeqEditStepButtonLeds(this.engine, this.currentRuntimePatch);
+    launchControlXL3SequencerEdit.syncStepButtonLeds(
+      this.engine,
+      this.currentRuntimePatch,
+    );
     syncNavigationButtonLeds(this.engine, this.currentRuntimePatch);
     this.options.onRuntimePatchChange?.(this.currentRuntimePatch);
     this.options.onDisplayStateChange?.(this.getDisplayState());
@@ -323,7 +322,7 @@ export class InstrumentSession implements InstrumentControllerSession {
   }
 
   private handleMidiEvent(event: MidiEvent) {
-    const result = reduceInstrumentControllerEvent(
+    const result = launchControlXL3Surface.reduceEvent(
       this.currentRuntimePatch,
       event,
     );
@@ -353,7 +352,9 @@ export class InstrumentSession implements InstrumentControllerSession {
       result.command.type === "seqEdit.toggle" ||
       result.command.type === "seqEdit.page"
     ) {
-      const sequencerPageSync = createSeqEditPageSync(this.currentRuntimePatch);
+      const sequencerPageSync = launchControlXL3SequencerEdit.createPageSync(
+        this.currentRuntimePatch,
+      );
       if (sequencerPageSync) {
         didRuntimePatchChange = true;
         this.currentRuntimePatch = sequencerPageSync.runtimePatch;
@@ -377,7 +378,7 @@ export class InstrumentSession implements InstrumentControllerSession {
       event.cc !== undefined &&
       event.ccValue !== undefined
     ) {
-      const seqEditUpdate = applySeqEditEncoderEvent(
+      const seqEditUpdate = launchControlXL3SequencerEdit.applyEncoderEvent(
         this.currentRuntimePatch,
         event.cc,
         event.ccValue,

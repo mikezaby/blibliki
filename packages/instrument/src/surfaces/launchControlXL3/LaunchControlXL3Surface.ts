@@ -1,10 +1,7 @@
 import { MidiEvent } from "@blibliki/engine";
+import { Instrument } from "@/Instrument";
 import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
-import {
-  navigateInstrumentRuntime,
-  type InstrumentNavigationAction,
-  updateInstrumentRuntimeNavigation,
-} from "@/runtime/instrumentRuntime";
+import type { InstrumentNavigationAction } from "@/core/InstrumentNavigation";
 
 type LaunchControlXL3Command =
   | {
@@ -57,6 +54,24 @@ function createNoopResult(
   };
 }
 
+function updateInstrumentNavigation(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  navigation: Partial<CompiledInstrumentEnginePatch["runtime"]["navigation"]>,
+) {
+  return Instrument.fromRuntimePatch(runtimePatch)
+    .withNavigation(navigation)
+    .serializeEnginePatch();
+}
+
+function navigateInstrument(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  action: InstrumentNavigationAction,
+) {
+  return Instrument.fromRuntimePatch(runtimePatch)
+    .navigate(action)
+    .serializeEnginePatch();
+}
+
 export class LaunchControlXL3Surface {
   reduceEvent(
     runtimePatch: CompiledInstrumentEnginePatch,
@@ -68,7 +83,7 @@ export class LaunchControlXL3Surface {
 
     if (event.cc === SHIFT_CC) {
       return {
-        runtimePatch: updateInstrumentRuntimeNavigation(runtimePatch, {
+        runtimePatch: updateInstrumentNavigation(runtimePatch, {
           shiftPressed: event.ccValue === 127,
         }),
         command: {
@@ -116,7 +131,7 @@ export class LaunchControlXL3Surface {
       const enabled = currentNavigation.mode !== "seqEdit";
 
       return {
-        runtimePatch: updateInstrumentRuntimeNavigation(runtimePatch, {
+        runtimePatch: updateInstrumentNavigation(runtimePatch, {
           mode: enabled ? "seqEdit" : "performance",
         }),
         command: {
@@ -131,7 +146,7 @@ export class LaunchControlXL3Surface {
         const stepIndex = event.cc - STEP_BUTTON_CC_START;
 
         return {
-          runtimePatch: updateInstrumentRuntimeNavigation(runtimePatch, {
+          runtimePatch: updateInstrumentNavigation(runtimePatch, {
             selectedStepIndex: stepIndex,
           }),
           command: {
@@ -144,7 +159,7 @@ export class LaunchControlXL3Surface {
       switch (event.cc) {
         case PAGE_UP_CC:
           return {
-            runtimePatch: navigateInstrumentRuntime(runtimePatch, "nextPage"),
+            runtimePatch: navigateInstrument(runtimePatch, "nextPage"),
             command: {
               type: "seqEdit.page",
               action: "nextPage",
@@ -152,10 +167,7 @@ export class LaunchControlXL3Surface {
           };
         case PAGE_DOWN_CC:
           return {
-            runtimePatch: navigateInstrumentRuntime(
-              runtimePatch,
-              "previousPage",
-            ),
+            runtimePatch: navigateInstrument(runtimePatch, "previousPage"),
             command: {
               type: "seqEdit.page",
               action: "previousPage",
@@ -169,7 +181,7 @@ export class LaunchControlXL3Surface {
     switch (event.cc) {
       case TRACK_NEXT_CC:
         return {
-          runtimePatch: navigateInstrumentRuntime(runtimePatch, "nextTrack"),
+          runtimePatch: navigateInstrument(runtimePatch, "nextTrack"),
           command: {
             type: "navigation",
             action: "nextTrack",
@@ -177,10 +189,7 @@ export class LaunchControlXL3Surface {
         };
       case TRACK_PREV_CC:
         return {
-          runtimePatch: navigateInstrumentRuntime(
-            runtimePatch,
-            "previousTrack",
-          ),
+          runtimePatch: navigateInstrument(runtimePatch, "previousTrack"),
           command: {
             type: "navigation",
             action: "previousTrack",
@@ -188,7 +197,7 @@ export class LaunchControlXL3Surface {
         };
       case PAGE_UP_CC:
         return {
-          runtimePatch: navigateInstrumentRuntime(runtimePatch, "nextPage"),
+          runtimePatch: navigateInstrument(runtimePatch, "nextPage"),
           command: {
             type: "navigation",
             action: "nextPage",
@@ -196,7 +205,7 @@ export class LaunchControlXL3Surface {
         };
       case PAGE_DOWN_CC:
         return {
-          runtimePatch: navigateInstrumentRuntime(runtimePatch, "previousPage"),
+          runtimePatch: navigateInstrument(runtimePatch, "previousPage"),
           command: {
             type: "navigation",
             action: "previousPage",
