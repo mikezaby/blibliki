@@ -7,29 +7,31 @@ description: Use when creating or refactoring Blibliki packages, especially when
 
 ## Overview
 
-Blibliki packages should look like parts of one system. Prefer small, typed, human-readable units built around stable base concepts, then extend those concepts with focused implementations.
+Blibliki packages should look like parts of one system. Prefer small, typed, human-readable units built around stable domain classes and base concepts, then extend those concepts with focused implementations.
 
-Use `packages/engine` as the reference package: it separates core abstractions, concrete modules, processors, utilities, exports, and tests. Do not copy engine mechanically; copy its discipline.
+Use `packages/engine` as the reference package: it centers behavior in named classes such as `Engine`, `Module`, `PolyModule`, `Routes`, and IO collections, while keeping pure helpers small and explicit. Do not copy engine mechanically; copy its class-first discipline.
 
 ## Core Principles
 
-1. **Name the domain layers first**
+1. **Name the domain concepts first**
    - Put base concepts in their own folders before adding features.
-   - Typical layers: `core/`, domain implementations, compiler/build stages, runtime/session orchestration, hardware adapters, utilities, and tests.
+   - Prefer durable concepts such as `Instrument`, `Track`, `Block`, `Page`, `Slot`, `InstrumentSession`, and hardware surface classes over generic process folders.
 
 2. **Base classes own invariants**
    - A base class should manage identity, collections, lifecycle, serialization, common lookup errors, and shared registration helpers.
    - Extension classes should describe the concrete thing, not reimplement framework behavior.
+   - If behavior has state, lifecycle, navigation, active selections, collections, or external synchronization, model it as a class before reaching for loose functions.
 
 3. **Keep files single-purpose**
    - One file should have one reason to change.
    - Split files when construction, normalization, route building, display mapping, event reduction, persistence, or hardware IO live together.
    - Large files are allowed only when they are cohesive registries or intentionally central type maps.
 
-4. **Separate pure transforms from side effects**
+4. **Separate domain objects, pure transforms, and side effects**
+   - Domain classes should own behavior and invariants.
    - Compilers should be pure data-in/data-out.
-   - Runtime reducers should return next state and commands.
-   - Sessions/adapters should be the only layer that talks to live engines, devices, persistence, or callbacks.
+   - Pure functions should be reserved for compilation, serialization, deterministic naming, tiny utilities, and class-internal helpers with a clear context.
+   - Sessions/adapters should be the only classes that talk to live engines, devices, persistence, or callbacks.
 
 5. **Use typed registries instead of scattered conditionals**
    - Engine uses `ModuleType`, prop schemas, mapping types, and registration helpers.
@@ -60,9 +62,9 @@ Use folders for durable domain layers, not temporary tasks.
 | --- | --- |
 | `core/` | `helpers/` as a dumping ground |
 | `compiler/` | `builders/` when the stage is compilation |
-| `runtime/` | `logic/` |
-| `runtime/controller/` | `controllerStuff/` |
-| `runtime/sequencerEdit/` | `seq/` |
+| `surfaces/launchControlXL3/` | `controller/` when the behavior is hardware-specific |
+| `sessions/` | `runtime/` as a dumping ground |
+| `sequencer/` or `surfaces/launchControlXL3/LaunchControlXL3SequencerEdit.ts` | `seq/` |
 | `hardware/launchControlXL3/` | `midi/` when hardware-specific |
 
 ### File Names
@@ -77,12 +79,13 @@ File names should name one responsibility. Prefer nouns for concepts and verb ph
 | `instrumentRuntimeModules.ts` | creates runtime modules for instrument patches |
 | `instrumentRuntimeRoutes.ts` | creates runtime routes for instrument patches |
 | `engineSerialization.ts` | converts instrument data to engine serialized shape |
-| `navigation.ts` | owns runtime navigation normalization/reduction |
-| `midiMapperState.ts` | owns MIDI mapper state updates |
-| `persistence.ts` | owns persistence confirmation/progress/error state |
-| `ledSync.ts` | owns live LED output side effects |
+| `Instrument.ts` | central instrument domain object |
+| `InstrumentNavigation.ts` | class owning active track/page/mode invariants |
+| `InstrumentSession.ts` | live engine/device/persistence lifecycle |
+| `LaunchControlXL3Surface.ts` | hardware-specific controller surface |
+| `LaunchControlXL3SequencerEdit.ts` | hardware-specific sequencer edit behavior |
 
-Avoid names such as `helpers.ts`, `utils.ts`, `common.ts`, `stuff.ts`, `manager.ts`, `processor.ts`, or `service.ts` unless the package already has a precise local meaning for that word.
+Avoid names such as `helpers.ts`, `utils.ts`, `common.ts`, `stuff.ts`, `manager.ts`, `processor.ts`, `service.ts`, `runtime.ts`, or `controller.ts` unless the package already has a precise local meaning for that word. A folder of unrelated functions is still chaotic even if the files are small.
 
 ### Function Names
 
@@ -104,13 +107,14 @@ Avoid vague verbs like `handle`, `process`, `do`, `make`, `build`, and `update` 
 
 ### Class and Type Names
 
-Class names should be reserved for concepts with identity, lifecycle, collections, or invariants. Prefer functions for pure transforms.
+Class names should be used for concepts with identity, lifecycle, collections, navigation, active selections, synchronization, or invariants. Prefer functions only for pure transforms and tiny utilities.
 
 | Use classes for | Examples |
 | --- | --- |
 | base invariants | `BaseBlock`, `BaseTrack`, `Module`, `PolyModule` |
 | concrete domain implementations | `OscBlock`, `Track`, `MonoGain`, `Gain` |
-| live/session objects with lifecycle | `InstrumentDocumentModel` if it owns document behavior |
+| aggregate domain objects | `Instrument`, `InstrumentNavigation` |
+| live/session objects with lifecycle | `InstrumentSession`, `LaunchControlXL3Surface` |
 
 Use type names for public shapes and contracts:
 
@@ -120,7 +124,7 @@ type CompiledInstrumentEnginePatch = { ... };
 type CreateInstrumentEnginePatchOptions = { ... };
 ```
 
-Avoid classes named `Manager`, `Controller`, `Service`, or `Processor` unless they own a specific, named lifecycle. Prefer `InstrumentControllerSession` over `ControllerManager`, and `engineSerialization.ts` over `EngineSerializationService`.
+Avoid classes named `Manager`, `Controller`, `Service`, or `Processor` unless they own a specific, named lifecycle. Prefer `InstrumentSession` over `ControllerManager`, `LaunchControlXL3Surface` over `ControllerRuntime`, and `engineSerialization.ts` over `EngineSerializationService`.
 
 ### Test Names
 
@@ -132,6 +136,7 @@ Test file names should mirror the concept under test:
 | `instrumentRuntimeRoutes.test.ts` | `RouteBug.test.ts` |
 | `sequencerEdit.test.ts` or `stepUpdates.test.ts` | `SeqEditRefactor.test.ts` |
 | `BaseTrack.test.ts` | `TrackInternals.test.ts` |
+| `InstrumentNavigation.test.ts` | `RuntimeNavigationCleanup.test.ts` |
 
 Test names should describe behavior in human language:
 
@@ -147,18 +152,18 @@ Do not name tests after implementation phases, bugs, or cleanup work.
 Make the package pipeline explicit before adding files. A package should read left to right:
 
 ```text
-document/config -> domain model -> compiler -> serialized runtime data -> runtime reducers -> session/adapters -> app/device side effects
+document/config -> domain model -> compiler -> serialized runtime data -> domain runtime object -> session/adapters -> app/device side effects
 ```
 
 For `packages/instrument`, that means:
 
 ```text
 InstrumentDocument
-  -> Track/Block/Page/Slot model
+  -> Instrument/Track/Block/Page/Slot model
   -> compiled instrument and compiled track data
   -> Engine patch serialization
-  -> runtime navigation/display/controller reducers
-  -> controller session and live engine updates
+  -> Instrument and InstrumentNavigation runtime objects
+  -> InstrumentSession and live engine updates
   -> MIDI hardware, persistence, UI callbacks
 ```
 
@@ -227,25 +232,25 @@ export function compileThing(document: ThingDocument): CompiledThing {
 
 If a compiler needs runtime modules or routes, split factories into files such as `runtimeModules.ts`, `runtimeRoutes.ts`, and `engineSerialization.ts`.
 
-### Runtime Reducer and Session Boundary
+### Domain Runtime Object and Session Boundary
 
-Reducers decide what happened. Sessions perform it.
+Runtime behavior should start as a named domain class. Use a reducer function only when it is a small implementation detail inside that class or when the event transform is naturally stateless.
 
 ```typescript
-type RuntimeResult = {
-  state: RuntimeState;
-  command: { type: "none" } | { type: "updateModule"; id: string };
-};
+class InstrumentNavigation {
+  constructor(private readonly state: InstrumentNavigationState) {}
 
-export function reduceRuntimeEvent(state: RuntimeState, event: Event): RuntimeResult {
-  return {
-    state: nextState,
-    command,
-  };
+  navigate(action: InstrumentNavigationAction): InstrumentNavigation {
+    return new InstrumentNavigation(normalizeNavigation(this.state, action));
+  }
+
+  serialize(): InstrumentNavigationState {
+    return this.state;
+  }
 }
 ```
 
-The session layer may call `engine.updateModule`, send MIDI LED events, persist drafts, and notify UI callbacks. The reducer should be testable without an engine instance or MIDI device.
+The session layer may call `engine.updateModule`, send MIDI LED events, persist drafts, and notify UI callbacks. Domain classes should be testable without an engine instance or MIDI device.
 
 ### Typed Registry
 
