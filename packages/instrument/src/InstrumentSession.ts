@@ -9,11 +9,11 @@ import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
 import type {
   InstrumentDisplayNotice,
   InstrumentDisplayState,
-} from "@/runtime/displayState";
+} from "@/display/InstrumentDisplayState";
 import {
   createLiveInstrumentDisplayState,
   type LiveDisplayEngine,
-} from "@/runtime/liveDisplayState";
+} from "@/display/LiveInstrumentDisplayState";
 import { launchControlXL3SequencerEdit } from "@/surfaces/launchControlXL3/LaunchControlXL3SequencerEdit";
 import { launchControlXL3Surface } from "@/surfaces/launchControlXL3/LaunchControlXL3Surface";
 

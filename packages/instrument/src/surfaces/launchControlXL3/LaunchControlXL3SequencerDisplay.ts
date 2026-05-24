@@ -1,6 +1,6 @@
 import { TransportState } from "@blibliki/engine";
 import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
-import type { InstrumentDisplayState } from "@/runtime/displayState";
+import type { InstrumentDisplayState } from "@/display/InstrumentDisplayState";
 import {
   DURATION_OPTIONS,
   PITCH_CCS,

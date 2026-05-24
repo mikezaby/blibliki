@@ -7,7 +7,7 @@ import type {
   CompiledInstrumentEnginePatch,
   InstrumentNavigationState,
 } from "@/compiler/instrumentTypes";
-import type { InstrumentDisplayState } from "@/runtime/displayState";
+import type { InstrumentDisplayState } from "@/display/InstrumentDisplayState";
 
 export type { InstrumentNavigationAction } from "@/core/InstrumentNavigation";
 export type {

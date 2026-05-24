@@ -15,11 +15,11 @@ import {
   InstrumentNavigation,
   type InstrumentNavigationAction,
 } from "@/core/InstrumentNavigation";
-import type { InstrumentGlobalBlock } from "@/document/types";
 import {
   createInstrumentDisplayState,
   type InstrumentDisplayState,
-} from "@/runtime/displayState";
+} from "@/display/InstrumentDisplayState";
+import type { InstrumentGlobalBlock } from "@/document/types";
 import type { TrackPageKey } from "@/types";
 
 export type InstrumentRuntimeState = {

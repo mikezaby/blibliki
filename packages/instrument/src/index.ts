@@ -109,14 +109,16 @@ export type {
   InstrumentControllerEngine,
   InstrumentControllerSession,
 } from "./InstrumentSession";
-export { createInstrumentDisplayState } from "./runtime/displayState";
+export { createInstrumentDisplayState } from "./display/InstrumentDisplayState";
 export type {
   CreateInstrumentDisplayStateInput,
   DisplayBandState,
   DisplaySlotState,
   InstrumentDisplayNotice,
   InstrumentDisplayState,
-} from "./runtime/displayState";
+} from "./display/InstrumentDisplayState";
+export { createLiveInstrumentDisplayState } from "./display/LiveInstrumentDisplayState";
+export type { LiveDisplayEngine } from "./display/LiveInstrumentDisplayState";
 export {
   createInstrumentRuntimeState,
   createInstrumentDisplayState as createRuntimeDisplayState,
@@ -124,8 +126,6 @@ export {
   updateInstrumentRuntimeNavigation,
 } from "./runtime/instrumentRuntime";
 export type { InstrumentNavigationAction } from "./runtime/instrumentRuntime";
-export { createLiveInstrumentDisplayState } from "./runtime/liveDisplayState";
-export type { LiveDisplayEngine } from "./runtime/liveDisplayState";
 export { reduceInstrumentControllerEvent } from "./runtime/controllerRuntime";
 export type { InstrumentControllerResult } from "./runtime/controllerRuntime";
 export { createSavedInstrumentDocument } from "./runtime/savedInstrumentDocument";

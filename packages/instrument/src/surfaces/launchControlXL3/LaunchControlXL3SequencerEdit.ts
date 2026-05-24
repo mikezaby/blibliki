@@ -1,5 +1,5 @@
 import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
-import type { InstrumentDisplayState } from "@/runtime/displayState";
+import type { InstrumentDisplayState } from "@/display/InstrumentDisplayState";
 import { createLaunchControlXL3SequencerDisplayState } from "./LaunchControlXL3SequencerDisplay";
 import {
   syncLaunchControlXL3SequencerStepButtonLeds,
