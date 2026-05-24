@@ -135,6 +135,8 @@ export {
   createSeqEditPageSync,
   syncSeqEditStepButtonLeds,
 } from "./runtime/sequencerEdit";
+export { LaunchControlXL3Surface } from "./surfaces/launchControlXL3/LaunchControlXL3Surface";
+export type { LaunchControlXL3Result } from "./surfaces/launchControlXL3/LaunchControlXL3Surface";
 export { createInstrumentControllerSession } from "./runtime/instrumentControllerSession";
 export { compileTrack } from "./compiler/compileTrack";
 export { compileInstrument } from "./compiler/compileInstrument";
