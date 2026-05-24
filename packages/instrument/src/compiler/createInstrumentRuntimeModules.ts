@@ -17,6 +17,7 @@ import {
   createTransportControlModule,
   type SerializableRuntimeModule,
 } from "./instrumentRuntimeModules";
+import type { InstrumentTrackNoteRuntime } from "./instrumentRuntimeRoutes";
 import type { InstrumentMasterOptions } from "./instrumentRuntimeState";
 import type {
   CompiledInstrument,
@@ -37,9 +38,7 @@ export function createInstrumentRuntimeModules(options: {
   noteInputSelection: MidiPortSelection | false;
   controllerInputSelection: MidiPortSelection | false;
   controllerOutputSelection: MidiPortSelection | false;
-  trackNoteRuntimes: readonly {
-    modules: readonly SerializableRuntimeModule[];
-  }[];
+  trackNoteRuntimes: readonly InstrumentTrackNoteRuntime[];
 }): SerializableRuntimeModule[] {
   const {
     document,

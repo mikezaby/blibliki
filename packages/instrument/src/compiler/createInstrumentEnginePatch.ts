@@ -17,8 +17,7 @@ import { createInstrumentRuntimeModules } from "./createInstrumentRuntimeModules
 import { toEngineSerializableModule } from "./engineSerialization";
 import { DEFAULT_INSTRUMENT_TIME_SIGNATURE } from "./instrumentRuntimeDefaults";
 import {
-  createControllerRoutes,
-  createMasterRoutes,
+  createInstrumentRuntimeRoutes,
   createTrackNoteRuntime,
 } from "./instrumentRuntimeRoutes";
 import {
@@ -118,15 +117,11 @@ export function createInstrumentEnginePatch(
     trackNoteRuntimes,
   });
 
-  const runtimeRoutes = [
-    ...trackNoteRuntimes.flatMap(({ routes }) => routes),
-    ...createControllerRoutes(
-      runtime.controllerInputId,
-      runtime.midiMapperId,
-      runtime.controllerOutputId,
-    ),
-    ...createMasterRoutes(trackInstances, runtime),
-  ];
+  const runtimeRoutes = createInstrumentRuntimeRoutes({
+    trackInstances,
+    runtime,
+    trackNoteRuntimes,
+  });
   const patchModules = [
     ...compiledInstrument.tracks.flatMap(
       (track) => track.compiledTrack.engine.modules,

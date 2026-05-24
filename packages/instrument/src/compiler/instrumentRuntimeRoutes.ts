@@ -10,15 +10,17 @@ import type { SerializableRuntimeModule } from "./instrumentRuntimeModules";
 import type { CompiledInstrumentEnginePatch } from "./instrumentTypes";
 import { scopeTrackIO } from "./scoping";
 
+export type InstrumentTrackNoteRuntime = {
+  modules: SerializableRuntimeModule[];
+  routes: IRoute[];
+};
+
 export function createTrackNoteRuntime(
   track: BaseTrack,
   trackDocument: InstrumentTrackDocument,
   noteInputId: string | undefined,
   stepSequencerId: string | undefined,
-): {
-  modules: SerializableRuntimeModule[];
-  routes: IRoute[];
-} {
+): InstrumentTrackNoteRuntime {
   if (trackDocument.noteSource === "stepSequencer") {
     if (!stepSequencerId) {
       return { modules: [], routes: [] };
@@ -142,4 +144,32 @@ export function createControllerRoutes(
   }
 
   return routes;
+}
+
+export function createInstrumentRuntimeRoutes(options: {
+  trackInstances: readonly BaseTrack[];
+  runtime: Pick<
+    CompiledInstrumentEnginePatch["runtime"],
+    | "controllerInputId"
+    | "controllerOutputId"
+    | "globalDelayId"
+    | "globalReverbId"
+    | "masterFilterId"
+    | "masterId"
+    | "masterVolumeId"
+    | "midiMapperId"
+  >;
+  trackNoteRuntimes: readonly InstrumentTrackNoteRuntime[];
+}): IRoute[] {
+  const { trackInstances, runtime, trackNoteRuntimes } = options;
+
+  return [
+    ...trackNoteRuntimes.flatMap(({ routes }) => routes),
+    ...createControllerRoutes(
+      runtime.controllerInputId,
+      runtime.midiMapperId,
+      runtime.controllerOutputId,
+    ),
+    ...createMasterRoutes(trackInstances, runtime),
+  ];
 }
