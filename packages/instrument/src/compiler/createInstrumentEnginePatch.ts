@@ -12,22 +12,10 @@ import { compileInstrument } from "./compileInstrument";
 import {
   createInstrumentEncoderGlobalMappings,
   createInstrumentFaderGlobalMappings,
-  createInstrumentMidiMapperProps,
 } from "./createInstrumentMidiMapperProps";
+import { createInstrumentRuntimeModules } from "./createInstrumentRuntimeModules";
 import { toEngineSerializableModule } from "./engineSerialization";
 import { DEFAULT_INSTRUMENT_TIME_SIGNATURE } from "./instrumentRuntimeDefaults";
-import {
-  createGlobalDelayModule,
-  createGlobalReverbModule,
-  createMasterFilterModule,
-  createMasterModule,
-  createMasterVolumeModule,
-  createMidiInputModule,
-  createMidiMapperModule,
-  createMidiOutputModule,
-  createStepSequencerModule,
-  createTransportControlModule,
-} from "./instrumentRuntimeModules";
 import {
   createControllerRoutes,
   createMasterRoutes,
@@ -115,89 +103,20 @@ export function createInstrumentEnginePatch(
       runtime.stepSequencerIds[trackDocument.key],
     ),
   );
-  const runtimeModules = [
-    createTransportControlModule(
-      runtime.transportControlId,
-      "Instrument Transport Control",
-      document,
-    ),
-    createMasterFilterModule(
-      runtime.masterFilterId,
-      "Instrument Master Filter",
-      document,
-    ),
-    createGlobalDelayModule(
-      runtime.globalDelayId,
-      "Instrument Global Delay",
-      document,
-    ),
-    createGlobalReverbModule(
-      runtime.globalReverbId,
-      "Instrument Global Reverb",
-      document,
-    ),
-    createMasterVolumeModule(
-      runtime.masterVolumeId,
-      "Instrument Master Volume",
-      document,
-    ),
-    ...(noteInputSelection === false || !runtime.noteInputId
-      ? []
-      : [
-          createMidiInputModule(
-            runtime.noteInputId,
-            "Instrument Note Input",
-            noteInputSelection,
-          ),
-        ]),
-    ...trackNoteRuntimes.flatMap(({ modules }) => modules),
-    ...enabledTrackDocuments
-      .filter((track) => track.noteSource === "stepSequencer")
-      .map((track) =>
-        createStepSequencerModule(
-          runtime.stepSequencerIds[track.key]!,
-          `${track.key} Step Sequencer`,
-          track,
-        ),
-      ),
-    ...(controllerInputSelection === false || !runtime.controllerInputId
-      ? []
-      : [
-          createMidiInputModule(
-            runtime.controllerInputId,
-            "Instrument Controller Input",
-            controllerInputSelection,
-          ),
-        ]),
-    createMidiMapperModule(
-      runtime.midiMapperId,
-      options.midiMapper?.name ?? "Instrument Midi Mapper",
-      createInstrumentMidiMapperProps(
-        compiledInstrument,
-        navigation,
-        globalMappings,
-      ),
-    ),
-    ...(controllerOutputSelection === false || !runtime.controllerOutputId
-      ? []
-      : [
-          createMidiOutputModule(
-            runtime.controllerOutputId,
-            "Instrument Controller Output",
-            controllerOutputSelection,
-          ),
-        ]),
-    ...(runtime.masterId
-      ? [
-          createMasterModule(
-            runtime.masterId,
-            masterOptions !== false
-              ? (masterOptions.name ?? "Instrument Master")
-              : "Instrument Master",
-          ),
-        ]
-      : []),
-  ];
+  const runtimeModules = createInstrumentRuntimeModules({
+    document,
+    enabledTrackDocuments,
+    compiledInstrument,
+    createOptions: options,
+    runtime,
+    masterOptions,
+    navigation,
+    globalMappings,
+    noteInputSelection,
+    controllerInputSelection,
+    controllerOutputSelection,
+    trackNoteRuntimes,
+  });
 
   const runtimeRoutes = [
     ...trackNoteRuntimes.flatMap(({ routes }) => routes),
