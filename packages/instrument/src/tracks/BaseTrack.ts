@@ -1,8 +1,10 @@
-import { type IRoute, ModuleType } from "@blibliki/engine";
 import BaseBlock from "@/blocks/BaseBlock";
-import type { BlockModule, BlockPlug } from "@/blocks/types";
+import type { BlockPlug } from "@/blocks/types";
 import type { Page } from "@/pages/Page";
 import type { BlockKey, TrackPageKey } from "@/types";
+import TrackMidiRuntime, {
+  type TrackMidiRuntimeOptions,
+} from "./TrackMidiRuntime";
 import type {
   BaseTrackOptions,
   CreateTrackIO,
@@ -16,21 +18,6 @@ function createRouteId() {
   return crypto.randomUUID();
 }
 
-function createRuntimeRouteId(
-  trackKey: string,
-  source: BlockPlug,
-  destination: BlockPlug,
-) {
-  return `${trackKey}:runtime:${source.moduleId}.${source.ioName}->${destination.moduleId}.${destination.ioName}`;
-}
-
-function scopeBlockPlug(trackKey: string, plug: BlockPlug): BlockPlug {
-  return {
-    ...plug,
-    moduleId: `${trackKey}.${plug.moduleId}`,
-  };
-}
-
 export default abstract class BaseTrack {
   readonly key: string;
   readonly voices: number;
@@ -41,6 +28,7 @@ export default abstract class BaseTrack {
   protected readonly _pages = new Map<TrackPageKey, Page>();
   protected readonly _inputs = new Map<string, TrackIO>();
   protected readonly _outputs = new Map<string, TrackIO>();
+  private readonly midiRuntime = new TrackMidiRuntime(this);
 
   protected constructor(key: string, options: BaseTrackOptions) {
     this.key = key;
@@ -148,113 +136,18 @@ export default abstract class BaseTrack {
     return output;
   }
 
-  private createMidiRuntimeModuleId(suffix: string) {
-    return `${this.key}.runtime.${suffix}`;
-  }
-
-  private createMidiRuntimeDestinations(options: {
-    scopeBlockPlugs?: boolean;
-  }) {
-    const midiInput = this.findInput("midi in");
-    return midiInput.plugs.flatMap((trackPlug) => {
-      const block = this.findBlock(trackPlug.blockKey);
-      const blockInput = block.findInput(trackPlug.ioName);
-
-      return blockInput.plugs.map((plug) =>
-        options.scopeBlockPlugs ? scopeBlockPlug(this.key, plug) : { ...plug },
-      );
-    });
-  }
-
   createInternalMidiRuntime(
     source: BlockPlug,
-    options: { scopeBlockPlugs?: boolean; includeModules?: boolean } = {},
-  ): {
-    modules: BlockModule<ModuleType.VoiceScheduler>[];
-    routes: IRoute[];
-  } {
-    const voiceSchedulerId = this.createMidiRuntimeModuleId("voiceScheduler");
-    const voiceSchedulerInput: BlockPlug = {
-      moduleId: voiceSchedulerId,
-      ioName: "midi in",
-    };
-    const voiceSchedulerOutput: BlockPlug = {
-      moduleId: voiceSchedulerId,
-      ioName: "midi out",
-    };
-    const destinations = this.createMidiRuntimeDestinations(options);
-
-    return {
-      modules:
-        options.includeModules === false
-          ? []
-          : [
-              {
-                id: voiceSchedulerId,
-                name: "Track Voice Scheduler",
-                moduleType: ModuleType.VoiceScheduler,
-                voices: this.voices,
-                props: {},
-              },
-            ],
-      routes: [
-        {
-          id: createRuntimeRouteId(this.key, source, voiceSchedulerInput),
-          source,
-          destination: voiceSchedulerInput,
-        },
-        ...destinations.map((destination) => ({
-          id: createRuntimeRouteId(this.key, voiceSchedulerOutput, destination),
-          source: voiceSchedulerOutput,
-          destination,
-        })),
-      ],
-    };
+    options: TrackMidiRuntimeOptions = {},
+  ) {
+    return this.midiRuntime.createInternalMidiRuntime(source, options);
   }
 
   createExternalMidiRuntime(
     source: BlockPlug,
-    options: { scopeBlockPlugs?: boolean; includeModules?: boolean } = {},
-  ): {
-    modules: (
-      | BlockModule<ModuleType.MidiChannelFilter>
-      | BlockModule<ModuleType.VoiceScheduler>
-    )[];
-    routes: IRoute[];
-  } {
-    const filterId = this.createMidiRuntimeModuleId("midiChannelFilter");
-    const filterInput: BlockPlug = { moduleId: filterId, ioName: "midi in" };
-    const filterOutput: BlockPlug = { moduleId: filterId, ioName: "midi out" };
-    const internalRuntime = this.createInternalMidiRuntime(
-      filterOutput,
-      options,
-    );
-
-    return {
-      modules: [
-        ...(options.includeModules === false
-          ? []
-          : [
-              {
-                id: filterId,
-                name: "Track Midi Channel Filter",
-                moduleType: ModuleType.MidiChannelFilter,
-                props: {
-                  channel: this.midiChannel,
-                },
-              } satisfies BlockModule<ModuleType.MidiChannelFilter>,
-            ]),
-        ...internalRuntime.modules,
-      ],
-      routes: [
-        {
-          id: createRuntimeRouteId(this.key, source, filterInput),
-          source,
-          destination: filterInput,
-        },
-        ...internalRuntime.routes,
-      ],
-    };
+    options: TrackMidiRuntimeOptions = {},
+  ) {
+    return this.midiRuntime.createExternalMidiRuntime(source, options);
   }
 
   serialize(): SerializedTrack {
