@@ -10,7 +10,7 @@ import {
 import {
   getActiveStepSequencerId,
   getStepSequencerProps,
-} from "./LaunchControlXL3SequencerPatch";
+} from "./LaunchControlXL3SequencerState";
 
 export type LaunchControlXL3SequencerEditEngine = {
   findModule: (id: string) => {

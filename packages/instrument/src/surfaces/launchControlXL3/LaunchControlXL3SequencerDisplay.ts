@@ -10,7 +10,7 @@ import {
 import {
   getActiveStep,
   getStepSequencerProps,
-} from "./LaunchControlXL3SequencerPatch";
+} from "./LaunchControlXL3SequencerState";
 
 function createBandSlot(
   cc: number,
