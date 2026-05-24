@@ -7,6 +7,7 @@ import {
 } from "@blibliki/engine";
 import { describe, expect, it } from "vitest";
 import { InstrumentSession } from "@/InstrumentSession";
+import type { InstrumentPersistenceAction } from "@/InstrumentSessionPersistence";
 import { createInstrumentEnginePatch } from "@/compiler/createInstrumentEnginePatch";
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
 
@@ -112,5 +113,67 @@ describe("InstrumentSession", () => {
     expect(session.getRuntimePatch().runtime.navigation.activePage).toBe(
       "filterMod",
     );
+  });
+
+  it("requires a repeated matching persistence command before running it", async () => {
+    const runtimePatch = createInstrumentEnginePatch(
+      createSeededInstrumentDocument(),
+    );
+    const inputDevice = createControllerInputDevice();
+    const actions: InstrumentPersistenceAction[] = [];
+    const notices: string[] = [];
+    const modules = new Map(
+      runtimePatch.patch.modules.map((module) => [module.id, module]),
+    );
+
+    new InstrumentSession(
+      {
+        findMidiInputDeviceByFuzzyName: () => ({
+          device: inputDevice,
+          score: 1,
+        }),
+        findModule: (id) => {
+          const module = modules.get(id);
+          if (!module) {
+            throw new Error(`Module ${id} not found`);
+          }
+
+          return module;
+        },
+        state: TransportState.stopped,
+        start: () => Promise.resolve(),
+        stop: () => undefined,
+        updateModule: (params) => params,
+      },
+      runtimePatch,
+      {
+        onDisplayStateChange: (displayState) => {
+          if (displayState.notice) {
+            notices.push(displayState.notice.title);
+          }
+        },
+        onPersistenceAction: (action) => {
+          actions.push(action);
+          return {
+            title: "SAVED",
+            tone: "success",
+          };
+        },
+      },
+    );
+
+    inputDevice.emit(MidiEvent.fromCC(63, 127, 0));
+    inputDevice.emit(MidiEvent.fromCC(102, 127, 0));
+
+    expect(actions).toEqual([]);
+    expect(notices.at(-1)).toBe("SAVE TO CLOUD?");
+
+    inputDevice.emit(MidiEvent.fromCC(102, 127, 0));
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, 0);
+    });
+
+    expect(actions).toEqual(["saveDraft"]);
+    expect(notices.slice(-3)).toEqual(["SAVE TO CLOUD?", "SAVING...", "SAVED"]);
   });
 });

@@ -9,10 +9,8 @@ import {
   getSelectedMidiName,
 } from "@/InstrumentSessionMidi";
 import {
-  createPersistenceConfirmNotice,
-  createPersistenceErrorNotice,
-  createPersistenceProgressNotice,
   type InstrumentPersistenceAction,
+  InstrumentSessionPersistenceFlow,
 } from "@/InstrumentSessionPersistence";
 import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
 import type {
@@ -109,10 +107,9 @@ function createDisplayState(
 export class InstrumentSession implements InstrumentControllerSession {
   private currentRuntimePatch: CompiledInstrumentEnginePatch;
   private currentNotice: InstrumentDisplayNotice | undefined;
-  private pendingPersistenceAction: InstrumentPersistenceAction | null = null;
-  private persistenceActionInFlight = false;
   private disposed = false;
   private readonly controllerInput: ControllerInputDevice | undefined;
+  private readonly persistenceFlow: InstrumentSessionPersistenceFlow;
 
   constructor(
     private readonly engine: InstrumentControllerEngine,
@@ -121,6 +118,16 @@ export class InstrumentSession implements InstrumentControllerSession {
   ) {
     this.currentRuntimePatch = runtimePatch;
     this.currentNotice = options.initialDisplayNotice;
+    this.persistenceFlow = new InstrumentSessionPersistenceFlow({
+      isDisposed: () => this.disposed,
+      onNoticeChange: (notice) => {
+        this.currentNotice = notice;
+      },
+      onStateChange: () => {
+        this.emitState();
+      },
+      onRunAction: options.onPersistenceAction,
+    });
 
     const controllerInputName = getSelectedMidiName(
       runtimePatch,
@@ -175,67 +182,21 @@ export class InstrumentSession implements InstrumentControllerSession {
     this.options.onDisplayStateChange?.(this.getDisplayState());
   }
 
-  private clearPendingPersistenceAction() {
-    this.pendingPersistenceAction = null;
-    this.currentNotice = undefined;
-  }
-
-  private async handlePersistenceAction(action: InstrumentPersistenceAction) {
-    if (this.persistenceActionInFlight) {
-      this.emitState();
-      return;
-    }
-
-    if (this.pendingPersistenceAction !== action) {
-      this.pendingPersistenceAction = action;
-      this.currentNotice = createPersistenceConfirmNotice(action);
-      this.emitState();
-      return;
-    }
-
-    this.pendingPersistenceAction = null;
-    this.persistenceActionInFlight = true;
-    this.currentNotice = createPersistenceProgressNotice(action);
-    this.emitState();
-
-    try {
-      const nextNotice = await this.options.onPersistenceAction?.(
-        action,
-        this.currentRuntimePatch,
-      );
-      if (this.disposed) {
-        return;
-      }
-
-      this.currentNotice = nextNotice;
-      this.emitState();
-    } catch (error) {
-      if (this.disposed) {
-        return;
-      }
-
-      this.currentNotice = createPersistenceErrorNotice(action, error);
-      this.emitState();
-    } finally {
-      this.persistenceActionInFlight = false;
-    }
-  }
-
   private handleMidiEvent(event: MidiEvent) {
     const result = launchControlXL3Surface.reduceEvent(
       this.currentRuntimePatch,
       event,
     );
     if (
-      this.pendingPersistenceAction &&
+      this.persistenceFlow.getPendingAction() &&
       event.cc !== SHIFT_CC &&
       event.ccValue === 127
     ) {
       const isMatchingPersistenceAction =
         result.command.type === "persistence" &&
-        result.command.action === this.pendingPersistenceAction;
+        result.command.action === this.persistenceFlow.getPendingAction();
       if (!isMatchingPersistenceAction) {
-        this.clearPendingPersistenceAction();
+        this.persistenceFlow.clearPendingAction();
       }
     }
 
@@ -244,7 +205,10 @@ export class InstrumentSession implements InstrumentControllerSession {
     this.currentRuntimePatch = result.runtimePatch;
 
     if (result.command.type === "persistence") {
-      void this.handlePersistenceAction(result.command.action);
+      void this.persistenceFlow.requestAction(
+        result.command.action,
+        this.currentRuntimePatch,
+      );
       return;
     }
 
