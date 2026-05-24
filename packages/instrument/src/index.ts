@@ -98,6 +98,11 @@ export type {
   TrackPageKey,
   ValueSpec,
 } from "./types";
+export { Instrument } from "./Instrument";
+export type {
+  CreateInstrumentRuntimeStateOptions,
+  InstrumentRuntimeState,
+} from "./Instrument";
 export { createInstrumentDisplayState } from "./runtime/displayState";
 export type {
   CreateInstrumentDisplayStateInput,
@@ -112,10 +117,7 @@ export {
   navigateInstrumentRuntime,
   updateInstrumentRuntimeNavigation,
 } from "./runtime/instrumentRuntime";
-export type {
-  InstrumentNavigationAction,
-  InstrumentRuntimeState,
-} from "./runtime/instrumentRuntime";
+export type { InstrumentNavigationAction } from "./runtime/instrumentRuntime";
 export { createLiveInstrumentDisplayState } from "./runtime/liveDisplayState";
 export type { LiveDisplayEngine } from "./runtime/liveDisplayState";
 export { reduceInstrumentControllerEvent } from "./runtime/controllerRuntime";
