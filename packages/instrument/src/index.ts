@@ -128,7 +128,7 @@ export {
 export type { InstrumentNavigationAction } from "./runtime/instrumentRuntime";
 export { reduceInstrumentControllerEvent } from "./runtime/controllerRuntime";
 export type { InstrumentControllerResult } from "./runtime/controllerRuntime";
-export { createSavedInstrumentDocument } from "./runtime/savedInstrumentDocument";
+export { createSavedInstrumentDocument } from "./document/SavedInstrumentDocument";
 export {
   applySeqEditEncoderEvent,
   createSeqEditDisplayState,
