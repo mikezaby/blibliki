@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { createInstrumentEnginePatch } from "@/compiler/createInstrumentEnginePatch";
-import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
 import {
   createInstrumentRuntimeState,
   navigateInstrumentRuntime,
-} from "@/runtime/instrumentRuntime";
+} from "@/InstrumentRuntime";
+import { createInstrumentEnginePatch } from "@/compiler/createInstrumentEnginePatch";
+import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
 
 function createSeededInstrumentDocument() {
   const document = createDefaultInstrumentDocument();
@@ -21,7 +21,7 @@ function createSeededInstrumentDocument() {
   return document;
 }
 
-describe("createInstrumentRuntimeState", () => {
+describe("InstrumentRuntime", () => {
   it("exposes document identity, active track, active page, and visible page metadata", () => {
     const runtime = createInstrumentRuntimeState(
       createInstrumentEnginePatch(createSeededInstrumentDocument()),

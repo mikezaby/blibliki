@@ -6,6 +6,7 @@ import type {
   TimeSignature,
 } from "@blibliki/engine";
 import type { BlockModule } from "@/blocks/types";
+import type { MidiPortSelection } from "@/core/midiPortSelection";
 import type { PageKind, PageRegionPosition } from "@/pages/Page";
 import type { AnySlotBinding, SlotInitialValue } from "@/slots/BaseSlot";
 import type {
@@ -101,13 +102,7 @@ export type CompiledTrack = {
   };
 };
 
-export type MidiPortSelection = {
-  selectedId?: string | null;
-  selectedName?: string | null;
-  allIns?: boolean;
-  excludedIds?: string[];
-  excludedNames?: string[];
-};
+export type { MidiPortSelection };
 
 export type CreateTrackEnginePatchOptions = {
   bpm?: BPM;

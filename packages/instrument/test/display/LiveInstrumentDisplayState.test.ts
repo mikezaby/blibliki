@@ -1,8 +1,8 @@
 import { TransportState } from "@blibliki/engine";
 import { describe, expect, it } from "vitest";
 import { createInstrumentEnginePatch } from "@/compiler/createInstrumentEnginePatch";
+import { createLiveInstrumentDisplayState } from "@/display/LiveInstrumentDisplayState";
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
-import { createLiveInstrumentDisplayState } from "@/runtime/liveDisplayState";
 
 function createSeededInstrumentDocument() {
   const document = createDefaultInstrumentDocument();
@@ -19,7 +19,7 @@ function createSeededInstrumentDocument() {
   return document;
 }
 
-describe("createLiveInstrumentDisplayState", () => {
+describe("LiveInstrumentDisplayState", () => {
   it("resolves visible values from the live engine module props", () => {
     const runtimePatch = createInstrumentEnginePatch(
       createSeededInstrumentDocument(),
