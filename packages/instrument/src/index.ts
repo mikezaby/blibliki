@@ -98,41 +98,55 @@ export type {
   TrackPageKey,
   ValueSpec,
 } from "./types";
-export { createInstrumentDisplayState } from "./runtime/displayState";
+export { Instrument } from "./Instrument";
+export type {
+  CreateInstrumentRuntimeStateOptions,
+  InstrumentRuntimeState,
+} from "./Instrument";
+export {
+  createInstrumentControllerSession,
+  InstrumentSession,
+} from "./InstrumentSession";
+export type {
+  CreateInstrumentControllerSessionOptions,
+  InstrumentControllerEngine,
+  InstrumentControllerSession,
+} from "./InstrumentSession";
+export { createInstrumentDisplayState } from "./display/InstrumentDisplayState";
 export type {
   CreateInstrumentDisplayStateInput,
   DisplayBandState,
   DisplaySlotState,
   InstrumentDisplayNotice,
   InstrumentDisplayState,
-} from "./runtime/displayState";
+} from "./display/InstrumentDisplayState";
+export { createLiveInstrumentDisplayState } from "./display/LiveInstrumentDisplayState";
+export type { LiveDisplayEngine } from "./display/LiveInstrumentDisplayState";
 export {
   createInstrumentRuntimeState,
   createInstrumentDisplayState as createRuntimeDisplayState,
   navigateInstrumentRuntime,
   updateInstrumentRuntimeNavigation,
-} from "./runtime/instrumentRuntime";
-export type {
-  InstrumentNavigationAction,
-  InstrumentRuntimeState,
-} from "./runtime/instrumentRuntime";
-export { createLiveInstrumentDisplayState } from "./runtime/liveDisplayState";
-export type { LiveDisplayEngine } from "./runtime/liveDisplayState";
-export { reduceInstrumentControllerEvent } from "./runtime/controllerRuntime";
-export type { InstrumentControllerResult } from "./runtime/controllerRuntime";
-export { createSavedInstrumentDocument } from "./runtime/savedInstrumentDocument";
+} from "./InstrumentRuntime";
+export type { InstrumentNavigationAction } from "./InstrumentRuntime";
+export { reduceInstrumentControllerEvent } from "./InstrumentControlSurface";
+export type { InstrumentControllerResult } from "./InstrumentControlSurface";
+export { createSavedInstrumentDocument } from "./document/SavedInstrumentDocument";
+export { LaunchControlXL3Surface } from "./surfaces/launchControlXL3/LaunchControlXL3Surface";
+export type { LaunchControlXL3Result } from "./surfaces/launchControlXL3/LaunchControlXL3Surface";
 export {
   applySeqEditEncoderEvent,
   createSeqEditDisplayState,
   createSeqEditPageSync,
+  LaunchControlXL3SequencerEdit,
   syncSeqEditStepButtonLeds,
-} from "./runtime/sequencerEdit";
-export { createInstrumentControllerSession } from "./runtime/instrumentControllerSession";
+} from "./surfaces/launchControlXL3/LaunchControlXL3SequencerEdit";
 export type {
-  CreateInstrumentControllerSessionOptions,
-  InstrumentControllerEngine,
-  InstrumentControllerSession,
-} from "./runtime/instrumentControllerSession";
+  LaunchControlXL3SequencerEditEngine,
+  LaunchControlXL3SequencerEditUpdate,
+  SeqEditStepLedSyncEngine,
+  SeqEditUpdate,
+} from "./surfaces/launchControlXL3/LaunchControlXL3SequencerEdit";
 export { compileTrack } from "./compiler/compileTrack";
 export { compileInstrument } from "./compiler/compileInstrument";
 export {

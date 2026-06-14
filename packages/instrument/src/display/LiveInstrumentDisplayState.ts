@@ -1,14 +1,11 @@
 import { type MidiEvent, ModuleType, TransportState } from "@blibliki/engine";
+import { Instrument } from "@/Instrument";
 import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
 import type {
   InstrumentDisplayNotice,
   InstrumentDisplayState,
-} from "@/runtime/displayState";
-import {
-  createInstrumentDisplayState,
-  createInstrumentRuntimeState,
-} from "@/runtime/instrumentRuntime";
-import { createSeqEditDisplayState } from "@/runtime/sequencerEdit";
+} from "@/display/InstrumentDisplayState";
+import { launchControlXL3SequencerEdit } from "@/surfaces/launchControlXL3/LaunchControlXL3SequencerEdit";
 
 type DisplayEngineModule = {
   moduleType?: ModuleType;
@@ -155,7 +152,7 @@ function resolveSlotValueFromRuntimePatch(
   band: InstrumentDisplayState["upperBand"],
   engine: LiveDisplayEngine,
 ): typeof band {
-  const runtimeState = createInstrumentRuntimeState(runtimePatch);
+  const runtimeState = Instrument.fromRuntimePatch(runtimePatch).runtimeState;
   const region =
     runtimeState.visiblePage.regions.find(
       (candidate) => candidate.position === band.position,
@@ -199,9 +196,10 @@ export function createLiveInstrumentDisplayState(
     notice?: InstrumentDisplayNotice;
   } = {},
 ): InstrumentDisplayState {
-  const runtimeState = createInstrumentRuntimeState(runtimePatch);
+  const runtimeState = Instrument.fromRuntimePatch(runtimePatch).runtimeState;
   if (runtimeState.navigation.mode === "seqEdit") {
-    const seqEditDisplayState = createSeqEditDisplayState(runtimePatch);
+    const seqEditDisplayState =
+      launchControlXL3SequencerEdit.createDisplayState(runtimePatch);
     if (seqEditDisplayState) {
       return {
         ...seqEditDisplayState,
@@ -214,7 +212,7 @@ export function createLiveInstrumentDisplayState(
     }
   }
 
-  const staticDisplayState = createInstrumentDisplayState(runtimeState);
+  const staticDisplayState = Instrument.createDisplayState(runtimeState);
 
   return {
     ...staticDisplayState,
