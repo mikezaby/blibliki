@@ -46,6 +46,7 @@ export function createSourcePageSlots(
       ]);
     case "wavetable":
       return createTrackSlots("source", [
+        "presetId",
         "position",
         "frequency",
         "octave",

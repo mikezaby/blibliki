@@ -19,6 +19,7 @@ import {
 import { waitForCondition, waitForMicrotasks } from "../utils/waitForCondition";
 
 const DEFAULT_PROPS: IWavetableProps = {
+  presetId: "custom",
   tables: [
     {
       real: [0, 0],
@@ -425,6 +426,47 @@ describe("Wavetable", () => {
 
       expect(clonedTables).not.toEqual(preset!.tables);
       expect(getWavetablePresetIdByTables(clonedTables)).toBeUndefined();
+    });
+
+    it("applies presetId to wavetable tables during construction and prop updates", (ctx) => {
+      const glassPreset = getWavetablePresetById("glass-bell");
+      const warmPreset = getWavetablePresetById("warm-morph");
+      if (!glassPreset || !warmPreset) {
+        throw new Error("Expected wavetable presets to exist");
+      }
+
+      const wavetable = new Wavetable(ctx.engine.id, {
+        name: "Wavetable",
+        moduleType: ModuleType.Wavetable,
+        props: {
+          ...DEFAULT_PROPS,
+          presetId: "glass-bell",
+        } as IWavetableProps,
+        voices: 1,
+        monoModuleConstructor: () => {
+          throw new Error("Not used in test");
+        },
+      });
+
+      expect(
+        wavetable.props as IWavetableProps & { presetId: string },
+      ).toMatchObject({
+        presetId: "glass-bell",
+        tables: glassPreset.tables,
+      });
+      expect(wavetable.props.tables).not.toBe(glassPreset.tables);
+
+      wavetable.props = {
+        presetId: "warm-morph",
+      } as Partial<IWavetableProps>;
+
+      expect(
+        wavetable.props as IWavetableProps & { presetId: string },
+      ).toMatchObject({
+        presetId: "warm-morph",
+        tables: warmPreset.tables,
+      });
+      expect(wavetable.props.tables).not.toBe(warmPreset.tables);
     });
   });
 });

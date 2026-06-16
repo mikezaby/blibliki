@@ -302,6 +302,67 @@ describe("InstrumentEditor", () => {
     });
   });
 
+  it("saves the selected wavetable preset for wavetable tracks", async () => {
+    const saveSpy = vi.spyOn(Instrument.prototype, "save").mockResolvedValue();
+    const document = createDefaultInstrumentDocument();
+    const firstTrack = document.tracks[0];
+
+    if (!firstTrack) {
+      throw new Error("Expected default instrument to include a first track");
+    }
+
+    document.tracks[0] = {
+      ...firstTrack,
+      sourceProfileId: "wavetable",
+      controllerSlotValues: {
+        "source.presetId": "warm-morph",
+      },
+    };
+
+    render(
+      <Provider store={store}>
+        <InstrumentEditor
+          instrument={{
+            id: "instrument-1",
+            name: "Broken Instrument",
+            userId: "user-1",
+            document,
+          }}
+        />
+      </Provider>,
+    );
+
+    const presetValue = screen.getByText("Warm Morph");
+    const presetTrigger =
+      presetValue.closest('[role="combobox"]') ?? presetValue.closest("button");
+
+    if (!(presetTrigger instanceof HTMLElement)) {
+      throw new Error("Expected wavetable preset trigger button");
+    }
+
+    presetTrigger.focus();
+    fireEvent.keyDown(presetTrigger, { key: "ArrowDown" });
+    fireEvent.click(screen.getByRole("option", { name: "Glass Bell" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save Instrument" }));
+
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+
+    const savedInstrument = saveSpy.mock.instances[0] as Instrument;
+    const savedDocument = savedInstrument.document as {
+      tracks?: Array<{
+        controllerSlotValues?: Record<string, string | number | boolean>;
+        sourceSettings?: unknown;
+      }>;
+    };
+
+    expect(savedDocument.tracks?.[0]?.controllerSlotValues).toMatchObject({
+      "source.presetId": "glass-bell",
+    });
+    expect(savedDocument.tracks?.[0]?.sourceSettings).toBeUndefined();
+  });
+
   it("separates sequencer note names from step velocity editing", () => {
     const document = createDefaultInstrumentDocument();
     const firstTrack = document.tracks[0];

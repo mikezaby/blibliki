@@ -5,7 +5,7 @@ import { IModule, Module } from "@/core";
 import Note from "@/core/Note";
 import { IModuleConstructor, SetterHooks } from "@/core/module/Module";
 import { IPolyModuleConstructor, PolyModule } from "@/core/module/PolyModule";
-import { ModulePropSchema } from "@/core/schema";
+import { EnumProp, ModulePropSchema } from "@/core/schema";
 import { CustomWorklet, newAudioWorklet } from "@/processors";
 import { ICreateModule, ModuleType } from ".";
 import {
@@ -59,7 +59,10 @@ export type IWavetableConfig = {
   tables: IWavetableTable[];
 };
 
+export const CUSTOM_WAVETABLE_PRESET_ID = "custom";
+
 export type IWavetableProps = {
+  presetId: string;
   tables: IWavetableTable[];
   position: number;
   frequency: number;
@@ -67,59 +70,6 @@ export type IWavetableProps = {
   coarse: number;
   octave: number;
   lowGain: boolean;
-};
-
-export const wavetablePropSchema: ModulePropSchema<IWavetableProps> = {
-  tables: {
-    kind: "array",
-    label: "Tables",
-    shortLabel: "tbls",
-  },
-  position: {
-    kind: "number",
-    min: 0,
-    max: 1,
-    step: 0.001,
-    label: "Position",
-    shortLabel: "pos",
-  },
-  frequency: {
-    kind: "number",
-    min: 0,
-    max: 25000,
-    step: 1,
-    label: "Frequency",
-    shortLabel: "freq",
-  },
-  fine: {
-    kind: "number",
-    min: -1,
-    max: 1,
-    step: 0.01,
-    label: "Fine",
-    shortLabel: "fine",
-  },
-  coarse: {
-    kind: "number",
-    min: -12,
-    max: 12,
-    step: 1,
-    label: "Coarse",
-    shortLabel: "crs",
-  },
-  octave: {
-    kind: "number",
-    min: -1,
-    max: 2,
-    step: 1,
-    label: "Octave",
-    shortLabel: "oct",
-  },
-  lowGain: {
-    kind: "boolean",
-    label: `Use ${LOW_GAIN}db Gain`,
-    shortLabel: "low",
-  },
 };
 
 const NUMBER_PATTERN = /-?\d*\.?\d+(?:e[+-]?\d+)?/gi;
@@ -432,6 +382,8 @@ export const WAVETABLE_PRESETS: IWavetablePreset[] = PRESET_DEFINITIONS.map(
   },
 );
 
+export const DEFAULT_WAVETABLE_PRESET_ID = WAVETABLE_PRESETS[0]!.id;
+
 export const cloneWavetablePresetTables = (
   tables: IWavetableTable[],
 ): IWavetableTable[] => {
@@ -480,11 +432,79 @@ export const getWavetablePresetIdByTables = (
   )?.id;
 };
 
+export const wavetablePropSchema: ModulePropSchema<
+  IWavetableProps,
+  {
+    presetId: EnumProp<string>;
+  }
+> = {
+  presetId: {
+    kind: "enum",
+    options: [
+      CUSTOM_WAVETABLE_PRESET_ID,
+      ...WAVETABLE_PRESETS.map((preset) => preset.id),
+    ],
+    label: "Preset",
+    shortLabel: "pre",
+  },
+  tables: {
+    kind: "array",
+    label: "Tables",
+    shortLabel: "tbls",
+  },
+  position: {
+    kind: "number",
+    min: 0,
+    max: 1,
+    step: 0.001,
+    label: "Position",
+    shortLabel: "pos",
+  },
+  frequency: {
+    kind: "number",
+    min: 0,
+    max: 25000,
+    step: 1,
+    label: "Frequency",
+    shortLabel: "freq",
+  },
+  fine: {
+    kind: "number",
+    min: -1,
+    max: 1,
+    step: 0.01,
+    label: "Fine",
+    shortLabel: "fine",
+  },
+  coarse: {
+    kind: "number",
+    min: -12,
+    max: 12,
+    step: 1,
+    label: "Coarse",
+    shortLabel: "crs",
+  },
+  octave: {
+    kind: "number",
+    min: -1,
+    max: 2,
+    step: 1,
+    label: "Octave",
+    shortLabel: "oct",
+  },
+  lowGain: {
+    kind: "boolean",
+    label: `Use ${LOW_GAIN}db Gain`,
+    shortLabel: "low",
+  },
+};
+
 const DEFAULT_TABLES: IWavetableTable[] = DEFAULT_WAVETABLE_TABLES.map(
   (table) => ({ real: [...table.real], imag: [...table.imag] }),
 );
 
 const DEFAULT_PROPS: IWavetableProps = {
+  presetId: CUSTOM_WAVETABLE_PRESET_ID,
   tables: DEFAULT_TABLES,
   position: 0,
   frequency: 440,
@@ -494,9 +514,20 @@ const DEFAULT_PROPS: IWavetableProps = {
   lowGain: false,
 };
 
+const applyPresetTables = <T extends IWavetableProps>(props: T): T => {
+  const preset = getWavetablePresetById(props.presetId);
+  if (!preset) return props;
+
+  return {
+    ...props,
+    tables: cloneWavetablePresetTables(preset.tables),
+  };
+};
+
 type WavetableSetterHooks = Pick<
   SetterHooks<IWavetableProps>,
   | "onSetPosition"
+  | "onAfterSetPresetId"
   | "onAfterSetTables"
   | "onAfterSetPosition"
   | "onAfterSetFrequency"
@@ -508,7 +539,7 @@ type WavetableSetterHooks = Pick<
 
 type PolyWavetableSetterHooks = Pick<
   SetterHooks<IWavetableProps>,
-  "onSetTables"
+  "onSetTables" | "onAfterSetPresetId"
 >;
 
 const transposeFrequency = ({
@@ -539,7 +570,7 @@ export class MonoWavetable
   private positionModulationGain: GainNode;
 
   constructor(engineId: string, params: ICreateModule<ModuleType.Wavetable>) {
-    const props = { ...DEFAULT_PROPS, ...params.props };
+    const props = applyPresetTables({ ...DEFAULT_PROPS, ...params.props });
 
     const audioNodeConstructor = (context: Context) => {
       const node = newAudioWorklet(context, CustomWorklet.WavetableProcessor);
@@ -579,6 +610,17 @@ export class MonoWavetable
 
   onSetPosition: WavetableSetterHooks["onSetPosition"] = (value) => {
     return clamp(value, 0, 1);
+  };
+
+  onAfterSetPresetId: WavetableSetterHooks["onAfterSetPresetId"] = (
+    presetId,
+  ) => {
+    const preset = getWavetablePresetById(presetId);
+    if (!preset) return;
+
+    this.props = {
+      tables: cloneWavetablePresetTables(preset.tables),
+    };
   };
 
   onAfterSetTables: WavetableSetterHooks["onAfterSetTables"] = (tables) => {
@@ -726,7 +768,7 @@ export default class Wavetable
     engineId: string,
     params: IPolyModuleConstructor<ModuleType.Wavetable>,
   ) {
-    const props = { ...DEFAULT_PROPS, ...params.props };
+    const props = applyPresetTables({ ...DEFAULT_PROPS, ...params.props });
     const monoModuleConstructor = (
       engineId: string,
       params: IModuleConstructor<ModuleType.Wavetable>,
@@ -746,6 +788,17 @@ export default class Wavetable
 
   onSetTables: PolyWavetableSetterHooks["onSetTables"] = (tables) => {
     return sanitizeWavetableTables(tables);
+  };
+
+  onAfterSetPresetId: PolyWavetableSetterHooks["onAfterSetPresetId"] = (
+    presetId,
+  ) => {
+    const preset = getWavetablePresetById(presetId);
+    if (!preset) return;
+
+    this.props = {
+      tables: cloneWavetablePresetTables(preset.tables),
+    };
   };
 
   start(time: ContextTime) {

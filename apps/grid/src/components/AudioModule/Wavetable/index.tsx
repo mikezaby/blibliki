@@ -1,5 +1,6 @@
 import {
   cloneWavetablePresetTables,
+  CUSTOM_WAVETABLE_PRESET_ID,
   formatWavetableDefinition,
   getWavetablePresetById,
   getWavetablePresetIdByTables,
@@ -61,7 +62,7 @@ const IMPORT_WAV_FRAME_SIZE = 2048;
 const IMPORT_WAV_HARMONICS = 1024;
 const EXPORT_WAV_SAMPLE_RATE = 44100;
 const EXPORT_WAV_FRAME_SAMPLES = 2048;
-const CUSTOM_PRESET_ID = "__custom__";
+const CUSTOM_PRESET_ID = CUSTOM_WAVETABLE_PRESET_ID;
 
 const schema = moduleSchemas[ModuleType.Wavetable];
 
@@ -169,8 +170,12 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
     return getWavetablePresetIdByTables(safeTables) ?? CUSTOM_PRESET_ID;
   }, [safeTables]);
 
-  const setTables = (nextTables: typeof safeTables) => {
+  const setTables = (
+    nextTables: typeof safeTables,
+    presetId = CUSTOM_PRESET_ID,
+  ) => {
     updateProp("tables")(nextTables);
+    updateProp("presetId")(presetId);
   };
 
   const openEditTable = (tableIndex: number) => {
@@ -205,7 +210,7 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
     if (!preset) return;
 
     updateProp("position")(0);
-    setTables(cloneWavetablePresetTables(preset.tables));
+    setTables(cloneWavetablePresetTables(preset.tables), preset.id);
     setWavError(null);
   };
 

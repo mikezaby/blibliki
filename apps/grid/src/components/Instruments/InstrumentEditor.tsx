@@ -1,4 +1,8 @@
-import { stepPropSchema } from "@blibliki/engine";
+import {
+  ModuleType,
+  stepPropSchema,
+  WAVETABLE_PRESETS,
+} from "@blibliki/engine";
 import {
   compileTrack,
   createTrackFromDocument,
@@ -52,6 +56,9 @@ const SOURCE_PROFILE_OPTIONS: SourceProfileId[] = [
   "threeOsc",
   "drumMachine",
 ];
+const WAVETABLE_PRESET_NAME_BY_ID = new Map(
+  WAVETABLE_PRESETS.map((preset) => [preset.id, preset.name]),
+);
 const NOTE_SOURCE_OPTIONS: InstrumentTrackDocument["noteSource"][] = [
   "externalMidi",
   "stepSequencer",
@@ -181,9 +188,17 @@ function getControllerSlotDocumentKey(slot: ControllerSlot) {
   return `${slot.blockKey}.${slot.slotKey}`;
 }
 
-function getControllerEnumOptions(options: readonly (string | number)[]) {
+function getControllerEnumOptions(
+  slot: ControllerSlot,
+  options: readonly (string | number)[],
+) {
   return options.map((option) => ({
-    name: String(option),
+    name:
+      slot.binding.moduleType === ModuleType.Wavetable &&
+      slot.binding.propKey === "presetId" &&
+      typeof option === "string"
+        ? (WAVETABLE_PRESET_NAME_BY_ID.get(option) ?? option)
+        : String(option),
     value: option,
   }));
 }
@@ -586,7 +601,9 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
                       value={activeTrack.sourceProfileId}
                       options={SOURCE_PROFILE_OPTIONS}
                       onChange={(value: SourceProfileId) => {
-                        setTrackChanges({ sourceProfileId: value });
+                        setTrackChanges({
+                          sourceProfileId: value,
+                        });
                       }}
                     />
                   </Stack>
@@ -753,6 +770,7 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
                                                 : slot.valueSpec.options[0]
                                             }
                                             options={getControllerEnumOptions(
+                                              slot,
                                               slot.valueSpec.options,
                                             )}
                                             onChange={(value) => {

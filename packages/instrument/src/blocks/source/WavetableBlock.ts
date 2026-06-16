@@ -1,8 +1,9 @@
-import { ModuleType } from "@blibliki/engine";
+import { DEFAULT_WAVETABLE_PRESET_ID, ModuleType } from "@blibliki/engine";
 import BaseBlock from "@/blocks/BaseBlock";
 import { createModuleId } from "@/blocks/helpers";
 
 const DEFAULT_PROPS = {
+  presetId: DEFAULT_WAVETABLE_PRESET_ID,
   position: 0,
   frequency: 440,
   fine: 0,
@@ -22,7 +23,7 @@ export default class WavetableBlock extends BaseBlock {
       name: "Wavetable",
       moduleType: ModuleType.Wavetable,
       voices,
-      props: { ...DEFAULT_PROPS },
+      props: DEFAULT_PROPS,
     });
 
     this.addInput({

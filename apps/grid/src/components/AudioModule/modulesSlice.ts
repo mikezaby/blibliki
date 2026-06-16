@@ -1,4 +1,5 @@
 import {
+  CUSTOM_WAVETABLE_PRESET_ID,
   Engine,
   IAnyModuleSerialize,
   IModule,
@@ -64,6 +65,7 @@ export const AvailableModules: Record<
     name: "Wavetable",
     moduleType: ModuleType.Wavetable,
     props: {
+      presetId: CUSTOM_WAVETABLE_PRESET_ID,
       lowGain: true,
       tables: [
         {

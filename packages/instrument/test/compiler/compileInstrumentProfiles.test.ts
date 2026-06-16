@@ -1,4 +1,4 @@
-import { ModuleType } from "@blibliki/engine";
+import { getWavetablePresetById, ModuleType } from "@blibliki/engine";
 import { describe, expect, it } from "vitest";
 import { compileInstrument } from "@/compiler/compileInstrument";
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
@@ -55,12 +55,52 @@ describe("compileInstrument profiles", () => {
       throw new Error("Expected the first source page slot to be populated");
     }
 
-    expect(topLeftSlot.slotKey).toBe("position");
+    expect(topLeftSlot.slotKey).toBe("presetId");
     expect(topLeftSlot.binding).toEqual({
       kind: "module-prop",
       moduleId: "track-1.source.main",
       moduleType: ModuleType.Wavetable,
-      propKey: "position",
+      propKey: "presetId",
+    });
+    expect(topLeftSlot.valueSpec.kind).toBe("enum");
+    if (topLeftSlot.valueSpec.kind !== "enum") {
+      throw new Error("Expected wavetable preset slot to use enum values");
+    }
+    expect(topLeftSlot.valueSpec.options).toContain("warm-morph");
+    expect(topLeftSlot.valueSpec.options).toContain("glass-bell");
+  });
+
+  it("compiles a selected wavetable preset from source controller slot values", () => {
+    const document = createDefaultInstrumentDocument();
+    const firstTrack = document.tracks[0];
+    if (!firstTrack) {
+      throw new Error("Expected default instrument to include a first track");
+    }
+
+    document.tracks[0] = {
+      ...firstTrack,
+      sourceProfileId: "wavetable",
+      controllerSlotValues: {
+        "source.presetId": "glass-bell",
+      },
+    };
+
+    const preset = getWavetablePresetById("glass-bell");
+    if (!preset) {
+      throw new Error("Expected glass-bell wavetable preset to exist");
+    }
+
+    const compiled = compileInstrument(document);
+    const sourceModule = compiled.tracks[0]?.compiledTrack.engine.modules.find(
+      (module) => module.id === "track-1.source.main",
+    );
+
+    expect(sourceModule?.moduleType).toBe(ModuleType.Wavetable);
+    expect(sourceModule?.props).toMatchObject({
+      presetId: "glass-bell",
+    });
+    expect(sourceModule?.props).not.toMatchObject({
+      tables: preset.tables,
     });
   });
 });

@@ -67,6 +67,8 @@ export {
   DelayTimeMode,
   ReverbType,
   cloneWavetablePresetTables,
+  CUSTOM_WAVETABLE_PRESET_ID,
+  DEFAULT_WAVETABLE_PRESET_ID,
   parseWavetableDefinition,
   formatWavetableDefinition,
   parseWavetableConfig,

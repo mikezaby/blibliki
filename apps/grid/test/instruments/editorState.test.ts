@@ -6,6 +6,7 @@ import {
 import {
   cloneInstrumentDocument,
   updateSequencerStep,
+  updateTrackControllerSlotValue,
   updateTrackDocument,
   updateTrackFxChain,
 } from "../../src/instruments/editorState";
@@ -56,6 +57,33 @@ describe("instrument editor state helpers", () => {
       "reverb",
       "reverb",
     ]);
+  });
+
+  it("updates a controller slot value without replacing existing slots", () => {
+    const document = createDocument();
+    document.tracks[0] = {
+      ...document.tracks[0]!,
+      controllerSlotValues: {
+        "source.presetId": "warm-morph",
+        "fx1.drive": 0.72,
+      },
+    };
+
+    const updated = updateTrackControllerSlotValue(
+      document,
+      0,
+      "source.presetId",
+      "glass-bell",
+    );
+
+    expect(updated.tracks[0]?.controllerSlotValues).toEqual({
+      "source.presetId": "glass-bell",
+      "fx1.drive": 0.72,
+    });
+    expect(document.tracks[0]?.controllerSlotValues).toEqual({
+      "source.presetId": "warm-morph",
+      "fx1.drive": 0.72,
+    });
   });
 
   it("updates the selected sequencer step content", () => {

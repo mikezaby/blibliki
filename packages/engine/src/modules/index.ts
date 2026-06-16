@@ -230,6 +230,8 @@ export type {
 } from "./Wavetable";
 export {
   cloneWavetablePresetTables,
+  CUSTOM_WAVETABLE_PRESET_ID,
+  DEFAULT_WAVETABLE_PRESET_ID,
   formatWavetableConfig,
   getWavetablePresetById,
   getWavetablePresetIdByTables,
