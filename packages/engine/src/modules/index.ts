@@ -225,12 +225,18 @@ export type {
   IWavetableState,
   IWavetableConfig,
   IWavetableDefinition,
+  IWavetablePreset,
+  IWavetableTable,
 } from "./Wavetable";
 export {
+  cloneWavetablePresetTables,
   formatWavetableConfig,
+  getWavetablePresetById,
+  getWavetablePresetIdByTables,
   parseWavetableDefinition,
   parseWavetableConfig,
   formatWavetableDefinition,
+  WAVETABLE_PRESETS,
 } from "./Wavetable";
 export type { IGain } from "./Gain";
 export type { IMaster } from "./Master";

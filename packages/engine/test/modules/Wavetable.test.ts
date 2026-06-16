@@ -2,11 +2,15 @@ import { describe, expect, it } from "vitest";
 import { ModuleType } from "@/modules";
 import Inspector from "@/modules/Inspector";
 import Wavetable, {
+  cloneWavetablePresetTables,
   formatWavetableConfig,
   IWavetableProps,
   formatWavetableDefinition,
+  getWavetablePresetById,
+  getWavetablePresetIdByTables,
   parseWavetableConfig,
   parseWavetableDefinition,
+  WAVETABLE_PRESETS,
 } from "@/modules/Wavetable";
 import {
   readInspectorPeak,
@@ -399,6 +403,28 @@ describe("Wavetable", () => {
       expect(formatted).toContain('"tables": [');
       expect(formatted).toContain('"real": [');
       expect(formatted).toContain('"imag": [');
+    });
+  });
+
+  describe("presets", () => {
+    it("exports reusable wavetable presets with lookup and cloning helpers", () => {
+      const preset = getWavetablePresetById("warm-morph");
+
+      expect(WAVETABLE_PRESETS.length).toBeGreaterThan(0);
+      expect(preset?.name).toBe("Warm Morph");
+      expect(preset?.tables.length).toBeGreaterThan(1);
+
+      const clonedTables = cloneWavetablePresetTables(preset!.tables);
+
+      expect(clonedTables).toEqual(preset!.tables);
+      expect(clonedTables).not.toBe(preset!.tables);
+      expect(clonedTables[0]).not.toBe(preset!.tables[0]);
+      expect(getWavetablePresetIdByTables(clonedTables)).toBe("warm-morph");
+
+      clonedTables[0]!.imag[1] = 0.123456;
+
+      expect(clonedTables).not.toEqual(preset!.tables);
+      expect(getWavetablePresetIdByTables(clonedTables)).toBeUndefined();
     });
   });
 });

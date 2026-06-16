@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest";
 import {
-  clonePresetTables,
-  getPresetIdByTables,
+  cloneWavetablePresetTables,
+  getWavetablePresetIdByTables,
   WAVETABLE_PRESETS,
-} from "../../../src/components/AudioModule/Wavetable/presets";
+} from "@blibliki/engine";
+import { describe, expect, it } from "vitest";
 import {
   buildPreviewWaveforms,
   getInterpolationState,
@@ -35,7 +35,7 @@ describe("wavetable presets", () => {
 
   it("clones tables without mutating original preset", () => {
     const source = WAVETABLE_PRESETS[0]!;
-    const clonedTables = clonePresetTables(source.tables);
+    const clonedTables = cloneWavetablePresetTables(source.tables);
 
     clonedTables[0]!.imag[1] = 999;
 
@@ -44,17 +44,17 @@ describe("wavetable presets", () => {
 
   it("resolves preset id from matching table data", () => {
     const source = WAVETABLE_PRESETS[0]!;
-    const clonedTables = clonePresetTables(source.tables);
+    const clonedTables = cloneWavetablePresetTables(source.tables);
 
-    expect(getPresetIdByTables(clonedTables)).toBe(source.id);
+    expect(getWavetablePresetIdByTables(clonedTables)).toBe(source.id);
   });
 
   it("returns undefined for non-preset table data", () => {
     const source = WAVETABLE_PRESETS[0]!;
-    const mutated = clonePresetTables(source.tables);
+    const mutated = cloneWavetablePresetTables(source.tables);
     mutated[0]!.imag[1] = (mutated[0]!.imag[1] ?? 0) + 0.5;
 
-    expect(getPresetIdByTables(mutated)).toBeUndefined();
+    expect(getWavetablePresetIdByTables(mutated)).toBeUndefined();
   });
 
   it("has abrupt step-to-step deltas for the experimental set", () => {

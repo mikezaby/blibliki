@@ -1,4 +1,4 @@
-import { WavetableTable } from "./presets";
+import type { IWavetableTable } from "@blibliki/engine";
 
 export type WavetableInterpolationState = {
   fromIndex: number;
@@ -11,7 +11,7 @@ const clamp = (value: number, min: number, max: number): number => {
 };
 
 const sampleWaveform = (
-  table: WavetableTable,
+  table: IWavetableTable,
   pointCount: number,
 ): number[] => {
   const harmonics = Math.max(table.real.length, table.imag.length) - 1;
@@ -65,7 +65,7 @@ export const getInterpolationState = (
 };
 
 export const buildPreviewWaveforms = (
-  tables: WavetableTable[],
+  tables: IWavetableTable[],
   pointCount = 96,
 ): number[][] => {
   const safePointCount = Math.max(2, Math.floor(pointCount));

@@ -1,5 +1,8 @@
 import {
+  cloneWavetablePresetTables,
   formatWavetableDefinition,
+  getWavetablePresetById,
+  getWavetablePresetIdByTables,
   moduleSchemas,
   ModuleType,
   parseWavetableDefinition,
@@ -7,6 +10,7 @@ import {
   extractEmbeddedWavetableTablesFromWavBytes,
   extractWavetableTablesFromAudioBuffer,
   ModuleTypeToPropsMapping,
+  WAVETABLE_PRESETS,
 } from "@blibliki/engine";
 import {
   Button,
@@ -34,12 +38,6 @@ import { ChangeEvent, useMemo, useRef, useState } from "react";
 import { useModuleState } from "@/hooks";
 import { ModuleComponent } from "..";
 import Container from "../Container";
-import {
-  clonePresetTables,
-  getPresetById,
-  getPresetIdByTables,
-  WAVETABLE_PRESETS,
-} from "./presets";
 import { buildPreviewWaveforms, getInterpolationState } from "./preview";
 
 const CENTER: MarkProps[] = [{ value: 0, label: "" }];
@@ -168,7 +166,7 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
   const wavFileInputRef = useRef<HTMLInputElement | null>(null);
 
   const selectedPresetId = useMemo(() => {
-    return getPresetIdByTables(safeTables) ?? CUSTOM_PRESET_ID;
+    return getWavetablePresetIdByTables(safeTables) ?? CUSTOM_PRESET_ID;
   }, [safeTables]);
 
   const setTables = (nextTables: typeof safeTables) => {
@@ -203,11 +201,11 @@ const Wavetable: ModuleComponent<ModuleType.Wavetable> = (props) => {
   const applyPreset = (presetId: string) => {
     if (presetId === CUSTOM_PRESET_ID) return;
 
-    const preset = getPresetById(presetId);
+    const preset = getWavetablePresetById(presetId);
     if (!preset) return;
 
     updateProp("position")(0);
-    setTables(clonePresetTables(preset.tables));
+    setTables(cloneWavetablePresetTables(preset.tables));
     setWavError(null);
   };
 

@@ -66,10 +66,14 @@ export {
   NoiseType,
   DelayTimeMode,
   ReverbType,
+  cloneWavetablePresetTables,
   parseWavetableDefinition,
   formatWavetableDefinition,
   parseWavetableConfig,
   formatWavetableConfig,
+  getWavetablePresetById,
+  getWavetablePresetIdByTables,
+  WAVETABLE_PRESETS,
 } from "./modules";
 export { default as StepSequencer } from "./modules/StepSequencer";
 export type {
@@ -97,8 +101,10 @@ export type {
   IWavetable,
   IWavetableConfig,
   IWavetableDefinition,
+  IWavetablePreset,
   IWavetableProps,
   IWavetableState,
+  IWavetableTable,
   IDrumMachine,
   IDrumMachineProps,
 } from "./modules";
