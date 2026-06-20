@@ -7,14 +7,11 @@ import {
   StepSequencer as StepSequencerModule,
 } from "@blibliki/engine";
 import { Stack } from "@blibliki/ui";
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { useModuleState } from "@/hooks";
 import { ModuleComponent } from "..";
-import Controls from "./Controls";
-import PageNavigator from "./PageNavigator";
 import PatternSelector from "./PatternSelector";
-import StepEditor from "./StepEditor";
-import StepGrid from "./StepGrid";
+import StepSequencerEditor from "./StepSequencerEditor";
 
 // Helper to create default step
 const createDefaultStep = (): IStep => ({
@@ -41,10 +38,6 @@ const createDefaultPattern = (name: string): IPattern => ({
 const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
   const { id, updateProp, props: sequencerProps } = props;
   const sequencerState = useModuleState(id, ModuleType.StepSequencer);
-  const [selectedStep, setSelectedStep] = useState<number>(0);
-  const [lastConfiguredStep, setLastConfiguredStep] = useState<IStep | null>(
-    null,
-  );
 
   // Get the module instance
   const getModuleInstance = useCallback((): StepSequencerModule | undefined => {
@@ -87,72 +80,25 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
   const isRunning = sequencerState.isRunning;
 
   const currentPattern = patterns[activePatternNo];
-  const currentPage = currentPattern?.pages[activePageNo];
-  const steps = currentPage?.steps ?? [];
-
-  // Update a specific step - PROPERLY deep copy nested structures
-  const updateStep = (stepIndex: number, updates: Partial<IStep>) => {
-    const currentStep = steps[stepIndex];
-    if (!currentStep) return;
-
-    // Check if we're activating a previously inactive step
-    const isActivating = !currentStep.active && updates.active === true;
-
-    // Deep copy patterns array
+  const updateStep = (pageIndex: number, stepIndex: number, step: IStep) => {
     const updatedPatterns = patterns.map((pattern, pIdx) => {
       if (pIdx !== activePatternNo) return pattern;
 
-      // Deep copy pages array
       const updatedPages = pattern.pages.map((page, pageIdx) => {
-        if (pageIdx !== activePageNo) return page;
+        if (pageIdx !== pageIndex) return page;
 
-        // Deep copy steps array
-        const updatedSteps = page.steps.map((step, sIdx) => {
-          if (sIdx !== stepIndex) return step;
-
-          // If activating and we have a last configured step, inherit its params
-          if (isActivating && lastConfiguredStep) {
-            return {
-              ...step,
-              active: true,
-              notes: [...lastConfiguredStep.notes],
-              ccMessages: [...lastConfiguredStep.ccMessages],
-              probability: lastConfiguredStep.probability,
-              microtimeOffset: lastConfiguredStep.microtimeOffset,
-              duration: lastConfiguredStep.duration,
-            };
-          }
-
-          // Otherwise, merge updates into the step
-          return { ...step, ...updates };
-        });
-
-        return { ...page, steps: updatedSteps };
+        return {
+          ...page,
+          steps: page.steps.map((currentStep, currentStepIndex) =>
+            currentStepIndex === stepIndex ? step : currentStep,
+          ),
+        };
       });
 
       return { ...pattern, pages: updatedPages };
     });
 
-    // Update patterns prop
     updateProp("patterns")(updatedPatterns);
-
-    // Track this as the last configured step if it's now active
-    const updatedStep =
-      isActivating && lastConfiguredStep
-        ? {
-            ...currentStep,
-            active: true,
-            notes: [...lastConfiguredStep.notes],
-            ccMessages: [...lastConfiguredStep.ccMessages],
-            probability: lastConfiguredStep.probability,
-            microtimeOffset: lastConfiguredStep.microtimeOffset,
-            duration: lastConfiguredStep.duration,
-          }
-        : { ...currentStep, ...updates };
-
-    if (updatedStep.active) {
-      setLastConfiguredStep(updatedStep);
-    }
   };
 
   // Add new pattern
@@ -242,20 +188,19 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
         updateProp={updateProp}
       />
 
-      <PageNavigator
-        pages={patterns[activePatternNo]?.pages ?? []}
+      <StepSequencerEditor
+        pages={currentPattern?.pages ?? []}
         activePageNo={activePageNo}
         onPageChange={(index) => {
           updateProp("activePageNo")(index);
         }}
+        onStepChange={updateStep}
         onAddPage={addPage}
         onDeletePage={deletePage}
-      />
-
-      <Controls
         stepsPerPage={stepsPerPage}
         resolution={resolution}
         playbackMode={playbackMode}
+        currentStep={currentStep}
         isRunning={isRunning}
         onStepsChange={(value) => {
           updateProp("stepsPerPage")(value);
@@ -268,25 +213,6 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
         }}
         onStart={handleStart}
         onStop={handleStop}
-      />
-
-      <StepGrid
-        steps={steps}
-        currentStep={currentStep}
-        selectedStep={selectedStep}
-        onSelectStep={setSelectedStep}
-        onToggleActive={(stepIndex) => {
-          updateStep(stepIndex, { active: !steps[stepIndex]?.active });
-        }}
-        stepsPerPage={stepsPerPage}
-      />
-
-      <StepEditor
-        step={steps[selectedStep]}
-        stepIndex={selectedStep}
-        onUpdate={(updates) => {
-          updateStep(selectedStep, updates);
-        }}
       />
     </Stack>
   );

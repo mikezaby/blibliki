@@ -6,8 +6,8 @@ type PageNavigatorProps = {
   pages: IPage[];
   activePageNo: number;
   onPageChange: (index: number) => void;
-  onAddPage: () => void;
-  onDeletePage: (index: number) => void;
+  onAddPage?: () => void;
+  onDeletePage?: (index: number) => void;
 };
 
 export default function PageNavigator({
@@ -52,11 +52,13 @@ export default function PageNavigator({
         {pages[activePageNo]?.name ?? "Unnamed Page"}
       </Text>
 
-      <Button color="success" size="sm" onClick={onAddPage}>
-        <Plus className="w-4 h-4" />
-        Page
-      </Button>
-      {pages.length > 1 && (
+      {onAddPage && (
+        <Button color="success" size="sm" onClick={onAddPage}>
+          <Plus className="w-4 h-4" />
+          Page
+        </Button>
+      )}
+      {onDeletePage && pages.length > 1 && (
         <Button
           color="error"
           size="sm"

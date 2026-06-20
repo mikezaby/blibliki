@@ -1,8 +1,4 @@
-import {
-  ModuleType,
-  stepPropSchema,
-  WAVETABLE_PRESETS,
-} from "@blibliki/engine";
+import { ModuleType, WAVETABLE_PRESETS } from "@blibliki/engine";
 import {
   compileTrack,
   createTrackFromDocument,
@@ -30,18 +26,21 @@ import {
 import { Link } from "@tanstack/react-router";
 import { Save } from "lucide-react";
 import { useMemo, useState } from "react";
+import StepSequencerEditor from "@/components/AudioModule/StepSequencer/StepSequencerEditor";
+import {
+  toEditorPages,
+  updateInstrumentPageStep,
+} from "@/components/AudioModule/StepSequencer/instrumentAdapter";
 import { useAppDispatch } from "@/hooks";
 import type {
   EffectProfileId,
   InstrumentDocument,
   InstrumentLatencyHint,
-  InstrumentSequencerStep,
   InstrumentTrackDocument,
   SourceProfileId,
 } from "@/instruments/document";
 import {
   cloneInstrumentDocument,
-  updateSequencerStep,
   updateTrackControllerSlotValue,
   updateTrackDocument,
   updateTrackFxChain,
@@ -74,38 +73,7 @@ const MIDI_CHANNEL_OPTIONS = Array.from(
   (_, index) => index + 1,
 );
 const LOOP_LENGTH_OPTIONS = [1, 2, 3, 4] as const;
-const SEQUENCER_PAGE_OPTIONS = [1, 2, 3, 4] as const;
-const STEP_OPTIONS = Array.from({ length: 16 }, (_, index) => index + 1);
-const DURATION_OPTIONS = [
-  "1/64",
-  "1/48",
-  "1/32",
-  "1/24",
-  "1/16",
-  "1/12",
-  "1/8",
-  "1/6",
-  "3/16",
-  "1/4",
-  "5/16",
-  "1/3",
-  "3/8",
-  "1/2",
-  "3/4",
-  "1",
-  "1.5",
-  "2",
-  "3",
-  "4",
-  "6",
-  "8",
-  "16",
-  "32",
-] as const;
-const RESOLUTION_OPTIONS = ["1/16", "1/8", "1/4", "1/2", "1"] as const;
-const PLAYBACK_MODE_OPTIONS = ["loop", "pingPong", "random"] as const;
 const LATENCY_HINT_OPTIONS = ["interactive", "playback"] as const;
-const DEFAULT_STEP_VELOCITY = 100;
 const TRACK_VOICES_MIN = 1;
 const TRACK_VOICES_MAX = 64;
 const CONTROLLER_PAGE_LABELS: Record<
@@ -121,60 +89,6 @@ type ControllerSlot = Extract<
   CompiledLaunchControlXL3Page["regions"][number]["slots"][number],
   { kind: "slot" }
 >;
-
-function normalizeStepNoteName(value: string) {
-  return value.trim().toUpperCase();
-}
-
-function normalizeStepNotesInput(value: string) {
-  return value.toUpperCase();
-}
-
-function formatStepNotes(notes: InstrumentSequencerStep["notes"]) {
-  return notes.map(({ note }) => normalizeStepNoteName(note)).join(", ");
-}
-
-function clampStepVelocity(value: number) {
-  return Math.max(1, Math.min(127, Math.round(value)));
-}
-
-function getStepVelocity(notes: InstrumentSequencerStep["notes"]) {
-  const firstVelocity = notes[0]?.velocity;
-
-  return typeof firstVelocity === "number"
-    ? clampStepVelocity(firstVelocity)
-    : DEFAULT_STEP_VELOCITY;
-}
-
-function parseStepNotes(
-  input: string,
-  velocity: number,
-): InstrumentSequencerStep["notes"] {
-  const nextVelocity = clampStepVelocity(velocity);
-
-  return input
-    .split(",")
-    .map((entry) => normalizeStepNoteName(entry))
-    .filter((entry) => entry.length > 0)
-    .map((entry) => ({
-      note: entry,
-      velocity: nextVelocity,
-    }))
-    .filter((entry) => entry.note.length > 0);
-}
-
-function formatSelectedStepNotes(
-  document: InstrumentDocument,
-  trackIndex: number,
-  pageIndex: number,
-  stepIndex: number,
-) {
-  const track = document.tracks[trackIndex] ?? document.tracks[0];
-  const page = track?.sequencer.pages[pageIndex] ?? track?.sequencer.pages[0];
-  const step = page?.steps[stepIndex] ?? page?.steps[0];
-
-  return formatStepNotes(step?.notes ?? []);
-}
 
 function getControllerSlotId(
   trackKey: string,
@@ -246,17 +160,13 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
   const [document, setDocument] = useState<InstrumentDocument>(initialDocument);
   const [activeTrackIndex, setActiveTrackIndex] = useState(0);
   const [activePageIndex, setActivePageIndex] = useState(0);
-  const [activeStepIndex, setActiveStepIndex] = useState(0);
-  const [stepNotesInput, setStepNotesInput] = useState(() =>
-    formatSelectedStepNotes(initialDocument, 0, 0, 0),
-  );
   const [saving, setSaving] = useState(false);
 
   const activeTrack = document.tracks[activeTrackIndex] ?? document.tracks[0];
-  const activePage =
-    activeTrack?.sequencer.pages[activePageIndex] ??
-    activeTrack?.sequencer.pages[0];
-  const activeStep = activePage?.steps[activeStepIndex] ?? activePage?.steps[0];
+  const editorPages = useMemo(
+    () => toEditorPages(activeTrack?.sequencer.pages ?? []),
+    [activeTrack?.sequencer.pages],
+  );
   const compiledActiveTrack = useMemo(() => {
     if (!activeTrack) {
       return;
@@ -300,18 +210,6 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
   ) => {
     setDocument((current) =>
       updateTrackFxChain(current, activeTrackIndex, fxIndex, effectProfileId),
-    );
-  };
-
-  const setStep = (step: InstrumentSequencerStep) => {
-    setDocument((current) =>
-      updateSequencerStep(
-        current,
-        activeTrackIndex,
-        activePageIndex,
-        activeStepIndex,
-        step,
-      ),
     );
   };
 
@@ -367,7 +265,7 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
     }
   };
 
-  if (!activeTrack || !activePage || !activeStep) {
+  if (!activeTrack) {
     return (
       <Surface tone="canvas" className="p-8">
         <Text tone="muted">Instrument document is missing track data.</Text>
@@ -448,10 +346,6 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
                     onClick={() => {
                       setActiveTrackIndex(track.index);
                       setActivePageIndex(0);
-                      setActiveStepIndex(0);
-                      setStepNotesInput(
-                        formatSelectedStepNotes(document, track.index, 0, 0),
-                      );
                     }}
                   >
                     {track.label}
@@ -805,235 +699,62 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
               </CardHeader>
               <CardContent>
                 <Stack gap={5}>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <Stack gap={2}>
-                      <Label>Loop Length</Label>
-                      <OptionSelect
-                        label="Select loop length"
-                        value={activeTrack.sequencer.loopLength}
-                        options={LOOP_LENGTH_OPTIONS}
-                        onChange={(value: 1 | 2 | 3 | 4) => {
-                          setTrackChanges({
-                            sequencer: {
-                              ...activeTrack.sequencer,
-                              loopLength: value,
-                            },
-                          });
-                        }}
-                      />
-                    </Stack>
+                  <Stack gap={2} className="max-w-48">
+                    <Label>Loop Length</Label>
+                    <OptionSelect
+                      label="Select loop length"
+                      value={activeTrack.sequencer.loopLength}
+                      options={LOOP_LENGTH_OPTIONS}
+                      onChange={(value: 1 | 2 | 3 | 4) => {
+                        setTrackChanges({
+                          sequencer: {
+                            ...activeTrack.sequencer,
+                            loopLength: value,
+                          },
+                        });
+                      }}
+                    />
+                  </Stack>
 
-                    <Stack gap={2}>
-                      <Label>Resolution</Label>
-                      <OptionSelect
-                        label="Select resolution"
-                        value={activeTrack.sequencer.resolution}
-                        options={RESOLUTION_OPTIONS}
-                        onChange={(value) => {
-                          setTrackChanges({
-                            sequencer: {
-                              ...activeTrack.sequencer,
-                              resolution: value,
-                            },
-                          });
-                        }}
-                      />
-                    </Stack>
-
-                    <Stack gap={2}>
-                      <Label>Playback Mode</Label>
-                      <OptionSelect
-                        label="Select playback mode"
-                        value={activeTrack.sequencer.playbackMode}
-                        options={PLAYBACK_MODE_OPTIONS}
-                        onChange={(value) => {
-                          setTrackChanges({
-                            sequencer: {
-                              ...activeTrack.sequencer,
-                              playbackMode: value,
-                            },
-                          });
-                        }}
-                      />
-                    </Stack>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-[14rem_minmax(0,1fr)]">
-                    <Stack gap={3}>
-                      <Stack gap={2}>
-                        <Label>Page</Label>
-                        <OptionSelect
-                          label="Select page"
-                          value={activePageIndex + 1}
-                          options={SEQUENCER_PAGE_OPTIONS}
-                          onChange={(value: number) => {
-                            setActivePageIndex(value - 1);
-                            setActiveStepIndex(0);
-                            setStepNotesInput(
-                              formatSelectedStepNotes(
-                                document,
-                                activeTrackIndex,
-                                value - 1,
-                                0,
-                              ),
-                            );
-                          }}
-                        />
-                      </Stack>
-
-                      <Stack gap={2}>
-                        <Label>Step</Label>
-                        <div className="grid grid-cols-4 gap-2">
-                          {STEP_OPTIONS.map((stepNo) => (
-                            <Button
-                              key={`${activeTrack.key}-step-${stepNo}`}
-                              variant={
-                                stepNo - 1 === activeStepIndex
-                                  ? "contained"
-                                  : "outlined"
-                              }
-                              color={
-                                stepNo - 1 === activeStepIndex
-                                  ? "info"
-                                  : "neutral"
-                              }
-                              size="sm"
-                              onClick={() => {
-                                setActiveStepIndex(stepNo - 1);
-                                setStepNotesInput(
-                                  formatSelectedStepNotes(
-                                    document,
-                                    activeTrackIndex,
-                                    activePageIndex,
-                                    stepNo - 1,
-                                  ),
-                                );
-                              }}
-                            >
-                              {stepNo}
-                            </Button>
-                          ))}
-                        </div>
-                      </Stack>
-                    </Stack>
-
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <Stack gap={2}>
-                        <Label>Active</Label>
-                        <OptionSelect
-                          label="Select active state"
-                          value={activeStep.active ? "on" : "off"}
-                          options={[
-                            { name: "On", value: "on" },
-                            { name: "Off", value: "off" },
-                          ]}
-                          onChange={(value: "on" | "off") => {
-                            setStep({
-                              ...activeStep,
-                              active: value === "on",
-                            });
-                          }}
-                        />
-                      </Stack>
-
-                      <Stack gap={2}>
-                        <Label>Duration</Label>
-                        <OptionSelect
-                          label="Select duration"
-                          value={activeStep.duration}
-                          options={DURATION_OPTIONS}
-                          onChange={(
-                            value: InstrumentSequencerStep["duration"],
-                          ) => {
-                            setStep({
-                              ...activeStep,
-                              duration: value,
-                            });
-                          }}
-                        />
-                      </Stack>
-
-                      <Stack gap={2} className="md:col-span-2">
-                        <Label htmlFor="step-notes">Notes</Label>
-                        <Input
-                          id="step-notes"
-                          value={stepNotesInput}
-                          placeholder="C3, E3"
-                          onChange={(event) => {
-                            const value = normalizeStepNotesInput(
-                              event.target.value,
-                            );
-                            setStepNotesInput(value);
-                            setStep({
-                              ...activeStep,
-                              notes: parseStepNotes(
-                                value,
-                                getStepVelocity(activeStep.notes),
-                              ),
-                            });
-                          }}
-                        />
-                        <Text tone="muted" size="xs">
-                          Use comma-separated note names, example: `C3, E3`
-                        </Text>
-                      </Stack>
-
-                      <Stack gap={2}>
-                        <Fader
-                          name="Probability"
-                          value={activeStep.probability}
-                          min={stepPropSchema.probability.min}
-                          max={stepPropSchema.probability.max}
-                          step={stepPropSchema.probability.step}
-                          orientation="horizontal"
-                          onChange={(_, probability) => {
-                            setStep({
-                              ...activeStep,
-                              probability,
-                            });
-                          }}
-                        />
-                      </Stack>
-
-                      <Stack gap={2}>
-                        <Fader
-                          name="Velocity"
-                          value={getStepVelocity(activeStep.notes)}
-                          min={1}
-                          max={127}
-                          step={1}
-                          orientation="horizontal"
-                          onChange={(_, nextVelocity) => {
-                            const velocity = clampStepVelocity(nextVelocity);
-                            setStep({
-                              ...activeStep,
-                              notes: activeStep.notes.map((note) => ({
-                                ...note,
-                                velocity,
-                              })),
-                            });
-                          }}
-                        />
-                      </Stack>
-
-                      <Stack gap={2}>
-                        <Fader
-                          name="Microtime"
-                          value={activeStep.microtimeOffset}
-                          min={stepPropSchema.microtimeOffset.min}
-                          max={stepPropSchema.microtimeOffset.max}
-                          step={stepPropSchema.microtimeOffset.step}
-                          orientation="horizontal"
-                          onChange={(_, microtimeOffset) => {
-                            setStep({
-                              ...activeStep,
-                              microtimeOffset,
-                            });
-                          }}
-                        />
-                      </Stack>
-                    </div>
-                  </div>
+                  <StepSequencerEditor
+                    key={activeTrack.key}
+                    pages={editorPages}
+                    activePageNo={activePageIndex}
+                    stepsPerPage={16}
+                    resolution={activeTrack.sequencer.resolution}
+                    playbackMode={activeTrack.sequencer.playbackMode}
+                    showCcMessages={false}
+                    onPageChange={setActivePageIndex}
+                    onStepChange={(pageIndex, stepIndex, step) => {
+                      setTrackChanges({
+                        sequencer: {
+                          ...activeTrack.sequencer,
+                          pages: updateInstrumentPageStep(
+                            activeTrack.sequencer.pages,
+                            pageIndex,
+                            stepIndex,
+                            step,
+                          ),
+                        },
+                      });
+                    }}
+                    onResolutionChange={(resolution) => {
+                      setTrackChanges({
+                        sequencer: {
+                          ...activeTrack.sequencer,
+                          resolution,
+                        },
+                      });
+                    }}
+                    onPlaybackModeChange={(playbackMode) => {
+                      setTrackChanges({
+                        sequencer: {
+                          ...activeTrack.sequencer,
+                          playbackMode,
+                        },
+                      });
+                    }}
+                  />
                 </Stack>
               </CardContent>
             </Card>

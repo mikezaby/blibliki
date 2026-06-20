@@ -13,15 +13,15 @@ import {
 } from "@blibliki/ui";
 
 type ControlsProps = {
-  stepsPerPage: number;
+  stepsPerPage?: number;
   resolution: Resolution;
   playbackMode: PlaybackMode;
-  isRunning: boolean;
-  onStepsChange: (value: number) => void;
+  isRunning?: boolean;
+  onStepsChange?: (value: number) => void;
   onResolutionChange: (value: Resolution) => void;
   onPlaybackModeChange: (value: PlaybackMode) => void;
-  onStart: () => void;
-  onStop: () => void;
+  onStart?: () => void;
+  onStop?: () => void;
 };
 
 const STEP_OPTIONS = [4, 8, 12, 16] as const;
@@ -47,42 +47,52 @@ export default function Controls({
   onStart,
   onStop,
 }: ControlsProps) {
+  const showTransportControls = onStart !== undefined && onStop !== undefined;
+  const showStepsControl =
+    stepsPerPage !== undefined && onStepsChange !== undefined;
+
   return (
     <Surface tone="subtle" border="subtle" radius="md" className="p-3">
       <Stack direction="row" align="center" gap={4} className="flex-wrap">
-        <Stack direction="row" gap={2}>
-          <Button
-            color={isRunning ? "error" : "success"}
-            size="sm"
-            className="w-15"
-            onClick={isRunning ? onStop : onStart}
-          >
-            {isRunning ? "Stop" : "Start"}
-          </Button>
-        </Stack>
+        {showTransportControls && (
+          <>
+            <Stack direction="row" gap={2}>
+              <Button
+                color={isRunning ? "error" : "success"}
+                size="sm"
+                className="w-15"
+                onClick={isRunning ? onStop : onStart}
+              >
+                {isRunning ? "Stop" : "Start"}
+              </Button>
+            </Stack>
 
-        <Divider orientation="vertical" className="h-6" />
+            <Divider orientation="vertical" className="h-6" />
+          </>
+        )}
 
-        <Stack direction="row" align="center" gap={2}>
-          <Label className="text-xs font-medium">Steps:</Label>
-          <Select
-            value={stepsPerPage.toString()}
-            onValueChange={(nextValue) => {
-              onStepsChange(Number(nextValue));
-            }}
-          >
-            <SelectTrigger size="sm" className="w-20">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {STEP_OPTIONS.map((num) => (
-                <SelectItem key={num} value={num.toString()}>
-                  {num}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Stack>
+        {showStepsControl && (
+          <Stack direction="row" align="center" gap={2}>
+            <Label className="text-xs font-medium">Steps:</Label>
+            <Select
+              value={stepsPerPage.toString()}
+              onValueChange={(nextValue) => {
+                onStepsChange(Number(nextValue));
+              }}
+            >
+              <SelectTrigger size="sm" className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STEP_OPTIONS.map((num) => (
+                  <SelectItem key={num} value={num.toString()}>
+                    {num}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Stack>
+        )}
 
         <Stack direction="row" align="center" gap={2}>
           <Label className="text-xs font-medium">Resolution:</Label>

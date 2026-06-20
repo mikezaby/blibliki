@@ -2,7 +2,6 @@ import type {
   EffectProfileId,
   InstrumentDocument,
   InstrumentTrackControllerSlotValues,
-  InstrumentSequencerStep,
   InstrumentTrackDocument,
 } from "@/instruments/document";
 
@@ -70,39 +69,6 @@ export function updateTrackControllerSlotValue(
     controllerSlotValues: {
       ...(track.controllerSlotValues ?? {}),
       [slotKey]: value,
-    },
-  };
-
-  return next;
-}
-
-export function updateSequencerStep(
-  document: InstrumentDocument,
-  trackIndex: number,
-  pageIndex: number,
-  stepIndex: number,
-  step: InstrumentSequencerStep,
-): InstrumentDocument {
-  const next = cloneInstrumentDocument(document);
-  const track = next.tracks[trackIndex];
-  const page = track?.sequencer.pages[pageIndex];
-  if (!track || !page) {
-    return next;
-  }
-
-  const nextPages = [...track.sequencer.pages];
-  const nextSteps = [...page.steps];
-  nextSteps[stepIndex] = step;
-  nextPages[pageIndex] = {
-    ...page,
-    steps: nextSteps,
-  };
-
-  next.tracks[trackIndex] = {
-    ...track,
-    sequencer: {
-      ...track.sequencer,
-      pages: nextPages,
     },
   };
 

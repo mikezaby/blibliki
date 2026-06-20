@@ -16,6 +16,7 @@ type StepEditorProps = {
   step: IStep | undefined;
   stepIndex: number;
   onUpdate: (updates: Partial<IStep>) => void;
+  showCcMessages?: boolean;
 };
 
 const DURATION_MARKS: MarkProps[] = stepPropSchema.duration.options.map(
@@ -28,6 +29,7 @@ export default function StepEditor({
   step,
   stepIndex,
   onUpdate,
+  showCcMessages = true,
 }: StepEditorProps) {
   if (!step) {
     return (
@@ -43,7 +45,7 @@ export default function StepEditor({
   }
 
   const hasNotes = step.notes.length > 0;
-  const hasCC = step.ccMessages.length > 0;
+  const hasCC = showCcMessages && step.ccMessages.length > 0;
   const statusTone = step.active ? "success" : "neutral";
 
   return (
@@ -96,9 +98,15 @@ export default function StepEditor({
                 variant="text"
                 color="error"
                 onClick={() => {
-                  onUpdate({ notes: [], ccMessages: [] });
+                  onUpdate(
+                    showCcMessages
+                      ? { notes: [], ccMessages: [] }
+                      : { notes: [] },
+                  );
                 }}
-                title="Clear all notes and CC"
+                title={
+                  showCcMessages ? "Clear all notes and CC" : "Clear all notes"
+                }
               >
                 Clear
               </Button>
@@ -166,14 +174,18 @@ export default function StepEditor({
           />
 
           {/* Separator */}
-          <Divider orientation="vertical" className="mx-2 h-10" />
+          {showCcMessages && (
+            <>
+              <Divider orientation="vertical" className="mx-2 h-10" />
 
-          <CCEditor
-            ccMessages={step.ccMessages}
-            onChange={(ccMessages) => {
-              onUpdate({ ccMessages });
-            }}
-          />
+              <CCEditor
+                ccMessages={step.ccMessages}
+                onChange={(ccMessages) => {
+                  onUpdate({ ccMessages });
+                }}
+              />
+            </>
+          )}
         </Stack>
 
         {/* Combined Notes and CC Grid */}
@@ -226,50 +238,53 @@ export default function StepEditor({
             ))}
 
             {/* Render all CC messages */}
-            {step.ccMessages.map((ccMsg, index) => (
-              <Surface
-                key={`cc-${index}`}
-                tone="subtle"
-                border="subtle"
-                radius="md"
-                className="flex items-start gap-3 p-3"
-              >
-                <div className="flex items-center gap-2 min-w-[60px] pt-2">
-                  <div className="w-2 h-2 rounded-full bg-brand-secondary" />
-                  <span className="font-mono text-sm font-semibold">
-                    CC {ccMsg.cc}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <Fader
-                    name="Value"
-                    value={ccMsg.value}
-                    onChange={(_, value) => {
-                      const updatedCC = [...step.ccMessages];
-                      updatedCC[index] = { ...ccMsg, value };
-                      onUpdate({ ccMessages: updatedCC });
-                    }}
-                    min={0}
-                    max={127}
-                    step={1}
-                    orientation="horizontal"
-                  />
-                </div>
-                <Button
-                  size="sm"
-                  variant="text"
-                  color="error"
-                  onClick={() => {
-                    onUpdate({
-                      ccMessages: step.ccMessages.filter((_, i) => i !== index),
-                    });
-                  }}
-                  className="mt-2 shrink-0"
+            {showCcMessages &&
+              step.ccMessages.map((ccMsg, index) => (
+                <Surface
+                  key={`cc-${index}`}
+                  tone="subtle"
+                  border="subtle"
+                  radius="md"
+                  className="flex items-start gap-3 p-3"
                 >
-                  ✕
-                </Button>
-              </Surface>
-            ))}
+                  <div className="flex items-center gap-2 min-w-[60px] pt-2">
+                    <div className="w-2 h-2 rounded-full bg-brand-secondary" />
+                    <span className="font-mono text-sm font-semibold">
+                      CC {ccMsg.cc}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <Fader
+                      name="Value"
+                      value={ccMsg.value}
+                      onChange={(_, value) => {
+                        const updatedCC = [...step.ccMessages];
+                        updatedCC[index] = { ...ccMsg, value };
+                        onUpdate({ ccMessages: updatedCC });
+                      }}
+                      min={0}
+                      max={127}
+                      step={1}
+                      orientation="horizontal"
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="text"
+                    color="error"
+                    onClick={() => {
+                      onUpdate({
+                        ccMessages: step.ccMessages.filter(
+                          (_, i) => i !== index,
+                        ),
+                      });
+                    }}
+                    className="mt-2 shrink-0"
+                  >
+                    ✕
+                  </Button>
+                </Surface>
+              ))}
           </div>
         )}
       </Stack>

@@ -363,7 +363,7 @@ describe("InstrumentEditor", () => {
     expect(savedDocument.tracks?.[0]?.sourceSettings).toBeUndefined();
   });
 
-  it("separates sequencer note names from step velocity editing", () => {
+  it("uses the shared step editor for instrument sequencer content", () => {
     const document = createDefaultInstrumentDocument();
     const firstTrack = document.tracks[0];
     if (!firstTrack) {
@@ -410,20 +410,92 @@ describe("InstrumentEditor", () => {
       </Provider>,
     );
 
-    const notesInput = screen.getByLabelText("Notes") as HTMLInputElement;
-    const velocityInput = screen.getByLabelText("Velocity") as HTMLInputElement;
+    const velocityInputs = screen.getAllByLabelText(
+      "Velocity",
+    ) as HTMLInputElement[];
 
-    expect(notesInput.value).toBe("C3, E3");
-    expect(velocityInput.value).toBe("90");
+    expect(screen.getByRole("button", { name: "Step 1" })).toBeDefined();
+    expect(screen.getByText("C3")).toBeDefined();
+    expect(screen.getByText("E3")).toBeDefined();
+    expect(velocityInputs.map((input) => input.value)).toEqual(["90", "90"]);
 
-    fireEvent.change(notesInput, { target: { value: "C3, G3" } });
-    fireEvent.change(velocityInput, { target: { value: "110" } });
+    fireEvent.change(velocityInputs[0]!, { target: { value: "110" } });
 
-    expect(notesInput.value).toBe("C3, G3");
-    expect(velocityInput.value).toBe("110");
+    expect(
+      (screen.getAllByLabelText("Velocity") as HTMLInputElement[]).map(
+        (input) => input.value,
+      ),
+    ).toEqual(["110", "90"]);
   });
 
-  it("preserves a trailing comma while composing multiple sequencer notes", () => {
+  it("does not carry configured step content between instrument tracks", async () => {
+    const saveSpy = vi.spyOn(Instrument.prototype, "save").mockResolvedValue();
+    const document = createDefaultInstrumentDocument();
+    const firstTrack = document.tracks[0];
+
+    if (!firstTrack) {
+      throw new Error("Expected default instrument to include a first track");
+    }
+
+    document.tracks[0] = {
+      ...firstTrack,
+      sequencer: {
+        ...firstTrack.sequencer,
+        pages: [
+          {
+            ...firstTrack.sequencer.pages[0]!,
+            steps: [
+              {
+                ...firstTrack.sequencer.pages[0]!.steps[0]!,
+                active: true,
+                notes: [{ note: "C3", velocity: 90 }],
+              },
+              ...firstTrack.sequencer.pages[0]!.steps.slice(1),
+            ],
+          },
+          ...firstTrack.sequencer.pages.slice(1),
+        ],
+      },
+    };
+
+    render(
+      <Provider store={store}>
+        <InstrumentEditor
+          instrument={{
+            id: "instrument-1",
+            name: "Broken Instrument",
+            userId: "user-1",
+            document,
+          }}
+        />
+      </Provider>,
+    );
+
+    fireEvent.change(screen.getByLabelText("Velocity"), {
+      target: { value: "91" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "track-2" }));
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Activate step" })[0]!,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Save Instrument" }));
+
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+
+    const savedInstrument = saveSpy.mock.instances[0] as Instrument;
+    const savedDocument = savedInstrument.document as ReturnType<
+      typeof createDefaultInstrumentDocument
+    >;
+
+    expect(
+      savedDocument.tracks[1]?.sequencer.pages[0]?.steps[0]?.notes,
+    ).toEqual([]);
+  });
+
+  it("adds normalized notes and saves instrument-only step data", async () => {
+    const saveSpy = vi.spyOn(Instrument.prototype, "save").mockResolvedValue();
     const document = createDefaultInstrumentDocument();
     const firstTrack = document.tracks[0];
     if (!firstTrack) {
@@ -448,25 +520,29 @@ describe("InstrumentEditor", () => {
       </Provider>,
     );
 
-    const notesInput = screen.getByLabelText("Notes") as HTMLInputElement;
+    const noteInput = screen.getByPlaceholderText(
+      "Add note (e.g., C4, D#4, E4)...",
+    );
+    fireEvent.change(noteInput, { target: { value: "c3" } });
+    fireEvent.click(screen.getByRole("button", { name: "Note" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save Instrument" }));
 
-    fireEvent.change(notesInput, { target: { value: "C3," } });
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
 
-    expect(notesInput.value).toBe("C3,");
+    const savedInstrument = saveSpy.mock.instances[0] as Instrument;
+    const savedStep = (
+      savedInstrument.document as ReturnType<
+        typeof createDefaultInstrumentDocument
+      >
+    ).tracks[0]?.sequencer.pages[0]?.steps[0];
+
+    expect(savedStep?.notes).toEqual([{ note: "C3", velocity: 100 }]);
+    expect(savedStep).not.toHaveProperty("ccMessages");
   });
 
-  it("normalizes typed note names to uppercase while editing", () => {
-    const document = createDefaultInstrumentDocument();
-    const firstTrack = document.tracks[0];
-    if (!firstTrack) {
-      throw new Error("Expected default instrument to include a first track");
-    }
-
-    document.tracks[0] = {
-      ...firstTrack,
-      noteSource: "stepSequencer",
-    };
-
+  it("only offers engine-supported sequencer playback modes", () => {
     render(
       <Provider store={store}>
         <InstrumentEditor
@@ -474,16 +550,26 @@ describe("InstrumentEditor", () => {
             id: "instrument-1",
             name: "Broken Instrument",
             userId: "user-1",
-            document,
+            document: createDefaultInstrumentDocument(),
           }}
         />
       </Provider>,
     );
 
-    const notesInput = screen.getByLabelText("Notes") as HTMLInputElement;
+    const playbackModeValue = screen.getByText("Loop");
+    const playbackModeTrigger =
+      playbackModeValue.closest('[role="combobox"]') ??
+      playbackModeValue.closest("button");
 
-    fireEvent.change(notesInput, { target: { value: "c3, e3" } });
+    if (!(playbackModeTrigger instanceof HTMLElement)) {
+      throw new Error("Expected playback mode trigger button");
+    }
 
-    expect(notesInput.value).toBe("C3, E3");
+    playbackModeTrigger.focus();
+    fireEvent.keyDown(playbackModeTrigger, { key: "ArrowDown" });
+
+    expect(screen.getByRole("option", { name: "One-Shot" })).toBeDefined();
+    expect(screen.queryByRole("option", { name: "random" })).toBeNull();
+    expect(screen.queryByRole("option", { name: "pingPong" })).toBeNull();
   });
 });

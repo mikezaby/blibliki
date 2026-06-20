@@ -5,7 +5,6 @@ import {
 } from "../../src/instruments/document";
 import {
   cloneInstrumentDocument,
-  updateSequencerStep,
   updateTrackControllerSlotValue,
   updateTrackDocument,
   updateTrackFxChain,
@@ -83,24 +82,6 @@ describe("instrument editor state helpers", () => {
     expect(document.tracks[0]?.controllerSlotValues).toEqual({
       "source.presetId": "warm-morph",
       "fx1.drive": 0.72,
-    });
-  });
-
-  it("updates the selected sequencer step content", () => {
-    const updated = updateSequencerStep(createDocument(), 0, 0, 0, {
-      active: true,
-      notes: [{ note: "C3", velocity: 90 }],
-      probability: 75,
-      microtimeOffset: 4,
-      duration: "1/8",
-    });
-
-    expect(updated.tracks[0]?.sequencer.pages[0]?.steps[0]).toEqual({
-      active: true,
-      notes: [{ note: "C3", velocity: 90 }],
-      probability: 75,
-      microtimeOffset: 4,
-      duration: "1/8",
     });
   });
 });
