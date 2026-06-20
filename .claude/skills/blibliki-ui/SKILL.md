@@ -55,6 +55,7 @@ Apply these rules to every shared primitive:
 
 #### Encoder interaction contract
 
+- Use encoders only for numeric values with finite minimum and maximum bounds. Use a numeric input for open-ended or non-finite ranges.
 - Render the current value below the dial, not inside it.
 - Normal vertical drag traverses the full range in 80px.
 - Holding Shift during a drag enables 8× finer adjustment.

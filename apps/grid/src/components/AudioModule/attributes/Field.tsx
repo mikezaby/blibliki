@@ -64,8 +64,12 @@ export const InputField = <T extends string | number>({
   className,
 }: InputProps<T>) => {
   const label = schema.label;
+  const hasFiniteRange =
+    schema.kind === "number" &&
+    Number.isFinite(schema.min) &&
+    Number.isFinite(schema.max);
 
-  if (schema.kind === "number") {
+  if (hasFiniteRange) {
     return (
       <FieldShell label={label} className={className}>
         <div className="flex justify-center">
@@ -85,15 +89,29 @@ export const InputField = <T extends string | number>({
     );
   }
 
-  const inputType = "text";
+  const inputType = schema.kind === "number" ? "number" : "text";
 
   const internalOnChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onChange(event.target.value as T);
+    const newValue =
+      schema.kind === "number"
+        ? Number(event.target.value)
+        : event.target.value;
+
+    onChange(newValue as T);
   };
 
   return (
     <FieldShell label={label} className={className}>
-      <Input type={inputType} value={value} onChange={internalOnChange} />
+      <Input
+        type={inputType}
+        aria-label={label}
+        step={schema.kind === "number" ? schema.step : undefined}
+        value={value}
+        onChange={internalOnChange}
+        className={
+          inputType === "number" ? "w-20 text-center font-mono" : undefined
+        }
+      />
     </FieldShell>
   );
 };
