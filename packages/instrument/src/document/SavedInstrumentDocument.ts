@@ -170,6 +170,25 @@ function createSavedSequencerStep(
           return [];
         })
       : [],
+    ccMessages: Array.isArray(step.ccMessages)
+      ? step.ccMessages.flatMap((message) => {
+          if (
+            message &&
+            typeof message === "object" &&
+            typeof (message as { cc?: unknown }).cc === "number" &&
+            typeof (message as { value?: unknown }).value === "number"
+          ) {
+            return [
+              {
+                cc: (message as { cc: number }).cc,
+                value: (message as { value: number }).value,
+              },
+            ];
+          }
+
+          return [];
+        })
+      : [],
     probability: typeof step.probability === "number" ? step.probability : 100,
     microtimeOffset:
       typeof step.microtimeOffset === "number" ? step.microtimeOffset : 0,

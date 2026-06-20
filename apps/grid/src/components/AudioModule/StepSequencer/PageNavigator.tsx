@@ -5,7 +5,9 @@ import { Plus } from "lucide-react";
 type PageNavigatorProps = {
   pages: IPage[];
   activePageNo: number;
+  pageSelected?: boolean;
   onPageChange: (index: number) => void;
+  onSelectPage?: () => void;
   onAddPage?: () => void;
   onDeletePage?: (index: number) => void;
 };
@@ -13,7 +15,9 @@ type PageNavigatorProps = {
 export default function PageNavigator({
   pages,
   activePageNo,
+  pageSelected = false,
   onPageChange,
+  onSelectPage,
   onAddPage,
   onDeletePage,
 }: PageNavigatorProps) {
@@ -33,9 +37,15 @@ export default function PageNavigator({
         ←
       </Button>
 
-      <Text size="sm" weight="medium">
+      <Button
+        variant="outlined"
+        size="sm"
+        aria-label={`Select Page ${activePageNo + 1}`}
+        onClick={onSelectPage}
+        className={pageSelected ? "border-info bg-info/10" : ""}
+      >
         Page {activePageNo + 1} / {pages.length}
-      </Text>
+      </Button>
 
       <Button
         variant="outlined"

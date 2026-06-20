@@ -5,11 +5,24 @@ import {
   Resolution,
 } from "@blibliki/engine";
 import { Stack } from "@blibliki/ui";
-import { useState } from "react";
+import { isTextInputLikeTarget } from "@blibliki/utils";
+import { useState, type ClipboardEvent } from "react";
+import ClipboardToolbar from "./ClipboardToolbar";
 import Controls from "./Controls";
 import PageNavigator from "./PageNavigator";
 import StepEditor from "./StepEditor";
 import StepGrid from "./StepGrid";
+import {
+  createPageClipboardPayload,
+  createStepsClipboardPayload,
+  pasteSequencerClipboard,
+  readSequencerClipboard,
+  readSequencerClipboardFromDataTransfer,
+  writeSequencerClipboard,
+  writeSequencerClipboardToDataTransfer,
+  type SequencerClipboardPayload,
+  type SequencerSelection,
+} from "./clipboard";
 
 type StepSequencerEditorProps = {
   pages: IPage[];
@@ -22,6 +35,7 @@ type StepSequencerEditorProps = {
   showCcMessages?: boolean;
   onPageChange: (index: number) => void;
   onStepChange: (pageIndex: number, stepIndex: number, step: IStep) => void;
+  onPagesChange?: (pages: IPage[]) => void;
   onStepsChange?: (value: number) => void;
   onResolutionChange: (value: Resolution) => void;
   onPlaybackModeChange: (value: PlaybackMode) => void;
@@ -30,6 +44,20 @@ type StepSequencerEditorProps = {
   onStart?: () => void;
   onStop?: () => void;
 };
+
+type EditorSelection =
+  | {
+      pageIndex: number;
+      scope: "steps";
+      anchor: number;
+      focus: number;
+    }
+  | {
+      pageIndex: number;
+      scope: "page";
+      anchor: number;
+      focus: number;
+    };
 
 export default function StepSequencerEditor({
   pages,
@@ -42,6 +70,7 @@ export default function StepSequencerEditor({
   showCcMessages = true,
   onPageChange,
   onStepChange,
+  onPagesChange,
   onStepsChange,
   onResolutionChange,
   onPlaybackModeChange,
@@ -50,16 +79,125 @@ export default function StepSequencerEditor({
   onStart,
   onStop,
 }: StepSequencerEditorProps) {
-  const [selection, setSelection] = useState({
+  const [selection, setSelection] = useState<EditorSelection>({
     pageIndex: activePageNo,
-    stepIndex: 0,
+    scope: "steps" as const,
+    anchor: 0,
+    focus: 0,
   });
   const [lastConfiguredStep, setLastConfiguredStep] = useState<IStep | null>(
     null,
   );
+  const [clipboardStatus, setClipboardStatus] = useState<string>();
   const steps = pages[activePageNo]?.steps ?? [];
+  const currentSelection =
+    selection.pageIndex === activePageNo
+      ? selection
+      : {
+          pageIndex: activePageNo,
+          scope: "steps" as const,
+          anchor: 0,
+          focus: 0,
+        };
   const selectedStep =
-    selection.pageIndex === activePageNo ? selection.stepIndex : 0;
+    currentSelection.scope === "steps" ? currentSelection.focus : 0;
+  const selectionStart =
+    currentSelection.scope === "steps"
+      ? Math.min(currentSelection.anchor, currentSelection.focus)
+      : -1;
+  const selectionEnd =
+    currentSelection.scope === "steps"
+      ? Math.max(currentSelection.anchor, currentSelection.focus)
+      : -1;
+  const clipboardSelection: SequencerSelection =
+    currentSelection.scope === "page"
+      ? { scope: "page" }
+      : { scope: "steps", start: selectionStart, end: selectionEnd };
+  const selectionLabel =
+    currentSelection.scope === "page"
+      ? `Page ${activePageNo + 1}`
+      : selectionStart === selectionEnd
+        ? `Step ${selectionStart + 1}`
+        : `Steps ${selectionStart + 1}–${selectionEnd + 1}`;
+
+  const handlePageChange = (pageIndex: number) => {
+    setSelection({
+      pageIndex,
+      scope: "steps",
+      anchor: 0,
+      focus: 0,
+    });
+    onPageChange(pageIndex);
+  };
+
+  const createClipboardPayload = (): SequencerClipboardPayload | null => {
+    const page = pages[activePageNo];
+    if (!page) return null;
+
+    return currentSelection.scope === "page"
+      ? createPageClipboardPayload(page)
+      : createStepsClipboardPayload(page.steps, selectionStart, selectionEnd);
+  };
+
+  const applyClipboardPayload = (payload: SequencerClipboardPayload | null) => {
+    if (!payload) {
+      setClipboardStatus("Clipboard does not contain sequencer data");
+      return;
+    }
+
+    const result = pasteSequencerClipboard(
+      pages,
+      activePageNo,
+      clipboardSelection,
+      payload,
+    );
+    if (!result.applied || !onPagesChange) {
+      setClipboardStatus("Clipboard scope does not match selection");
+      return;
+    }
+
+    onPagesChange(result.pages);
+    setClipboardStatus(
+      result.pastedCount < result.totalCount
+        ? `Pasted ${result.pastedCount} of ${result.totalCount} steps`
+        : payload.kind === "page"
+          ? `Pasted page into Page ${activePageNo + 1}`
+          : `Pasted ${result.pastedCount} step${result.pastedCount === 1 ? "" : "s"}`,
+    );
+  };
+
+  const handleToolbarCopy = () => {
+    const payload = createClipboardPayload();
+    if (!payload) return;
+
+    void writeSequencerClipboard(payload);
+    setClipboardStatus(`Copied ${selectionLabel}`);
+  };
+
+  const handleToolbarPaste = () => {
+    void readSequencerClipboard().then(applyClipboardPayload);
+  };
+
+  const handleCopy = (event: ClipboardEvent<HTMLDivElement>) => {
+    if (isTextInputLikeTarget(event.target)) return;
+    const payload = createClipboardPayload();
+    if (!payload) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    writeSequencerClipboardToDataTransfer(event.clipboardData, payload);
+    setClipboardStatus(`Copied ${selectionLabel}`);
+  };
+
+  const handlePaste = (event: ClipboardEvent<HTMLDivElement>) => {
+    if (isTextInputLikeTarget(event.target)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    applyClipboardPayload(
+      readSequencerClipboardFromDataTransfer(event.clipboardData),
+    );
+  };
 
   const updateStep = (stepIndex: number, updates: Partial<IStep>) => {
     const current = steps[stepIndex];
@@ -89,48 +227,82 @@ export default function StepSequencerEditor({
   };
 
   return (
-    <Stack gap={4} className="w-full">
-      <PageNavigator
-        pages={pages}
-        activePageNo={activePageNo}
-        onPageChange={onPageChange}
-        onAddPage={onAddPage}
-        onDeletePage={onDeletePage}
-      />
+    <div
+      data-testid="step-sequencer-editor"
+      data-sequencer-clipboard-scope
+      onCopy={handleCopy}
+      onPaste={handlePaste}
+    >
+      <Stack gap={4} className="w-full">
+        <PageNavigator
+          pages={pages}
+          activePageNo={activePageNo}
+          pageSelected={currentSelection.scope === "page"}
+          onPageChange={handlePageChange}
+          onSelectPage={() => {
+            setSelection({
+              pageIndex: activePageNo,
+              scope: "page",
+              anchor: 0,
+              focus: 0,
+            });
+          }}
+          onAddPage={onAddPage}
+          onDeletePage={onDeletePage}
+        />
 
-      <Controls
-        stepsPerPage={onStepsChange ? stepsPerPage : undefined}
-        resolution={resolution}
-        playbackMode={playbackMode}
-        isRunning={isRunning}
-        onStepsChange={onStepsChange}
-        onResolutionChange={onResolutionChange}
-        onPlaybackModeChange={onPlaybackModeChange}
-        onStart={onStart}
-        onStop={onStop}
-      />
+        <Controls
+          stepsPerPage={onStepsChange ? stepsPerPage : undefined}
+          resolution={resolution}
+          playbackMode={playbackMode}
+          isRunning={isRunning}
+          onStepsChange={onStepsChange}
+          onResolutionChange={onResolutionChange}
+          onPlaybackModeChange={onPlaybackModeChange}
+          onStart={onStart}
+          onStop={onStop}
+        />
 
-      <StepGrid
-        steps={steps}
-        currentStep={currentStep}
-        selectedStep={selectedStep}
-        onSelectStep={(stepIndex) => {
-          setSelection({ pageIndex: activePageNo, stepIndex });
-        }}
-        onToggleActive={(stepIndex) => {
-          updateStep(stepIndex, { active: !steps[stepIndex]?.active });
-        }}
-        stepsPerPage={stepsPerPage}
-      />
+        <ClipboardToolbar
+          selectionLabel={selectionLabel}
+          status={clipboardStatus}
+          onCopy={handleToolbarCopy}
+          onPaste={handleToolbarPaste}
+        />
 
-      <StepEditor
-        step={steps[selectedStep]}
-        stepIndex={selectedStep}
-        onUpdate={(updates) => {
-          updateStep(selectedStep, updates);
-        }}
-        showCcMessages={showCcMessages}
-      />
-    </Stack>
+        <StepGrid
+          steps={steps}
+          currentStep={currentStep}
+          selectedStep={selectedStep}
+          selectionStart={selectionStart}
+          selectionEnd={selectionEnd}
+          pageSelected={currentSelection.scope === "page"}
+          onSelectStep={(stepIndex, extendSelection) => {
+            setSelection({
+              pageIndex: activePageNo,
+              scope: "steps",
+              anchor:
+                extendSelection && currentSelection.scope === "steps"
+                  ? currentSelection.anchor
+                  : stepIndex,
+              focus: stepIndex,
+            });
+          }}
+          onToggleActive={(stepIndex) => {
+            updateStep(stepIndex, { active: !steps[stepIndex]?.active });
+          }}
+          stepsPerPage={stepsPerPage}
+        />
+
+        <StepEditor
+          step={steps[selectedStep]}
+          stepIndex={selectedStep}
+          onUpdate={(updates) => {
+            updateStep(selectedStep, updates);
+          }}
+          showCcMessages={showCcMessages}
+        />
+      </Stack>
+    </div>
   );
 }

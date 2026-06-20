@@ -1,12 +1,14 @@
 import { IStep } from "@blibliki/engine";
 import { Button, Stack } from "@blibliki/ui";
+import type { MouseEvent } from "react";
 
 type StepButtonProps = {
   step: IStep;
   stepIndex: number;
   isPlaying: boolean;
   isSelected: boolean;
-  onSelect: () => void;
+  isInSelection: boolean;
+  onSelect: (event: MouseEvent<HTMLButtonElement>) => void;
   onToggleActive: () => void;
 };
 
@@ -15,6 +17,7 @@ export default function StepButton({
   stepIndex,
   isPlaying,
   isSelected,
+  isInSelection,
   onSelect,
   onToggleActive,
 }: StepButtonProps) {
@@ -55,6 +58,9 @@ export default function StepButton({
   const toggleClasses = isActive
     ? "bg-success border-success/80"
     : "bg-transparent border-border-subtle";
+  const selectionClasses = isInSelection
+    ? "bg-info/10 ring-1 ring-inset ring-info/40"
+    : "";
 
   return (
     <Stack align="center" gap={1}>
@@ -77,7 +83,7 @@ export default function StepButton({
         color="neutral"
         aria-label={`Step ${stepIndex + 1}`}
         onClick={onSelect}
-        className={`relative h-12 w-full justify-center px-0 text-xs font-medium transition-all duration-150 hover:scale-105 ${stepToneClasses} ${stepBorderClasses} ${
+        className={`relative h-12 w-full justify-center px-0 text-xs font-medium transition-all duration-150 hover:scale-105 ${stepToneClasses} ${stepBorderClasses} ${selectionClasses} ${
           isPlaying ? "animate-pulse" : ""
         }`}
       >

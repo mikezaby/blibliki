@@ -6,7 +6,10 @@ type StepGridProps = {
   steps: IStep[];
   currentStep: number;
   selectedStep: number;
-  onSelectStep: (index: number) => void;
+  selectionStart: number;
+  selectionEnd: number;
+  pageSelected: boolean;
+  onSelectStep: (index: number, extendSelection: boolean) => void;
   onToggleActive: (index: number) => void;
   stepsPerPage: number;
 };
@@ -22,6 +25,9 @@ export default function StepGrid({
   steps,
   currentStep,
   selectedStep,
+  selectionStart,
+  selectionEnd,
+  pageSelected,
   onSelectStep,
   onToggleActive,
   stepsPerPage,
@@ -33,7 +39,13 @@ export default function StepGrid({
     "[grid-template-columns:repeat(16,minmax(0,1fr))]";
 
   return (
-    <Surface tone="subtle" border="subtle" radius="md" className="p-4">
+    <Surface
+      tone="subtle"
+      border="subtle"
+      radius="md"
+      data-testid="step-grid"
+      className={`p-4 ${pageSelected ? "ring-2 ring-info/60" : ""}`}
+    >
       <div className={`grid gap-2 ${gridColumnsClass}`}>
         {visibleSteps.map((step, index) => (
           <StepButton
@@ -42,8 +54,13 @@ export default function StepGrid({
             stepIndex={index}
             isPlaying={index === currentStep}
             isSelected={index === selectedStep}
-            onSelect={() => {
-              onSelectStep(index);
+            isInSelection={
+              selectionStart !== selectionEnd &&
+              index >= selectionStart &&
+              index <= selectionEnd
+            }
+            onSelect={(event) => {
+              onSelectStep(index, event.shiftKey);
             }}
             onToggleActive={() => {
               onToggleActive(index);

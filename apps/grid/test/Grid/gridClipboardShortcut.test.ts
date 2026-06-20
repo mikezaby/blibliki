@@ -14,4 +14,13 @@ describe("grid clipboard target guard", () => {
       false,
     );
   });
+
+  it("blocks clipboard handling inside a step sequencer", () => {
+    expect(
+      shouldHandleGridClipboardTarget({
+        closest: (selector: string) =>
+          selector === "[data-sequencer-clipboard-scope]" ? {} : null,
+      }),
+    ).toBe(false);
+  });
 });

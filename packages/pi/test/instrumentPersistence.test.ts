@@ -151,7 +151,7 @@ describe("createSavedInstrumentDocument", () => {
                   ? {
                       active: true,
                       notes: [{ note: "C4", velocity: 112 }],
-                      ccMessages: [],
+                      ccMessages: [{ cc: 74, value: 99 }],
                       probability: 73,
                       microtimeOffset: 9,
                       duration: "1/8",
@@ -202,6 +202,7 @@ describe("createSavedInstrumentDocument", () => {
     expect(savedDocument.tracks[0]?.sequencer.pages[0]?.steps[0]).toEqual({
       active: true,
       notes: [{ note: "C4", velocity: 112 }],
+      ccMessages: [{ cc: 74, value: 99 }],
       probability: 73,
       microtimeOffset: 9,
       duration: "1/8",

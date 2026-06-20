@@ -97,6 +97,7 @@ describe("createInstrumentEnginePatch noteSource", () => {
               {
                 active: true,
                 notes: [{ note: "C4", velocity: 100 }],
+                ccMessages: [{ cc: 74, value: 96 }],
                 probability: 100,
                 microtimeOffset: 0,
                 duration: "1/16",
@@ -104,6 +105,7 @@ describe("createInstrumentEnginePatch noteSource", () => {
               ...Array.from({ length: 15 }, () => ({
                 active: false,
                 notes: [],
+                ccMessages: [],
                 probability: 100,
                 microtimeOffset: 0,
                 duration: "1/16" as const,
@@ -116,6 +118,7 @@ describe("createInstrumentEnginePatch noteSource", () => {
               {
                 active: false,
                 notes: [],
+                ccMessages: [],
                 probability: 100,
                 microtimeOffset: 0,
                 duration: "1/16",
@@ -123,6 +126,7 @@ describe("createInstrumentEnginePatch noteSource", () => {
               {
                 active: true,
                 notes: [{ note: "E4", velocity: 90 }],
+                ccMessages: [],
                 probability: 100,
                 microtimeOffset: 0,
                 duration: "1/16",
@@ -141,6 +145,7 @@ describe("createInstrumentEnginePatch noteSource", () => {
             steps: Array.from({ length: 16 }, () => ({
               active: false,
               notes: [],
+              ccMessages: [],
               probability: 100,
               microtimeOffset: 0,
               duration: "1/16" as const,
@@ -179,6 +184,7 @@ describe("createInstrumentEnginePatch noteSource", () => {
       expect.objectContaining({
         active: true,
         notes: [{ note: "C4", velocity: 100 }],
+        ccMessages: [{ cc: 74, value: 96 }],
       }),
     );
 

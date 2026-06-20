@@ -55,9 +55,15 @@ export type InstrumentSequencerNote = {
   velocity: number;
 };
 
+export type InstrumentSequencerCC = {
+  cc: number;
+  value: number;
+};
+
 export type InstrumentSequencerStep = {
   active: boolean;
   notes: InstrumentSequencerNote[];
+  ccMessages?: InstrumentSequencerCC[];
   probability: number;
   microtimeOffset: number;
   duration: InstrumentSequencerDivision;
@@ -118,6 +124,7 @@ function createDefaultSequencerStep(): InstrumentSequencerStep {
   return {
     active: false,
     notes: [],
+    ccMessages: [],
     probability: 100,
     microtimeOffset: 0,
     duration: "1/16",

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import StepButton from "../../../src/components/AudioModule/StepSequencer/StepButton";
 
 const createStep = () => ({
@@ -13,6 +13,8 @@ const createStep = () => ({
 });
 
 describe("StepButton", () => {
+  afterEach(cleanup);
+
   it("uses blibliki/ui Button primitives for both controls", () => {
     render(
       <StepButton
@@ -20,6 +22,7 @@ describe("StepButton", () => {
         stepIndex={0}
         isPlaying={false}
         isSelected={false}
+        isInSelection={false}
         onSelect={vi.fn()}
         onToggleActive={vi.fn()}
       />,
@@ -40,6 +43,7 @@ describe("StepButton", () => {
         stepIndex={3}
         isPlaying={false}
         isSelected={false}
+        isInSelection={false}
         onSelect={vi.fn()}
         onToggleActive={vi.fn()}
       />,
@@ -49,5 +53,23 @@ describe("StepButton", () => {
 
     expect(stepCellButton.className).toContain("bg-surface-panel");
     expect(stepCellButton.className).toContain("text-content-muted");
+  });
+
+  it("uses a subtle info tint for steps inside a selected range", () => {
+    render(
+      <StepButton
+        step={createStep()}
+        stepIndex={3}
+        isPlaying={false}
+        isSelected={false}
+        isInSelection
+        onSelect={vi.fn()}
+        onToggleActive={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Step 4" }).className).toContain(
+      "bg-info/10",
+    );
   });
 });

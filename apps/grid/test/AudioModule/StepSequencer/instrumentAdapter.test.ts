@@ -14,14 +14,14 @@ function createPages(): InstrumentSequencerPage[] {
 }
 
 describe("instrument step sequencer editor adapter", () => {
-  it("adds empty CC messages when converting instrument pages", () => {
+  it("preserves CC messages when converting instrument pages", () => {
     const pages = createPages();
+    pages[0]!.steps[0]!.ccMessages = [{ cc: 74, value: 80 }];
     const editorPages = toEditorPages(pages);
 
-    expect(editorPages[0]?.steps[0]).toEqual({
-      ...pages[0]?.steps[0],
-      ccMessages: [],
-    });
+    expect(editorPages[0]?.steps[0]?.ccMessages).toEqual([
+      { cc: 74, value: 80 },
+    ]);
   });
 
   it("immutably updates the selected instrument page and step", () => {
@@ -31,7 +31,7 @@ describe("instrument step sequencer editor adapter", () => {
       ...originalStep,
       active: true,
       notes: [{ note: "C3", velocity: 96 }],
-      ccMessages: [],
+      ccMessages: [{ cc: 1, value: 64 }],
     };
 
     const updated = updateInstrumentPageStep(pages, 0, 0, nextStep);
@@ -44,13 +44,14 @@ describe("instrument step sequencer editor adapter", () => {
     expect(updated[0]?.steps[0]).toEqual({
       active: true,
       notes: [{ note: "C3", velocity: 96 }],
+      ccMessages: [{ cc: 1, value: 64 }],
       probability: 100,
       microtimeOffset: 0,
       duration: "1/16",
     });
   });
 
-  it("does not persist editor-only CC messages", () => {
+  it("persists editor CC messages", () => {
     const pages = createPages();
     const nextStep: IStep = {
       ...pages[0]!.steps[0]!,
@@ -59,7 +60,7 @@ describe("instrument step sequencer editor adapter", () => {
 
     const updated = updateInstrumentPageStep(pages, 0, 0, nextStep);
 
-    expect(updated[0]?.steps[0]).not.toHaveProperty("ccMessages");
+    expect(updated[0]?.steps[0]?.ccMessages).toEqual([{ cc: 1, value: 64 }]);
   });
 
   it("rejects engine-only infinite note durations", () => {

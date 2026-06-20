@@ -525,6 +525,10 @@ describe("InstrumentEditor", () => {
     );
     fireEvent.change(noteInput, { target: { value: "c3" } });
     fireEvent.click(screen.getByRole("button", { name: "Note" }));
+    fireEvent.change(screen.getByPlaceholderText("CC#"), {
+      target: { value: "74" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "CC" }));
     fireEvent.click(screen.getByRole("button", { name: "Save Instrument" }));
 
     await waitFor(() => {
@@ -539,7 +543,7 @@ describe("InstrumentEditor", () => {
     ).tracks[0]?.sequencer.pages[0]?.steps[0];
 
     expect(savedStep?.notes).toEqual([{ note: "C3", velocity: 100 }]);
-    expect(savedStep).not.toHaveProperty("ccMessages");
+    expect(savedStep?.ccMessages).toEqual([{ cc: 74, value: 64 }]);
   });
 
   it("only offers engine-supported sequencer playback modes", () => {

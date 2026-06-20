@@ -101,6 +101,14 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
     updateProp("patterns")(updatedPatterns);
   };
 
+  const updatePages = (pages: IPage[]) => {
+    updateProp("patterns")(
+      patterns.map((pattern, patternIndex) =>
+        patternIndex === activePatternNo ? { ...pattern, pages } : pattern,
+      ),
+    );
+  };
+
   // Add new pattern
   const addPattern = () => {
     const nextLetter = String.fromCharCode(65 + patterns.length); // A, B, C, D...
@@ -195,6 +203,7 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
           updateProp("activePageNo")(index);
         }}
         onStepChange={updateStep}
+        onPagesChange={updatePages}
         onAddPage={addPage}
         onDeletePage={deletePage}
         stepsPerPage={stepsPerPage}

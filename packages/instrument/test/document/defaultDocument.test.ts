@@ -56,4 +56,12 @@ describe("createDefaultInstrumentDocument metadata", () => {
     expect(document.globalBlock.delaySend).toBe(0);
     expect(document.globalBlock.reverbSend).toBe(0);
   });
+
+  it("initializes sequencer steps with empty CC messages", () => {
+    const document = createDefaultInstrumentDocument();
+
+    expect(
+      document.tracks[0]?.sequencer.pages[0]?.steps[0]?.ccMessages,
+    ).toEqual([]);
+  });
 });

@@ -21,6 +21,7 @@ function createDefaultSequencerStep(): InstrumentSequencerStep {
   return {
     active: false,
     notes: [],
+    ccMessages: [],
     probability: 100,
     microtimeOffset: 0,
     duration: "1/16",

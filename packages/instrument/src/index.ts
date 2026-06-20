@@ -10,6 +10,7 @@ export type {
   InstrumentDocument,
   InstrumentGlobalBlock,
   InstrumentNoteSource,
+  InstrumentSequencerCC,
   InstrumentTrackControllerSlotValues,
   InstrumentSequencerStep,
   InstrumentTrackDocument,

@@ -258,6 +258,7 @@ describe("startDeviceDeployment", () => {
         Promise.resolve({
           document,
         }),
+      loadWorkingCopy: () => Promise.resolve(null),
       saveWorkingCopy: (_instrumentId, nextDocument) => {
         workingCopySaves.push(nextDocument);
       },

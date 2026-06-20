@@ -14,10 +14,18 @@ function toInstrumentStep(step: IStep): InstrumentSequencerStep {
   return {
     active: step.active,
     notes: step.notes,
+    ccMessages: step.ccMessages,
     probability: step.probability,
     microtimeOffset: step.microtimeOffset,
     duration: step.duration,
   };
+}
+
+export function toInstrumentPages(pages: IPage[]): InstrumentSequencerPage[] {
+  return pages.map((page) => ({
+    name: page.name,
+    steps: page.steps.map(toInstrumentStep),
+  }));
 }
 
 export function toEditorPages(pages: InstrumentSequencerPage[]): IPage[] {
@@ -25,7 +33,7 @@ export function toEditorPages(pages: InstrumentSequencerPage[]): IPage[] {
     ...page,
     steps: page.steps.map((step) => ({
       ...step,
-      ccMessages: [],
+      ccMessages: structuredClone(step.ccMessages ?? []),
     })),
   }));
 }

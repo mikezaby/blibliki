@@ -29,6 +29,7 @@ import { useMemo, useState } from "react";
 import StepSequencerEditor from "@/components/AudioModule/StepSequencer/StepSequencerEditor";
 import {
   toEditorPages,
+  toInstrumentPages,
   updateInstrumentPageStep,
 } from "@/components/AudioModule/StepSequencer/instrumentAdapter";
 import { useAppDispatch } from "@/hooks";
@@ -723,7 +724,6 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
                     stepsPerPage={16}
                     resolution={activeTrack.sequencer.resolution}
                     playbackMode={activeTrack.sequencer.playbackMode}
-                    showCcMessages={false}
                     onPageChange={setActivePageIndex}
                     onStepChange={(pageIndex, stepIndex, step) => {
                       setTrackChanges({
@@ -735,6 +735,14 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
                             stepIndex,
                             step,
                           ),
+                        },
+                      });
+                    }}
+                    onPagesChange={(pages) => {
+                      setTrackChanges({
+                        sequencer: {
+                          ...activeTrack.sequencer,
+                          pages: toInstrumentPages(pages),
                         },
                       });
                     }}

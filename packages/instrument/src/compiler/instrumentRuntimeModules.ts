@@ -78,7 +78,7 @@ export function createStepSequencerModule(
         note: note.note,
         velocity: note.velocity,
       })),
-      ccMessages: [],
+      ccMessages: (step.ccMessages ?? []).map((message) => ({ ...message })),
       probability: step.probability,
       microtimeOffset: step.microtimeOffset,
       duration: step.duration,
