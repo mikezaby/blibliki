@@ -34,6 +34,18 @@ description: Use when working with Blibliki's packages/ui or migrating apps to @
 
 ## Core Workflows
 
+## Visual Language
+
+Apply these rules to every shared primitive:
+
+- Prefer flat, minimal geometry built from semantic surface, border, text, and intent tokens.
+- Use one subtle border to define control structure. Add shadows only when they communicate real elevation such as menus, dialogs, or floating panels.
+- Use intent color deliberately for state, progress, selection, and focus. Keep inactive structure neutral.
+- Avoid skeuomorphic material effects: no simulated gloss, bevels, inset lighting, metallic shading, glow, or stacked decorative shadows.
+- Avoid decorative gradients in controls. Allow gradients only for branding, data/progress visualization, or an explicitly theatrical app surface.
+- Keep motion short and functional. Prefer color/border transitions; avoid hover lift, bounce, or scale unless spatial movement is the interaction itself.
+- Verify primitives in light, dark, and monochrome-compatible themes. Styling must derive from semantic tokens rather than fixed light/dark assumptions.
+
 ### 1) Add or change a UI primitive
 
 1. Modify or add component in `packages/ui/src/components/`.

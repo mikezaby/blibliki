@@ -10,7 +10,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Drag vertically to adjust quickly across the range. Hold Shift while dragging for 8× finer control. The current value is displayed below the dial.",
+          "A flat, token-driven encoder with a single progress arc. Drag vertically to adjust quickly across the range, or hold Shift for 8× finer control. The current value is displayed below the dial.",
       },
     },
   },
