@@ -6,6 +6,14 @@ const meta = {
   title: "Primitives/Encoder",
   component: Encoder,
   tags: ["autodocs"],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          "Drag vertically to adjust quickly across the range. Hold Shift while dragging for 8× finer control. The current value is displayed below the dial.",
+      },
+    },
+  },
   args: {
     name: "Drive",
     min: 0,
@@ -84,6 +92,26 @@ export const Ranges: Story = {
       />
     </div>
   ),
+};
+
+export const PrecisionDrag: Story = {
+  render: () => {
+    const [value, setValue] = useState(0.5);
+
+    return (
+      <div className="sb-stack">
+        <Encoder
+          name="Precision drive"
+          value={value}
+          min={0}
+          max={1}
+          step={0.01}
+          onChange={setValue}
+        />
+        <p>Drag vertically. Hold Shift while dragging for fine adjustment.</p>
+      </div>
+    );
+  },
 };
 
 export const Disabled: Story = {

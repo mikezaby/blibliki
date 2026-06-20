@@ -41,6 +41,13 @@ description: Use when working with Blibliki's packages/ui or migrating apps to @
 3. If behavior is public, add/update Storybook stories.
 4. Run validation commands (package + storybook).
 
+#### Encoder interaction contract
+
+- Render the current value below the dial, not inside it.
+- Normal vertical drag traverses the full range in 80px.
+- Holding Shift during a drag enables 8× finer adjustment.
+- Process drag movement incrementally so toggling Shift mid-drag never causes a value jump.
+
 ### 2) Change tokens/theme/semantic behavior
 
 1. Update the source of truth:

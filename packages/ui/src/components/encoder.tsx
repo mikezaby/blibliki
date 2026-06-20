@@ -14,11 +14,12 @@ type EncoderSize = "sm" | "md";
 
 type DragState = {
   pointerId: number;
-  startY: number;
-  startSliderValue: number;
+  lastY: number;
+  sliderValue: number;
 };
 
-const FULL_RANGE_DRAG_DISTANCE_PX = 160;
+const FULL_RANGE_DRAG_DISTANCE_PX = 80;
+const FINE_DRAG_DISTANCE_MULTIPLIER = 8;
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
@@ -203,8 +204,8 @@ const Encoder = forwardRef<HTMLDivElement, EncoderProps>(
 
       dragStateRef.current = {
         pointerId: event.pointerId,
-        startY: event.clientY,
-        startSliderValue: currentSliderValue,
+        lastY: event.clientY,
+        sliderValue: currentSliderValue,
       };
     };
 
@@ -219,15 +220,20 @@ const Encoder = forwardRef<HTMLDivElement, EncoderProps>(
 
       event.preventDefault();
 
+      const dragDistance =
+        FULL_RANGE_DRAG_DISTANCE_PX *
+        (event.shiftKey ? FINE_DRAG_DISTANCE_MULTIPLIER : 1);
       const deltaSliderValue =
-        ((dragState.startY - event.clientY) * (max - min)) /
-        FULL_RANGE_DRAG_DISTANCE_PX;
+        ((dragState.lastY - event.clientY) * (max - min)) / dragDistance;
       const nextSliderValue = clamp(
-        dragState.startSliderValue + deltaSliderValue,
+        dragState.sliderValue + deltaSliderValue,
         min,
         max,
       );
       const nextValue = calcActualValue(nextSliderValue, min, max, exp);
+
+      dragState.lastY = event.clientY;
+      dragState.sliderValue = nextSliderValue;
 
       commitValue(nextValue);
     };
@@ -305,8 +311,8 @@ const Encoder = forwardRef<HTMLDivElement, EncoderProps>(
       >
         <div className="ui-encoder__dial">
           <span className="ui-encoder__indicator" aria-hidden />
-          <span className="ui-encoder__value">{displayValue}</span>
         </div>
+        <span className="ui-encoder__value">{displayValue}</span>
       </div>
     );
   },
