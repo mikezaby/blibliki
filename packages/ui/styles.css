@@ -1320,9 +1320,8 @@
     height: calc(var(--ui-encoder-size) * 0.28);
     border-radius: 9999px;
     background: var(--ui-color-primary-500);
-    transform: translate(-50%, calc(-100% + 0.45rem))
-      rotate(var(--ui-encoder-angle));
-    transform-origin: center calc(100% - 0.18rem);
+    transform: translate(-50%, -100%) rotate(var(--ui-encoder-angle));
+    transform-origin: center bottom;
     z-index: 1;
   }
 

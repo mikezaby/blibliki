@@ -23,4 +23,13 @@ describe("Encoder visual style", () => {
     expect(styles).not.toContain("translateY");
     expect(styles.match(/conic-gradient/g)).toHaveLength(1);
   });
+
+  it("anchors the indicator base at the center of the dial", () => {
+    const styles = readEncoderStyles();
+
+    expect(styles).toContain(
+      "transform: translate(-50%, -100%) rotate(var(--ui-encoder-angle));",
+    );
+    expect(styles).toContain("transform-origin: center bottom;");
+  });
 });
