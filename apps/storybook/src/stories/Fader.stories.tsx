@@ -1,6 +1,6 @@
-import * as React from "react";
 import { Fader, type FaderProps, type MarkProps } from "@blibliki/ui";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import * as React from "react";
 
 const modeMarks: MarkProps[] = [
   { value: 0, label: "Off" },
@@ -12,13 +12,19 @@ const modeMarks: MarkProps[] = [
 type ControlledFaderProps = Omit<FaderProps, "onChange">;
 
 function ControlledFader(args: ControlledFaderProps) {
-  const [value, setValue] = React.useState(args.value ?? args.defaultValue ?? args.min ?? 0);
+  const initialValue = args.value ?? args.defaultValue ?? args.min ?? 0;
 
-  React.useEffect(() => {
-    if (args.value !== undefined) {
-      setValue(args.value);
-    }
-  }, [args.value]);
+  return (
+    <StatefulFader key={initialValue} {...args} initialValue={initialValue} />
+  );
+}
+
+type StatefulFaderProps = ControlledFaderProps & {
+  initialValue: number;
+};
+
+function StatefulFader({ initialValue, ...args }: StatefulFaderProps) {
+  const [value, setValue] = React.useState(initialValue);
 
   return (
     <Fader
