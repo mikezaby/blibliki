@@ -47,6 +47,7 @@ function createDefaultTrack(trackNo: number): InstrumentTrackDocument {
     voices: 8,
     midiChannel: trackNo,
     noteSource: "externalMidi",
+    audioSource: { type: "internal" },
     sourceProfileId: "unassigned",
     fxChain: [...DEFAULT_FX_CHAIN] as InstrumentTrackDocument["fxChain"],
     sequencer: createDefaultTrackSequencer(),

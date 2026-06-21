@@ -92,7 +92,11 @@ export function createInstrumentRuntimeModules(options: {
         ]),
     ...trackNoteRuntimes.flatMap(({ modules }) => modules),
     ...enabledTrackDocuments
-      .filter((track) => track.noteSource === "stepSequencer")
+      .filter(
+        (track) =>
+          track.audioSource?.type !== "track" &&
+          track.noteSource === "stepSequencer",
+      )
       .map((track) =>
         createStepSequencerModule(
           runtime.stepSequencerIds[track.key]!,

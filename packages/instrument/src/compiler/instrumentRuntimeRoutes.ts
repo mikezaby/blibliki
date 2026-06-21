@@ -21,6 +21,10 @@ export function createTrackNoteRuntime(
   noteInputId: string | undefined,
   stepSequencerId: string | undefined,
 ): InstrumentTrackNoteRuntime {
+  if (trackDocument.audioSource?.type === "track") {
+    return { modules: [], routes: [] };
+  }
+
   if (trackDocument.noteSource === "stepSequencer") {
     if (!stepSequencerId) {
       return { modules: [], routes: [] };

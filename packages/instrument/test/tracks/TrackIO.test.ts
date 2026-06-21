@@ -56,7 +56,7 @@ describe("Track IO", () => {
     expect(track.midiChannel).toBe(3);
   });
 
-  it("serializes explicit track midi in and audio out ports", () => {
+  it("serializes explicit track midi input and audio outputs", () => {
     const serialized = trackSerializeWithIO(new Track("track-1"));
 
     expect(serialized.inputs).toEqual([
@@ -72,6 +72,37 @@ describe("Track IO", () => {
     ]);
 
     expect(serialized.outputs).toEqual([
+      {
+        ioName: "audio send",
+        kind: "audio",
+        plugs: [{ blockKey: "fx4", ioName: "out" }],
+      },
+      {
+        ioName: "audio out",
+        kind: "audio",
+        plugs: [{ blockKey: "trackGain", ioName: "out" }],
+      },
+    ]);
+  });
+
+  it("routes processing-track audio input directly into the filter", () => {
+    const serialized = trackSerializeWithIO(
+      new Track("track-2", { audioSourceType: "track" }),
+    );
+
+    expect(serialized.inputs).toEqual([
+      {
+        ioName: "audio in",
+        kind: "audio",
+        plugs: [{ blockKey: "filter", ioName: "in" }],
+      },
+    ]);
+    expect(serialized.outputs).toEqual([
+      {
+        ioName: "audio send",
+        kind: "audio",
+        plugs: [{ blockKey: "fx4", ioName: "out" }],
+      },
       {
         ioName: "audio out",
         kind: "audio",

@@ -17,6 +17,7 @@ import { createSourceBlock, createSourcePageSlots } from "./TrackSourceProfile";
 import type { BaseTrackOptions, TrackPlug } from "./types";
 
 export type TrackOptions = Partial<BaseTrackOptions> & {
+  audioSourceType?: "internal" | "track";
   sourceProfileId?: SourceProfileId;
   fxChain?: TrackFxChain;
 };
@@ -33,13 +34,20 @@ export default class Track extends BaseTrack {
       voices,
       midiChannel: options.midiChannel ?? 1,
     });
+    const audioSourceType = options.audioSourceType ?? "internal";
     const sourceProfileId = options.sourceProfileId ?? "osc";
     const fxChain: NonNullable<TrackOptions["fxChain"]> = options.fxChain ?? [
       ...DEFAULT_FX_CHAIN,
     ];
 
-    const source = this.addBlock(createSourceBlock(sourceProfileId, voices));
-    const amp = this.addBlock(new AmpBlock(voices));
+    const source =
+      audioSourceType === "internal"
+        ? this.addBlock(createSourceBlock(sourceProfileId, voices))
+        : undefined;
+    const amp =
+      audioSourceType === "internal"
+        ? this.addBlock(new AmpBlock(voices))
+        : undefined;
     const filter = this.addBlock(new FilterBlock(voices));
     this.addBlock(new LfoBlock(voices));
     this.addBlock(createEffectBlock("fx1", fxChain[0]));
@@ -48,30 +56,48 @@ export default class Track extends BaseTrack {
     this.addBlock(createEffectBlock("fx4", fxChain[3]));
     this.addBlock(new TrackGainBlock());
 
-    this.addInput({
-      ioName: "midi in",
-      kind: "midi",
-      plugs: [
-        { blockKey: source.key, ioName: "midi in" },
-        { blockKey: amp.key, ioName: "midi in" },
-        { blockKey: filter.key, ioName: "midi in" },
-      ],
+    if (audioSourceType === "internal") {
+      if (!source || !amp) {
+        throw new Error("Internal track requires source and amp blocks");
+      }
+
+      this.addInput({
+        ioName: "midi in",
+        kind: "midi",
+        plugs: [
+          { blockKey: source.key, ioName: "midi in" },
+          { blockKey: amp.key, ioName: "midi in" },
+          { blockKey: filter.key, ioName: "midi in" },
+        ],
+      });
+
+      this.addRoute({
+        source: { blockKey: "source", ioName: "out" },
+        destination: { blockKey: "amp", ioName: "in" },
+      });
+
+      this.addRoute({
+        source: { blockKey: "amp", ioName: "out" },
+        destination: { blockKey: "filter", ioName: "in" },
+      });
+    } else {
+      this.addInput({
+        ioName: "audio in",
+        kind: "audio",
+        plugs: [{ blockKey: filter.key, ioName: "in" }],
+      });
+    }
+
+    this.addOutput({
+      ioName: "audio send",
+      kind: "audio",
+      plugs: [{ blockKey: "fx4", ioName: "out" }],
     });
 
     this.addOutput({
       ioName: "audio out",
       kind: "audio",
       plugs: createTrackAudioOutputPlugs(),
-    });
-
-    this.addRoute({
-      source: { blockKey: "source", ioName: "out" },
-      destination: { blockKey: "amp", ioName: "in" },
-    });
-
-    this.addRoute({
-      source: { blockKey: "amp", ioName: "out" },
-      destination: { blockKey: "filter", ioName: "in" },
     });
 
     this.addRoute({
@@ -98,19 +124,6 @@ export default class Track extends BaseTrack {
       source: { blockKey: "fx4", ioName: "out" },
       destination: { blockKey: "trackGain", ioName: "in" },
     });
-
-    const sourceAmpTop = createSourcePageSlots(sourceProfileId);
-
-    const sourceAmpBottom = [
-      createTrackSlot("amp", "attack"),
-      createTrackSlot("amp", "decay"),
-      createTrackSlot("amp", "sustain"),
-      createTrackSlot("amp", "release"),
-      EMPTY_SLOT_REF,
-      EMPTY_SLOT_REF,
-      EMPTY_SLOT_REF,
-      createTrackSlot("amp", "gain"),
-    ] as Fixed8<PageSlotRef>;
 
     const filterModTop = [
       createTrackSlot("filter", "cutoff"),
@@ -144,7 +157,22 @@ export default class Track extends BaseTrack {
       ...createEffectPageSlots("fx4", fxChain[3]),
     ] as Fixed8<PageSlotRef>;
 
-    this.setPage(createPage("sourceAmp", sourceAmpTop, sourceAmpBottom));
+    if (audioSourceType === "internal") {
+      const sourceAmpTop = createSourcePageSlots(sourceProfileId);
+      const sourceAmpBottom = [
+        createTrackSlot("amp", "attack"),
+        createTrackSlot("amp", "decay"),
+        createTrackSlot("amp", "sustain"),
+        createTrackSlot("amp", "release"),
+        EMPTY_SLOT_REF,
+        EMPTY_SLOT_REF,
+        EMPTY_SLOT_REF,
+        createTrackSlot("amp", "gain"),
+      ] as Fixed8<PageSlotRef>;
+
+      this.setPage(createPage("sourceAmp", sourceAmpTop, sourceAmpBottom));
+    }
+
     this.setPage(createPage("filterMod", filterModTop, filterModBottom));
     this.setPage(createPage("fx", fxTop, fxBottom));
   }

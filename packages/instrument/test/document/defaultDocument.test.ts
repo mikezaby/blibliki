@@ -50,6 +50,16 @@ describe("createDefaultInstrumentDocument metadata", () => {
     expect(document.tracks.every((track) => track.voices === 8)).toBe(true);
   });
 
+  it("uses an internal audio source for every default track", () => {
+    const document = createDefaultInstrumentDocument();
+
+    expect(
+      document.tracks.every(
+        (track) => track.audioSource?.type === "internal",
+      ),
+    ).toBe(true);
+  });
+
   it("starts global delay and reverb sends dry", () => {
     const document = createDefaultInstrumentDocument();
 

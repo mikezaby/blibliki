@@ -29,6 +29,16 @@ export type InstrumentSequencerDivision =
 
 export type InstrumentNoteSource = "externalMidi" | "stepSequencer";
 
+export type InstrumentTrackAudioSource =
+  | {
+      type: "internal";
+    }
+  | {
+      type: "track";
+      trackKey: string;
+      mode: "parallel" | "serial";
+    };
+
 export type SourceProfileId =
   | "unassigned"
   | "osc"
@@ -92,6 +102,7 @@ export type InstrumentTrackDocument = {
   enabled?: boolean;
   voices?: number;
   noteSource: InstrumentNoteSource;
+  audioSource?: InstrumentTrackAudioSource;
   midiChannel: number;
   sourceProfileId: SourceProfileId;
   fxChain: [EffectProfileId, EffectProfileId, EffectProfileId, EffectProfileId];

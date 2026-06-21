@@ -193,4 +193,44 @@ describe("Track", () => {
       { kind: "slot", blockKey: "source", slotKey: "cowbellLevel" },
     ]);
   });
+
+  it("creates a processing layout for a track audio source", () => {
+    const track = new Track("track-2", {
+      audioSourceType: "track",
+    });
+    const routes = Array.from(track.routes.values()).map(
+      ({ source, destination }) => ({ source, destination }),
+    );
+    const moduleIds = track
+      .serialize()
+      .blocks.flatMap((block) => block.modules.map((module) => module.id));
+
+    expect(Array.from(track.blocks.keys())).toEqual([
+      "filter",
+      "lfo1",
+      "fx1",
+      "fx2",
+      "fx3",
+      "fx4",
+      "trackGain",
+    ]);
+    expect(routes).not.toContainEqual(
+      expect.objectContaining({
+        source: { blockKey: "source", ioName: "out" },
+      }),
+    );
+    expect(routes).not.toContainEqual(
+      expect.objectContaining({
+        source: { blockKey: "amp", ioName: "out" },
+      }),
+    );
+    expect(routes).toContainEqual({
+      source: { blockKey: "filter", ioName: "out" },
+      destination: { blockKey: "fx1", ioName: "in" },
+    });
+    expect(Array.from(track.pages.keys())).toEqual(["filterMod", "fx"]);
+    expect(moduleIds).not.toContain("source.main");
+    expect(moduleIds).not.toContain("amp.envelope");
+    expect(moduleIds).not.toContain("amp.gain");
+  });
 });

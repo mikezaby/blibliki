@@ -30,14 +30,15 @@ function getTrackPageMappings(
     throw new Error(`Track ${trackIndex} not found in compiled instrument`);
   }
 
+  const trackMappings =
+    track.compiledTrack.launchControlXL3.midiMapper.tracks;
   const pageMappings =
-    track.compiledTrack.launchControlXL3.midiMapper.tracks.find(
-      (candidate) => candidate.name === activePage,
-    );
+    trackMappings.find((candidate) => candidate.name === activePage) ??
+    trackMappings[0];
 
   if (!pageMappings) {
     throw new Error(
-      `Page ${activePage} not found in compiled track ${track.key} midi mappings`,
+      `No midi mappings found in compiled track ${track.key}`,
     );
   }
 

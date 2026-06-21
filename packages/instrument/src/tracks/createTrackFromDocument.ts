@@ -69,6 +69,7 @@ export function createTrackFromDocument(
     new Track(trackDocument.key, {
       voices: trackDocument.voices ?? defaultVoices,
       midiChannel: trackDocument.midiChannel,
+      audioSourceType: trackDocument.audioSource?.type ?? "internal",
       sourceProfileId: trackDocument.sourceProfileId,
       fxChain: trackDocument.fxChain,
     }),

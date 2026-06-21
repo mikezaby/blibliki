@@ -405,6 +405,32 @@ describe("createInstrumentEnginePatch", () => {
     ]);
   });
 
+  it("does not create note runtime modules for a processing track", () => {
+    const document = createDefaultInstrumentDocument();
+    const track2 = document.tracks[1];
+
+    if (!track2) {
+      throw new Error("Expected default document to expose track 2");
+    }
+
+    document.tracks[1] = {
+      ...track2,
+      noteSource: "stepSequencer",
+      audioSource: {
+        type: "track",
+        trackKey: "track-1",
+        mode: "parallel",
+      },
+    };
+
+    const runtime = createInstrumentEnginePatch(document);
+    const moduleIds = runtime.patch.modules.map((module) => module.id);
+
+    expect(moduleIds).not.toContain("track-2.runtime.midiChannelFilter");
+    expect(moduleIds).not.toContain("track-2.runtime.voiceScheduler");
+    expect(moduleIds).not.toContain("track-2.runtime.stepSequencer");
+  });
+
   it("uses All ins for note input and excludes the controller port by default", () => {
     const document = createDefaultInstrumentDocument();
 

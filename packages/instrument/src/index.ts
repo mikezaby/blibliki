@@ -12,6 +12,7 @@ export type {
   InstrumentNoteSource,
   InstrumentSequencerCC,
   InstrumentTrackControllerSlotValues,
+  InstrumentTrackAudioSource,
   InstrumentSequencerStep,
   InstrumentTrackDocument,
   SourceProfileId,
