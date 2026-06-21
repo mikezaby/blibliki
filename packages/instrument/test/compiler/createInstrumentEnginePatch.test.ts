@@ -419,7 +419,7 @@ describe("createInstrumentEnginePatch", () => {
     ]);
   });
 
-  it("does not create note runtime modules for a processing track", () => {
+  it("keeps a processing-track sequencer without voice note runtime", () => {
     const document = createDefaultInstrumentDocument();
     const track2 = document.tracks[1];
 
@@ -442,8 +442,10 @@ describe("createInstrumentEnginePatch", () => {
 
     expect(moduleIds).not.toContain("track-2.runtime.midiChannelFilter");
     expect(moduleIds).not.toContain("track-2.runtime.voiceScheduler");
-    expect(moduleIds).not.toContain("track-2.runtime.stepSequencer");
-    expect(runtime.runtime.stepSequencerIds).not.toHaveProperty("track-2");
+    expect(moduleIds).toContain("track-2.runtime.stepSequencer");
+    expect(runtime.runtime.stepSequencerIds).toEqual({
+      "track-2": "track-2.runtime.stepSequencer",
+    });
   });
 
   it("does not create shared note input for processing-only tracks", () => {

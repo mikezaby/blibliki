@@ -28,10 +28,9 @@ function isSequencerTrack(
   runtimePatch: CompiledInstrumentEnginePatch,
   activeTrackIndex: number,
 ) {
-  return (
-    runtimePatch.compiledInstrument.tracks[activeTrackIndex]?.noteSource ===
-    "stepSequencer"
-  );
+  const track = runtimePatch.compiledInstrument.tracks[activeTrackIndex];
+
+  return track?.noteSource === "stepSequencer";
 }
 
 function getPageKeys(

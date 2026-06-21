@@ -202,6 +202,8 @@ When `audioSource.type === "track"`:
 - do not compile the source block,
 - do not compile the amp block,
 - do not create note-input runtime routes for the track,
+- keep a configured step sequencer available for CC automation and sequencer
+  editing, without routing notes through a voice scheduler,
 - add `audio in` mapped directly to the filter input,
 - keep filter, LFO, four FX blocks, and track gain,
 - omit the `sourceAmp` controller page,

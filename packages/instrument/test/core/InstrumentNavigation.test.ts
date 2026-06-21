@@ -156,6 +156,33 @@ describe("InstrumentNavigation", () => {
     });
   });
 
+  it("allows sequencer edit mode for processing-track CC automation", () => {
+    const document = createSeededInstrumentDocument();
+    document.tracks = document.tracks.slice(0, 2);
+    document.tracks[1] = {
+      ...document.tracks[1]!,
+      noteSource: "stepSequencer",
+      audioSource: {
+        type: "track",
+        trackKey: "track-1",
+        mode: "parallel",
+      },
+    };
+
+    const runtimePatch = createInstrumentEnginePatch(document, {
+      navigation: {
+        activeTrackIndex: 1,
+        mode: "seqEdit",
+      },
+    });
+    const navigation = InstrumentNavigation.fromRuntimePatch(runtimePatch);
+
+    expect(runtimePatch.runtime.navigation.mode).toBe("seqEdit");
+    expect(navigation.withChanges({ mode: "seqEdit" }).serialize().mode).toBe(
+      "seqEdit",
+    );
+  });
+
   it("keeps seq edit page navigation scoped to sequencer pages", () => {
     const runtimePatch = createInstrumentEnginePatch(
       createStepSequencerInstrumentDocument(),

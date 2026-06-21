@@ -89,6 +89,7 @@ Assert:
 - pages are `filterMod` and `fx`,
 - input is `audio in -> filter.in`,
 - no MIDI input exists,
+- a configured step sequencer remains available for CC automation,
 - `audio send -> fx4.out`,
 - `audio out -> trackGain.out`,
 - compiled modules omit source and amp modules.
@@ -130,7 +131,7 @@ Run the three focused test files again.
 
 Expected: PASS.
 
-### Task 3: Stop creating note runtime for processing tracks
+### Task 3: Stop creating voice note runtime for processing tracks
 
 **Files:**
 
@@ -144,8 +145,12 @@ Create a document where track 2 uses track 1 as its audio source. Assert the pat
 ```text
 track-2.runtime.midiChannelFilter
 track-2.runtime.voiceScheduler
-track-2.runtime.stepSequencer
 ```
+
+When `noteSource` is `stepSequencer`, assert the patch still contains
+`track-2.runtime.stepSequencer` and permits sequencer-edit mode. The sequencer
+is retained for CC automation even though note routes into source/amp are
+omitted.
 
 **Step 2: Run the test to verify it fails**
 
@@ -155,17 +160,21 @@ Run:
 pnpm -C packages/instrument test test/compiler/createInstrumentEnginePatch.test.ts
 ```
 
-Expected: FAIL because processing tracks still create note runtime.
+Expected: FAIL because processing tracks still create voice note runtime or
+incorrectly suppress the sequencer.
 
 **Step 3: Write the minimal implementation**
 
-Return an empty note runtime when:
+Return an empty voice note runtime when:
 
 ```ts
 trackDocument.audioSource?.type === "track"
 ```
 
 Treat missing `audioSource` as internal.
+
+Keep step-sequencer module creation and sequencer-edit navigation based on
+`noteSource`, including for processing tracks.
 
 **Step 4: Run the test to verify it passes**
 

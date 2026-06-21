@@ -53,11 +53,7 @@ export function createInstrumentStepSequencerIds(
 ) {
   return Object.fromEntries(
     trackDocuments
-      .filter(
-        (track) =>
-          track.audioSource?.type !== "track" &&
-          track.noteSource === "stepSequencer",
-      )
+      .filter((track) => track.noteSource === "stepSequencer")
       .map((track) => [
         track.key,
         createTrackRuntimeModuleId(track.key, "stepSequencer"),
@@ -97,11 +93,15 @@ export function normalizeInstrumentNavigation(
   const activePage = pageKeys.includes(requestedActivePage)
     ? requestedActivePage
     : (pageKeys[0] ?? DEFAULT_ACTIVE_PAGE);
+  const sequencerTrack = activeTrack?.noteSource === "stepSequencer";
 
   return {
     activeTrackIndex,
     activePage,
-    mode: options.navigation?.mode ?? "performance",
+    mode:
+      sequencerTrack && options.navigation?.mode === "seqEdit"
+        ? "seqEdit"
+        : "performance",
     shiftPressed: options.navigation?.shiftPressed ?? false,
     sequencerPageIndex: options.navigation?.sequencerPageIndex ?? 0,
     selectedStepIndex: options.navigation?.selectedStepIndex ?? 0,
