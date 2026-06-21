@@ -15,7 +15,7 @@ catalogs:
     "@types/node": 26.0.0
   web-audio:
     "@types/audioworklet": 0.0.100
-    "node-web-audio-api": 1.0.9
+    "node-web-audio-api": 2.0.0
   vite:
     vite: 8.0.16
     "vite-tsconfig-paths": 6.1.1
