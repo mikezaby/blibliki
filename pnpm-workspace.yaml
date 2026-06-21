@@ -2,9 +2,9 @@ packages:
   - packages/*
   - apps/*
 allowBuilds:
-  '@clerk/shared': false
-  '@firebase/util': false
-  '@julusian/midi': false
+  "@clerk/shared": false
+  "@firebase/util": false
+  "@julusian/midi": false
   esbuild: true
   protobufjs: false
   slint-ui: false
@@ -12,12 +12,12 @@ catalogs:
   utils:
     "es-toolkit": 1.46.1
   node:
-    "@types/node": 25.6.0
+    "@types/node": 26.0.0
   web-audio:
     "@types/audioworklet": 0.0.99
     "node-web-audio-api": 1.0.9
   vite:
-    vite: 8.0.10
+    vite: 8.0.16
     "vite-tsconfig-paths": 6.1.1
   test:
     vitest: 4.1.5
@@ -26,9 +26,9 @@ catalogs:
     "tailwind-merge": 3.5.0
     "tailwindcss": 4.2.4
   react-19:
-    react: 19.2.5
-    react-dom: 19.2.5
-    "@types/react": 19.2.14
+    react: 19.2.7
+    react-dom: 19.2.7
+    "@types/react": 19.2.17
     "@types/react-dom": 19.2.3
     "@vitejs/plugin-react": 6.0.1
     babel-plugin-react-compiler: 1.0.0
