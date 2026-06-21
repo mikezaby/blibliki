@@ -46,6 +46,18 @@ vi.mock("@tanstack/react-router", () => ({
   },
 }));
 
+function getComboboxByValue(value: string) {
+  const combobox = screen
+    .getAllByRole("combobox")
+    .find((candidate) => candidate.textContent?.includes(value));
+
+  if (!(combobox instanceof HTMLElement)) {
+    throw new Error(`Expected combobox with value ${value}`);
+  }
+
+  return combobox;
+}
+
 describe("InstrumentEditor", () => {
   afterEach(() => {
     cleanup();
@@ -203,6 +215,103 @@ describe("InstrumentEditor", () => {
     fireEvent.keyDown(sourceProfileTrigger, { key: "ArrowDown" });
 
     expect(screen.getByRole("option", { name: "drumMachine" })).toBeDefined();
+  });
+
+  it("selects and saves a parallel track audio source", async () => {
+    const saveSpy = vi.spyOn(Instrument.prototype, "save").mockResolvedValue();
+
+    render(
+      <Provider store={store}>
+        <InstrumentEditor
+          instrument={{
+            id: "instrument-1",
+            name: "Routing Instrument",
+            userId: "user-1",
+            document: createDefaultInstrumentDocument(),
+          }}
+        />
+      </Provider>,
+    );
+
+    const audioSource = getComboboxByValue("Internal");
+    audioSource.focus();
+    fireEvent.keyDown(audioSource, { key: "ArrowDown" });
+    fireEvent.click(screen.getByRole("option", { name: "track-2" }));
+
+    expect(getComboboxByValue("parallel")).toBeDefined();
+    expect(screen.queryByRole("slider", { name: "Voices" })).toBeNull();
+    expect(screen.queryByText("Source Profile")).toBeNull();
+    expect(getComboboxByValue("externalMidi")).toBeDefined();
+    expect(screen.getByText("Sequencer")).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save Instrument" }));
+
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+
+    const savedInstrument = saveSpy.mock.instances[0] as Instrument;
+    const savedDocument = savedInstrument.document as ReturnType<
+      typeof createDefaultInstrumentDocument
+    >;
+
+    expect(savedDocument.tracks[0]?.audioSource).toEqual({
+      type: "track",
+      trackKey: "track-2",
+      mode: "parallel",
+    });
+  });
+
+  it("edits and saves serial routing for a processing track", async () => {
+    const saveSpy = vi.spyOn(Instrument.prototype, "save").mockResolvedValue();
+    const document = createDefaultInstrumentDocument();
+    document.tracks[1] = {
+      ...document.tracks[1]!,
+      noteSource: "stepSequencer",
+      audioSource: {
+        type: "track",
+        trackKey: "track-1",
+        mode: "parallel",
+      },
+    };
+
+    render(
+      <Provider store={store}>
+        <InstrumentEditor
+          instrument={{
+            id: "instrument-1",
+            name: "Routing Instrument",
+            userId: "user-1",
+            document,
+          }}
+        />
+      </Provider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "track-2" }));
+
+    const routingMode = getComboboxByValue("parallel");
+    routingMode.focus();
+    fireEvent.keyDown(routingMode, { key: "ArrowDown" });
+    fireEvent.click(screen.getByRole("option", { name: "serial" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save Instrument" }));
+
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+
+    const savedInstrument = saveSpy.mock.instances[0] as Instrument;
+    const savedDocument = savedInstrument.document as ReturnType<
+      typeof createDefaultInstrumentDocument
+    >;
+
+    expect(savedDocument.tracks[1]?.audioSource).toEqual({
+      type: "track",
+      trackKey: "track-1",
+      mode: "serial",
+    });
+    expect(getComboboxByValue("stepSequencer")).toBeDefined();
+    expect(screen.getByRole("button", { name: "Step 1" })).toBeDefined();
   });
 
   it("saves the selected latency mode with the instrument document", async () => {

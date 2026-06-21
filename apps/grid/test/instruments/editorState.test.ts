@@ -5,6 +5,7 @@ import {
 } from "../../src/instruments/document";
 import {
   cloneInstrumentDocument,
+  selectTrackAudioSource,
   updateTrackControllerSlotValue,
   updateTrackDocument,
   updateTrackFxChain,
@@ -56,6 +57,24 @@ describe("instrument editor state helpers", () => {
       "reverb",
       "reverb",
     ]);
+  });
+
+  it("selects track audio sources and defaults new routes to parallel", () => {
+    const document = createDocument();
+    const processingTrack = selectTrackAudioSource(document, 1, "track-1");
+
+    expect(processingTrack.tracks[1]?.audioSource).toEqual({
+      type: "track",
+      trackKey: "track-1",
+      mode: "parallel",
+    });
+    expect(document.tracks[1]?.audioSource).toEqual({ type: "internal" });
+
+    const internalTrack = selectTrackAudioSource(processingTrack, 1, undefined);
+
+    expect(internalTrack.tracks[1]?.audioSource).toEqual({
+      type: "internal",
+    });
   });
 
   it("updates a controller slot value without replacing existing slots", () => {

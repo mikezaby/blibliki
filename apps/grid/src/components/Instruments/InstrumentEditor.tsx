@@ -42,6 +42,7 @@ import type {
 } from "@/instruments/document";
 import {
   cloneInstrumentDocument,
+  selectTrackAudioSource,
   updateTrackControllerSlotValue,
   updateTrackDocument,
   updateTrackFxChain,
@@ -63,6 +64,7 @@ const NOTE_SOURCE_OPTIONS: InstrumentTrackDocument["noteSource"][] = [
   "externalMidi",
   "stepSequencer",
 ];
+const ROUTING_MODE_OPTIONS = ["parallel", "serial"] as const;
 const EFFECT_OPTIONS: EffectProfileId[] = [
   "distortion",
   "chorus",
@@ -164,6 +166,7 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
   const [saving, setSaving] = useState(false);
 
   const activeTrack = document.tracks[activeTrackIndex] ?? document.tracks[0];
+  const activeAudioSource = activeTrack?.audioSource ?? { type: "internal" };
   const editorPages = useMemo(
     () => toEditorPages(activeTrack?.sequencer.pages ?? []),
     [activeTrack?.sequencer.pages],
@@ -196,6 +199,18 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
           track.name?.trim().length ? track.name : track.key
         }${track.enabled === false ? " (disabled)" : ""}`,
       })),
+    [document.tracks],
+  );
+  const audioSourceOptions = useMemo(
+    () => [
+      { name: "Internal", value: "internal" },
+      ...document.tracks.map((track) => ({
+        name: `${
+          track.name?.trim().length ? track.name : track.key
+        }${track.enabled === false ? " (disabled)" : ""}`,
+        value: track.key,
+      })),
+    ],
     [document.tracks],
   );
 
@@ -450,30 +465,73 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
                   </Stack>
 
                   <Stack gap={2}>
-                    <Label>MIDI Channel</Label>
+                    <Label>Audio Source</Label>
                     <OptionSelect
-                      label="Select MIDI channel"
-                      value={activeTrack.midiChannel}
-                      options={MIDI_CHANNEL_OPTIONS}
-                      onChange={(value: number) => {
-                        setTrackChanges({ midiChannel: value });
+                      label="Select audio source"
+                      value={
+                        activeAudioSource.type === "track"
+                          ? activeAudioSource.trackKey
+                          : "internal"
+                      }
+                      options={audioSourceOptions}
+                      onChange={(value: string) => {
+                        setDocument((current) =>
+                          selectTrackAudioSource(
+                            current,
+                            activeTrackIndex,
+                            value === "internal" ? undefined : value,
+                          ),
+                        );
                       }}
                     />
                   </Stack>
 
-                  <Stack gap={2}>
-                    <Fader
-                      name="Voices"
-                      value={activeTrack.voices ?? 8}
-                      min={TRACK_VOICES_MIN}
-                      max={TRACK_VOICES_MAX}
-                      step={1}
-                      orientation="horizontal"
-                      onChange={(_, voices) => {
-                        setTrackChanges({ voices });
-                      }}
-                    />
-                  </Stack>
+                  {activeAudioSource.type === "track" ? (
+                    <Stack gap={2}>
+                      <Label>Routing Mode</Label>
+                      <OptionSelect
+                        label="Select routing mode"
+                        value={activeAudioSource.mode}
+                        options={ROUTING_MODE_OPTIONS}
+                        onChange={(mode: "parallel" | "serial") => {
+                          setTrackChanges({
+                            audioSource: {
+                              ...activeAudioSource,
+                              mode,
+                            },
+                          });
+                        }}
+                      />
+                    </Stack>
+                  ) : (
+                    <>
+                      <Stack gap={2}>
+                        <Label>MIDI Channel</Label>
+                        <OptionSelect
+                          label="Select MIDI channel"
+                          value={activeTrack.midiChannel}
+                          options={MIDI_CHANNEL_OPTIONS}
+                          onChange={(value: number) => {
+                            setTrackChanges({ midiChannel: value });
+                          }}
+                        />
+                      </Stack>
+
+                      <Stack gap={2}>
+                        <Fader
+                          name="Voices"
+                          value={activeTrack.voices ?? 8}
+                          min={TRACK_VOICES_MIN}
+                          max={TRACK_VOICES_MAX}
+                          step={1}
+                          orientation="horizontal"
+                          onChange={(_, voices) => {
+                            setTrackChanges({ voices });
+                          }}
+                        />
+                      </Stack>
+                    </>
+                  )}
 
                   <Stack gap={2}>
                     <Label>Note Source</Label>
@@ -489,19 +547,21 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
                     />
                   </Stack>
 
-                  <Stack gap={2}>
-                    <Label>Source Profile</Label>
-                    <OptionSelect
-                      label="Select source profile"
-                      value={activeTrack.sourceProfileId}
-                      options={SOURCE_PROFILE_OPTIONS}
-                      onChange={(value: SourceProfileId) => {
-                        setTrackChanges({
-                          sourceProfileId: value,
-                        });
-                      }}
-                    />
-                  </Stack>
+                  {activeAudioSource.type === "internal" ? (
+                    <Stack gap={2}>
+                      <Label>Source Profile</Label>
+                      <OptionSelect
+                        label="Select source profile"
+                        value={activeTrack.sourceProfileId}
+                        options={SOURCE_PROFILE_OPTIONS}
+                        onChange={(value: SourceProfileId) => {
+                          setTrackChanges({
+                            sourceProfileId: value,
+                          });
+                        }}
+                      />
+                    </Stack>
+                  ) : null}
                 </div>
               </CardContent>
             </Card>

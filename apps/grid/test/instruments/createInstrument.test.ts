@@ -17,6 +17,7 @@ describe("createNewInstrumentForUser", () => {
         tracks: expect.arrayContaining([
           expect.objectContaining({
             key: "track-1",
+            audioSource: { type: "internal" },
             sourceProfileId: "unassigned",
             noteSource: "externalMidi",
           }),

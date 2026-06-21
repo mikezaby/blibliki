@@ -1,5 +1,8 @@
 import { PlaybackMode, Resolution } from "@blibliki/engine";
-import type { SlotInitialValue } from "@blibliki/instrument";
+import type {
+  InstrumentTrackAudioSource,
+  SlotInitialValue,
+} from "@blibliki/instrument";
 
 export type InstrumentSequencerDivision =
   | "1/64"
@@ -92,6 +95,7 @@ export type InstrumentTrackDocument = {
   enabled?: boolean;
   voices?: number;
   noteSource: InstrumentNoteSource;
+  audioSource?: InstrumentTrackAudioSource;
   midiChannel: number;
   sourceProfileId: SourceProfileId;
   fxChain: [EffectProfileId, EffectProfileId, EffectProfileId, EffectProfileId];
@@ -138,6 +142,7 @@ function createDefaultTrack(trackNo: number): InstrumentTrackDocument {
     voices: 8,
     midiChannel: trackNo,
     noteSource: "externalMidi",
+    audioSource: { type: "internal" },
     sourceProfileId: "unassigned",
     fxChain: [...DEFAULT_FX_CHAIN] as InstrumentTrackDocument["fxChain"],
     sequencer: {

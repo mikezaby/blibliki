@@ -30,6 +30,31 @@ export function updateTrackDocument(
   return next;
 }
 
+export function selectTrackAudioSource(
+  document: InstrumentDocument,
+  trackIndex: number,
+  sourceTrackKey: string | undefined,
+): InstrumentDocument {
+  const next = cloneInstrumentDocument(document);
+  const track = next.tracks[trackIndex];
+  if (!track) {
+    return next;
+  }
+
+  track.audioSource = sourceTrackKey
+    ? {
+        type: "track",
+        trackKey: sourceTrackKey,
+        mode:
+          track.audioSource?.type === "track"
+            ? track.audioSource.mode
+            : "parallel",
+      }
+    : { type: "internal" };
+
+  return next;
+}
+
 export function updateTrackFxChain(
   document: InstrumentDocument,
   trackIndex: number,
