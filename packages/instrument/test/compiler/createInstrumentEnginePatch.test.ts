@@ -4,6 +4,20 @@ import { describe, expect, it } from "vitest";
 import { createInstrumentEnginePatch } from "@/compiler/createInstrumentEnginePatch";
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
 
+function hasRoute(
+  routes: ReturnType<typeof createInstrumentEnginePatch>["patch"]["routes"],
+  sourceModuleId: string,
+  destinationModuleId: string,
+) {
+  return routes.some(
+    ({ source, destination }) =>
+      source.moduleId === sourceModuleId &&
+      source.ioName === "out" &&
+      destination.moduleId === destinationModuleId &&
+      destination.ioName === "in",
+  );
+}
+
 describe("createInstrumentEnginePatch", () => {
   it("builds one shared engine patch with track-owned midi channel filters", () => {
     const document = createDefaultInstrumentDocument();
@@ -429,6 +443,30 @@ describe("createInstrumentEnginePatch", () => {
     expect(moduleIds).not.toContain("track-2.runtime.midiChannelFilter");
     expect(moduleIds).not.toContain("track-2.runtime.voiceScheduler");
     expect(moduleIds).not.toContain("track-2.runtime.stepSequencer");
+    expect(runtime.runtime.stepSequencerIds).not.toHaveProperty("track-2");
+  });
+
+  it("does not create shared note input for processing-only tracks", () => {
+    const document = createDefaultInstrumentDocument();
+    document.tracks = [
+      {
+        ...document.tracks[0]!,
+        audioSource: {
+          type: "track",
+          trackKey: "missing-track",
+          mode: "parallel",
+        },
+      },
+    ];
+
+    const runtime = createInstrumentEnginePatch(document);
+
+    expect(runtime.runtime.noteInputId).toBeUndefined();
+    expect(
+      runtime.patch.modules.some(
+        (module) => module.id === "instrument.runtime.noteInput",
+      ),
+    ).toBe(false);
   });
 
   it("uses All ins for note input and excludes the controller port by default", () => {
@@ -477,6 +515,229 @@ describe("createInstrumentEnginePatch", () => {
           destination.ioName === "in",
       ),
     ).toBe(false);
+  });
+
+  it("routes a parallel processing track while keeping both master routes", () => {
+    const document = createDefaultInstrumentDocument();
+    document.tracks = document.tracks.slice(0, 2);
+    document.tracks[1] = {
+      ...document.tracks[1]!,
+      audioSource: {
+        type: "track",
+        trackKey: "track-1",
+        mode: "parallel",
+      },
+    };
+
+    const { patch, runtime } = createInstrumentEnginePatch(document);
+
+    expect(
+      hasRoute(patch.routes, "track-1.fx4.main", "track-2.filter.main"),
+    ).toBe(true);
+    expect(
+      hasRoute(patch.routes, "track-1.trackGain.main", runtime.masterFilterId),
+    ).toBe(true);
+    expect(
+      hasRoute(patch.routes, "track-2.trackGain.main", runtime.masterFilterId),
+    ).toBe(true);
+  });
+
+  it("routes a serial processing track without the source master route", () => {
+    const document = createDefaultInstrumentDocument();
+    document.tracks = document.tracks.slice(0, 2);
+    document.tracks[1] = {
+      ...document.tracks[1]!,
+      audioSource: {
+        type: "track",
+        trackKey: "track-1",
+        mode: "serial",
+      },
+    };
+
+    const { patch, runtime } = createInstrumentEnginePatch(document);
+
+    expect(
+      hasRoute(patch.routes, "track-1.fx4.main", "track-2.filter.main"),
+    ).toBe(true);
+    expect(
+      hasRoute(patch.routes, "track-1.trackGain.main", runtime.masterFilterId),
+    ).toBe(false);
+    expect(
+      hasRoute(patch.routes, "track-2.trackGain.main", runtime.masterFilterId),
+    ).toBe(true);
+  });
+
+  it("routes a serial processing chain through each track", () => {
+    const document = createDefaultInstrumentDocument();
+    document.tracks = document.tracks.slice(0, 3);
+    document.tracks[1] = {
+      ...document.tracks[1]!,
+      audioSource: {
+        type: "track",
+        trackKey: "track-1",
+        mode: "serial",
+      },
+    };
+    document.tracks[2] = {
+      ...document.tracks[2]!,
+      audioSource: {
+        type: "track",
+        trackKey: "track-2",
+        mode: "serial",
+      },
+    };
+
+    const { patch, runtime } = createInstrumentEnginePatch(document);
+
+    expect(
+      hasRoute(patch.routes, "track-1.fx4.main", "track-2.filter.main"),
+    ).toBe(true);
+    expect(
+      hasRoute(patch.routes, "track-2.fx4.main", "track-3.filter.main"),
+    ).toBe(true);
+    expect(
+      hasRoute(patch.routes, "track-1.trackGain.main", runtime.masterFilterId),
+    ).toBe(false);
+    expect(
+      hasRoute(patch.routes, "track-2.trackGain.main", runtime.masterFilterId),
+    ).toBe(false);
+    expect(
+      hasRoute(patch.routes, "track-3.trackGain.main", runtime.masterFilterId),
+    ).toBe(true);
+  });
+
+  it("supports serial and parallel destinations from one source", () => {
+    const document = createDefaultInstrumentDocument();
+    document.tracks = document.tracks.slice(0, 3);
+    document.tracks[1] = {
+      ...document.tracks[1]!,
+      audioSource: {
+        type: "track",
+        trackKey: "track-1",
+        mode: "serial",
+      },
+    };
+    document.tracks[2] = {
+      ...document.tracks[2]!,
+      audioSource: {
+        type: "track",
+        trackKey: "track-1",
+        mode: "parallel",
+      },
+    };
+
+    const { patch, runtime } = createInstrumentEnginePatch(document);
+
+    expect(
+      hasRoute(patch.routes, "track-1.fx4.main", "track-2.filter.main"),
+    ).toBe(true);
+    expect(
+      hasRoute(patch.routes, "track-1.fx4.main", "track-3.filter.main"),
+    ).toBe(true);
+    expect(
+      hasRoute(patch.routes, "track-1.trackGain.main", runtime.masterFilterId),
+    ).toBe(false);
+    expect(
+      hasRoute(patch.routes, "track-2.trackGain.main", runtime.masterFilterId),
+    ).toBe(true);
+    expect(
+      hasRoute(patch.routes, "track-3.trackGain.main", runtime.masterFilterId),
+    ).toBe(true);
+  });
+
+  it("ignores disabled tracks without repairing their serial chains", () => {
+    const document = createDefaultInstrumentDocument();
+    document.tracks = document.tracks.slice(0, 3);
+    document.tracks[1] = {
+      ...document.tracks[1]!,
+      enabled: false,
+      audioSource: {
+        type: "track",
+        trackKey: "track-1",
+        mode: "serial",
+      },
+    };
+    document.tracks[2] = {
+      ...document.tracks[2]!,
+      audioSource: {
+        type: "track",
+        trackKey: "track-2",
+        mode: "serial",
+      },
+    };
+
+    const { patch, runtime } = createInstrumentEnginePatch(document);
+
+    expect(
+      hasRoute(patch.routes, "track-1.trackGain.main", runtime.masterFilterId),
+    ).toBe(true);
+    expect(
+      hasRoute(patch.routes, "track-2.fx4.main", "track-3.filter.main"),
+    ).toBe(false);
+    expect(
+      hasRoute(patch.routes, "track-3.trackGain.main", runtime.masterFilterId),
+    ).toBe(true);
+  });
+
+  it("compiles missing sources and feedback routes without validation", () => {
+    const missingSourceDocument = createDefaultInstrumentDocument();
+    missingSourceDocument.tracks = missingSourceDocument.tracks.slice(0, 1);
+    missingSourceDocument.tracks[0] = {
+      ...missingSourceDocument.tracks[0]!,
+      audioSource: {
+        type: "track",
+        trackKey: "missing-track",
+        mode: "serial",
+      },
+    };
+
+    const missingSourceRuntime = createInstrumentEnginePatch(
+      missingSourceDocument,
+    );
+
+    expect(
+      hasRoute(
+        missingSourceRuntime.patch.routes,
+        "track-1.trackGain.main",
+        missingSourceRuntime.runtime.masterFilterId,
+      ),
+    ).toBe(true);
+
+    const feedbackDocument = createDefaultInstrumentDocument();
+    feedbackDocument.tracks = feedbackDocument.tracks.slice(0, 2);
+    feedbackDocument.tracks[0] = {
+      ...feedbackDocument.tracks[0]!,
+      audioSource: {
+        type: "track",
+        trackKey: "track-2",
+        mode: "parallel",
+      },
+    };
+    feedbackDocument.tracks[1] = {
+      ...feedbackDocument.tracks[1]!,
+      audioSource: {
+        type: "track",
+        trackKey: "track-1",
+        mode: "parallel",
+      },
+    };
+
+    const feedbackRuntime = createInstrumentEnginePatch(feedbackDocument);
+
+    expect(
+      hasRoute(
+        feedbackRuntime.patch.routes,
+        "track-1.fx4.main",
+        "track-2.filter.main",
+      ),
+    ).toBe(true);
+    expect(
+      hasRoute(
+        feedbackRuntime.patch.routes,
+        "track-2.fx4.main",
+        "track-1.filter.main",
+      ),
+    ).toBe(true);
   });
 
   it("starts the global delay and reverb runtime modules dry", () => {

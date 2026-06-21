@@ -1,14 +1,10 @@
 import type { IRoute } from "@blibliki/engine";
-import type { BlockPlug } from "@/blocks/types";
-import {
-  createExpandedRoutes,
-  createRuntimeRouteId,
-} from "@/core/runtimeRoutes";
+import { createRuntimeRouteId } from "@/core/runtimeRoutes";
 import type { InstrumentTrackDocument } from "@/document/types";
 import type BaseTrack from "@/tracks/BaseTrack";
+import { createInstrumentAudioRoutes } from "./instrumentAudioRouting";
 import type { SerializableRuntimeModule } from "./instrumentRuntimeModules";
 import type { CompiledInstrumentEnginePatch } from "./instrumentTypes";
-import { scopeTrackIO } from "./scoping";
 
 export type InstrumentTrackNoteRuntime = {
   modules: SerializableRuntimeModule[];
@@ -50,6 +46,7 @@ export function createTrackNoteRuntime(
 }
 
 export function createMasterRoutes(
+  trackDocuments: readonly InstrumentTrackDocument[],
   tracks: readonly BaseTrack[],
   runtime: Pick<
     CompiledInstrumentEnginePatch["runtime"],
@@ -60,19 +57,12 @@ export function createMasterRoutes(
     | "masterVolumeId"
   >,
 ): IRoute[] {
-  const mixDestinationPlugs: BlockPlug[] = [
-    { moduleId: runtime.masterFilterId, ioName: "in" },
-  ];
-
   return [
-    ...tracks.flatMap((track) =>
-      createExpandedRoutes(
-        track.key,
-        scopeTrackIO(track.key, track, track.findOutput("audio out"), "output")
-          .plugs,
-        mixDestinationPlugs,
-      ),
-    ),
+    ...createInstrumentAudioRoutes({
+      trackDocuments,
+      tracks,
+      masterFilterId: runtime.masterFilterId,
+    }),
     {
       id: createRuntimeRouteId(
         "instrument",
@@ -151,6 +141,7 @@ export function createControllerRoutes(
 }
 
 export function createInstrumentRuntimeRoutes(options: {
+  trackDocuments: readonly InstrumentTrackDocument[];
   trackInstances: readonly BaseTrack[];
   runtime: Pick<
     CompiledInstrumentEnginePatch["runtime"],
@@ -165,7 +156,8 @@ export function createInstrumentRuntimeRoutes(options: {
   >;
   trackNoteRuntimes: readonly InstrumentTrackNoteRuntime[];
 }): IRoute[] {
-  const { trackInstances, runtime, trackNoteRuntimes } = options;
+  const { trackDocuments, trackInstances, runtime, trackNoteRuntimes } =
+    options;
 
   return [
     ...trackNoteRuntimes.flatMap(({ routes }) => routes),
@@ -174,6 +166,6 @@ export function createInstrumentRuntimeRoutes(options: {
       runtime.midiMapperId,
       runtime.controllerOutputId,
     ),
-    ...createMasterRoutes(trackInstances, runtime),
+    ...createMasterRoutes(trackDocuments, trackInstances, runtime),
   ];
 }

@@ -103,6 +103,59 @@ describe("InstrumentNavigation", () => {
     });
   });
 
+  it("falls back to the first page available on a processing track", () => {
+    const document = createSeededInstrumentDocument();
+    document.tracks = document.tracks.slice(0, 2);
+    document.tracks[1] = {
+      ...document.tracks[1]!,
+      audioSource: {
+        type: "track",
+        trackKey: "track-1",
+        mode: "parallel",
+      },
+    };
+    const runtimePatch = createInstrumentEnginePatch(document);
+
+    const processingTrack =
+      InstrumentNavigation.fromRuntimePatch(runtimePatch).navigate("nextTrack");
+
+    expect(processingTrack.serialize()).toMatchObject({
+      activeTrackIndex: 1,
+      activePage: "filterMod",
+    });
+    expect(processingTrack.visiblePage.pageKey).toBe("filterMod");
+    expect(processingTrack.navigate("nextPage").serialize()).toMatchObject({
+      activePage: "fx",
+    });
+    expect(processingTrack.navigate("previousPage").serialize()).toMatchObject({
+      activePage: "fx",
+    });
+  });
+
+  it("normalizes the initial runtime page for a processing track", () => {
+    const document = createSeededInstrumentDocument();
+    document.tracks = document.tracks.slice(0, 2);
+    document.tracks[1] = {
+      ...document.tracks[1]!,
+      audioSource: {
+        type: "track",
+        trackKey: "track-1",
+        mode: "parallel",
+      },
+    };
+
+    const runtimePatch = createInstrumentEnginePatch(document, {
+      navigation: {
+        activeTrackIndex: 1,
+      },
+    });
+
+    expect(runtimePatch.runtime.navigation).toMatchObject({
+      activeTrackIndex: 1,
+      activePage: "filterMod",
+    });
+  });
+
   it("keeps seq edit page navigation scoped to sequencer pages", () => {
     const runtimePatch = createInstrumentEnginePatch(
       createStepSequencerInstrumentDocument(),

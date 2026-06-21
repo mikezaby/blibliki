@@ -34,13 +34,16 @@ function isSequencerTrack(
   );
 }
 
-function getPageKeys(runtimePatch: CompiledInstrumentEnginePatch) {
-  const firstTrack = runtimePatch.compiledInstrument.tracks[0];
-  if (!firstTrack) {
-    throw new Error("Instrument has no tracks");
+function getPageKeys(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  activeTrackIndex: number,
+) {
+  const activeTrack = runtimePatch.compiledInstrument.tracks[activeTrackIndex];
+  if (!activeTrack) {
+    throw new Error(`Track ${activeTrackIndex} not found in instrument`);
   }
 
-  return firstTrack.compiledTrack.pages.map((page) => page.key);
+  return activeTrack.compiledTrack.pages.map((page) => page.key);
 }
 
 function normalizeNavigation(
@@ -51,10 +54,13 @@ function normalizeNavigation(
     navigation.activeTrackIndex,
     runtimePatch.compiledInstrument.tracks.length,
   );
-  const pageKeys = getPageKeys(runtimePatch);
+  const pageKeys = getPageKeys(runtimePatch, activeTrackIndex);
   const activePage = pageKeys.includes(navigation.activePage)
     ? navigation.activePage
-    : runtimePatch.runtime.navigation.activePage;
+    : pageKeys[0];
+  if (!activePage) {
+    throw new Error(`Track ${activeTrackIndex} has no pages`);
+  }
   const sequencerTrack = isSequencerTrack(runtimePatch, activeTrackIndex);
 
   return {
@@ -105,7 +111,10 @@ export class InstrumentNavigation {
         (page) =>
           page.trackIndex === this.state.activeTrackIndex &&
           page.pageKey === this.state.activePage,
-      ) ?? this.runtimePatch.compiledInstrument.launchControlXL3.pages[0];
+      ) ??
+      this.runtimePatch.compiledInstrument.launchControlXL3.pages.find(
+        (page) => page.trackIndex === this.state.activeTrackIndex,
+      );
 
     if (!activePage) {
       throw new Error("Instrument has no LaunchControlXL3 pages");
@@ -160,7 +169,10 @@ export class InstrumentNavigation {
       }
     }
 
-    const pageKeys = getPageKeys(this.runtimePatch);
+    const pageKeys = getPageKeys(
+      this.runtimePatch,
+      this.state.activeTrackIndex,
+    );
     const currentPageIndex = pageKeys.indexOf(this.state.activePage);
 
     switch (action) {

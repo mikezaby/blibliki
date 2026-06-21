@@ -6,6 +6,7 @@ import {
 import type { InstrumentTrackDocument } from "@/document/types";
 import { DEFAULT_ACTIVE_PAGE } from "./createInstrumentMidiMapperProps";
 import type {
+  CompiledInstrument,
   CompiledInstrumentEnginePatch,
   CreateInstrumentEnginePatchOptions,
   InstrumentNavigationState,
@@ -52,7 +53,11 @@ export function createInstrumentStepSequencerIds(
 ) {
   return Object.fromEntries(
     trackDocuments
-      .filter((track) => track.noteSource === "stepSequencer")
+      .filter(
+        (track) =>
+          track.audioSource?.type !== "track" &&
+          track.noteSource === "stepSequencer",
+      )
       .map((track) => [
         track.key,
         createTrackRuntimeModuleId(track.key, "stepSequencer"),
@@ -72,7 +77,7 @@ function normalizeActiveTrackIndex(
 }
 
 export function normalizeInstrumentNavigation(
-  trackCount: number,
+  compiledInstrument: CompiledInstrument,
   options: CreateInstrumentEnginePatchOptions,
 ): InstrumentNavigationState {
   const requestedActiveTrackIndex =
@@ -80,12 +85,22 @@ export function normalizeInstrumentNavigation(
     options.midiMapper?.activeTrack ??
     0;
 
+  const activeTrackIndex = normalizeActiveTrackIndex(
+    compiledInstrument.tracks.length,
+    requestedActiveTrackIndex,
+  );
+  const activeTrack = compiledInstrument.tracks[activeTrackIndex];
+  const pageKeys =
+    activeTrack?.compiledTrack.pages.map((page) => page.key) ?? [];
+  const requestedActivePage =
+    options.navigation?.activePage ?? DEFAULT_ACTIVE_PAGE;
+  const activePage = pageKeys.includes(requestedActivePage)
+    ? requestedActivePage
+    : (pageKeys[0] ?? DEFAULT_ACTIVE_PAGE);
+
   return {
-    activeTrackIndex: normalizeActiveTrackIndex(
-      trackCount,
-      requestedActiveTrackIndex,
-    ),
-    activePage: options.navigation?.activePage ?? DEFAULT_ACTIVE_PAGE,
+    activeTrackIndex,
+    activePage,
     mode: options.navigation?.mode ?? "performance",
     shiftPressed: options.navigation?.shiftPressed ?? false,
     sequencerPageIndex: options.navigation?.sequencerPageIndex ?? 0,

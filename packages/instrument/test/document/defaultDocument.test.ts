@@ -54,9 +54,7 @@ describe("createDefaultInstrumentDocument metadata", () => {
     const document = createDefaultInstrumentDocument();
 
     expect(
-      document.tracks.every(
-        (track) => track.audioSource?.type === "internal",
-      ),
+      document.tracks.every((track) => track.audioSource?.type === "internal"),
     ).toBe(true);
   });
 

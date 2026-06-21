@@ -28,6 +28,7 @@ function compileInstrumentTrack(
     name,
     midiChannel: track.midiChannel,
     noteSource: trackDocument.noteSource,
+    audioSource: trackDocument.audioSource ?? { type: "internal" },
     sourceProfileId: trackDocument.sourceProfileId,
     fxChain: [...trackDocument.fxChain],
     compiledTrack: scopeCompiledTrack(trackDocument.key, compileTrack(track)),

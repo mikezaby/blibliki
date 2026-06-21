@@ -47,7 +47,9 @@ export function createInstrumentEnginePatch(
     createTrackFromDocument(trackDocument, options.trackVoices),
   );
   const hasExternalMidiTracks = enabledTrackDocuments.some(
-    (track) => track.noteSource === "externalMidi",
+    (track) =>
+      track.audioSource?.type !== "track" &&
+      track.noteSource === "externalMidi",
   );
   const baseNoteInputSelection = normalizePortSelection(
     options.noteInput,
@@ -65,10 +67,7 @@ export function createInstrumentEnginePatch(
     baseNoteInputSelection,
     controllerInputSelection,
   );
-  const navigation = normalizeInstrumentNavigation(
-    compiledInstrument.tracks.length,
-    options,
-  );
+  const navigation = normalizeInstrumentNavigation(compiledInstrument, options);
   const masterOptions = normalizeInstrumentMasterOptions(options.master);
   const globalMappingRuntimeIds = createInstrumentGlobalMappingRuntimeIds();
   const globalMappings = [
@@ -118,6 +117,7 @@ export function createInstrumentEnginePatch(
   });
 
   const runtimeRoutes = createInstrumentRuntimeRoutes({
+    trackDocuments: enabledTrackDocuments,
     trackInstances,
     runtime,
     trackNoteRuntimes,

@@ -76,10 +76,7 @@ describe("compileTrack", () => {
     expect(moduleIds).not.toContain("amp.envelope");
     expect(moduleIds).not.toContain("amp.gain");
     expect(moduleIds).toContain("filter.main");
-    expect(compiled.pages.map((page) => page.key)).toEqual([
-      "filterMod",
-      "fx",
-    ]);
+    expect(compiled.pages.map((page) => page.key)).toEqual(["filterMod", "fx"]);
   });
 
   it("should compile the default track into engine-ready modules, routes, and resolved pages", () => {

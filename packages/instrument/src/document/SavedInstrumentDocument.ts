@@ -120,8 +120,11 @@ function createSavedGlobalBlock(
 function createSavedControllerSlotValues(
   track: CompiledInstrumentEnginePatch["compiledInstrument"]["tracks"][number],
   patch: IEngineSerialize,
+  existingValues: InstrumentTrackControllerSlotValues = {},
 ): InstrumentTrackControllerSlotValues | undefined {
-  const slotValues: InstrumentTrackControllerSlotValues = {};
+  const slotValues: InstrumentTrackControllerSlotValues = {
+    ...existingValues,
+  };
 
   for (const page of track.compiledTrack.launchControlXL3.resolvedPages) {
     for (const region of page.regions) {
@@ -201,8 +204,13 @@ function createSavedTrackDocument(
   runtimePatch: CompiledInstrumentEnginePatch,
   patch: IEngineSerialize,
 ): InstrumentTrackDocument {
+  const audioSource = trackDocument.audioSource ?? { type: "internal" };
+
   if (!isTrackEnabled(trackDocument)) {
-    return trackDocument;
+    return {
+      ...trackDocument,
+      audioSource,
+    };
   }
 
   const compiledTrack = runtimePatch.compiledInstrument.tracks.find(
@@ -210,7 +218,10 @@ function createSavedTrackDocument(
   );
 
   if (!compiledTrack) {
-    return trackDocument;
+    return {
+      ...trackDocument,
+      audioSource,
+    };
   }
 
   const stepSequencerId =
@@ -230,7 +241,12 @@ function createSavedTrackDocument(
 
   return {
     ...trackDocument,
-    controllerSlotValues: createSavedControllerSlotValues(compiledTrack, patch),
+    audioSource,
+    controllerSlotValues: createSavedControllerSlotValues(
+      compiledTrack,
+      patch,
+      trackDocument.controllerSlotValues,
+    ),
     sequencer: pages
       ? {
           pages: pages.map((page, pageIndex) => ({

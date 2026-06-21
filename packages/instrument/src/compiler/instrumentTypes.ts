@@ -3,6 +3,7 @@ import type {
   EffectProfileId,
   InstrumentGlobalBlock,
   InstrumentNoteSource,
+  InstrumentTrackAudioSource,
   SourceProfileId,
 } from "@/document/types";
 import type { TrackPageKey } from "@/types";
@@ -15,6 +16,7 @@ export type CompiledInstrumentTrack = {
   name: string;
   midiChannel: number;
   noteSource: InstrumentNoteSource;
+  audioSource: InstrumentTrackAudioSource;
   sourceProfileId: SourceProfileId;
   fxChain: [EffectProfileId, EffectProfileId, EffectProfileId, EffectProfileId];
   compiledTrack: CompiledTrack;

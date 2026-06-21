@@ -159,6 +159,35 @@ describe("compileInstrument", () => {
     ]);
   });
 
+  it("normalizes missing audio sources as internal", () => {
+    const document = createDefaultInstrumentDocument();
+    delete document.tracks[0]!.audioSource;
+
+    const compiled = compileInstrument(document);
+
+    expect(compiled.tracks[0]?.audioSource).toEqual({ type: "internal" });
+  });
+
+  it("preserves track audio source metadata in compiled tracks", () => {
+    const document = createDefaultInstrumentDocument();
+    document.tracks[1] = {
+      ...document.tracks[1]!,
+      audioSource: {
+        type: "track",
+        trackKey: "track-1",
+        mode: "serial",
+      },
+    };
+
+    const compiled = compileInstrument(document);
+
+    expect(compiled.tracks[1]?.audioSource).toEqual({
+      type: "track",
+      trackKey: "track-1",
+      mode: "serial",
+    });
+  });
+
   it("throws when no tracks are enabled", () => {
     const document = createDefaultInstrumentDocument();
     document.tracks = document.tracks.map((track) => ({

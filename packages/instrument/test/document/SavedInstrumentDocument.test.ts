@@ -5,6 +5,57 @@ import { createSavedInstrumentDocument } from "@/document/SavedInstrumentDocumen
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
 
 describe("createSavedInstrumentDocument", () => {
+  it("writes normalized audio sources for enabled and disabled tracks", () => {
+    const document = createDefaultInstrumentDocument();
+    delete document.tracks[0]!.audioSource;
+    document.tracks[1] = {
+      ...document.tracks[1]!,
+      enabled: false,
+      audioSource: undefined,
+    };
+    const runtimePatch = createInstrumentEnginePatch(document);
+
+    const saved = createSavedInstrumentDocument(
+      document,
+      runtimePatch,
+      structuredClone(runtimePatch.patch),
+    );
+
+    expect(saved.tracks[0]?.audioSource).toEqual({ type: "internal" });
+    expect(saved.tracks[1]?.audioSource).toEqual({ type: "internal" });
+  });
+
+  it("preserves dormant source controls while saving a processing track", () => {
+    const document = createDefaultInstrumentDocument();
+    document.tracks = document.tracks.slice(0, 2);
+    document.tracks[1] = {
+      ...document.tracks[1]!,
+      audioSource: {
+        type: "track",
+        trackKey: "track-1",
+        mode: "parallel",
+      },
+      controllerSlotValues: {
+        "source.wave": "square",
+        "amp.attack": 0.25,
+        "filter.cutoff": 3200,
+      },
+    };
+    const runtimePatch = createInstrumentEnginePatch(document);
+
+    const saved = createSavedInstrumentDocument(
+      document,
+      runtimePatch,
+      structuredClone(runtimePatch.patch),
+    );
+
+    expect(saved.tracks[1]?.controllerSlotValues).toMatchObject({
+      "source.wave": "square",
+      "amp.attack": 0.25,
+      "filter.cutoff": 3200,
+    });
+  });
+
   it("preserves valid sequencer CC messages from the runtime patch", () => {
     const document = createDefaultInstrumentDocument();
     document.tracks[0] = {
