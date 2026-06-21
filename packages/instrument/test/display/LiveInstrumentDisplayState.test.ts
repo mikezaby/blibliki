@@ -32,11 +32,16 @@ describe("LiveInstrumentDisplayState", () => {
           ? { ...module, props: { ...module.props, wave: "square" } }
           : module.id === "track-1.amp.envelope"
             ? { ...module, props: { ...module.props, attack: 0.5 } }
-            : module.id === "instrument.runtime.transportControl"
-              ? { ...module, props: { ...module.props, bpm: 132, swing: 0.25 } }
-              : module.id === "instrument.runtime.masterVolume"
-                ? { ...module, props: { ...module.props, volume: -12 } }
-                : module,
+            : module.id === "track-1.trackGain.main"
+              ? { ...module, props: { ...module.props, volume: -18.5 } }
+              : module.id === "instrument.runtime.transportControl"
+                ? {
+                    ...module,
+                    props: { ...module.props, bpm: 132, swing: 0.25 },
+                  }
+                : module.id === "instrument.runtime.masterVolume"
+                  ? { ...module, props: { ...module.props, volume: -12 } }
+                  : module,
       ]),
     );
 
@@ -56,6 +61,7 @@ describe("LiveInstrumentDisplayState", () => {
     );
 
     expect(displayState.header.transportState).toBe(TransportState.playing);
+    expect(displayState.header.trackVolume).toBe(-18.5);
     expect(displayState.globalBand.slots[0].valueText).toBe("132 BPM");
     expect(displayState.globalBand.slots[1].valueText).toBe("25%");
     expect(displayState.globalBand.slots[7].valueText).toBe("-12 dB");

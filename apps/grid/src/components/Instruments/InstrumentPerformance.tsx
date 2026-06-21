@@ -504,6 +504,10 @@ function StatusLamp({ active, label }: { active: boolean; label: string }) {
   );
 }
 
+function formatTrackVolume(volume?: number) {
+  return volume === undefined ? "--" : `${volume.toFixed(1)} dB`;
+}
+
 export default function InstrumentPerformance({
   instrument,
   onInstrumentChange,
@@ -656,6 +660,7 @@ export default function InstrumentPerformance({
     ? `${displayState.upperBand.title} / ${displayState.lowerBand.title}`
     : "--";
   const trackName = displayState?.header.trackName ?? "Waiting for runtime";
+  const trackVolume = formatTrackVolume(displayState?.header.trackVolume);
   const instrumentName = instrument.name;
   const isTransportRunning =
     displayState?.header.transportState === TransportState.playing;
@@ -760,6 +765,7 @@ export default function InstrumentPerformance({
               <div className="mt-6 grid gap-5 xl:grid-cols-[18rem_minmax(0,1fr)]">
                 <aside>
                   <ConsoleStat label="Track" value={trackName} />
+                  <ConsoleStat label="Track Volume" value={trackVolume} />
                   <ConsoleStat
                     label="Page Bank"
                     value={pageBankLabel}

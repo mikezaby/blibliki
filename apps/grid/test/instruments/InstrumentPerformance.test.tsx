@@ -137,6 +137,7 @@ describe("InstrumentPerformance", () => {
     header: {
       instrumentName: "DEFAULT INSTRUMENT",
       trackName: "track-1",
+      trackVolume: -12.5,
       pageKey: "sourceAmp",
       controllerPage: 1,
       midiChannel: 1,
@@ -167,6 +168,7 @@ describe("InstrumentPerformance", () => {
       header: {
         instrumentName: "DEFAULT INSTRUMENT",
         trackName: "track-1",
+        trackVolume: -12.5,
         pageKey: "sourceAmp",
         controllerPage: 1,
         midiChannel: 1,
@@ -247,6 +249,8 @@ describe("InstrumentPerformance", () => {
     expect(screen.queryByText("Display Focus")).toBeNull();
     expect(screen.getByText("Track")).toBeTruthy();
     expect(screen.getAllByText("track-1")).toHaveLength(1);
+    expect(screen.getByText("Track Volume")).toBeTruthy();
+    expect(screen.getByText("-12.5 dB")).toBeTruthy();
     expect(screen.getByText("Page Bank")).toBeTruthy();
     expect(screen.getByText("SOURCE / AMP")).toBeTruthy();
     expect(screen.queryByText("Mode")).toBeNull();

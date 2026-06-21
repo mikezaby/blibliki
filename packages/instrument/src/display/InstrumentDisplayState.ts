@@ -54,6 +54,7 @@ export type InstrumentDisplayState = {
   header: {
     instrumentName: string;
     trackName: string;
+    trackVolume?: number;
     pageKey: TrackPageKey;
     controllerPage: 1 | 2 | 3;
     midiChannel: number;

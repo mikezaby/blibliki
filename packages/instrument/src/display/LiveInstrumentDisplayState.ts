@@ -55,6 +55,27 @@ function getModuleProp(
   }
 }
 
+function getActiveTrackVolume(
+  engine: LiveDisplayEngine,
+  runtimePatch: CompiledInstrumentEnginePatch,
+): number | undefined {
+  const activeTrack =
+    runtimePatch.compiledInstrument.tracks[
+      runtimePatch.runtime.navigation.activeTrackIndex
+    ];
+  if (!activeTrack) {
+    return undefined;
+  }
+
+  const value = getModuleProp(
+    engine,
+    `${activeTrack.key}.trackGain.main`,
+    "volume",
+  );
+
+  return typeof value === "number" ? value : undefined;
+}
+
 function resolveGlobalSlotValue(
   slot: InstrumentDisplayState["globalBand"]["slots"][number],
   engine: LiveDisplayEngine,
@@ -201,6 +222,7 @@ export function createLiveInstrumentDisplayState(
   } = {},
 ): InstrumentDisplayState {
   const runtimeState = Instrument.fromRuntimePatch(runtimePatch).runtimeState;
+  const trackVolume = getActiveTrackVolume(engine, runtimePatch);
   if (runtimeState.navigation.mode === "seqEdit") {
     const seqEditDisplayState =
       launchControlXL3SequencerEdit.createDisplayState(runtimePatch);
@@ -210,6 +232,7 @@ export function createLiveInstrumentDisplayState(
         notice: options.notice,
         header: {
           ...seqEditDisplayState.header,
+          trackVolume,
           transportState: engine.state ?? TransportState.stopped,
         },
       };
@@ -223,6 +246,7 @@ export function createLiveInstrumentDisplayState(
     notice: options.notice,
     header: {
       ...staticDisplayState.header,
+      trackVolume,
       transportState: engine.state ?? TransportState.stopped,
     },
     globalBand: {
