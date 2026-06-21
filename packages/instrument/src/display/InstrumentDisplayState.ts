@@ -100,6 +100,10 @@ function formatPercent(value: number) {
   return `${Math.round(value * 100)}%`;
 }
 
+function formatVolume(value: number) {
+  return `${value} dB`;
+}
+
 function formatGlobalValue(
   globalBlock: InstrumentGlobalBlock,
   key: (typeof launchControlXL3GlobalRow)[number]["key"],
@@ -118,7 +122,7 @@ function formatGlobalValue(
     case "delaySend":
       return formatPercent(globalBlock.delaySend);
     case "masterVolume":
-      return formatPercent(globalBlock.masterVolume);
+      return formatVolume(globalBlock.masterVolume);
     case "inactive":
       return "--";
     default:
@@ -171,7 +175,7 @@ function getGlobalValueSpec(
     case "delaySend":
       return getValueSpecForModuleProp(ModuleType.Delay, "mix");
     case "masterVolume":
-      return getValueSpecForModuleProp(ModuleType.Gain, "gain");
+      return getValueSpecForModuleProp(ModuleType.Volume, "volume");
     case "inactive":
       return undefined;
     default:

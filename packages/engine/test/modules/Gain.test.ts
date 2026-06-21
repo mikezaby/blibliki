@@ -35,6 +35,26 @@ describe("Gain", () => {
     gain.audioNode.connect(inspector.audioNode);
   });
 
+  it("allows polyphonic routes before deferred voices initialize", (ctx) => {
+    const source = ctx.engine.addModule({
+      name: "source gain",
+      moduleType: ModuleType.Gain,
+      props: { gain: 1 },
+    });
+    const destination = ctx.engine.addModule({
+      name: "destination gain",
+      moduleType: ModuleType.Gain,
+      props: { gain: 1 },
+    });
+
+    expect(() =>
+      ctx.engine.addRoute({
+        source: { moduleId: source.id, ioName: "out" },
+        destination: { moduleId: destination.id, ioName: "in" },
+      }),
+    ).not.toThrow();
+  });
+
   it("passes audio through with the default gain", async () => {
     const value = await waitForInspectorNear(inspector, 1);
     expect(value).toBeCloseTo(1, 1);

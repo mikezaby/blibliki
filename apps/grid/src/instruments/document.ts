@@ -113,7 +113,7 @@ export type InstrumentDocument = {
   tracks: InstrumentTrackDocument[];
 };
 
-const DEFAULT_VERSION = "1";
+const DEFAULT_VERSION = "2";
 const DEFAULT_NAME = "Default Instrument";
 const DEFAULT_TEMPLATE_ID = "default-performance-instrument";
 const DEFAULT_HARDWARE_PROFILE_ID = "launchcontrolxl3-pi-lcd";
@@ -171,7 +171,7 @@ export function createDefaultInstrumentDocument(): InstrumentDocument {
       masterFilterResonance: 1,
       reverbSend: 0,
       delaySend: 0,
-      masterVolume: 1,
+      masterVolume: 0,
     },
     tracks: Array.from({ length: 8 }, (_, index) =>
       createDefaultTrack(index + 1),

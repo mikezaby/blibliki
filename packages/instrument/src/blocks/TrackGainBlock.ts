@@ -2,7 +2,7 @@ import { ModuleType } from "@blibliki/engine";
 import BaseBlock from "@/blocks/BaseBlock";
 import { createModuleId } from "@/blocks/helpers";
 
-const DEFAULT_GAIN = 1;
+const DEFAULT_VOLUME = 0;
 
 export default class TrackGainBlock extends BaseBlock {
   constructor() {
@@ -12,10 +12,10 @@ export default class TrackGainBlock extends BaseBlock {
 
     this.addModule({
       id: moduleId,
-      name: "Track Gain",
-      moduleType: ModuleType.Gain,
+      name: "Track Volume",
+      moduleType: ModuleType.Volume,
       props: {
-        gain: DEFAULT_GAIN,
+        volume: DEFAULT_VOLUME,
       },
     });
 

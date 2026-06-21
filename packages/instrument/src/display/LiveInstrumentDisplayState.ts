@@ -39,6 +39,10 @@ function formatPercent(value: number) {
   return `${Math.round(value * 100)}%`;
 }
 
+function formatVolume(value: number) {
+  return `${value} dB`;
+}
+
 function getModuleProp(
   engine: LiveDisplayEngine,
   moduleId: string,
@@ -130,12 +134,12 @@ function resolveGlobalSlotValue(
       const value = getModuleProp(
         engine,
         runtimePatch.runtime.masterVolumeId,
-        "gain",
+        "volume",
       );
       return {
         rawValue: typeof value === "number" ? value : slot.rawValue,
         valueText:
-          typeof value === "number" ? formatPercent(value) : slot.valueText,
+          typeof value === "number" ? formatVolume(value) : slot.valueText,
       };
     }
     case "inactive":

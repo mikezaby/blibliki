@@ -35,7 +35,7 @@ describe("LiveInstrumentDisplayState", () => {
             : module.id === "instrument.runtime.transportControl"
               ? { ...module, props: { ...module.props, bpm: 132, swing: 0.25 } }
               : module.id === "instrument.runtime.masterVolume"
-                ? { ...module, props: { ...module.props, gain: 0.7 } }
+                ? { ...module, props: { ...module.props, volume: -12 } }
                 : module,
       ]),
     );
@@ -58,7 +58,7 @@ describe("LiveInstrumentDisplayState", () => {
     expect(displayState.header.transportState).toBe(TransportState.playing);
     expect(displayState.globalBand.slots[0].valueText).toBe("132 BPM");
     expect(displayState.globalBand.slots[1].valueText).toBe("25%");
-    expect(displayState.globalBand.slots[7].valueText).toBe("70%");
+    expect(displayState.globalBand.slots[7].valueText).toBe("-12 dB");
     expect(displayState.upperBand.slots[0]).toEqual(
       expect.objectContaining({
         valueText: "square",

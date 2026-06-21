@@ -66,6 +66,7 @@ import VirtualMidi, {
   IVirtualMidiProps,
   virtualMidiPropSchema,
 } from "./VirtualMidi";
+import Volume, { IVolumeProps, volumePropSchema } from "./Volume";
 import Wavetable, {
   IWavetableProps,
   IWavetableState,
@@ -77,6 +78,7 @@ export enum ModuleType {
   Oscillator = "Oscillator",
   Wavetable = "Wavetable",
   Gain = "Gain",
+  Volume = "Volume",
   MidiInput = "MidiInput",
   MidiChannelFilter = "MidiChannelFilter",
   MidiOutput = "MidiOutput",
@@ -105,6 +107,7 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.Oscillator]: IOscillatorProps;
   [ModuleType.Wavetable]: IWavetableProps;
   [ModuleType.Gain]: IGainProps;
+  [ModuleType.Volume]: IVolumeProps;
   [ModuleType.Master]: IMasterProps;
   [ModuleType.MidiInput]: IMidiInputProps;
   [ModuleType.MidiChannelFilter]: IMidiChannelFilterProps;
@@ -134,6 +137,7 @@ export type ModuleTypeToStateMapping = {
   [ModuleType.Oscillator]: never;
   [ModuleType.Wavetable]: IWavetableState;
   [ModuleType.Gain]: never;
+  [ModuleType.Volume]: never;
   [ModuleType.Master]: never;
   [ModuleType.MidiInput]: never;
   [ModuleType.MidiChannelFilter]: never;
@@ -163,6 +167,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.Oscillator]: Oscillator;
   [ModuleType.Wavetable]: Wavetable;
   [ModuleType.Gain]: Gain;
+  [ModuleType.Volume]: Volume;
   [ModuleType.Master]: Master;
   [ModuleType.MidiInput]: MidiInput;
   [ModuleType.MidiChannelFilter]: MidiChannelFilter;
@@ -192,6 +197,7 @@ export const moduleSchemas = {
   [ModuleType.Oscillator]: oscillatorPropSchema,
   [ModuleType.Wavetable]: wavetablePropSchema,
   [ModuleType.Gain]: gainPropSchema,
+  [ModuleType.Volume]: volumePropSchema,
   [ModuleType.Master]: masterPropSchema,
   [ModuleType.MidiInput]: midiInputPropSchema,
   [ModuleType.MidiChannelFilter]: midiChannelFilterPropSchema,
@@ -241,6 +247,7 @@ export {
   WAVETABLE_PRESETS,
 } from "./Wavetable";
 export type { IGain } from "./Gain";
+export type { IVolume, IVolumeProps } from "./Volume";
 export type { IMaster } from "./Master";
 export type { IMidiInput, IMidiInputProps } from "./MidiInput";
 export type {
@@ -298,6 +305,7 @@ export type ModuleParams = {
     | ModuleType.Oscillator
     | ModuleType.Wavetable
     | ModuleType.Gain
+    | ModuleType.Volume
     | ModuleType.LegacyEnvelope
     | ModuleType.Envelope
     | ModuleType.Filter
@@ -321,6 +329,8 @@ export function createModule(
       return Wavetable.create(Wavetable, engineId, params);
     case ModuleType.Gain:
       return Gain.create(Gain, engineId, params);
+    case ModuleType.Volume:
+      return Volume.create(Volume, engineId, params);
     case ModuleType.Master:
       return Master.create(Master, engineId, params);
     case ModuleType.MidiInput:

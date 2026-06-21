@@ -7,8 +7,8 @@ import type {
   InstrumentSequencerStep,
   InstrumentTrackDocument,
 } from "./types";
+import { CURRENT_INSTRUMENT_VERSION } from "./version";
 
-const DEFAULT_VERSION = "1";
 const DEFAULT_NAME = "Default Instrument";
 const DEFAULT_FX_CHAIN: [
   EffectProfileId,
@@ -56,7 +56,7 @@ function createDefaultTrack(trackNo: number): InstrumentTrackDocument {
 
 export function createDefaultInstrumentDocument(): InstrumentDocument {
   return {
-    version: DEFAULT_VERSION,
+    version: CURRENT_INSTRUMENT_VERSION,
     name: DEFAULT_NAME,
     templateId: DEFAULT_TEMPLATE_ID,
     hardwareProfileId: DEFAULT_HARDWARE_PROFILE_ID,
@@ -68,7 +68,7 @@ export function createDefaultInstrumentDocument(): InstrumentDocument {
       masterFilterResonance: 1,
       reverbSend: 0,
       delaySend: 0,
-      masterVolume: 1,
+      masterVolume: 0,
     },
     tracks: Array.from({ length: 8 }, (_, index) =>
       createDefaultTrack(index + 1),

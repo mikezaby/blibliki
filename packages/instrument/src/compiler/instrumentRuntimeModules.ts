@@ -9,6 +9,7 @@ import type {
   InstrumentDocument,
   InstrumentTrackDocument,
 } from "@/document/types";
+import { normalizeMasterVolume } from "@/document/version";
 import type { CompiledInstrumentMidiMapperProps } from "./instrumentTypes";
 
 type RuntimeModule<T extends ModuleType> = ICreateModule<T> & { id: string };
@@ -198,14 +199,14 @@ export function createMasterVolumeModule(
   id: string,
   name: string,
   document: InstrumentDocument,
-): RuntimeModule<ModuleType.Gain> & { voices: number } {
+): RuntimeModule<ModuleType.Volume> & { voices: number } {
   return {
     id,
     name,
-    moduleType: EngineModuleType.Gain,
+    moduleType: EngineModuleType.Volume,
     voices: 1,
     props: {
-      gain: document.globalBlock.masterVolume,
+      volume: normalizeMasterVolume(document),
     },
   };
 }

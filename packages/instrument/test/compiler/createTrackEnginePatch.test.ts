@@ -54,7 +54,7 @@ describe("createTrackEnginePatch", () => {
         id: "track-1.runtime.voiceScheduler",
         moduleType: ModuleType.VoiceScheduler,
       },
-      { id: "trackGain.main", moduleType: ModuleType.Gain },
+      { id: "trackGain.main", moduleType: ModuleType.Volume },
     ]);
 
     expect(

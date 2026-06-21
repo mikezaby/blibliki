@@ -18,7 +18,8 @@ const createContext = () => {
     // Falling back to a "none" sink keeps real-time processing without hardware output.
     if (
       error instanceof Error &&
-      error.message.includes("querying device output config")
+      (error.message.includes("querying device output config") ||
+        error.message.includes("default_output_config"))
     ) {
       return new Context(new AudioContext({ sinkId: "none" } as any));
     }

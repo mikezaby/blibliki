@@ -58,6 +58,7 @@ export abstract class PolyModule<
   protected _state!: ModuleTypeToStateMapping[T];
   protected _propsInitialized = false;
   private _voices!: number;
+  private initialVoices: number;
   private _name!: string;
   private pendingUIUpdates = false;
 
@@ -103,6 +104,7 @@ export abstract class PolyModule<
     this.moduleType = moduleType;
     this._props = props;
     this._state = {} as ModuleTypeToStateMapping[T];
+    this.initialVoices = voices || 1;
 
     this.inputs = new InputCollection(
       this as unknown as PolyModule<ModuleType>,
@@ -113,7 +115,7 @@ export abstract class PolyModule<
 
     // Defer hook calls until after subclass is fully initialized
     queueMicrotask(() => {
-      this.voices = voices || 1;
+      this.voices = this.initialVoices;
       this.props = props;
       this.triggerPropsUpdate();
     });
@@ -216,7 +218,7 @@ export abstract class PolyModule<
       id: this.id,
       name: this.name,
       moduleType: this.moduleType,
-      voices: this.voices,
+      voices: this.audioModules.length === 0 ? this.initialVoices : this.voices,
       props: this.props,
       inputs: this.inputs.serialize(),
       outputs: this.outputs.serialize(),

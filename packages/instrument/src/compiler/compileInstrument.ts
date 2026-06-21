@@ -2,6 +2,10 @@ import type {
   InstrumentDocument,
   InstrumentTrackDocument,
 } from "@/document/types";
+import {
+  CURRENT_INSTRUMENT_VERSION,
+  normalizeMasterVolume,
+} from "@/document/version";
 import { createTrackFromDocument } from "@/tracks/createTrackFromDocument";
 import { compileTrack } from "./compileTrack";
 import type {
@@ -65,11 +69,14 @@ export function compileInstrument(
   );
 
   return {
-    version: document.version,
+    version: CURRENT_INSTRUMENT_VERSION,
     name: document.name,
     templateId: document.templateId,
     hardwareProfileId: document.hardwareProfileId,
-    globalBlock: { ...document.globalBlock },
+    globalBlock: {
+      ...document.globalBlock,
+      masterVolume: normalizeMasterVolume(document),
+    },
     tracks,
     launchControlXL3: {
       pages: compileLaunchControlPages(tracks),

@@ -87,6 +87,7 @@ export const AvailableModules: Record<
   },
   [ModuleType.Filter]: { name: "Filter", moduleType: ModuleType.Filter },
   [ModuleType.Gain]: { name: "Gain", moduleType: ModuleType.Gain },
+  [ModuleType.Volume]: { name: "Volume", moduleType: ModuleType.Volume },
   [ModuleType.MidiInput]: {
     name: "MIDI Input",
     moduleType: ModuleType.MidiInput,

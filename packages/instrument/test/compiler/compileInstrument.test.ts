@@ -7,7 +7,7 @@ describe("compileInstrument", () => {
   it("compiles the default instrument document into per-track compiled units", () => {
     const compiled = compileInstrument(createDefaultInstrumentDocument());
 
-    expect(compiled.version).toBe("1");
+    expect(compiled.version).toBe("2");
     expect(compiled.name).toBe("Default Instrument");
     expect(compiled.templateId).toBe("default-performance-instrument");
     expect(compiled.hardwareProfileId).toBe("launchcontrolxl3-pi-lcd");
@@ -18,7 +18,7 @@ describe("compileInstrument", () => {
       masterFilterResonance: 1,
       reverbSend: 0,
       delaySend: 0,
-      masterVolume: 1,
+      masterVolume: 0,
     });
 
     expect(compiled.tracks).toHaveLength(8);
@@ -115,6 +115,27 @@ describe("compileInstrument", () => {
         pageKeys: ["sourceAmp", "filterMod", "fx"],
       },
     ]);
+  });
+
+  it("converts version 1 linear master volume to dB", () => {
+    const document = createDefaultInstrumentDocument();
+    document.version = "1";
+    document.globalBlock.masterVolume = 0.5;
+
+    const compiled = compileInstrument(document);
+
+    expect(compiled.version).toBe("2");
+    expect(compiled.globalBlock.masterVolume).toBeCloseTo(-6.02, 2);
+  });
+
+  it("converts version 1 silence to the -60 dB mute sentinel", () => {
+    const document = createDefaultInstrumentDocument();
+    document.version = "1";
+    document.globalBlock.masterVolume = 0;
+
+    const compiled = compileInstrument(document);
+
+    expect(compiled.globalBlock.masterVolume).toBe(-60);
   });
 
   it("skips disabled tracks and preserves enabled-track order", () => {

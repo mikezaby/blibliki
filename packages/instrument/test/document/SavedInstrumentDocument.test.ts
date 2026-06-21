@@ -5,6 +5,42 @@ import { createSavedInstrumentDocument } from "@/document/SavedInstrumentDocumen
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
 
 describe("createSavedInstrumentDocument", () => {
+  it("saves master volume in dB", () => {
+    const document = createDefaultInstrumentDocument();
+    const runtimePatch = createInstrumentEnginePatch(document);
+    const patch = structuredClone(runtimePatch.patch);
+    const masterVolume = patch.modules.find(
+      (module) => module.id === runtimePatch.runtime.masterVolumeId,
+    );
+
+    if (!masterVolume) {
+      throw new Error("Expected master volume module");
+    }
+
+    masterVolume.props = { volume: -18 };
+
+    const saved = createSavedInstrumentDocument(document, runtimePatch, patch);
+
+    expect(saved.globalBlock.masterVolume).toBe(-18);
+    expect(saved.version).toBe("2");
+  });
+
+  it("migrates version 1 master volume when the runtime module is unavailable", () => {
+    const document = createDefaultInstrumentDocument();
+    document.version = "1";
+    document.globalBlock.masterVolume = 0.5;
+    const runtimePatch = createInstrumentEnginePatch(document);
+    const patch = structuredClone(runtimePatch.patch);
+    patch.modules = patch.modules.filter(
+      (module) => module.id !== runtimePatch.runtime.masterVolumeId,
+    );
+
+    const saved = createSavedInstrumentDocument(document, runtimePatch, patch);
+
+    expect(saved.globalBlock.masterVolume).toBeCloseTo(-6.02, 2);
+    expect(saved.version).toBe("2");
+  });
+
   it("writes normalized audio sources for enabled and disabled tracks", () => {
     const document = createDefaultInstrumentDocument();
     delete document.tracks[0]!.audioSource;

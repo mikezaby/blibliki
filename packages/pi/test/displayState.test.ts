@@ -118,8 +118,8 @@ describe("createInstrumentDisplayState", () => {
         label: "Main Volume",
         shortLabel: "VOL",
         cc: 20,
-        rawValue: 1,
-        valueText: "100%",
+        rawValue: 0,
+        valueText: "0 dB",
       }),
     );
 

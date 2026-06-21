@@ -25,6 +25,7 @@ import StepSequencer from "./StepSequencer";
 import StereoPanner from "./StereoPanner";
 import TransportControl from "./TransportControl";
 import VoiceScheduler from "./VoiceScheduler";
+import Volume from "./Volume";
 import Wavetable from "./Wavetable";
 import { updateModule } from "./modulesSlice";
 
@@ -59,6 +60,7 @@ const COMPONENT_MAPPING: {
   [ModuleType.Master]: Master,
   [ModuleType.Filter]: Filter,
   [ModuleType.Gain]: Gain,
+  [ModuleType.Volume]: Volume,
   [ModuleType.Envelope]: Envelope,
   [ModuleType.MidiInput]: MidiInput,
   [ModuleType.MidiChannelFilter]: MidiChannelFilter,

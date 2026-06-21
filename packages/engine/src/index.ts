@@ -81,6 +81,8 @@ export { default as StepSequencer } from "./modules/StepSequencer";
 export type {
   IOscillator,
   IGain,
+  IVolume,
+  IVolumeProps,
   IMaster,
   IStepSequencerProps,
   IStepSequencerState,

@@ -124,7 +124,7 @@ describe("createSavedInstrumentDocument", () => {
       runtimePatch.runtime.masterVolumeId,
       (props) => ({
         ...props,
-        gain: 0.84,
+        volume: -3,
       }),
     );
     livePatch = updateModuleProps(
@@ -187,7 +187,7 @@ describe("createSavedInstrumentDocument", () => {
       masterFilterResonance: 6.5,
       delaySend: 0.37,
       reverbSend: 0.61,
-      masterVolume: 0.84,
+      masterVolume: -3,
     });
     expect(savedDocument.tracks[0]?.controllerSlotValues).toMatchObject({
       "fx1.drive": 0.91,

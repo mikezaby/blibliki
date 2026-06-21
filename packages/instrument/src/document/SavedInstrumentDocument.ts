@@ -11,6 +11,10 @@ import type {
   InstrumentTrackControllerSlotValues,
   InstrumentTrackDocument,
 } from "@/document/types";
+import {
+  CURRENT_INSTRUMENT_VERSION,
+  normalizeMasterVolume,
+} from "@/document/version";
 
 function isTrackEnabled(trackDocument: InstrumentTrackDocument) {
   return trackDocument.enabled !== false;
@@ -111,9 +115,9 @@ function createSavedGlobalBlock(
         ? reverbProps.mix
         : document.globalBlock.reverbSend,
     masterVolume:
-      typeof masterVolumeProps?.gain === "number"
-        ? masterVolumeProps.gain
-        : document.globalBlock.masterVolume,
+      typeof masterVolumeProps?.volume === "number"
+        ? masterVolumeProps.volume
+        : normalizeMasterVolume(document),
   };
 }
 
@@ -283,6 +287,7 @@ export function createSavedInstrumentDocument(
 ): InstrumentDocument {
   return {
     ...document,
+    version: CURRENT_INSTRUMENT_VERSION,
     globalBlock: createSavedGlobalBlock(document, runtimePatch, patch),
     tracks: document.tracks.map((trackDocument) =>
       createSavedTrackDocument(trackDocument, runtimePatch, patch),

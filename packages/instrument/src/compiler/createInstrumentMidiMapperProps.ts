@@ -93,8 +93,8 @@ export function createInstrumentFaderGlobalMappings(
   return compiledInstrument.tracks.map((track, trackIndex) => ({
     cc: FADER_CCS[trackIndex],
     moduleId: `${track.key}.trackGain.main`,
-    moduleType: ModuleType.Gain,
-    propName: "gain",
+    moduleType: ModuleType.Volume,
+    propName: "volume",
     mode: MidiMappingMode.direct,
   }));
 }
@@ -156,8 +156,8 @@ export function createInstrumentEncoderGlobalMappings(
         return {
           cc: control.cc,
           moduleId: runtimeIds.masterVolumeId,
-          moduleType: ModuleType.Gain,
-          propName: "gain",
+          moduleType: ModuleType.Volume,
+          propName: "volume",
           mode: MidiMappingMode.incDec,
         };
       case "inactive":
