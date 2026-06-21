@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@blibliki/display-protocol": "workspace:^",
-    "slint-ui": "^1.13.1",
+    "slint-ui": "1.16.1",
     "vite-tsconfig-paths": "catalog:vite"
   },
   "devDependencies": {
