@@ -5,13 +5,15 @@ Standalone Storybook playground for Blibliki UI components.
 ## Run
 
 ```bash
-pnpm -C apps/storybook storybook
+pnpm -C apps/storybook dev
 ```
+
+Storybook is served directly from `/` on port `6006`.
 
 ## Build static Storybook
 
 ```bash
-pnpm -C apps/storybook build-storybook
+pnpm -C apps/storybook build
 ```
 
 ## First story

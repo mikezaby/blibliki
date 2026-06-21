@@ -4,13 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "clean:dist": "rm -rf ./dist",
+    "dev": "storybook dev -p 6006",
+    "build": "storybook build",
+    "clean:dist": "rm -rf ./storybook-static",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "test": "node --test test/*.test.mjs",
+    "storybook": "pnpm dev",
+    "build-storybook": "pnpm build"
   },
   "dependencies": {
     "@blibliki/ui": "workspace:^",
@@ -21,7 +21,6 @@
     "@types/node": "catalog:node",
     "@types/react": "catalog:react-19",
     "@types/react-dom": "catalog:react-19",
-    "@vitejs/plugin-react": "6.0.2",
     "globals": "17.6.0",
     "vite": "catalog:vite",
     "storybook": "10.4.6",
