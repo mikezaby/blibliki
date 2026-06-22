@@ -6,6 +6,10 @@ import VoiceScheduler, {
   voiceSchedulerPropSchema,
 } from "@/core/module/VoiceScheduler";
 import Chorus, { chorusPropSchema, IChorusProps } from "./Chorus";
+import Compressor, {
+  compressorPropSchema,
+  ICompressorProps,
+} from "./Compressor";
 import Constant, { constantPropSchema, IConstantProps } from "./Constant";
 import Delay, { delayPropSchema, IDelayProps } from "./Delay";
 import Distortion, {
@@ -89,6 +93,7 @@ export enum ModuleType {
   StereoPanner = "StereoPanner",
   Inspector = "Inspector",
   Chorus = "Chorus",
+  Compressor = "Compressor",
   Constant = "Constant",
   Delay = "Delay",
   Distortion = "Distortion",
@@ -119,6 +124,7 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.StereoPanner]: IStereoPannerProps;
   [ModuleType.Inspector]: IInspectorProps;
   [ModuleType.Chorus]: IChorusProps;
+  [ModuleType.Compressor]: ICompressorProps;
   [ModuleType.Constant]: IConstantProps;
   [ModuleType.Delay]: IDelayProps;
   [ModuleType.Distortion]: IDistortionProps;
@@ -149,6 +155,7 @@ export type ModuleTypeToStateMapping = {
   [ModuleType.StereoPanner]: never;
   [ModuleType.Inspector]: never;
   [ModuleType.Chorus]: never;
+  [ModuleType.Compressor]: never;
   [ModuleType.Constant]: never;
   [ModuleType.Delay]: never;
   [ModuleType.Distortion]: never;
@@ -179,6 +186,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.StereoPanner]: StereoPanner;
   [ModuleType.Inspector]: Inspector;
   [ModuleType.Chorus]: Chorus;
+  [ModuleType.Compressor]: Compressor;
   [ModuleType.Constant]: Constant;
   [ModuleType.Delay]: Delay;
   [ModuleType.Distortion]: Distortion;
@@ -209,6 +217,7 @@ export const moduleSchemas = {
   [ModuleType.StereoPanner]: stereoPannerPropSchema,
   [ModuleType.Inspector]: inspectorPropSchema,
   [ModuleType.Chorus]: chorusPropSchema,
+  [ModuleType.Compressor]: compressorPropSchema,
   [ModuleType.Constant]: constantPropSchema,
   [ModuleType.Delay]: delayPropSchema,
   [ModuleType.Distortion]: distortionPropSchema,
@@ -289,6 +298,7 @@ export { DelayTimeMode } from "./Delay";
 export type { IDelay, IDelayProps } from "./Delay";
 export type { IDistortion, IDistortionProps } from "./Distortion";
 export type { IChorus, IChorusProps } from "./Chorus";
+export type { ICompressor, ICompressorProps } from "./Compressor";
 
 export type AnyModule = Module<ModuleType>;
 export type IAnyModule = IModule<ModuleType>;
@@ -354,6 +364,8 @@ export function createModule(
       return Inspector.create(Inspector, engineId, params);
     case ModuleType.Chorus:
       return Chorus.create(Chorus, engineId, params);
+    case ModuleType.Compressor:
+      return Compressor.create(Compressor, engineId, params);
     case ModuleType.Constant:
       return Constant.create(Constant, engineId, params);
     case ModuleType.Delay:

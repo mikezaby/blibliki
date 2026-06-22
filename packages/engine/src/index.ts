@@ -102,6 +102,8 @@ export type {
   ILFO,
   ILFOProps,
   INoise,
+  ICompressor,
+  ICompressorProps,
   IWavetable,
   IWavetableConfig,
   IWavetableDefinition,
