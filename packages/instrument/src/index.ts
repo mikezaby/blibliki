@@ -42,6 +42,7 @@ export {
   getValueSpecForModuleProp,
 } from "./blocks/helpers";
 export { default as ChorusBlock } from "./blocks/effects/ChorusBlock";
+export { default as CompressorBlock } from "./blocks/effects/CompressorBlock";
 export { default as DelayBlock } from "./blocks/effects/DelayBlock";
 export { default as DistortionBlock } from "./blocks/effects/DistortionBlock";
 export { default as ReverbBlock } from "./blocks/effects/ReverbBlock";

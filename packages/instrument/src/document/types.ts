@@ -47,7 +47,12 @@ export type SourceProfileId =
   | "threeOsc"
   | "drumMachine";
 
-export type EffectProfileId = "distortion" | "chorus" | "delay" | "reverb";
+export type EffectProfileId =
+  | "distortion"
+  | "compressor"
+  | "chorus"
+  | "delay"
+  | "reverb";
 export type InstrumentLatencyHint = "interactive" | "playback";
 
 export type InstrumentGlobalBlock = {

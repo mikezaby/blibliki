@@ -1,4 +1,5 @@
 import ChorusBlock from "@/blocks/effects/ChorusBlock";
+import CompressorBlock from "@/blocks/effects/CompressorBlock";
 import DelayBlock from "@/blocks/effects/DelayBlock";
 import DistortionBlock from "@/blocks/effects/DistortionBlock";
 import ReverbBlock from "@/blocks/effects/ReverbBlock";
@@ -29,6 +30,8 @@ export function createEffectBlock(
   switch (effectProfileId) {
     case "distortion":
       return new DistortionBlock(key);
+    case "compressor":
+      return new CompressorBlock(key);
     case "chorus":
       return new ChorusBlock(key);
     case "delay":
@@ -49,6 +52,13 @@ export function createEffectPageSlots(
         createTrackSlot(blockKey, "tone"),
         createTrackSlot(blockKey, "mix"),
         EMPTY_SLOT_REF,
+      ];
+    case "compressor":
+      return [
+        createTrackSlot(blockKey, "threshold"),
+        createTrackSlot(blockKey, "ratio"),
+        createTrackSlot(blockKey, "makeup"),
+        createTrackSlot(blockKey, "mix"),
       ];
     case "chorus":
       return [

@@ -66,6 +66,36 @@ class FanoutTrack extends BaseTrack {
 }
 
 describe("compileTrack", () => {
+  it("compiles compressor in any effect slot with four controller controls", () => {
+    const compiled = compileTrack(
+      new Track("track-compressor", {
+        fxChain: ["compressor", "chorus", "delay", "reverb"],
+      }),
+    );
+    const compressor = compiled.engine.modules.find(
+      (module) => module.id === "fx1.main",
+    );
+    const fxPage = compiled.pages.find((page) => page.key === "fx");
+
+    expect(compressor).toMatchObject({
+      moduleType: ModuleType.Compressor,
+      props: {
+        threshold: 0,
+        ratio: 4,
+        knee: 6,
+        attack: 0.001,
+        release: 0.003,
+        makeup: 0,
+        mix: 0,
+      },
+    });
+    expect(
+      fxPage?.regions[0].slots.slice(0, 4).map((slot) =>
+        slot.kind === "slot" ? slot.binding.propKey : slot.kind,
+      ),
+    ).toEqual(["threshold", "ratio", "makeup", "mix"]);
+  });
+
   it("compiles a processing track without source or amp modules", () => {
     const compiled = compileTrack(
       new Track("track-2", { audioSourceType: "track" }),
