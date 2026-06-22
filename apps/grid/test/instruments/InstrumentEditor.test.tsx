@@ -217,6 +217,27 @@ describe("InstrumentEditor", () => {
     expect(screen.getByRole("option", { name: "drumMachine" })).toBeDefined();
   });
 
+  it("offers compressor in every track effect selector", () => {
+    render(
+      <Provider store={store}>
+        <InstrumentEditor
+          instrument={{
+            id: "instrument-1",
+            name: "Compressor Instrument",
+            userId: "user-1",
+            document: createDefaultInstrumentDocument(),
+          }}
+        />
+      </Provider>,
+    );
+
+    const firstEffect = getComboboxByValue("distortion");
+    firstEffect.focus();
+    fireEvent.keyDown(firstEffect, { key: "ArrowDown" });
+
+    expect(screen.getByRole("option", { name: "compressor" })).toBeDefined();
+  });
+
   it("selects and saves a parallel track audio source", async () => {
     const saveSpy = vi.spyOn(Instrument.prototype, "save").mockResolvedValue();
 

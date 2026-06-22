@@ -17,4 +17,11 @@ describe("AvailableModules", () => {
       moduleType: ModuleType.DrumMachine,
     });
   });
+
+  it("includes compressor in the grid module registry", () => {
+    expect(AvailableModules[ModuleType.Compressor]).toEqual({
+      name: "Compressor",
+      moduleType: ModuleType.Compressor,
+    });
+  });
 });

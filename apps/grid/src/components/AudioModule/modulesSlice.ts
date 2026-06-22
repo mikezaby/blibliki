@@ -107,6 +107,10 @@ export const AvailableModules: Record<
   },
   [ModuleType.Constant]: { name: "Constant", moduleType: ModuleType.Constant },
   [ModuleType.Chorus]: { name: "Chorus", moduleType: ModuleType.Chorus },
+  [ModuleType.Compressor]: {
+    name: "Compressor",
+    moduleType: ModuleType.Compressor,
+  },
   [ModuleType.Delay]: { name: "Delay", moduleType: ModuleType.Delay },
   [ModuleType.Distortion]: {
     name: "Distortion",

@@ -67,6 +67,7 @@ const NOTE_SOURCE_OPTIONS: InstrumentTrackDocument["noteSource"][] = [
 const ROUTING_MODE_OPTIONS = ["parallel", "serial"] as const;
 const EFFECT_OPTIONS: EffectProfileId[] = [
   "distortion",
+  "compressor",
   "chorus",
   "delay",
   "reverb",
