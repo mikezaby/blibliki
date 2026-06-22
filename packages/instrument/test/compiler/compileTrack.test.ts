@@ -90,9 +90,11 @@ describe("compileTrack", () => {
       },
     });
     expect(
-      fxPage?.regions[0].slots.slice(0, 4).map((slot) =>
-        slot.kind === "slot" ? slot.binding.propKey : slot.kind,
-      ),
+      fxPage?.regions[0].slots
+        .slice(0, 4)
+        .map((slot) =>
+          slot.kind === "slot" ? slot.binding.propKey : slot.kind,
+        ),
     ).toEqual(["threshold", "ratio", "makeup", "mix"]);
   });
 

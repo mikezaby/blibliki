@@ -4,13 +4,7 @@ import {
   ModuleTypeToPropsMapping,
   moduleSchemas,
 } from "@blibliki/engine";
-import {
-  Fader,
-  type MarkProps,
-  Stack,
-  Surface,
-  Text,
-} from "@blibliki/ui";
+import { Fader, type MarkProps, Stack, Surface, Text } from "@blibliki/ui";
 import { requestAnimationFrame } from "@blibliki/utils";
 import { useEffect, useState } from "react";
 import { ModuleComponent } from ".";
@@ -65,10 +59,7 @@ const Compressor: ModuleComponent<ModuleType.Compressor> = (props) => {
     };
   };
 
-  const reductionAmount = Math.min(
-    MAX_REDUCTION_DB,
-    Math.max(0, -reduction),
-  );
+  const reductionAmount = Math.min(MAX_REDUCTION_DB, Math.max(0, -reduction));
 
   return (
     <Stack gap={4}>
