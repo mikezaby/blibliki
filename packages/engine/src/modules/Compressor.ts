@@ -145,9 +145,8 @@ export default class Compressor
     this.dryDelayNode.connect(this.wetDryMixer.getDryInput());
 
     this.applyCompressorProps(props);
-    this.dryDelayNode.delayTime.value = LOOK_AHEAD_SECONDS;
     this.makeupNode.gain.value = decibelsToGain(props.makeup);
-    this.wetDryMixer.setMix(props.mix);
+    this.applyMix(props.mix);
 
     this.registerDefaultIOs("in");
     this.registerAudioOutput({
@@ -162,6 +161,11 @@ export default class Compressor
     this.compressorNode.knee.value = props.knee;
     this.compressorNode.attack.value = props.attack;
     this.compressorNode.release.value = props.release;
+  }
+
+  private applyMix(mix: number) {
+    this.dryDelayNode.delayTime.value = mix === 0 ? 0 : LOOK_AHEAD_SECONDS;
+    this.wetDryMixer.setMix(mix);
   }
 
   getReduction() {
@@ -224,6 +228,6 @@ export default class Compressor
     clamp(value, 0, 1);
 
   onAfterSetMix: SetterHooks<ICompressorProps>["onAfterSetMix"] = (value) => {
-    this.wetDryMixer.setMix(value);
+    this.applyMix(value);
   };
 }

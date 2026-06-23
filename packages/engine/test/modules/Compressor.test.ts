@@ -143,6 +143,23 @@ describe("Compressor", () => {
       expect(dryDelayNode.delayTime.value).toBeCloseTo(0.006, 5);
     });
 
+    it("uses a zero-latency dry path when mix is zero", (ctx) => {
+      const compressor = createCompressor(ctx, { mix: 0 });
+      const dryDelayNode = (
+        compressor as unknown as {
+          dryDelayNode: DelayNode;
+        }
+      ).dryDelayNode;
+
+      expect(dryDelayNode.delayTime.value).toBe(0);
+
+      compressor.props = { mix: 0.5 };
+      expect(dryDelayNode.delayTime.value).toBeCloseTo(0.006, 5);
+
+      compressor.props = { mix: 0 };
+      expect(dryDelayNode.delayTime.value).toBe(0);
+    });
+
     it("updates the equal-power dry and wet gains from mix", (ctx) => {
       const compressor = createCompressor(ctx, { mix: 0 });
       const wetDryMixer = (
