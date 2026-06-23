@@ -1,5 +1,11 @@
 export { Engine } from "./Engine";
-export type { ICreateRoute, IUpdateModule, IEngineSerialize } from "./Engine";
+export type {
+  EngineStateUpdate,
+  EngineStateUpdateCallback,
+  ICreateRoute,
+  IUpdateModule,
+  IEngineSerialize,
+} from "./Engine";
 
 export type {
   IRoute,

@@ -105,6 +105,73 @@ const baseProps = (steps: IStep[]): IStepSequencerProps => ({
 });
 
 describe("StepSequencer", () => {
+  it("emits immediate state updates during transport playback", async (ctx) => {
+    const stateUpdates: {
+      id: string;
+      moduleType: ModuleType;
+      state?: {
+        currentStep?: number;
+      };
+    }[] = [];
+    const engine = ctx.engine as typeof ctx.engine & {
+      onStateUpdate?: (
+        callback: (params: {
+          id: string;
+          moduleType: ModuleType;
+          state?: {
+            currentStep?: number;
+          };
+        }) => void,
+      ) => void;
+      removeStateUpdateCallback?: (
+        callback: (params: {
+          id: string;
+          moduleType: ModuleType;
+          state?: {
+            currentStep?: number;
+          };
+        }) => void,
+      ) => void;
+    };
+    const onStateUpdate = (params: {
+      id: string;
+      moduleType: ModuleType;
+      state?: {
+        currentStep?: number;
+      };
+    }) => {
+      stateUpdates.push(params);
+    };
+
+    engine.onStateUpdate?.(onStateUpdate);
+    const run = createRunningSequencer(
+      ctx,
+      baseProps(Array.from({ length: 16 }, createInactiveStep)),
+    );
+
+    try {
+      await waitForCondition(
+        () =>
+          stateUpdates.some(
+            (update) =>
+              update.moduleType === ModuleType.StepSequencer &&
+              update.state?.currentStep === 1,
+          ),
+        {
+          timeoutMs: 1000,
+          description: "immediate sequencer state update",
+        },
+      );
+
+      expect(
+        stateUpdates.some((update) => update.state?.currentStep === 1),
+      ).toBe(true);
+    } finally {
+      engine.removeStateUpdateCallback?.(onStateUpdate);
+      run.stop();
+    }
+  });
+
   it("plays only the active loop pages while keeping extra pages in props", async (ctx) => {
     const props: IStepSequencerProps = {
       ...baseProps([

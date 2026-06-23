@@ -52,12 +52,21 @@ export interface IEngineSerialize {
   routes: IRoute[];
 }
 
+export type EngineStateUpdate<T extends ModuleType = ModuleType> = {
+  id: string;
+  moduleType: T;
+  state: ModuleTypeToStateMapping[T];
+};
+
+export type EngineStateUpdateCallback = (params: EngineStateUpdate) => void;
+
 export class Engine {
   private static _engines = new Map<string, Engine>();
   private static _currentId: string | undefined;
   private propsUpdateCallbacks: (<T extends ModuleType>(
     params: IModule<T> | IPolyModule<T>,
   ) => void)[] = [];
+  private stateUpdateCallbacks: EngineStateUpdateCallback[] = [];
 
   readonly id: string;
   context: Context;
@@ -306,6 +315,22 @@ export class Engine {
     },
   ) {
     this.propsUpdateCallbacks.forEach((callback) => {
+      callback(params);
+    });
+  }
+
+  onStateUpdate(callback: EngineStateUpdateCallback) {
+    this.stateUpdateCallbacks.push(callback);
+  }
+
+  removeStateUpdateCallback(callback: EngineStateUpdateCallback) {
+    this.stateUpdateCallbacks = this.stateUpdateCallbacks.filter(
+      (candidate) => candidate !== callback,
+    );
+  }
+
+  _triggerStateUpdate<T extends ModuleType>(params: EngineStateUpdate<T>) {
+    this.stateUpdateCallbacks.forEach((callback) => {
       callback(params);
     });
   }

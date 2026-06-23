@@ -228,6 +228,12 @@ export abstract class Module<T extends ModuleType> implements IModule<T> {
         this.callStateHook("onAfterSetState", key, stateValue);
       }
     });
+
+    this.engine._triggerStateUpdate({
+      id: this.id,
+      moduleType: this.moduleType,
+      state: this._state,
+    });
   }
 
   private callStateHook<K extends keyof ModuleTypeToStateMapping[T]>(

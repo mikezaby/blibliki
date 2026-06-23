@@ -23,6 +23,7 @@ import {
 } from "@/display/LiveInstrumentDisplayState";
 import { syncLaunchControlXL3NavigationButtonLeds } from "@/surfaces/launchControlXL3/LaunchControlXL3NavigationLeds";
 import { launchControlXL3SequencerEdit } from "@/surfaces/launchControlXL3/LaunchControlXL3SequencerEdit";
+import { getActiveStepSequencerId } from "@/surfaces/launchControlXL3/LaunchControlXL3SequencerState";
 import { launchControlXL3Surface } from "@/surfaces/launchControlXL3/LaunchControlXL3Surface";
 
 const SHIFT_CC = 63;
@@ -69,10 +70,24 @@ type EnginePropsObserver = {
   ) => void;
 };
 
+type EngineStateUpdate = {
+  id: string;
+  moduleType: ModuleType;
+  state?: unknown;
+};
+
+type EngineStateObserver = {
+  onStateUpdate?: (callback: (params: EngineStateUpdate) => void) => void;
+  removeStateUpdateCallback?: (
+    callback: (params: EngineStateUpdate) => void,
+  ) => void;
+};
+
 export type InstrumentControllerEngine = MidiInputLookup &
   EngineModuleUpdater &
   EngineTransportController &
   EnginePropsObserver &
+  EngineStateObserver &
   LiveDisplayEngine;
 
 export type CreateInstrumentControllerSessionOptions = {
@@ -143,6 +158,7 @@ export class InstrumentSession implements InstrumentControllerSession {
     engine.transport?.addPropertyChangeCallback?.("state", () => {
       this.emitState();
     });
+    engine.onStateUpdate?.(this.onEngineStateUpdate);
 
     this.controllerInput?.addEventListener(this.onMidiEvent);
     this.emitState();
@@ -162,6 +178,7 @@ export class InstrumentSession implements InstrumentControllerSession {
 
   dispose() {
     this.disposed = true;
+    this.engine.removeStateUpdateCallback?.(this.onEngineStateUpdate);
     this.controllerInput?.removeEventListener(this.onMidiEvent);
   }
 
@@ -262,6 +279,24 @@ export class InstrumentSession implements InstrumentControllerSession {
 
   private readonly onMidiEvent = (event: MidiEvent) => {
     this.handleMidiEvent(event);
+  };
+
+  private readonly onEngineStateUpdate = (params: EngineStateUpdate) => {
+    if (this.disposed) {
+      return;
+    }
+
+    if (
+      params.moduleType !== ModuleType.StepSequencer ||
+      params.id !== getActiveStepSequencerId(this.currentRuntimePatch)
+    ) {
+      return;
+    }
+
+    launchControlXL3SequencerEdit.syncStepButtonLeds(
+      this.engine,
+      this.currentRuntimePatch,
+    );
   };
 }
 

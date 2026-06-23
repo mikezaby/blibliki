@@ -26,6 +26,46 @@ function createSeededInstrumentDocument() {
   return document;
 }
 
+function createSequencedInstrumentDocument() {
+  const document = createSeededInstrumentDocument();
+  const firstTrack = document.tracks[0];
+  if (!firstTrack) {
+    throw new Error("Expected default instrument to include a first track");
+  }
+
+  document.tracks[0] = {
+    ...firstTrack,
+    noteSource: "stepSequencer",
+    sequencer: {
+      ...firstTrack.sequencer,
+      pages: [
+        {
+          name: "Page 1",
+          steps: [
+            {
+              active: true,
+              notes: [{ note: "C3", velocity: 80 }],
+              probability: 100,
+              microtimeOffset: 0,
+              duration: "1/16",
+            },
+            ...Array.from({ length: 15 }, () => ({
+              active: false,
+              notes: [],
+              probability: 100,
+              microtimeOffset: 0,
+              duration: "1/16" as const,
+            })),
+          ],
+        },
+        ...firstTrack.sequencer.pages.slice(1),
+      ],
+    },
+  };
+
+  return document;
+}
+
 function createControllerInputDevice() {
   const listeners: ((event: MidiEvent) => void)[] = [];
 
@@ -175,5 +215,113 @@ describe("InstrumentSession", () => {
 
     expect(actions).toEqual(["saveDraft"]);
     expect(notices.slice(-3)).toEqual(["SAVE TO CLOUD?", "SAVING...", "SAVED"]);
+  });
+
+  it("syncs playhead LEDs from immediate sequencer state updates", () => {
+    const runtimePatch = createInstrumentEnginePatch(
+      createSequencedInstrumentDocument(),
+      {
+        navigation: {
+          mode: "seqEdit",
+          selectedStepIndex: 0,
+        },
+      },
+    );
+    const inputDevice = createControllerInputDevice();
+    const ledEvents: MidiEvent[] = [];
+    const modules = new Map<string, unknown>(
+      runtimePatch.patch.modules.map((module) => [module.id, module]),
+    );
+    type StateUpdate = {
+      id: string;
+      moduleType: ModuleType;
+      state?: unknown;
+    };
+    let stateUpdateCallback: ((params: StateUpdate) => void) | undefined;
+    let removedStateUpdateCallback: ((params: StateUpdate) => void) | undefined;
+
+    const controllerOutputId = runtimePatch.runtime.controllerOutputId;
+    if (!controllerOutputId) {
+      throw new Error("Expected controller output module in runtime patch");
+    }
+    modules.set(controllerOutputId, {
+      ...(modules.get(controllerOutputId) ?? {}),
+      moduleType: ModuleType.MidiOutput,
+      onMidiEvent: (event: MidiEvent) => {
+        ledEvents.push(event);
+      },
+    });
+
+    const stepSequencerId = runtimePatch.runtime.stepSequencerIds["track-1"];
+    if (!stepSequencerId) {
+      throw new Error("Expected sequencer id for track-1");
+    }
+    const liveStepSequencer = {
+      ...(modules.get(stepSequencerId) ?? {}),
+      moduleType: ModuleType.StepSequencer,
+      state: {
+        currentStep: 1,
+      },
+    };
+    modules.set(stepSequencerId, liveStepSequencer);
+
+    const engine = {
+      findMidiInputDeviceByFuzzyName: () => ({
+        device: inputDevice,
+        score: 1,
+      }),
+      findModule: (id: string) => {
+        const module = modules.get(id);
+        if (!module) {
+          throw new Error(`Module ${id} not found`);
+        }
+
+        return module;
+      },
+      state: TransportState.playing,
+      start: () => Promise.resolve(),
+      stop: () => undefined,
+      onStateUpdate: (callback: (params: StateUpdate) => void) => {
+        stateUpdateCallback = callback;
+      },
+      removeStateUpdateCallback: (callback: (params: StateUpdate) => void) => {
+        removedStateUpdateCallback = callback;
+      },
+      updateModule: <T extends ModuleType>(params: IUpdateModule<T>) => params,
+    };
+
+    const session = new InstrumentSession(engine, runtimePatch);
+
+    expect(stateUpdateCallback).toBeTypeOf("function");
+
+    liveStepSequencer.state = {
+      currentStep: 5,
+    };
+    stateUpdateCallback?.({
+      id: stepSequencerId,
+      moduleType: ModuleType.StepSequencer,
+      state: liveStepSequencer.state,
+    });
+
+    const getLedValue = (cc: number) =>
+      ledEvents.filter((event) => event.cc === cc).at(-1)?.ccValue;
+
+    expect(getLedValue(42)).toBe(96);
+
+    session.dispose();
+
+    expect(removedStateUpdateCallback).toBe(stateUpdateCallback);
+
+    const ledEventCount = ledEvents.length;
+    liveStepSequencer.state = {
+      currentStep: 6,
+    };
+    stateUpdateCallback?.({
+      id: stepSequencerId,
+      moduleType: ModuleType.StepSequencer,
+      state: liveStepSequencer.state,
+    });
+
+    expect(ledEvents).toHaveLength(ledEventCount);
   });
 });
