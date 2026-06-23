@@ -103,11 +103,19 @@ describe("compileTrack", () => {
       new Track("track-2", { audioSourceType: "track" }),
     );
     const moduleIds = compiled.engine.modules.map((module) => module.id);
+    const filter = compiled.engine.modules.find(
+      (module) => module.id === "filter.main",
+    );
+    const lfo = compiled.engine.modules.find(
+      (module) => module.id === "lfo1.main",
+    );
 
     expect(moduleIds).not.toContain("source.main");
     expect(moduleIds).not.toContain("amp.envelope");
     expect(moduleIds).not.toContain("amp.gain");
     expect(moduleIds).toContain("filter.main");
+    expect(filter?.voices).toBe(1);
+    expect(lfo?.voices).toBe(1);
     expect(compiled.pages.map((page) => page.key)).toEqual(["filterMod", "fx"]);
   });
 

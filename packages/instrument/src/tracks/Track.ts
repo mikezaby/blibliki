@@ -35,6 +35,7 @@ export default class Track extends BaseTrack {
       midiChannel: options.midiChannel ?? 1,
     });
     const audioSourceType = options.audioSourceType ?? "internal";
+    const processingVoices = audioSourceType === "track" ? 1 : voices;
     const sourceProfileId = options.sourceProfileId ?? "osc";
     const fxChain: NonNullable<TrackOptions["fxChain"]> = options.fxChain ?? [
       ...DEFAULT_FX_CHAIN,
@@ -48,8 +49,8 @@ export default class Track extends BaseTrack {
       audioSourceType === "internal"
         ? this.addBlock(new AmpBlock(voices))
         : undefined;
-    const filter = this.addBlock(new FilterBlock(voices));
-    this.addBlock(new LfoBlock(voices));
+    const filter = this.addBlock(new FilterBlock(processingVoices));
+    this.addBlock(new LfoBlock(processingVoices));
     this.addBlock(createEffectBlock("fx1", fxChain[0]));
     this.addBlock(createEffectBlock("fx2", fxChain[1]));
     this.addBlock(createEffectBlock("fx3", fxChain[2]));
