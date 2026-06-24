@@ -1,6 +1,10 @@
 {
   "name": "@blibliki/pi",
   "version": "0.9.2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikezaby/blibliki"
+  },
   "type": "module",
   "bin": {
     "blibliki-pi": "./dist/cli.js"

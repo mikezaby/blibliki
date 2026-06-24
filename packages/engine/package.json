@@ -1,6 +1,10 @@
 {
   "name": "@blibliki/engine",
   "version": "0.9.2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikezaby/blibliki"
+  },
   "type": "module",
   "exports": {
     ".": {
