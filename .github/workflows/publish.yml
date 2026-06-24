@@ -21,71 +21,51 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2 # Fetch current and previous commit to detect changes
-
-      - name: Check for package.json changes
-        id: check_changes
-        run: |
-          # Check if any package.json files changed in the last commit
-          if git diff --name-only HEAD~1 HEAD | grep -q 'packages/.*/package.json'; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "✅ Package.json files changed, proceeding with publish checks"
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "⏭️  No package.json changes detected, skipping publish"
-          fi
 
       - name: Use Node.js
-        if: steps.check_changes.outputs.changed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
           registry-url: "https://registry.npmjs.org"
 
       - name: Use pnpm
-        if: steps.check_changes.outputs.changed == 'true'
         uses: pnpm/action-setup@v4
         with:
           run_install: true
 
-      - name: Detect version changes
-        if: steps.check_changes.outputs.changed == 'true'
+      - name: Detect unpublished versions
         id: detect
         run: |
-          # Function to check if package version changed
           check_version_change() {
             local package_path=$1
             local package_name=$2
+            local npm_name=$3
 
-            # Get current version
             current_version=$(node -p "require('./${package_path}/package.json').version")
+            published_version=$(npm view ${npm_name} version 2>/dev/null || echo "none")
 
-            # Get previous version (from previous commit)
-            previous_version=$(git show HEAD~1:./${package_path}/package.json | node -p "JSON.parse(require('fs').readFileSync(0, 'utf-8')).version")
-
-            if [ "$current_version" != "$previous_version" ]; then
-              echo "📦 ${package_name}: ${previous_version} → ${current_version}"
+            if [ "$current_version" != "$published_version" ]; then
+              echo "📦 ${npm_name}: ${published_version} → ${current_version}"
               echo "${package_name}=true" >> $GITHUB_OUTPUT
             else
-              echo "⏭️  ${package_name}: ${current_version} (no change)"
+              echo "⏭️  ${npm_name}: ${current_version} (already published)"
               echo "${package_name}=false" >> $GITHUB_OUTPUT
             fi
           }
 
-          echo "Checking for version changes..."
-          check_version_change "packages/utils" "utils"
-          check_version_change "packages/transport" "transport"
-          check_version_change "packages/engine" "engine"
-          check_version_change "packages/models" "models"
-          check_version_change "packages/pi" "pi"
+          echo "Checking for unpublished versions..."
+          check_version_change "packages/utils" "utils" "@blibliki/utils"
+          check_version_change "packages/transport" "transport" "@blibliki/transport"
+          check_version_change "packages/engine" "engine" "@blibliki/engine"
+          check_version_change "packages/models" "models" "@blibliki/models"
+          check_version_change "packages/pi" "pi" "@blibliki/pi"
 
       - name: Build all packages
-        if: steps.check_changes.outputs.changed == 'true' && (steps.detect.outputs.utils == 'true' || steps.detect.outputs.transport == 'true' || steps.detect.outputs.engine == 'true' || steps.detect.outputs.models == 'true' || steps.detect.outputs.pi == 'true')
+        if: steps.detect.outputs.utils == 'true' || steps.detect.outputs.transport == 'true' || steps.detect.outputs.engine == 'true' || steps.detect.outputs.models == 'true' || steps.detect.outputs.pi == 'true'
         run: pnpm build:packages
 
       - name: Publish @blibliki/utils
-        if: steps.check_changes.outputs.changed == 'true' && steps.detect.outputs.utils == 'true'
+        if: steps.detect.outputs.utils == 'true'
         working-directory: ./packages/utils
         run: |
           echo "Publishing @blibliki/utils..."
@@ -94,7 +74,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
 
       - name: Publish @blibliki/transport
-        if: steps.check_changes.outputs.changed == 'true' && steps.detect.outputs.transport == 'true'
+        if: steps.detect.outputs.transport == 'true'
         working-directory: ./packages/transport
         run: |
           echo "Publishing @blibliki/transport..."
@@ -103,7 +83,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
 
       - name: Publish @blibliki/engine
-        if: steps.check_changes.outputs.changed == 'true' && steps.detect.outputs.engine == 'true'
+        if: steps.detect.outputs.engine == 'true'
         working-directory: ./packages/engine
         run: |
           echo "Publishing @blibliki/engine..."
@@ -112,7 +92,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
 
       - name: Publish @blibliki/models
-        if: steps.check_changes.outputs.changed == 'true' && steps.detect.outputs.models == 'true'
+        if: steps.detect.outputs.models == 'true'
         working-directory: ./packages/models
         run: |
           echo "Publishing @blibliki/models..."
@@ -121,7 +101,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
 
       - name: Publish @blibliki/pi
-        if: steps.check_changes.outputs.changed == 'true' && steps.detect.outputs.pi == 'true'
+        if: steps.detect.outputs.pi == 'true'
         working-directory: ./packages/pi
         run: |
           echo "Publishing @blibliki/pi..."
@@ -130,7 +110,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
 
       - name: Summary
-        if: steps.check_changes.outputs.changed == 'true' && (steps.detect.outputs.utils == 'true' || steps.detect.outputs.transport == 'true' || steps.detect.outputs.engine == 'true' || steps.detect.outputs.models == 'true' || steps.detect.outputs.pi == 'true')
+        if: steps.detect.outputs.utils == 'true' || steps.detect.outputs.transport == 'true' || steps.detect.outputs.engine == 'true' || steps.detect.outputs.models == 'true' || steps.detect.outputs.pi == 'true'
         run: |
           echo "### 📦 Published Packages" >> $GITHUB_STEP_SUMMARY
           [ "${{ steps.detect.outputs.utils }}" == "true" ] && echo "- ✅ @blibliki/utils" >> $GITHUB_STEP_SUMMARY || true
