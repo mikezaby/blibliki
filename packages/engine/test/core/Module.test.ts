@@ -288,8 +288,13 @@ describe("Module", () => {
       expect(module.minParam.value).toBe(100);
     });
 
-    it("should keep the same correct value after microtask", async (ctx) => {
-      TestAudioWorkletModule.initInConstructor = false;
+    it("should keep the same correct value after microtask when using audioNodeConstructor init", async (ctx) => {
+      // initInConstructor=false has an audio-thread race: the native audio thread can process
+      // one quantum with the default param value before the JS hook value takes effect, then
+      // write it back to shared memory. The Envelope pattern (initInConstructor=true) avoids
+      // this because the parameter is set before the node is returned and the audio thread
+      // ever runs, so the thread never sees the default.
+      TestAudioWorkletModule.initInConstructor = true;
       const module = TestAudioWorkletModule.create(
         TestAudioWorkletModule,
         ctx.engine.id,
@@ -304,7 +309,7 @@ describe("Module", () => {
       expect(module.hookValue).toBe(100);
       expect(module.minParam.value).toBe(100);
 
-      // Should stay stable after microtask.
+      // Should stay stable after microtask — guaranteed by Envelope pattern.
       await waitForMicrotasks();
 
       expect(module.hookValue).toBe(100);

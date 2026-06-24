@@ -21,15 +21,27 @@ export const waitForCondition = async (
 ) => {
   const startedAt = Date.now();
 
+  // ponytail: setImmediate fires once per event-loop tick (~1-10ms even under CI load),
+  // vs setTimeout(fn, N) which can fire 50-200ms late when the system is busy.
+  // Without this, the 60ms closedHat signal window is entirely missed between polls.
+  const si = (
+    globalThis as unknown as { setImmediate?: (fn: () => void) => void }
+  ).setImmediate;
+  const yieldFn: (resolve: () => void) => void = si
+    ? (resolve) => {
+        si(resolve);
+      }
+    : (resolve) => {
+        setTimeout(resolve, intervalMs);
+      };
+
   while (!condition()) {
     if (Date.now() - startedAt >= timeoutMs) {
       throw new Error(
         `Timed out waiting for ${description} after ${timeoutMs}ms`,
       );
     }
-    await new Promise<void>((resolve) => {
-      setTimeout(resolve, intervalMs);
-    });
+    await new Promise<void>(yieldFn);
   }
 };
 

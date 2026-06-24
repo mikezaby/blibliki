@@ -4,6 +4,7 @@ import Constant from "@/modules/Constant";
 import Inspector from "@/modules/Inspector";
 import Reverb, { ReverbType } from "@/modules/Reverb";
 import { waitForInspectorValue } from "../utils/audioWaits";
+import { waitForCondition } from "../utils/waitForCondition";
 
 describe("Reverb", () => {
   let reverb: Reverb;
@@ -57,7 +58,7 @@ describe("Reverb", () => {
       reverb.props = { mix: 0 };
       const value = await waitForInspectorValue(
         inspector,
-        (currentValue) => Math.abs(currentValue) > 0.5,
+        (currentValue) => Math.abs(currentValue - 1) < 0.05,
         { description: "mostly dry reverb output" },
       );
       expect(value).toBeCloseTo(1, 1);
@@ -103,11 +104,16 @@ describe("Reverb", () => {
   });
 
   describe("pre-delay", () => {
-    it("should set delay time correctly", () => {
+    it("should set delay time correctly", async () => {
       reverb.props = { preDelay: 50 }; // 50ms
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const delayNode = (reverb as any).preDelayNode;
+      // AudioParam.value can lag the native audio thread by one quantum; poll until settled.
+      await waitForCondition(
+        () => Math.abs(delayNode.delayTime.value - 0.05) < 0.001,
+        { description: "preDelay 50ms applied", timeoutMs: 500 },
+      );
       expect(delayNode.delayTime.value).toBeCloseTo(0.05, 3);
     });
   });
