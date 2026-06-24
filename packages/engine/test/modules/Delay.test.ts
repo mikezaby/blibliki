@@ -4,6 +4,27 @@ import Constant from "@/modules/Constant";
 import Delay from "@/modules/Delay";
 import Inspector from "@/modules/Inspector";
 import { waitForInspectorValue } from "../utils/audioWaits";
+import { waitForValue } from "../utils/waitForCondition";
+
+const waitForCloseValue = async (
+  read: () => number,
+  expected: number,
+  description: string,
+  precision = 3,
+) => {
+  const tolerance = 10 ** -precision;
+  const value = await waitForValue(
+    read,
+    (candidate) => Math.abs(candidate - expected) <= tolerance,
+    {
+      timeoutMs: 500,
+      intervalMs: 1,
+      description,
+    },
+  );
+
+  expect(value).toBeCloseTo(expected, precision);
+};
 
 describe("Delay", () => {
   let delay: Delay;
@@ -54,9 +75,13 @@ describe("Delay", () => {
       expect(delay.props.stereo).toBe(false);
     });
 
-    it("should have delay node configured", () => {
+    it("should have delay node configured", async () => {
       expect((delay as any).delayNode).toBeDefined();
-      expect((delay as any).delayNode.delayTime.value).toBeCloseTo(0.5, 3);
+      await waitForCloseValue(
+        () => (delay as any).delayNode.delayTime.value,
+        0.5,
+        "initial delay time",
+      );
     });
 
     it("should not over-allocate delay buffer capacity in manual mode", () => {
@@ -68,9 +93,21 @@ describe("Delay", () => {
   describe("mix parameter", () => {
     it("should output mostly dry signal when mix = 0", async () => {
       delay.props = { mix: 0 };
+      const wetDryMixer = (delay as any).wetDryMixer;
+
+      await waitForCloseValue(
+        () => wetDryMixer.getDryInput().gain.value,
+        1,
+        "dry delay mix gain",
+      );
+      await waitForCloseValue(
+        () => wetDryMixer.getWetInput().gain.value,
+        0,
+        "wet delay mix gain",
+      );
       const value = await waitForInspectorValue(
         inspector,
-        (currentValue) => Math.abs(currentValue) > 0.5,
+        (currentValue) => Math.abs(currentValue - 1) < 0.1,
         { description: "dry delay output" },
       );
       expect(value).toBeCloseTo(1, 1);
@@ -78,16 +115,45 @@ describe("Delay", () => {
 
     it("should blend dry and wet when mix = 0.5", async () => {
       delay.props = { mix: 0.5 };
+      const wetDryMixer = (delay as any).wetDryMixer;
+
+      await waitForCloseValue(
+        () => wetDryMixer.getDryInput().gain.value,
+        Math.SQRT1_2,
+        "dry blended delay mix gain",
+      );
+      await waitForCloseValue(
+        () => wetDryMixer.getWetInput().gain.value,
+        Math.SQRT1_2,
+        "wet blended delay mix gain",
+      );
       const value = await waitForInspectorValue(
         inspector,
-        (currentValue) => Math.abs(currentValue) > 0,
+        (currentValue) => Math.abs(currentValue - Math.SQRT1_2) < 0.1,
         { description: "blended delay output" },
       );
-      expect(value).toBeGreaterThan(0);
+      expect(value).toBeCloseTo(Math.SQRT1_2, 1);
     });
 
     it("should output mostly wet signal when mix = 1", async () => {
       delay.props = { mix: 1 };
+      const wetDryMixer = (delay as any).wetDryMixer;
+
+      await waitForCloseValue(
+        () => wetDryMixer.getDryInput().gain.value,
+        0,
+        "dry muted delay mix gain",
+      );
+      await waitForCloseValue(
+        () => wetDryMixer.getWetInput().gain.value,
+        1,
+        "wet delay mix gain",
+      );
+      await waitForInspectorValue(
+        inspector,
+        (currentValue) => Math.abs(currentValue) < 0.05,
+        { description: "muted dry delay output" },
+      );
       const value = await waitForInspectorValue(
         inspector,
         (currentValue) => Math.abs(currentValue) > 0,
@@ -98,41 +164,61 @@ describe("Delay", () => {
   });
 
   describe("delay time", () => {
-    it("should update delay time parameter", () => {
+    it("should update delay time parameter", async () => {
       delay.props = { time: 750 };
 
       const delayNode = (delay as any).delayNode;
-      expect(delayNode.delayTime.value).toBeCloseTo(0.75, 3);
+      await waitForCloseValue(
+        () => delayNode.delayTime.value,
+        0.75,
+        "updated delay time",
+      );
     });
 
-    it("should handle very short delay times", () => {
+    it("should handle very short delay times", async () => {
       delay.props = { time: 10 };
 
       const delayNode = (delay as any).delayNode;
-      expect(delayNode.delayTime.value).toBeCloseTo(0.01, 3);
+      await waitForCloseValue(
+        () => delayNode.delayTime.value,
+        0.01,
+        "short delay time",
+      );
     });
   });
 
   describe("feedback", () => {
-    it("should set feedback gain correctly", () => {
+    it("should set feedback gain correctly", async () => {
       delay.props = { feedback: 0.7 };
 
       const feedbackGain = (delay as any).feedbackGain;
-      expect(feedbackGain.gain.value).toBeCloseTo(0.7, 3);
+      await waitForCloseValue(
+        () => feedbackGain.gain.value,
+        0.7,
+        "updated feedback gain",
+      );
     });
 
-    it("should cap feedback at 0.95", () => {
+    it("should cap feedback at 0.95", async () => {
       delay.props = { feedback: 1.5 }; // Try to exceed
 
       const feedbackGain = (delay as any).feedbackGain;
-      expect(feedbackGain.gain.value).toBeLessThanOrEqual(0.95);
+      await waitForCloseValue(
+        () => feedbackGain.gain.value,
+        0.95,
+        "capped feedback gain",
+      );
     });
 
-    it("should allow zero feedback", () => {
+    it("should allow zero feedback", async () => {
       delay.props = { feedback: 0 };
 
       const feedbackGain = (delay as any).feedbackGain;
-      expect(feedbackGain.gain.value).toBe(0);
+      await waitForCloseValue(
+        () => feedbackGain.gain.value,
+        0,
+        "zero feedback gain",
+      );
     });
   });
 
@@ -171,33 +257,53 @@ describe("Delay", () => {
       expect((delay as any).outputNode).toBeDefined();
     });
 
-    it("should sync delay times in stereo mode", () => {
+    it("should sync delay times in stereo mode", async () => {
       delay.props = { stereo: true, time: 400 };
 
       const delayLeft = (delay as any).delayLeft;
       const delayRight = (delay as any).delayRight;
 
-      expect(delayLeft.delayTime.value).toBeCloseTo(0.4, 3);
-      expect(delayRight.delayTime.value).toBeCloseTo(0.4, 3);
+      await waitForCloseValue(
+        () => delayLeft.delayTime.value,
+        0.4,
+        "left stereo delay time",
+      );
+      await waitForCloseValue(
+        () => delayRight.delayTime.value,
+        0.4,
+        "right stereo delay time",
+      );
     });
 
-    it("should sync feedback gains in stereo mode", () => {
+    it("should sync feedback gains in stereo mode", async () => {
       delay.props = { stereo: true, feedback: 0.7 };
 
       const feedbackLeft = (delay as any).feedbackLeft;
       const feedbackRight = (delay as any).feedbackRight;
 
-      expect(feedbackLeft.gain.value).toBeCloseTo(0.7, 3);
-      expect(feedbackRight.gain.value).toBeCloseTo(0.7, 3);
+      await waitForCloseValue(
+        () => feedbackLeft.gain.value,
+        0.7,
+        "left stereo feedback gain",
+      );
+      await waitForCloseValue(
+        () => feedbackRight.gain.value,
+        0.7,
+        "right stereo feedback gain",
+      );
     });
   });
 
   describe("sync mode", () => {
-    it("should use manual time when sync is disabled", () => {
+    it("should use manual time when sync is disabled", async () => {
       delay.props = { sync: false, time: 750 };
 
       const delayNode = (delay as any).delayNode;
-      expect(delayNode.delayTime.value).toBeCloseTo(0.75, 3);
+      await waitForCloseValue(
+        () => delayNode.delayTime.value,
+        0.75,
+        "manual delay time with sync disabled",
+      );
     });
 
     it("should store sync and division properties", () => {
@@ -207,14 +313,18 @@ describe("Delay", () => {
       expect(delay.props.division).toBe("1/8");
     });
 
-    it("should not update delay time when division changes in manual mode", () => {
+    it("should not update delay time when division changes in manual mode", async () => {
       delay.props = { sync: false, time: 750, division: "1/4" };
 
       // Change division (should not affect delay time in manual mode)
       delay.props = { division: "1/8" };
 
       const delayNode = (delay as any).delayNode;
-      expect(delayNode.delayTime.value).toBeCloseTo(0.75, 3);
+      await waitForCloseValue(
+        () => delayNode.delayTime.value,
+        0.75,
+        "manual delay time after division change",
+      );
     });
   });
 });

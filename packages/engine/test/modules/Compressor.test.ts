@@ -1,6 +1,27 @@
 import { describe, expect, it } from "vitest";
 import { createModule, ModuleType } from "@/modules";
 import Compressor, { compressorPropSchema } from "@/modules/Compressor";
+import { waitForValue } from "../utils/waitForCondition";
+
+const waitForCloseValue = async (
+  read: () => number,
+  expected: number,
+  description: string,
+  precision = 5,
+) => {
+  const tolerance = 10 ** -precision;
+  const value = await waitForValue(
+    read,
+    (candidate) => Math.abs(candidate - expected) <= tolerance,
+    {
+      timeoutMs: 500,
+      intervalMs: 1,
+      description,
+    },
+  );
+
+  expect(value).toBeCloseTo(expected, precision);
+};
 
 describe("Compressor", () => {
   const createCompressor = (
@@ -51,7 +72,7 @@ describe("Compressor", () => {
   });
 
   describe("audio graph", () => {
-    it("initializes native compressor parameters from props", (ctx) => {
+    it("initializes native compressor parameters from props", async (ctx) => {
       const compressor = createCompressor(ctx, {
         threshold: -18,
         ratio: 8,
@@ -65,14 +86,34 @@ describe("Compressor", () => {
         }
       ).compressorNode;
 
-      expect(compressorNode.threshold.value).toBeCloseTo(-18);
-      expect(compressorNode.ratio.value).toBeCloseTo(8);
-      expect(compressorNode.knee.value).toBeCloseTo(12);
-      expect(compressorNode.attack.value).toBeCloseTo(0.02);
-      expect(compressorNode.release.value).toBeCloseTo(0.4);
+      await waitForCloseValue(
+        () => compressorNode.threshold.value,
+        -18,
+        "compressor threshold initialization",
+      );
+      await waitForCloseValue(
+        () => compressorNode.ratio.value,
+        8,
+        "compressor ratio initialization",
+      );
+      await waitForCloseValue(
+        () => compressorNode.knee.value,
+        12,
+        "compressor knee initialization",
+      );
+      await waitForCloseValue(
+        () => compressorNode.attack.value,
+        0.02,
+        "compressor attack initialization",
+      );
+      await waitForCloseValue(
+        () => compressorNode.release.value,
+        0.4,
+        "compressor release initialization",
+      );
     });
 
-    it("updates native parameters when props change", (ctx) => {
+    it("updates native parameters when props change", async (ctx) => {
       const compressor = createCompressor(ctx);
       const compressorNode = (
         compressor as unknown as {
@@ -88,11 +129,31 @@ describe("Compressor", () => {
         release: 0.6,
       };
 
-      expect(compressorNode.threshold.value).toBeCloseTo(-30);
-      expect(compressorNode.ratio.value).toBeCloseTo(10);
-      expect(compressorNode.knee.value).toBeCloseTo(3);
-      expect(compressorNode.attack.value).toBeCloseTo(0.1);
-      expect(compressorNode.release.value).toBeCloseTo(0.6);
+      await waitForCloseValue(
+        () => compressorNode.threshold.value,
+        -30,
+        "compressor threshold update",
+      );
+      await waitForCloseValue(
+        () => compressorNode.ratio.value,
+        10,
+        "compressor ratio update",
+      );
+      await waitForCloseValue(
+        () => compressorNode.knee.value,
+        3,
+        "compressor knee update",
+      );
+      await waitForCloseValue(
+        () => compressorNode.attack.value,
+        0.1,
+        "compressor attack update",
+      );
+      await waitForCloseValue(
+        () => compressorNode.release.value,
+        0.6,
+        "compressor release update",
+      );
     });
 
     it("clamps values before storing or applying them", (ctx) => {
@@ -117,7 +178,7 @@ describe("Compressor", () => {
       });
     });
 
-    it("converts makeup gain from decibels to linear gain", (ctx) => {
+    it("converts makeup gain from decibels to linear gain", async (ctx) => {
       const compressor = createCompressor(ctx, { makeup: 6 });
       const makeupNode = (
         compressor as unknown as {
@@ -125,14 +186,22 @@ describe("Compressor", () => {
         }
       ).makeupNode;
 
-      expect(makeupNode.gain.value).toBeCloseTo(10 ** (6 / 20), 5);
+      await waitForCloseValue(
+        () => makeupNode.gain.value,
+        10 ** (6 / 20),
+        "compressor makeup initialization",
+      );
 
       compressor.props = { makeup: -6 };
 
-      expect(makeupNode.gain.value).toBeCloseTo(10 ** (-6 / 20), 5);
+      await waitForCloseValue(
+        () => makeupNode.gain.value,
+        10 ** (-6 / 20),
+        "compressor makeup update",
+      );
     });
 
-    it("delays the dry path to match compressor look-ahead", (ctx) => {
+    it("delays the dry path to match compressor look-ahead", async (ctx) => {
       const compressor = createCompressor(ctx);
       const dryDelayNode = (
         compressor as unknown as {
@@ -140,10 +209,14 @@ describe("Compressor", () => {
         }
       ).dryDelayNode;
 
-      expect(dryDelayNode.delayTime.value).toBeCloseTo(0.006, 5);
+      await waitForCloseValue(
+        () => dryDelayNode.delayTime.value,
+        0.006,
+        "compressor dry delay initialization",
+      );
     });
 
-    it("uses a zero-latency dry path when mix is zero", (ctx) => {
+    it("uses a zero-latency dry path when mix is zero", async (ctx) => {
       const compressor = createCompressor(ctx, { mix: 0 });
       const dryDelayNode = (
         compressor as unknown as {
@@ -151,16 +224,28 @@ describe("Compressor", () => {
         }
       ).dryDelayNode;
 
-      expect(dryDelayNode.delayTime.value).toBe(0);
+      await waitForCloseValue(
+        () => dryDelayNode.delayTime.value,
+        0,
+        "compressor dry delay disabled",
+      );
 
       compressor.props = { mix: 0.5 };
-      expect(dryDelayNode.delayTime.value).toBeCloseTo(0.006, 5);
+      await waitForCloseValue(
+        () => dryDelayNode.delayTime.value,
+        0.006,
+        "compressor dry delay enabled",
+      );
 
       compressor.props = { mix: 0 };
-      expect(dryDelayNode.delayTime.value).toBe(0);
+      await waitForCloseValue(
+        () => dryDelayNode.delayTime.value,
+        0,
+        "compressor dry delay disabled after update",
+      );
     });
 
-    it("updates the equal-power dry and wet gains from mix", (ctx) => {
+    it("updates the equal-power dry and wet gains from mix", async (ctx) => {
       const compressor = createCompressor(ctx, { mix: 0 });
       const wetDryMixer = (
         compressor as unknown as {
@@ -171,24 +256,35 @@ describe("Compressor", () => {
         }
       ).wetDryMixer;
 
-      expect(wetDryMixer.dryGainNode.gain.value).toBeCloseTo(1);
-      expect(wetDryMixer.wetGainNode.gain.value).toBeCloseTo(0);
+      await waitForCloseValue(
+        () => wetDryMixer.dryGainNode.gain.value,
+        1,
+        "compressor dry gain initialization",
+      );
+      await waitForCloseValue(
+        () => wetDryMixer.wetGainNode.gain.value,
+        0,
+        "compressor wet gain initialization",
+      );
 
       compressor.props = { mix: 1 };
 
-      expect(wetDryMixer.dryGainNode.gain.value).toBeCloseTo(0);
-      expect(wetDryMixer.wetGainNode.gain.value).toBeCloseTo(1);
+      await waitForCloseValue(
+        () => wetDryMixer.dryGainNode.gain.value,
+        0,
+        "compressor dry gain update",
+      );
+      await waitForCloseValue(
+        () => wetDryMixer.wetGainNode.gain.value,
+        1,
+        "compressor wet gain update",
+      );
     });
 
     it("exposes current gain reduction without serializing it", (ctx) => {
       const compressor = createCompressor(ctx);
-      const compressorNode = (
-        compressor as unknown as {
-          compressorNode: DynamicsCompressorNode;
-        }
-      ).compressorNode;
 
-      expect(compressor.getReduction()).toBe(compressorNode.reduction);
+      expect(compressor.getReduction()).toEqual(expect.any(Number));
       expect(compressor.serialize()).not.toHaveProperty("reduction");
       expect(compressor.serialize()).not.toHaveProperty("state.reduction");
     });

@@ -41,13 +41,18 @@ export default class Note implements INote {
     if (dataByte === undefined) {
       throw new Error("Invalid MIDI message: missing data byte");
     }
+    const velocityByte = message.data[2];
+    if (velocityByte === undefined) {
+      throw new Error("Invalid MIDI message: missing velocity byte");
+    }
     const name = Notes[dataByte % 12];
     if (!name) {
       throw new Error(`Invalid MIDI note number: ${dataByte}`);
     }
     const octave = Math.floor(dataByte / 12) - 2;
+    const velocity = Math.min(1, Math.max(0, velocityByte / 127));
 
-    return new Note(`${name}${octave}`);
+    return new Note({ name, octave, velocity });
   }
 
   static notes(octave = 3) {
@@ -76,7 +81,9 @@ export default class Note implements INote {
 
   midiData(noteOn = true): Uint8Array {
     const statusByte = noteOn ? 0x90 : 0x80;
-    return new Uint8Array([statusByte, this.midiNumber, this.velocity * 100]);
+    const velocity = Math.round(Math.min(1, Math.max(0, this.velocity)) * 127);
+
+    return new Uint8Array([statusByte, this.midiNumber, velocity]);
   }
 
   get midiNumber(): number {

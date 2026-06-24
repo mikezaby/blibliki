@@ -4,11 +4,10 @@ import MidiEvent from "@/core/midi/MidiEvent";
 import { ModuleType } from "@/modules";
 import Inspector from "@/modules/Inspector";
 import {
-  readInspectorPeak,
   waitForInspectorPeakAbove,
   waitForInspectorValue,
 } from "../utils/audioWaits";
-import { waitForAudioTime, waitForMicrotasks } from "../utils/waitForCondition";
+import { waitForMicrotasks } from "../utils/waitForCondition";
 
 const DRUM_MACHINE_MODULE_TYPE = "DrumMachine" as ModuleType;
 
@@ -111,11 +110,51 @@ function connectOutputToInspector(
   output.getAudioNode().connect(inspector.audioNode);
 }
 
-function readBufferDifference(a: Float32Array, b: Float32Array) {
-  return a.reduce(
-    (total, value, index) => total + Math.abs(value - (b[index] ?? 0)),
-    0,
-  );
+type DecayEnvelopeCall = {
+  outputGain: GainNode;
+  peak: number;
+  triggeredAt: number;
+  decay: number;
+};
+
+type DrumMachineWithDecayScheduler = ReturnType<typeof createDrumMachine> & {
+  scheduleDecayEnvelope: (
+    outputGain: GainNode,
+    peak: number,
+    triggeredAt: number,
+    decay: number,
+  ) => number;
+};
+
+function captureDecayEnvelopeCalls(
+  drumMachine: ReturnType<typeof createDrumMachine>,
+) {
+  const scheduledEnvelopes: DecayEnvelopeCall[] = [];
+  const instrumentedDrumMachine = drumMachine as DrumMachineWithDecayScheduler;
+  const originalScheduleDecayEnvelope =
+    instrumentedDrumMachine.scheduleDecayEnvelope.bind(instrumentedDrumMachine);
+  instrumentedDrumMachine.scheduleDecayEnvelope = (
+    outputGain,
+    peak,
+    triggeredAt,
+    decay,
+  ) => {
+    scheduledEnvelopes.push({ outputGain, peak, triggeredAt, decay });
+
+    return originalScheduleDecayEnvelope(outputGain, peak, triggeredAt, decay);
+  };
+
+  return scheduledEnvelopes;
+}
+
+function expectTwoCalls<T>(calls: T[]): [T, T] {
+  expect(calls).toHaveLength(2);
+  const [first, second] = calls;
+  if (first === undefined || second === undefined) {
+    throw new Error("Expected exactly two calls");
+  }
+
+  return [first, second];
 }
 
 describe("DrumMachine", () => {
@@ -196,11 +235,10 @@ describe("DrumMachine", () => {
 
   it("scales kick output with incoming velocity", async (ctx) => {
     const drumMachine = createDrumMachine(ctx);
-    const inspector = createInspector(ctx);
+    const scheduledEnvelopes = captureDecayEnvelopeCalls(drumMachine);
 
     await waitForMicrotasks();
 
-    connectOutputToInspector(drumMachine, "kick out", inspector);
     drumMachine.props = { kickDecay: 0.08 };
 
     const lowVelocityAt = ctx.context.currentTime + 0.01;
@@ -212,12 +250,6 @@ describe("DrumMachine", () => {
       ),
     );
 
-    await waitForInspectorPeakAbove(inspector, 0.001, {
-      description: "low velocity kick output",
-    });
-    await waitForAudioTime(ctx.context.audioContext, lowVelocityAt + 0.04);
-    const lowVelocityPeak = readInspectorPeak(inspector);
-
     const highVelocityAt = ctx.context.audioContext.currentTime + 0.2;
     drumMachine.onMidiEvent(
       MidiEvent.fromNote(
@@ -227,88 +259,98 @@ describe("DrumMachine", () => {
       ),
     );
 
-    await waitForInspectorPeakAbove(inspector, 0.001, {
-      description: "high velocity kick output",
-    });
-    await waitForAudioTime(ctx.context.audioContext, highVelocityAt + 0.04);
-    const highVelocityPeak = readInspectorPeak(inspector);
+    const [lowVelocityEnvelope, highVelocityEnvelope] =
+      expectTwoCalls(scheduledEnvelopes);
 
-    expect(highVelocityPeak).toBeGreaterThan(lowVelocityPeak);
+    expect(lowVelocityEnvelope.peak).toBeCloseTo(0.36, 2);
+    expect(highVelocityEnvelope.peak).toBeCloseTo(1, 5);
+    expect(highVelocityEnvelope.peak).toBeGreaterThan(
+      lowVelocityEnvelope.peak * 2,
+    );
   });
 
   it("uses updated kick level on subsequent triggers", async (ctx) => {
     const drumMachine = createDrumMachine(ctx);
-    const inspector = createInspector(ctx);
+    const scheduledEnvelopes = captureDecayEnvelopeCalls(drumMachine);
 
     await waitForMicrotasks();
 
-    connectOutputToInspector(drumMachine, "kick out", inspector);
     drumMachine.props = { kickLevel: 0.15 };
 
     const firstTriggerAt = ctx.context.currentTime + 0.01;
     drumMachine.onMidiEvent(MidiEvent.fromNote("C1", true, firstTriggerAt));
 
-    await waitForAudioTime(ctx.context.audioContext, firstTriggerAt + 0.04);
-    const lowLevelPeak = readInspectorPeak(inspector);
-
     drumMachine.props = { kickLevel: 1 };
     const secondTriggerAt = ctx.context.audioContext.currentTime + 0.2;
     drumMachine.onMidiEvent(MidiEvent.fromNote("C1", true, secondTriggerAt));
 
-    await waitForAudioTime(ctx.context.audioContext, secondTriggerAt + 0.04);
-    const highLevelPeak = readInspectorPeak(inspector);
+    const [lowLevelEnvelope, highLevelEnvelope] =
+      expectTwoCalls(scheduledEnvelopes);
 
-    expect(highLevelPeak).toBeGreaterThan(lowLevelPeak * 2);
+    expect(lowLevelEnvelope.peak).toBeCloseTo(0.15, 5);
+    expect(highLevelEnvelope.peak).toBeCloseTo(1, 5);
+    expect(highLevelEnvelope.peak).toBeGreaterThan(lowLevelEnvelope.peak * 2);
   });
 
   it("uses updated open hat decay on subsequent triggers", async (ctx) => {
     const drumMachine = createDrumMachine(ctx);
-    const inspector = createInspector(ctx);
+    const scheduledEnvelopes = captureDecayEnvelopeCalls(drumMachine);
 
     await waitForMicrotasks();
 
-    connectOutputToInspector(drumMachine, "open hat out", inspector);
     drumMachine.props = { openHatDecay: 0.08 };
 
     const firstTriggerAt = ctx.context.currentTime + 0.01;
     drumMachine.onMidiEvent(MidiEvent.fromNote("A#1", true, firstTriggerAt));
 
-    await waitForAudioTime(ctx.context.audioContext, firstTriggerAt + 0.18);
-    const shortDecayPeak = readInspectorPeak(inspector);
-
     drumMachine.props = { openHatDecay: 1.2 };
     const secondTriggerAt = ctx.context.audioContext.currentTime + 0.2;
     drumMachine.onMidiEvent(MidiEvent.fromNote("A#1", true, secondTriggerAt));
 
-    await waitForAudioTime(ctx.context.audioContext, secondTriggerAt + 0.18);
-    const longDecayPeak = readInspectorPeak(inspector);
+    const [shortDecayEnvelope, longDecayEnvelope] =
+      expectTwoCalls(scheduledEnvelopes);
 
-    expect(longDecayPeak).toBeGreaterThan(shortDecayPeak * 2);
+    expect(shortDecayEnvelope.decay).toBeCloseTo(0.2, 5);
+    expect(longDecayEnvelope.decay).toBeCloseTo(0.96, 5);
+    expect(longDecayEnvelope.decay).toBeGreaterThan(
+      shortDecayEnvelope.decay * 2,
+    );
   });
 
   it("changes the kick waveform when tone changes", async (ctx) => {
-    const drumMachine = createDrumMachine(ctx);
-    const inspector = createInspector(ctx);
+    const drumMachine = createDrumMachine(ctx) as ReturnType<
+      typeof createDrumMachine
+    > & {
+      voiceSlots: {
+        kick: Array<{
+          oscillator: OscillatorNode;
+        }>;
+      };
+    };
 
     await waitForMicrotasks();
 
-    connectOutputToInspector(drumMachine, "kick out", inspector);
+    const scheduledStartFrequencies: number[] = [];
+    for (const slot of drumMachine.voiceSlots.kick) {
+      const frequency = slot.oscillator.frequency;
+      const originalSetValueAtTime = frequency.setValueAtTime.bind(frequency);
+      frequency.setValueAtTime = (value, startTime) => {
+        scheduledStartFrequencies.push(value);
+
+        return originalSetValueAtTime(value, startTime);
+      };
+    }
+
     drumMachine.props = { kickTone: 0 };
 
     const firstTriggerAt = ctx.context.currentTime + 0.01;
     drumMachine.onMidiEvent(MidiEvent.fromNote("C1", true, firstTriggerAt));
-    await waitForAudioTime(ctx.context.audioContext, firstTriggerAt + 0.03);
-    const darkKickBuffer = Float32Array.from(inspector.getValues());
 
     drumMachine.props = { kickTone: 1 };
     const secondTriggerAt = ctx.context.audioContext.currentTime + 0.25;
     drumMachine.onMidiEvent(MidiEvent.fromNote("C1", true, secondTriggerAt));
-    await waitForAudioTime(ctx.context.audioContext, secondTriggerAt + 0.03);
-    const brightKickBuffer = Float32Array.from(inspector.getValues());
 
-    expect(
-      readBufferDifference(darkKickBuffer, brightKickBuffer),
-    ).toBeGreaterThan(0.5);
+    expect(scheduledStartFrequencies).toEqual([180, 240]);
   });
 
   it("preallocates fixed voice slots and a shared looping noise source", async (ctx) => {
@@ -417,26 +459,32 @@ describe("DrumMachine", () => {
   });
 
   it("chokes an active open hat when a closed hat is triggered", async (ctx) => {
-    const drumMachine = createDrumMachine(ctx);
-    const openHatInspector = createInspector(ctx);
+    const drumMachine = createDrumMachine(ctx) as ReturnType<
+      typeof createDrumMachine
+    > & {
+      voiceSlots: {
+        openHat: Array<{ activeUntil: number }>;
+      };
+    };
 
     await waitForMicrotasks();
 
-    connectOutputToInspector(drumMachine, "open hat out", openHatInspector);
     drumMachine.props = { openHatDecay: 1.5 };
 
     const openHatAt = ctx.context.currentTime + 0.01;
     drumMachine.onMidiEvent(MidiEvent.fromNote("A#1", true, openHatAt));
-
-    await waitForInspectorPeakAbove(openHatInspector, 0.005, {
-      description: "open hat before choke",
-    });
+    const activeOpenHatSlot = drumMachine.voiceSlots.openHat.find(
+      (slot) => slot.activeUntil > openHatAt,
+    );
+    if (!activeOpenHatSlot) {
+      throw new Error("Expected an active open hat slot");
+    }
+    const activeUntilBeforeChoke = activeOpenHatSlot.activeUntil;
 
     const closedHatAt = openHatAt + 0.05;
     drumMachine.onMidiEvent(MidiEvent.fromNote("F#1", true, closedHatAt));
 
-    await waitForAudioTime(ctx.context.audioContext, closedHatAt + 0.12);
-
-    expect(readInspectorPeak(openHatInspector)).toBeLessThan(0.01);
+    expect(activeOpenHatSlot.activeUntil).toBeLessThan(activeUntilBeforeChoke);
+    expect(activeOpenHatSlot.activeUntil).toBeCloseTo(closedHatAt + 0.15, 5);
   });
 });

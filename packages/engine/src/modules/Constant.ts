@@ -76,4 +76,18 @@ export default class Constant
   triggerRelease = (_: Note, triggeredAt: ContextTime) => {
     this.stop(triggeredAt);
   };
+
+  dispose() {
+    if (this.isStated) {
+      try {
+        this.audioNode.stop();
+      } catch {
+        // ConstantSourceNode may already be stopped by scheduled release.
+      }
+      this.isStated = false;
+    }
+
+    this.audioNode.disconnect();
+    super.dispose();
+  }
 }

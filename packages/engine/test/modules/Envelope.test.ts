@@ -1,8 +1,9 @@
+import type { TestContext } from "vitest";
 import { describe, expect, it } from "vitest";
 import Note from "@/core/Note";
 import { ModuleType } from "@/modules";
 import Constant from "@/modules/Constant";
-import Envelope from "@/modules/Envelope";
+import Envelope, { ICustomEnvelopeProps } from "@/modules/Envelope";
 import Inspector from "@/modules/Inspector";
 import { readInspectorPeak, waitForInspectorValue } from "../utils/audioWaits";
 import { waitForAudioTime, waitForMicrotasks } from "../utils/waitForCondition";
@@ -16,32 +17,58 @@ const DEFAULT_PROPS = {
   retrigger: true,
 };
 
+function createEnvelope(
+  ctx: TestContext,
+  props: ICustomEnvelopeProps = DEFAULT_PROPS,
+) {
+  const envelope = new Envelope(ctx.engine.id, {
+    name: "envelope",
+    moduleType: ModuleType.Envelope,
+    props,
+    voices: 1,
+    monoModuleConstructor: () => {
+      throw new Error("Not used in test");
+    },
+  });
+  (
+    ctx.engine as unknown as {
+      modules: Map<string, Envelope>;
+    }
+  ).modules.set(envelope.id, envelope);
+
+  return envelope;
+}
+
+function createConstant(ctx: TestContext, props: { value: number }) {
+  const serialized = ctx.engine.addModule({
+    name: "constant",
+    moduleType: ModuleType.Constant,
+    props,
+  });
+
+  return ctx.engine.findModule(serialized.id) as Constant;
+}
+
+function createInspector(ctx: TestContext, props: { fftSize?: number } = {}) {
+  const serialized = ctx.engine.addModule({
+    name: "inspector",
+    moduleType: ModuleType.Inspector,
+    props,
+  });
+
+  return ctx.engine.findModule(serialized.id) as Inspector;
+}
+
 describe("Envelope", () => {
   describe("Initialize", () => {
     it("has proper type", (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: DEFAULT_PROPS,
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
-      });
+      const envelope = createEnvelope(ctx);
 
       expect(envelope.moduleType).toBe(ModuleType.Envelope);
     });
 
     it("has default ADSR values", (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: DEFAULT_PROPS,
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
-      });
+      const envelope = createEnvelope(ctx);
 
       expect(envelope.props.attack).toBe(0.01);
       expect(envelope.props.decay).toBe(0.1);
@@ -51,21 +78,13 @@ describe("Envelope", () => {
     });
 
     it("accepts custom ADSR values", (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: {
-          attack: 0.05,
-          attackCurve: 0.5,
-          decay: 0.2,
-          sustain: 0.5,
-          release: 0.5,
-          retrigger: false,
-        },
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
+      const envelope = createEnvelope(ctx, {
+        attack: 0.05,
+        attackCurve: 0.5,
+        decay: 0.2,
+        sustain: 0.5,
+        release: 0.5,
+        retrigger: false,
       });
 
       expect(envelope.props.attack).toBe(0.05);
@@ -78,21 +97,8 @@ describe("Envelope", () => {
 
   describe("Triggering with Constant module", () => {
     it("should output silence when not triggered", async (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: DEFAULT_PROPS,
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
-      });
-
-      const inspector = new Inspector(ctx.engine.id, {
-        name: "inspector",
-        moduleType: ModuleType.Inspector,
-        props: {},
-      });
+      const envelope = createEnvelope(ctx);
+      const inspector = createInspector(ctx);
 
       await waitForMicrotasks();
 
@@ -111,37 +117,21 @@ describe("Envelope", () => {
     });
 
     it("should rise during attack when triggered", async (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: {
-          attack: 0.1, // 100ms attack
-          attackCurve: 0.5,
-          decay: 0.1,
-          sustain: 0.7,
-          release: 0.1,
-          retrigger: true,
-        },
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
+      const envelope = createEnvelope(ctx, {
+        attack: 0.1, // 100ms attack
+        attackCurve: 0.5,
+        decay: 0.1,
+        sustain: 0.7,
+        release: 0.1,
+        retrigger: true,
       });
 
-      const constant = new Constant(ctx.engine.id, {
-        name: "constant",
-        moduleType: ModuleType.Constant,
-        props: {
-          value: 1, // Trigger on
-        },
+      const constant = createConstant(ctx, {
+        value: 1, // Trigger on
       });
       constant.start(ctx.context.currentTime);
 
-      const inspector = new Inspector(ctx.engine.id, {
-        name: "inspector",
-        moduleType: ModuleType.Inspector,
-        props: {},
-      });
+      const inspector = createInspector(ctx);
 
       await waitForMicrotasks();
 
@@ -166,37 +156,21 @@ describe("Envelope", () => {
     });
 
     it("should reach sustain level and hold", async (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: {
-          attack: 0.02, // 20ms attack (fast)
-          attackCurve: 0.5,
-          decay: 0.02, // 20ms decay (fast)
-          sustain: 0.5,
-          release: 0.1,
-          retrigger: true,
-        },
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
+      const envelope = createEnvelope(ctx, {
+        attack: 0.02, // 20ms attack (fast)
+        attackCurve: 0.5,
+        decay: 0.02, // 20ms decay (fast)
+        sustain: 0.5,
+        release: 0.1,
+        retrigger: true,
       });
 
-      const constant = new Constant(ctx.engine.id, {
-        name: "constant",
-        moduleType: ModuleType.Constant,
-        props: {
-          value: 1, // Trigger on
-        },
+      const constant = createConstant(ctx, {
+        value: 1, // Trigger on
       });
       constant.start(ctx.context.currentTime);
 
-      const inspector = new Inspector(ctx.engine.id, {
-        name: "inspector",
-        moduleType: ModuleType.Inspector,
-        props: {},
-      });
+      const inspector = createInspector(ctx);
 
       await waitForMicrotasks();
 
@@ -217,37 +191,21 @@ describe("Envelope", () => {
     });
 
     it("should release when trigger goes to 0", async (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: {
-          attack: 0.01, // 10ms attack (very fast)
-          attackCurve: 0.5,
-          decay: 0.01, // 10ms decay (very fast)
-          sustain: 0.8,
-          release: 0.05, // 50ms release
-          retrigger: true,
-        },
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
+      const envelope = createEnvelope(ctx, {
+        attack: 0.01, // 10ms attack (very fast)
+        attackCurve: 0.5,
+        decay: 0.01, // 10ms decay (very fast)
+        sustain: 0.8,
+        release: 0.05, // 50ms release
+        retrigger: true,
       });
 
-      const constant = new Constant(ctx.engine.id, {
-        name: "constant",
-        moduleType: ModuleType.Constant,
-        props: {
-          value: 1, // Trigger on
-        },
+      const constant = createConstant(ctx, {
+        value: 1, // Trigger on
       });
       constant.start(ctx.context.currentTime);
 
-      const inspector = new Inspector(ctx.engine.id, {
-        name: "inspector",
-        moduleType: ModuleType.Inspector,
-        props: {},
-      });
+      const inspector = createInspector(ctx);
 
       await waitForMicrotasks();
 
@@ -278,37 +236,21 @@ describe("Envelope", () => {
     });
 
     it("should handle retriggering during release", async (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: {
-          attack: 0.02,
-          attackCurve: 0.5,
-          decay: 0.02,
-          sustain: 0.7,
-          release: 0.2, // Long release (200ms)
-          retrigger: true,
-        },
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
+      const envelope = createEnvelope(ctx, {
+        attack: 0.02,
+        attackCurve: 0.5,
+        decay: 0.02,
+        sustain: 0.7,
+        release: 0.2, // Long release (200ms)
+        retrigger: true,
       });
 
-      const constant = new Constant(ctx.engine.id, {
-        name: "constant",
-        moduleType: ModuleType.Constant,
-        props: {
-          value: 1, // Trigger on
-        },
+      const constant = createConstant(ctx, {
+        value: 1, // Trigger on
       });
       constant.start(ctx.context.currentTime);
 
-      const inspector = new Inspector(ctx.engine.id, {
-        name: "inspector",
-        moduleType: ModuleType.Inspector,
-        props: {},
-      });
+      const inspector = createInspector(ctx);
 
       await waitForMicrotasks();
 
@@ -344,29 +286,17 @@ describe("Envelope", () => {
     });
 
     it("treats decay and release as durations that reach their targets", async (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: {
-          attack: 0.01,
-          attackCurve: 0.5,
-          decay: 0.04,
-          sustain: 0.25,
-          release: 0.04,
-          retrigger: true,
-        },
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
+      const envelope = createEnvelope(ctx, {
+        attack: 0.01,
+        attackCurve: 0.5,
+        decay: 0.04,
+        sustain: 0.25,
+        release: 0.04,
+        retrigger: true,
       });
 
-      const inspector = new Inspector(ctx.engine.id, {
-        name: "inspector",
-        moduleType: ModuleType.Inspector,
-        props: {
-          fftSize: 32,
-        },
+      const inspector = createInspector(ctx, {
+        fftSize: 32,
       });
 
       await waitForMicrotasks();
@@ -400,29 +330,17 @@ describe("Envelope", () => {
     });
 
     it("restarts overlapping notes from the beginning by default", async (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: {
-          attack: 0.05,
-          attackCurve: 0.5,
-          decay: 0.01,
-          sustain: 0.8,
-          release: 0.1,
-          retrigger: true,
-        },
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
+      const envelope = createEnvelope(ctx, {
+        attack: 0.05,
+        attackCurve: 0.5,
+        decay: 0.01,
+        sustain: 0.8,
+        release: 0.1,
+        retrigger: true,
       });
 
-      const inspector = new Inspector(ctx.engine.id, {
-        name: "inspector",
-        moduleType: ModuleType.Inspector,
-        props: {
-          fftSize: 32,
-        },
+      const inspector = createInspector(ctx, {
+        fftSize: 32,
       });
 
       await waitForMicrotasks();
@@ -452,29 +370,17 @@ describe("Envelope", () => {
     });
 
     it("restarts immediately played overlapping notes when retrigger is enabled", async (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: {
-          attack: 0.05,
-          attackCurve: 0.5,
-          decay: 0.01,
-          sustain: 0.8,
-          release: 0.1,
-          retrigger: true,
-        },
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
+      const envelope = createEnvelope(ctx, {
+        attack: 0.05,
+        attackCurve: 0.5,
+        decay: 0.01,
+        sustain: 0.8,
+        release: 0.1,
+        retrigger: true,
       });
 
-      const inspector = new Inspector(ctx.engine.id, {
-        name: "inspector",
-        moduleType: ModuleType.Inspector,
-        props: {
-          fftSize: 32,
-        },
+      const inspector = createInspector(ctx, {
+        fftSize: 32,
       });
 
       await waitForMicrotasks();
@@ -503,29 +409,17 @@ describe("Envelope", () => {
     });
 
     it("can keep overlapping notes legato when retrigger is disabled", async (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: {
-          attack: 0.05,
-          attackCurve: 0.5,
-          decay: 0.01,
-          sustain: 0.8,
-          release: 0.1,
-          retrigger: false,
-        },
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
+      const envelope = createEnvelope(ctx, {
+        attack: 0.05,
+        attackCurve: 0.5,
+        decay: 0.01,
+        sustain: 0.8,
+        release: 0.1,
+        retrigger: false,
       });
 
-      const inspector = new Inspector(ctx.engine.id, {
-        name: "inspector",
-        moduleType: ModuleType.Inspector,
-        props: {
-          fftSize: 32,
-        },
+      const inspector = createInspector(ctx, {
+        fftSize: 32,
       });
 
       await waitForMicrotasks();
@@ -557,74 +451,37 @@ describe("Envelope", () => {
 
   describe("Parameter updates", () => {
     it("should update attack parameter", (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: { ...DEFAULT_PROPS, attack: 0.01 },
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
-      });
+      const envelope = createEnvelope(ctx, { ...DEFAULT_PROPS, attack: 0.01 });
 
       envelope.props = { ...envelope.props, attack: 0.5 };
       expect(envelope.props.attack).toBe(0.5);
     });
 
     it("should update decay parameter", (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: { ...DEFAULT_PROPS, decay: 0.1 },
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
-      });
+      const envelope = createEnvelope(ctx, { ...DEFAULT_PROPS, decay: 0.1 });
 
       envelope.props = { ...envelope.props, decay: 0.3 };
       expect(envelope.props.decay).toBe(0.3);
     });
 
     it("should update sustain parameter", (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: { ...DEFAULT_PROPS, sustain: 0.7 },
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
-      });
+      const envelope = createEnvelope(ctx, { ...DEFAULT_PROPS, sustain: 0.7 });
 
       envelope.props = { ...envelope.props, sustain: 0.4 };
       expect(envelope.props.sustain).toBe(0.4);
     });
 
     it("should update release parameter", (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: { ...DEFAULT_PROPS, release: 0.3 },
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
-      });
+      const envelope = createEnvelope(ctx, { ...DEFAULT_PROPS, release: 0.3 });
 
       envelope.props = { ...envelope.props, release: 0.8 };
       expect(envelope.props.release).toBe(0.8);
     });
 
     it("should update retrigger parameter", (ctx) => {
-      const envelope = new Envelope(ctx.engine.id, {
-        name: "envelope",
-        moduleType: ModuleType.Envelope,
-        props: { ...DEFAULT_PROPS, retrigger: true },
-        voices: 1,
-        monoModuleConstructor: () => {
-          throw new Error("Not used in test");
-        },
+      const envelope = createEnvelope(ctx, {
+        ...DEFAULT_PROPS,
+        retrigger: true,
       });
 
       envelope.props = { ...envelope.props, retrigger: false };
