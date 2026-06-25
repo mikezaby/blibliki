@@ -72,6 +72,7 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
     playbackMode,
     patternSequence,
     enableSequence,
+    probabilityAmount,
   } = sequencerProps;
 
   // Extract state values (temporal/runtime data)
@@ -209,6 +210,7 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
         stepsPerPage={stepsPerPage}
         resolution={resolution}
         playbackMode={playbackMode}
+        probabilityAmount={probabilityAmount}
         currentStep={currentStep}
         isRunning={isRunning}
         onStepsChange={(value) => {
@@ -219,6 +221,9 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
         }}
         onPlaybackModeChange={(value) => {
           updateProp("playbackMode")(value);
+        }}
+        onProbabilityAmountChange={(value) => {
+          updateProp("probabilityAmount")(value);
         }}
         onStart={handleStart}
         onStop={handleStop}

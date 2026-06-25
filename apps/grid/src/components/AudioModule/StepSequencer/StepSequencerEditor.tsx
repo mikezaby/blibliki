@@ -30,6 +30,7 @@ type StepSequencerEditorProps = {
   stepsPerPage: number;
   resolution: Resolution;
   playbackMode: PlaybackMode;
+  probabilityAmount?: number;
   currentStep?: number;
   isRunning?: boolean;
   showCcMessages?: boolean;
@@ -39,6 +40,7 @@ type StepSequencerEditorProps = {
   onStepsChange?: (value: number) => void;
   onResolutionChange: (value: Resolution) => void;
   onPlaybackModeChange: (value: PlaybackMode) => void;
+  onProbabilityAmountChange?: (value: number) => void;
   onAddPage?: () => void;
   onDeletePage?: (index: number) => void;
   onStart?: () => void;
@@ -65,6 +67,7 @@ export default function StepSequencerEditor({
   stepsPerPage,
   resolution,
   playbackMode,
+  probabilityAmount = 1,
   currentStep = -1,
   isRunning = false,
   showCcMessages = true,
@@ -74,6 +77,7 @@ export default function StepSequencerEditor({
   onStepsChange,
   onResolutionChange,
   onPlaybackModeChange,
+  onProbabilityAmountChange,
   onAddPage,
   onDeletePage,
   onStart,
@@ -255,10 +259,12 @@ export default function StepSequencerEditor({
           stepsPerPage={onStepsChange ? stepsPerPage : undefined}
           resolution={resolution}
           playbackMode={playbackMode}
+          probabilityAmount={probabilityAmount}
           isRunning={isRunning}
           onStepsChange={onStepsChange}
           onResolutionChange={onResolutionChange}
           onPlaybackModeChange={onPlaybackModeChange}
+          onProbabilityAmountChange={onProbabilityAmountChange}
           onStart={onStart}
           onStop={onStop}
         />

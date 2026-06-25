@@ -42,6 +42,7 @@ export type IStepSequencerProps = {
   playbackMode: PlaybackMode; // loop or oneShot
   patternSequence: string; // Pattern sequence notation (e.g., "2A4B2AC")
   enableSequence: boolean; // Toggle to enable/disable sequence mode
+  probabilityAmount: number; // 0–1: how much step probability affects firing (0 = always fire, 1 = full effect)
 };
 
 // Module state (temporal/runtime only, not serialized)
@@ -64,6 +65,7 @@ export const stepSequencerPropSchema: ModulePropSchema<
     | "playbackMode"
     | "patternSequence"
     | "enableSequence"
+    | "probabilityAmount"
   >,
   {
     resolution: EnumProp<Resolution>;
@@ -123,6 +125,14 @@ export const stepSequencerPropSchema: ModulePropSchema<
     kind: "boolean",
     label: "Enable Sequence",
     shortLabel: "en-seq",
+  },
+  probabilityAmount: {
+    kind: "number",
+    label: "Prob Amount",
+    shortLabel: "p-amt",
+    min: 0,
+    max: 1,
+    step: 0.01,
   },
 };
 
@@ -215,6 +225,7 @@ const DEFAULT_PROPS: IStepSequencerProps = {
   playbackMode: PlaybackMode.loop,
   patternSequence: "",
   enableSequence: false,
+  probabilityAmount: 1,
 };
 
 const DEFAULT_STATE: IStepSequencerState = {
@@ -402,8 +413,11 @@ export default class StepSequencer
     // Check if step has notes or CC messages
     if (step.notes.length === 0 && step.ccMessages.length === 0) return;
 
-    // Check probability
-    if (Math.random() * 100 > step.probability) return;
+    // Check probability with amount: 0 = always fire, 1 = full step probability effect
+    const amount = this.props.probabilityAmount;
+    const effectiveProbability =
+      amount === 0 ? 100 : Math.min(100, (1 / amount) * step.probability);
+    if (Math.random() * 100 > effectiveProbability) return;
 
     const bpm = this.engine.bpm;
 

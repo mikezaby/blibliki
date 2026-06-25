@@ -2,6 +2,7 @@ import { Resolution, PlaybackMode } from "@blibliki/engine";
 import {
   Button,
   Divider,
+  Encoder,
   Label,
   Select,
   SelectContent,
@@ -16,10 +17,12 @@ type ControlsProps = {
   stepsPerPage?: number;
   resolution: Resolution;
   playbackMode: PlaybackMode;
+  probabilityAmount: number;
   isRunning?: boolean;
   onStepsChange?: (value: number) => void;
   onResolutionChange: (value: Resolution) => void;
   onPlaybackModeChange: (value: PlaybackMode) => void;
+  onProbabilityAmountChange?: (value: number) => void;
   onStart?: () => void;
   onStop?: () => void;
 };
@@ -40,10 +43,12 @@ export default function Controls({
   stepsPerPage,
   resolution,
   playbackMode,
+  probabilityAmount,
   isRunning,
   onStepsChange,
   onResolutionChange,
   onPlaybackModeChange,
+  onProbabilityAmountChange,
   onStart,
   onStop,
 }: ControlsProps) {
@@ -113,6 +118,17 @@ export default function Controls({
               ))}
             </SelectContent>
           </Select>
+        </Stack>
+
+        <Stack direction="row" align="center" gap={2}>
+          <Encoder
+            name="Prob Amount"
+            value={probabilityAmount}
+            onChange={onProbabilityAmountChange ?? ((_v) => undefined)}
+            min={0}
+            max={1}
+            step={0.01}
+          />
         </Stack>
 
         <Stack direction="row" align="center" gap={2}>

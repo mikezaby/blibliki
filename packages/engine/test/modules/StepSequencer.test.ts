@@ -102,6 +102,7 @@ const baseProps = (steps: IStep[]): IStepSequencerProps => ({
   playbackMode: PlaybackMode.loop,
   patternSequence: "",
   enableSequence: false,
+  probabilityAmount: 1,
 });
 
 describe("StepSequencer", () => {
