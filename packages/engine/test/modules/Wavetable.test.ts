@@ -278,7 +278,6 @@ describe("Wavetable", () => {
     ).toEqual(expect.any(Number));
   });
 
-
   describe("wavetable text format", () => {
     it("parses plain object format with quoted keys", () => {
       const source = `
