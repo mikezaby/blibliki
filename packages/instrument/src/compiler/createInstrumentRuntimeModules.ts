@@ -98,6 +98,7 @@ export function createInstrumentRuntimeModules(options: {
           runtime.stepSequencerIds[track.key]!,
           `${track.key} Step Sequencer`,
           track,
+          document.globalBlock.probabilityAmount,
         ),
       ),
     ...(controllerInputSelection === false || !runtime.controllerInputId

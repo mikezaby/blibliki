@@ -18,6 +18,7 @@ describe("createDefaultInstrumentDocument", () => {
       reverbSend: 0,
       delaySend: 0,
       masterVolume: 0,
+      probabilityAmount: 1,
     });
 
     expect(document.tracks).toHaveLength(8);

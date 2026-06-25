@@ -188,6 +188,7 @@ describe("createSavedInstrumentDocument", () => {
       delaySend: 0.37,
       reverbSend: 0.61,
       masterVolume: -3,
+      probabilityAmount: 1,
     });
     expect(savedDocument.tracks[0]?.controllerSlotValues).toMatchObject({
       "fx1.drive": 0.91,

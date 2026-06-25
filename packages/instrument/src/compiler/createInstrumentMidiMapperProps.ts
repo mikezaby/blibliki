@@ -101,6 +101,7 @@ export function createInstrumentFaderGlobalMappings(
 
 export function createInstrumentEncoderGlobalMappings(
   runtimeIds: InstrumentGlobalMappingRuntimeIds,
+  stepSequencerIds: Record<string, string> = {},
 ) {
   return launchControlXL3GlobalRow.flatMap((control) => {
     switch (control.key) {
@@ -160,8 +161,14 @@ export function createInstrumentEncoderGlobalMappings(
           propName: "volume",
           mode: MidiMappingMode.incDec,
         };
-      case "inactive":
-        return [];
+      case "probabilityAmount":
+        return Object.values(stepSequencerIds).map((moduleId) => ({
+          cc: control.cc,
+          moduleId,
+          moduleType: ModuleType.StepSequencer,
+          propName: "probabilityAmount",
+          mode: MidiMappingMode.incDec,
+        }));
       default:
         control.key satisfies never;
         return [];

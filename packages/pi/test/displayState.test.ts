@@ -87,7 +87,6 @@ describe("createInstrumentDisplayState", () => {
         shortLabel: "REV",
         cc: 17,
         rawValue: 0,
-        inactive: undefined,
         valueText: "0%",
       }),
     );
@@ -98,18 +97,17 @@ describe("createInstrumentDisplayState", () => {
         shortLabel: "DLY",
         cc: 18,
         rawValue: 0,
-        inactive: undefined,
         valueText: "0%",
       }),
     );
     expect(displayState.globalBand.slots[6]).toEqual(
       expect.objectContaining({
-        key: "inactive",
-        label: "Inactive",
-        shortLabel: "---",
+        key: "probabilityAmount",
+        label: "Prob Amount",
+        shortLabel: "P-AMT",
         cc: 19,
-        inactive: true,
-        valueText: "--",
+        rawValue: 1,
+        valueText: "100%",
       }),
     );
     expect(displayState.globalBand.slots[7]).toEqual(

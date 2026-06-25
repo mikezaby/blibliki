@@ -73,6 +73,7 @@ describe("createInstrumentRuntimeState", () => {
       reverbSend: 0,
       delaySend: 0,
       masterVolume: 0,
+      probabilityAmount: 1,
     });
 
     expect(runtime.navigation).toEqual({

@@ -63,6 +63,7 @@ export type InstrumentGlobalBlock = {
   reverbSend: number;
   delaySend: number;
   masterVolume: number;
+  probabilityAmount: number;
 };
 
 export type InstrumentSequencerNote = {

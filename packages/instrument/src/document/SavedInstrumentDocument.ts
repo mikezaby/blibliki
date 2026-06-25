@@ -88,6 +88,10 @@ function createSavedGlobalBlock(
     patch,
     runtimePatch.runtime.masterVolumeId,
   );
+  const firstStepSequencerProps = getModuleProps(
+    patch,
+    Object.values(runtimePatch.runtime.stepSequencerIds)[0],
+  );
 
   return {
     tempo:
@@ -118,6 +122,10 @@ function createSavedGlobalBlock(
       typeof masterVolumeProps?.volume === "number"
         ? masterVolumeProps.volume
         : normalizeMasterVolume(document),
+    probabilityAmount:
+      typeof firstStepSequencerProps?.probabilityAmount === "number"
+        ? firstStepSequencerProps.probabilityAmount
+        : document.globalBlock.probabilityAmount,
   };
 }
 

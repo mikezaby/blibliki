@@ -70,14 +70,17 @@ export function createInstrumentEnginePatch(
   const navigation = normalizeInstrumentNavigation(compiledInstrument, options);
   const masterOptions = normalizeInstrumentMasterOptions(options.master);
   const globalMappingRuntimeIds = createInstrumentGlobalMappingRuntimeIds();
-  const globalMappings = [
-    ...createInstrumentEncoderGlobalMappings(globalMappingRuntimeIds),
-    ...createInstrumentFaderGlobalMappings(compiledInstrument),
-    ...(options.midiMapper?.globalMappings ?? []),
-  ];
   const stepSequencerIds = createInstrumentStepSequencerIds(
     enabledTrackDocuments,
   );
+  const globalMappings = [
+    ...createInstrumentEncoderGlobalMappings(
+      globalMappingRuntimeIds,
+      stepSequencerIds,
+    ),
+    ...createInstrumentFaderGlobalMappings(compiledInstrument),
+    ...(options.midiMapper?.globalMappings ?? []),
+  ];
 
   const runtime = createInstrumentRuntimeState({
     createOptions: options,

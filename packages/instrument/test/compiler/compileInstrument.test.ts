@@ -19,6 +19,7 @@ describe("compileInstrument", () => {
       reverbSend: 0,
       delaySend: 0,
       masterVolume: 0,
+      probabilityAmount: 1,
     });
 
     expect(compiled.tracks).toHaveLength(8);

@@ -124,8 +124,8 @@ function formatGlobalValue(
       return formatPercent(globalBlock.delaySend);
     case "masterVolume":
       return formatVolume(globalBlock.masterVolume);
-    case "inactive":
-      return "--";
+    case "probabilityAmount":
+      return formatPercent(globalBlock.probabilityAmount);
     default:
       key satisfies never;
       return "--";
@@ -151,8 +151,8 @@ function getGlobalRawValue(
       return globalBlock.delaySend;
     case "masterVolume":
       return globalBlock.masterVolume;
-    case "inactive":
-      return undefined;
+    case "probabilityAmount":
+      return globalBlock.probabilityAmount;
     default:
       key satisfies never;
       return undefined;
@@ -177,8 +177,11 @@ function getGlobalValueSpec(
       return getValueSpecForModuleProp(ModuleType.Delay, "mix");
     case "masterVolume":
       return getValueSpecForModuleProp(ModuleType.Volume, "volume");
-    case "inactive":
-      return undefined;
+    case "probabilityAmount":
+      return getValueSpecForModuleProp(
+        ModuleType.StepSequencer,
+        "probabilityAmount",
+      );
     default:
       key satisfies never;
       return undefined;
@@ -192,7 +195,6 @@ function createGlobalBandState(globalBlock: InstrumentGlobalBlock) {
       label: control.label,
       shortLabel: control.shortLabel,
       cc: control.cc,
-      inactive: control.inactive,
       valueText: formatGlobalValue(globalBlock, control.key),
       rawValue: getGlobalRawValue(globalBlock, control.key),
       valueSpec: getGlobalValueSpec(control.key),

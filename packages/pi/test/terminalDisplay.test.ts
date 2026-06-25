@@ -120,7 +120,7 @@ describe("renderInstrumentDisplayStateToTerminal", () => {
     );
 
     expect(rendered).toMatch(
-      /GLOBAL[\s\S]*\n.*BPM.*SWG.*MCF.*MRQ.*REV.*DLY.*\[---\].*VOL.*\n.*120 BPM.*0%.*20000.*1.*0%.*0%.*\[--\].*0 dB.*\n.*o.*----.*\n/,
+      /GLOBAL[\s\S]*\n.*BPM.*SWG.*MCF.*MRQ.*REV.*DLY.*P-AMT.*VOL.*\n.*120 BPM.*0%.*20000.*1.*0%.*0%.*100%.*0 dB.*\n.*---o.*o---.*\n/,
     );
     expect(rendered).toMatch(
       /SOURCE[\s\S]*\n.*WAVE.*FREQ.*OCT.*CRS.*FINE.*LOW.*\n.*sine.*440.*0.*0.*0.*ON.*--.*--.*\n.*o.*----.*\n/,

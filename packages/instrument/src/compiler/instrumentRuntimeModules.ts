@@ -70,6 +70,7 @@ export function createStepSequencerModule(
   id: string,
   name: string,
   trackDocument: InstrumentTrackDocument,
+  probabilityAmount = 1,
 ): RuntimeModule<ModuleType.StepSequencer> {
   const compiledPages = trackDocument.sequencer.pages.map((page) => ({
     name: page.name,
@@ -105,6 +106,7 @@ export function createStepSequencerModule(
       playbackMode: trackDocument.sequencer.playbackMode,
       patternSequence: "",
       enableSequence: false,
+      probabilityAmount,
     },
   };
 }

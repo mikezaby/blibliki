@@ -163,7 +163,24 @@ function resolveGlobalSlotValue(
           typeof value === "number" ? formatVolume(value) : slot.valueText,
       };
     }
-    case "inactive":
+    case "probabilityAmount": {
+      const firstStepSequencerId = Object.values(
+        runtimePatch.runtime.stepSequencerIds,
+      )[0];
+      if (!firstStepSequencerId) {
+        return { rawValue: slot.rawValue, valueText: slot.valueText };
+      }
+      const value = getModuleProp(
+        engine,
+        firstStepSequencerId,
+        "probabilityAmount",
+      );
+      return {
+        rawValue: typeof value === "number" ? value : slot.rawValue,
+        valueText:
+          typeof value === "number" ? formatPercent(value) : slot.valueText,
+      };
+    }
     default:
       return {
         rawValue: slot.rawValue,

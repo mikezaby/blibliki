@@ -69,6 +69,7 @@ export function createDefaultInstrumentDocument(): InstrumentDocument {
       reverbSend: 0,
       delaySend: 0,
       masterVolume: 0,
+      probabilityAmount: 1,
     },
     tracks: Array.from({ length: 8 }, (_, index) =>
       createDefaultTrack(index + 1),

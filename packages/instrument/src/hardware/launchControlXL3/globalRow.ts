@@ -1,16 +1,13 @@
 import type { InstrumentGlobalBlock } from "@/document/types";
 import type { Fixed8 } from "@/types";
 
-export type InstrumentGlobalControlKey =
-  | keyof InstrumentGlobalBlock
-  | "inactive";
+export type InstrumentGlobalControlKey = keyof InstrumentGlobalBlock;
 
 export type LaunchControlXL3GlobalControl = {
   key: InstrumentGlobalControlKey;
   label: string;
   shortLabel: string;
   cc: number;
-  inactive?: boolean;
 };
 
 export const launchControlXL3GlobalRow: Fixed8<LaunchControlXL3GlobalControl> =
@@ -52,11 +49,10 @@ export const launchControlXL3GlobalRow: Fixed8<LaunchControlXL3GlobalControl> =
       cc: 18,
     },
     {
-      key: "inactive",
-      label: "Inactive",
-      shortLabel: "---",
+      key: "probabilityAmount",
+      label: "Prob Amount",
+      shortLabel: "P-AMT",
       cc: 19,
-      inactive: true,
     },
     {
       key: "masterVolume",
