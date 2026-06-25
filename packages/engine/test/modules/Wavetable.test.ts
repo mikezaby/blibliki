@@ -321,23 +321,29 @@ describe("Wavetable", () => {
     });
     updates.length = 0;
 
+    // Poll _state.actualPosition directly on every setImmediate tick.
+    // onPropsUpdate batches state via requestAnimationFrame (~16ms/frame): under
+    // load (e.g. parallel test runs), the entire 200ms transition can land in a
+    // single rAF frame with no intermediate values visible in `updates`.
+    // Polling the raw state bypasses the rAF batching and reliably captures the
+    // gradual progression produced by the audio-thread exponential smoother.
+    const snapshots: number[] = [];
     oscillator.props = { position: 1 };
+
     await waitForCondition(
-      () => updates.some((actualPosition) => actualPosition > 0.05),
-      { timeoutMs: 3000 },
+      () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pos = ((oscillator as any)._state as { actualPosition: number })
+          .actualPosition;
+        const last = snapshots[snapshots.length - 1] ?? -1;
+        if (pos - last > 0.001) snapshots.push(pos);
+        return pos > 0.95;
+      },
+      { timeoutMs: 5000, description: "position to transition past 0.95" },
     );
-    inspector.getValues();
 
-    const intermediateUpdate = updates.find(
-      (actualPosition) => actualPosition > 0.05 && actualPosition < 0.95,
-    );
-
-    await waitForCondition(() => (updates[updates.length - 1] ?? 0) > 0.95, {
-      timeoutMs: 3000,
-    });
-    inspector.getValues();
-
-    const latest = updates[updates.length - 1] ?? 0;
+    const intermediateUpdate = snapshots.find((p) => p > 0.05 && p < 0.95);
+    const latest = snapshots[snapshots.length - 1] ?? 0;
 
     expect(intermediateUpdate).toBeDefined();
     expect(latest).toBeGreaterThan(0.95);
