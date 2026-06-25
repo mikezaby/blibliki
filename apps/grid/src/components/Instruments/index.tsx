@@ -14,6 +14,7 @@ import {
 import { useUser } from "@clerk/react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
+  Copy,
   FolderKanban,
   Plus,
   SlidersHorizontal,
@@ -22,7 +23,10 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useAppDispatch, useInstruments } from "@/hooks";
-import { createNewInstrumentForUser } from "@/instruments/createInstrument";
+import {
+  cloneInstrumentForUser,
+  createNewInstrumentForUser,
+} from "@/instruments/createInstrument";
 import type { InstrumentDocument } from "@/instruments/document";
 import { addNotification } from "@/notificationsSlice";
 
@@ -43,6 +47,9 @@ export default function Instruments() {
   const [deletingInstrumentId, setDeletingInstrumentId] = useState<
     string | null
   >(null);
+  const [cloningInstrumentId, setCloningInstrumentId] = useState<string | null>(
+    null,
+  );
 
   const handleCreate = async () => {
     if (!user?.id || creating) {
@@ -83,6 +90,52 @@ export default function Instruments() {
       );
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleClone = async (instrument: IInstrument) => {
+    if (!user?.id || cloningInstrumentId === instrument.id) {
+      return;
+    }
+
+    if (!confirm(`Clone "${instrument.name}"?`)) {
+      return;
+    }
+
+    setCloningInstrumentId(instrument.id);
+
+    try {
+      const cloned = cloneInstrumentForUser(instrument, user.id);
+      const savedInstrument = await addInstrument(cloned);
+
+      dispatch(
+        addNotification({
+          type: "success",
+          title: "Instrument cloned",
+          message: `"${savedInstrument.name}" has been created.`,
+          duration: 3000,
+        }),
+      );
+
+      await navigate({
+        to: "/instrument/$instrumentId",
+        params: { instrumentId: savedInstrument.id },
+        search: { mode: undefined },
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+
+      dispatch(
+        addNotification({
+          type: "error",
+          title: "Failed to clone instrument",
+          message: errorMessage,
+          duration: 5000,
+        }),
+      );
+    } finally {
+      setCloningInstrumentId(null);
     }
   };
 
@@ -243,6 +296,18 @@ export default function Instruments() {
                           >
                             Open Instrument
                           </Link>
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            void handleClone(instrument);
+                          }}
+                          variant="outlined"
+                          color="neutral"
+                          size="sm"
+                          disabled={cloningInstrumentId === instrument.id}
+                          aria-label={`Clone ${instrument.name}`}
+                        >
+                          <Copy className="h-4 w-4" />
                         </Button>
                         {canDelete ? (
                           <Button
