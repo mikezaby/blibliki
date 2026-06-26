@@ -415,8 +415,7 @@ export default class StepSequencer
 
     // Check probability with amount: 0 = always fire, 1 = full step probability effect
     const amount = this.props.probabilityAmount;
-    const effectiveProbability =
-      amount === 0 ? 100 : Math.min(100, (1 / amount) * step.probability);
+    const effectiveProbability = 100 + step.probability * amount - 100 * amount;
     if (Math.random() * 100 > effectiveProbability) return;
 
     const bpm = this.engine.bpm;
