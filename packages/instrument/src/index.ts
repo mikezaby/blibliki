@@ -117,6 +117,7 @@ export type {
 } from "./InstrumentSession";
 export { createInstrumentDisplayState } from "./display/InstrumentDisplayState";
 export type {
+  BandSection,
   CreateInstrumentDisplayStateInput,
   DisplayBandState,
   DisplaySlotState,

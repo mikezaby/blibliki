@@ -3,6 +3,7 @@ import {
   createInstrumentControllerSession,
   createInstrumentEnginePatch,
   createSavedInstrumentDocument,
+  type BandSection,
   type InstrumentControllerSession,
   type InstrumentDisplayState,
   type InstrumentDocument,
@@ -385,24 +386,36 @@ function EncoderGlyph({
 
 function PerformanceBand({
   bandKey,
-  title,
+  sections,
   slots,
 }: {
   bandKey: BandKey;
-  title: string;
+  sections: BandSection[];
   slots: readonly BandCell[];
 }) {
   return (
     <section className="rounded-3xl bg-zinc-950/80 p-4 shadow-inner">
-      <div className="flex items-center justify-between gap-3">
-        <Text
-          asChild
-          size="xs"
-          className="font-mono uppercase tracking-[0.3em] text-zinc-500"
-        >
-          <h2>{title}</h2>
-        </Text>
-        <div className="h-px flex-1 bg-zinc-800" />
+      <div className="flex items-center gap-4">
+        {sections.map((section, i) => {
+          const nextStart = sections[i + 1]?.startIndex ?? slots.length;
+          const count = nextStart - section.startIndex;
+          return (
+            <div
+              key={section.startIndex}
+              style={{ flex: count }}
+              className="flex items-center gap-3 min-w-0"
+            >
+              <Text
+                asChild
+                size="xs"
+                className="font-mono uppercase tracking-[0.3em] text-zinc-500 shrink-0"
+              >
+                <span>{section.label}</span>
+              </Text>
+              <div className="h-px flex-1 bg-zinc-800" />
+            </div>
+          );
+        })}
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
@@ -424,7 +437,7 @@ function PerformanceBand({
 
             return (
               <div
-                key={`${title}-${index}-${renderCellLabel(slot)}`}
+                key={`${bandKey}-${index}-${renderCellLabel(slot)}`}
                 data-slot-key={slotKey}
                 data-slot-layout={visual.showEncoder ? "encoder" : "text"}
                 className={cn(
@@ -848,17 +861,17 @@ export default function InstrumentPerformance({
 
                         <PerformanceBand
                           bandKey="global"
-                          title="Global Controls"
+                          sections={[{ label: "Global Controls", startIndex: 0 }]}
                           slots={displayState.globalBand.slots}
                         />
                         <PerformanceBand
                           bandKey="upper"
-                          title={displayState.upperBand.title}
+                          sections={displayState.upperBand.sections}
                           slots={displayState.upperBand.slots}
                         />
                         <PerformanceBand
                           bandKey="lower"
-                          title={displayState.lowerBand.title}
+                          sections={displayState.lowerBand.sections}
                           slots={displayState.lowerBand.slots}
                         />
                       </div>

@@ -27,9 +27,15 @@ export type DisplaySlotState =
       valueSpec: ValueSpec;
     };
 
+export type BandSection = {
+  label: string;
+  startIndex: number;
+};
+
 export type DisplayBandState = {
   position: PageRegionPosition;
   title: string;
+  sections: BandSection[];
   slots: Fixed8<DisplaySlotState>;
 };
 
@@ -206,23 +212,40 @@ function createGlobalBandState(globalBlock: InstrumentGlobalBlock) {
   };
 }
 
-function formatBandTitle(
-  region: CompiledLaunchControlXL3Page["regions"][number],
-) {
-  const firstSlot = region.slots.find((slot) => slot.kind === "slot");
-  if (!firstSlot) {
-    return region.position.toUpperCase();
-  }
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
-  return firstSlot.blockKey.toUpperCase();
+function computeBandSections(
+  region: CompiledLaunchControlXL3Page["regions"][number],
+): BandSection[] {
+  const sections: BandSection[] = [];
+  let currentKey: string | null = null;
+
+  region.slots.forEach((slot, i) => {
+    if (slot.kind !== "slot" || slot.blockKey === currentKey) return;
+    currentKey = slot.blockKey;
+    sections.push({ label: capitalize(slot.blockType), startIndex: i });
+  });
+
+  return sections.length > 0
+    ? sections
+    : [{ label: region.position.toUpperCase(), startIndex: 0 }];
 }
 
 function createBandState(
   region: CompiledLaunchControlXL3Page["regions"][number],
 ): DisplayBandState {
+  const sections = computeBandSections(region);
+  const firstSlot = region.slots.find((s) => s.kind === "slot");
+  const title = firstSlot
+    ? firstSlot.blockKey.toUpperCase()
+    : region.position.toUpperCase();
+
   return {
     position: region.position,
-    title: formatBandTitle(region),
+    title,
+    sections,
     slots: region.slots.map((slot) => {
       if (slot.kind === "empty") {
         return {

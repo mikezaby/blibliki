@@ -122,6 +122,7 @@ export function createLaunchControlXL3SequencerDisplayState(
     upperBand: {
       position: "top",
       title: "VELOCITY",
+      sections: [{ label: "Velocity", startIndex: 0 }],
       slots: VELOCITY_CCS.map((cc, index) =>
         createBandSlot(
           cc,
@@ -136,6 +137,7 @@ export function createLaunchControlXL3SequencerDisplayState(
     lowerBand: {
       position: "bottom",
       title: "PITCH",
+      sections: [{ label: "Pitch", startIndex: 0 }],
       slots: PITCH_CCS.map((cc, index) =>
         createBandSlot(
           cc,
