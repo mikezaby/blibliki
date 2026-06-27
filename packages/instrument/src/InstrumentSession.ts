@@ -22,6 +22,7 @@ import {
   type LiveDisplayEngine,
 } from "@/display/LiveInstrumentDisplayState";
 import {
+  disableAnalogAutoDisplayEvents,
   encoderDisplayEvents,
   navigationDisplayEvents,
 } from "@/hardware/launchControlXL3/LaunchControlXL3HardwareDisplay";
@@ -165,6 +166,7 @@ export class InstrumentSession implements InstrumentControllerSession {
     engine.onStateUpdate?.(this.onEngineStateUpdate);
 
     this.controllerInput?.addEventListener(this.onMidiEvent);
+    this.sendHardwareDisplayEvents(disableAnalogAutoDisplayEvents());
     this.emitState();
   }
 
