@@ -35,6 +35,10 @@ export default class MidiEvent {
     );
   }
 
+  static fromSysEx(bytes: Uint8Array): MidiEvent {
+    return new MidiEvent(new Message(bytes), 0);
+  }
+
   constructor(message: Message, triggeredAt: ContextTime) {
     this.message = message;
     this.triggeredAt = triggeredAt;

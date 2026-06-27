@@ -21,6 +21,10 @@ import {
   createLiveInstrumentDisplayState,
   type LiveDisplayEngine,
 } from "@/display/LiveInstrumentDisplayState";
+import {
+  encoderDisplayEvents,
+  navigationDisplayEvents,
+} from "@/hardware/launchControlXL3/LaunchControlXL3HardwareDisplay";
 import { syncLaunchControlXL3NavigationButtonLeds } from "@/surfaces/launchControlXL3/LaunchControlXL3NavigationLeds";
 import { launchControlXL3SequencerEdit } from "@/surfaces/launchControlXL3/LaunchControlXL3SequencerEdit";
 import { getActiveStepSequencerId } from "@/surfaces/launchControlXL3/LaunchControlXL3SequencerState";
@@ -199,6 +203,17 @@ export class InstrumentSession implements InstrumentControllerSession {
     this.options.onDisplayStateChange?.(this.getDisplayState());
   }
 
+  private sendHardwareDisplayEvents(events: MidiEvent[] | null) {
+    if (!events) return;
+    const { controllerOutputId } = this.currentRuntimePatch.runtime;
+    if (!controllerOutputId) return;
+    const midiOut = this.engine.findModule(controllerOutputId);
+    if (!midiOut.onMidiEvent) return;
+    for (const event of events) {
+      midiOut.onMidiEvent(event);
+    }
+  }
+
   private handleMidiEvent(event: MidiEvent) {
     const result = launchControlXL3Surface.reduceEvent(
       this.currentRuntimePatch,
@@ -250,6 +265,31 @@ export class InstrumentSession implements InstrumentControllerSession {
       this.engine.updateModule(
         createMidiMapperUpdate(this.currentRuntimePatch),
       );
+    }
+
+    if (result.command.type === "navigation") {
+      this.sendHardwareDisplayEvents(
+        navigationDisplayEvents(this.getDisplayState()),
+      );
+    }
+
+    if (
+      result.command.type === "none" &&
+      !didRuntimePatchChange &&
+      this.currentRuntimePatch.runtime.navigation.mode === "performance" &&
+      event.isCC &&
+      event.cc !== undefined &&
+      event.ccValue !== 127
+    ) {
+      const cc = event.cc;
+      // queueMicrotask ensures the engine has processed the CC and updated props
+      // before we read display state (engine's listener fires before ours)
+      queueMicrotask(() => {
+        if (this.disposed) return;
+        this.sendHardwareDisplayEvents(
+          encoderDisplayEvents(this.getDisplayState(), cc),
+        );
+      });
     }
 
     if (

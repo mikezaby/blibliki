@@ -112,7 +112,14 @@ export default class MidiOutput
 
     // Send raw MIDI data to hardware
     const rawData = midiEvent.rawMessage.data;
-    this.currentDevice.send(rawData);
+
+    // SysEx (status 0xF0) must bypass the eventDataMutator: a controller's
+    // mutator reshapes messages into 3-byte CCs, which truncates/corrupts SysEx.
+    if (rawData[0] === 0xf0) {
+      this.currentDevice.directSend(rawData);
+    } else {
+      this.currentDevice.send(rawData);
+    }
   };
 
   private registerInputs() {
