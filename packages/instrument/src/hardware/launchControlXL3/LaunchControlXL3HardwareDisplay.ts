@@ -41,7 +41,11 @@ function configure(config: number): MidiEvent {
  */
 export function disableAnalogAutoDisplayEvents(): MidiEvent[] {
   const events: MidiEvent[] = [];
-  for (let target = ANALOG_TARGET_START; target <= ANALOG_TARGET_END; target++) {
+  for (
+    let target = ANALOG_TARGET_START;
+    target <= ANALOG_TARGET_END;
+    target++
+  ) {
     events.push(buildSysEx(CMD_CONFIGURE, [target, ARRANGE_NUMERIC_NO_AUTO]));
   }
   return events;
@@ -83,7 +87,11 @@ export function encoderDisplayEvents(
   for (const band of [displayState.upperBand, displayState.lowerBand]) {
     const slot = band.slots.find((s) => s.kind === "slot" && s.cc === cc);
     if (slot?.kind === "slot") {
-      return overlayEvents(titleCase(slot.blockKey), slot.label, slot.valueText);
+      return overlayEvents(
+        titleCase(slot.blockKey),
+        slot.label,
+        slot.valueText,
+      );
     }
   }
 
