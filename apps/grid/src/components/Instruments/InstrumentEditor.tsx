@@ -119,16 +119,19 @@ function renderSourceEditor(
     case "wavetable": {
       const props = modulePropsById.get("source.main");
       if (!props) return null;
-      const wavetableProps = props as ModuleTypeToPropsMapping[ModuleType.Wavetable];
-      const propsWithTables = wavetableProps.tables
-        ? wavetableProps
-        : {
-            ...wavetableProps,
-            tables: (() => {
-              const preset = getWavetablePresetById(wavetableProps.presetId ?? "");
-              return preset ? cloneWavetablePresetTables(preset.tables) : [];
-            })(),
-          };
+      const partialProps = props as Partial<
+        ModuleTypeToPropsMapping[ModuleType.Wavetable]
+      >;
+      const existingTables = partialProps.tables;
+      const preset = !existingTables
+        ? getWavetablePresetById(partialProps.presetId ?? "")
+        : null;
+      const propsWithTables = {
+        ...(props as ModuleTypeToPropsMapping[ModuleType.Wavetable]),
+        tables:
+          existingTables ??
+          (preset ? cloneWavetablePresetTables(preset.tables) : []),
+      };
       return (
         <WavetableEditor
           id="source.main"
