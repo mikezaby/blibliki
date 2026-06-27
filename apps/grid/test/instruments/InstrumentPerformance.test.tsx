@@ -145,8 +145,8 @@ describe("InstrumentPerformance", () => {
       mode: "performance",
     },
     globalBand: { slots: [] },
-    upperBand: { title: "SOURCE", slots: [] },
-    lowerBand: { title: "AMP", slots: [] },
+    upperBand: { title: "SOURCE", sections: [], slots: [] },
+    lowerBand: { title: "AMP", sections: [], slots: [] },
   };
   const engine = {
     serialize: vi.fn(() => ({
@@ -176,8 +176,8 @@ describe("InstrumentPerformance", () => {
         mode: "performance",
       },
       globalBand: { slots: [] },
-      upperBand: { title: "SOURCE", slots: [] },
-      lowerBand: { title: "AMP", slots: [] },
+      upperBand: { title: "SOURCE", sections: [], slots: [] },
+      lowerBand: { title: "AMP", sections: [], slots: [] },
     };
 
     fullscreenElement = null;
@@ -344,6 +344,7 @@ describe("InstrumentPerformance", () => {
       },
       upperBand: {
         title: "SOURCE",
+        sections: [],
         slots: [
           {
             kind: "slot",
@@ -372,6 +373,7 @@ describe("InstrumentPerformance", () => {
       },
       lowerBand: {
         title: "AMP",
+        sections: [],
         slots: [],
       },
     };

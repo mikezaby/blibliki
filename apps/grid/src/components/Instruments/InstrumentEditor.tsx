@@ -1,4 +1,9 @@
-import { ModuleType, ModuleTypeToPropsMapping } from "@blibliki/engine";
+import {
+  ModuleType,
+  ModuleTypeToPropsMapping,
+  cloneWavetablePresetTables,
+  getWavetablePresetById,
+} from "@blibliki/engine";
 import {
   compileTrack,
   createTrackFromDocument,
@@ -114,12 +119,22 @@ function renderSourceEditor(
     case "wavetable": {
       const props = modulePropsById.get("source.main");
       if (!props) return null;
+      const wavetableProps = props as ModuleTypeToPropsMapping[ModuleType.Wavetable];
+      const propsWithTables = wavetableProps.tables
+        ? wavetableProps
+        : {
+            ...wavetableProps,
+            tables: (() => {
+              const preset = getWavetablePresetById(wavetableProps.presetId ?? "");
+              return preset ? cloneWavetablePresetTables(preset.tables) : [];
+            })(),
+          };
       return (
         <WavetableEditor
           id="source.main"
           name="Wavetable"
           moduleType={ModuleType.Wavetable}
-          props={props as ModuleTypeToPropsMapping[ModuleType.Wavetable]}
+          props={propsWithTables}
           updateProp={blockUpdateProp("source")}
         />
       );
