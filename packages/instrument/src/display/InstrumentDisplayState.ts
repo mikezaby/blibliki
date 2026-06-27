@@ -87,7 +87,7 @@ function formatSlotValue(value: unknown): string {
   }
 
   if (typeof value === "number") {
-    return `${value}`;
+    return formatNum(value);
   }
 
   if (typeof value === "string") {
@@ -95,6 +95,10 @@ function formatSlotValue(value: unknown): string {
   }
 
   return "--";
+}
+
+function formatNum(value: number) {
+  return parseFloat(value.toFixed(2)).toString();
 }
 
 function formatPercent(value: number) {
@@ -115,9 +119,9 @@ function formatGlobalValue(
     case "swing":
       return formatPercent(globalBlock.swing);
     case "masterFilterCutoff":
-      return `${globalBlock.masterFilterCutoff}`;
+      return formatNum(globalBlock.masterFilterCutoff);
     case "masterFilterResonance":
-      return `${globalBlock.masterFilterResonance}`;
+      return formatNum(globalBlock.masterFilterResonance);
     case "reverbSend":
       return formatPercent(globalBlock.reverbSend);
     case "delaySend":

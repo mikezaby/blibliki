@@ -19,13 +19,17 @@ export type LiveDisplayEngine = {
   findModule: (id: string) => DisplayEngineModule;
 };
 
+function formatNum(value: number) {
+  return parseFloat(value.toFixed(2)).toString();
+}
+
 function formatSlotValue(value: unknown): string {
   if (typeof value === "boolean") {
     return value ? "ON" : "OFF";
   }
 
   if (typeof value === "number") {
-    return `${value}`;
+    return formatNum(value);
   }
 
   if (typeof value === "string") {
@@ -113,7 +117,8 @@ function resolveGlobalSlotValue(
       );
       return {
         rawValue: typeof value === "number" ? value : slot.rawValue,
-        valueText: typeof value === "number" ? `${value}` : slot.valueText,
+        valueText:
+          typeof value === "number" ? formatNum(value) : slot.valueText,
       };
     }
     case "masterFilterResonance": {
@@ -124,7 +129,8 @@ function resolveGlobalSlotValue(
       );
       return {
         rawValue: typeof value === "number" ? value : slot.rawValue,
-        valueText: typeof value === "number" ? `${value}` : slot.valueText,
+        valueText:
+          typeof value === "number" ? formatNum(value) : slot.valueText,
       };
     }
     case "reverbSend": {
