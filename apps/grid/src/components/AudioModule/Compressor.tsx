@@ -33,7 +33,12 @@ const Compressor: ModuleComponent<ModuleType.Compressor> = (props) => {
     const updateReduction = () => {
       if (!running) return;
 
-      const module = Engine.current.findModule(id);
+      let module;
+      try {
+        module = Engine.current.findModule(id);
+      } catch {
+        return;
+      }
       if (module.moduleType !== ModuleType.Compressor) {
         throw Error("Not a compressor module");
       }

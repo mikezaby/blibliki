@@ -1,8 +1,7 @@
-import { ModuleType, WAVETABLE_PRESETS } from "@blibliki/engine";
+import { ModuleType, ModuleTypeToPropsMapping } from "@blibliki/engine";
 import {
   compileTrack,
   createTrackFromDocument,
-  type CompiledLaunchControlXL3Page,
   type SlotInitialValue,
 } from "@blibliki/instrument";
 import { Instrument, type IInstrument } from "@blibliki/models";
@@ -26,12 +25,24 @@ import {
 import { Link } from "@tanstack/react-router";
 import { Save } from "lucide-react";
 import { useMemo, useState } from "react";
+import type { TUpdateProp } from "@/components/AudioModule";
+import Chorus from "@/components/AudioModule/Chorus";
+import Compressor from "@/components/AudioModule/Compressor";
+import Delay from "@/components/AudioModule/Delay";
+import Distortion from "@/components/AudioModule/Distortion";
+import DrumMachine from "@/components/AudioModule/DrumMachine";
+import EnvelopeEditor from "@/components/AudioModule/Envelope";
+import { Filter as FilterEditor } from "@/components/AudioModule/Filter";
+import Noise from "@/components/AudioModule/Noise";
+import OscillatorEditor from "@/components/AudioModule/Oscillator";
+import Reverb from "@/components/AudioModule/Reverb";
 import StepSequencerEditor from "@/components/AudioModule/StepSequencer/StepSequencerEditor";
 import {
   toEditorPages,
   toInstrumentPages,
   updateInstrumentPageStep,
 } from "@/components/AudioModule/StepSequencer/instrumentAdapter";
+import WavetableEditor from "@/components/AudioModule/Wavetable";
 import { useAppDispatch } from "@/hooks";
 import type {
   EffectProfileId,
@@ -57,9 +68,6 @@ const SOURCE_PROFILE_OPTIONS: SourceProfileId[] = [
   "threeOsc",
   "drumMachine",
 ];
-const WAVETABLE_PRESET_NAME_BY_ID = new Map(
-  WAVETABLE_PRESETS.map((preset) => [preset.id, preset.name]),
-);
 const NOTE_SOURCE_OPTIONS: InstrumentTrackDocument["noteSource"][] = [
   "externalMidi",
   "stepSequencer",
@@ -80,68 +88,169 @@ const LOOP_LENGTH_OPTIONS = [1, 2, 3, 4] as const;
 const LATENCY_HINT_OPTIONS = ["interactive", "playback"] as const;
 const TRACK_VOICES_MIN = 1;
 const TRACK_VOICES_MAX = 64;
-const CONTROLLER_PAGE_LABELS: Record<
-  CompiledLaunchControlXL3Page["pageKey"],
-  string
-> = {
-  sourceAmp: "Source + Amp",
-  filterMod: "Filter + Modulation",
-  fx: "FX Chain",
-};
-
-type ControllerSlot = Extract<
-  CompiledLaunchControlXL3Page["regions"][number]["slots"][number],
-  { kind: "slot" }
->;
-
-function getControllerSlotId(
-  trackKey: string,
-  pageKey: CompiledLaunchControlXL3Page["pageKey"],
-  slot: ControllerSlot,
-) {
-  return `${trackKey}-${pageKey}-${slot.blockKey}-${slot.slotKey}`;
-}
-
-function getControllerSlotDocumentKey(slot: ControllerSlot) {
-  return `${slot.blockKey}.${slot.slotKey}`;
-}
-
-function getControllerEnumOptions(
-  slot: ControllerSlot,
-  options: readonly (string | number)[],
-) {
-  return options.map((option) => ({
-    name:
-      slot.binding.moduleType === ModuleType.Wavetable &&
-      slot.binding.propKey === "presetId" &&
-      typeof option === "string"
-        ? (WAVETABLE_PRESET_NAME_BY_ID.get(option) ?? option)
-        : String(option),
-    value: option,
-  }));
-}
-
-function isSlotInitialValue(value: unknown): value is SlotInitialValue {
-  return (
-    typeof value === "string" ||
-    typeof value === "number" ||
-    typeof value === "boolean"
-  );
-}
-
-function getControllerSlotValue(
-  slot: ControllerSlot,
+function renderSourceEditor(
+  sourceProfileId: SourceProfileId,
   modulePropsById: Map<string, Record<string, unknown>>,
+  blockUpdateProp: <T extends ModuleType>(blockKey: string) => TUpdateProp<T>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  suffixedUpdateProp: (suffix: string) => TUpdateProp<any>,
 ) {
-  if (slot.initialValue !== undefined) {
-    return slot.initialValue;
+  switch (sourceProfileId) {
+    case "unassigned":
+      return null;
+    case "osc": {
+      const props = modulePropsById.get("source.main");
+      if (!props) return null;
+      return (
+        <OscillatorEditor
+          id="source.main"
+          name="Oscillator"
+          moduleType={ModuleType.Oscillator}
+          props={props as ModuleTypeToPropsMapping[ModuleType.Oscillator]}
+          updateProp={blockUpdateProp("source")}
+        />
+      );
+    }
+    case "wavetable": {
+      const props = modulePropsById.get("source.main");
+      if (!props) return null;
+      return (
+        <WavetableEditor
+          id="source.main"
+          name="Wavetable"
+          moduleType={ModuleType.Wavetable}
+          props={props as ModuleTypeToPropsMapping[ModuleType.Wavetable]}
+          updateProp={blockUpdateProp("source")}
+        />
+      );
+    }
+    case "noise": {
+      const props = modulePropsById.get("source.main");
+      if (!props) return null;
+      return (
+        <Noise
+          id="source.main"
+          name="Noise"
+          moduleType={ModuleType.Noise}
+          props={props as ModuleTypeToPropsMapping[ModuleType.Noise]}
+          updateProp={blockUpdateProp("source")}
+        />
+      );
+    }
+    case "threeOsc": {
+      const osc1Props = modulePropsById.get("source.osc1");
+      const osc2Props = modulePropsById.get("source.osc2");
+      const osc3Props = modulePropsById.get("source.osc3");
+      return (
+        <Stack gap={6}>
+          {osc1Props && (
+            <OscillatorEditor
+              id="source.osc1"
+              name="Osc 1"
+              moduleType={ModuleType.Oscillator}
+              props={
+                osc1Props as ModuleTypeToPropsMapping[ModuleType.Oscillator]
+              }
+              updateProp={suffixedUpdateProp("1")}
+            />
+          )}
+          {osc2Props && (
+            <OscillatorEditor
+              id="source.osc2"
+              name="Osc 2"
+              moduleType={ModuleType.Oscillator}
+              props={
+                osc2Props as ModuleTypeToPropsMapping[ModuleType.Oscillator]
+              }
+              updateProp={suffixedUpdateProp("2")}
+            />
+          )}
+          {osc3Props && (
+            <OscillatorEditor
+              id="source.osc3"
+              name="Osc 3"
+              moduleType={ModuleType.Oscillator}
+              props={
+                osc3Props as ModuleTypeToPropsMapping[ModuleType.Oscillator]
+              }
+              updateProp={suffixedUpdateProp("3")}
+            />
+          )}
+        </Stack>
+      );
+    }
+    case "drumMachine": {
+      const props = modulePropsById.get("source.main");
+      if (!props) return null;
+      return (
+        <DrumMachine
+          id="source.main"
+          name="Drum Machine"
+          moduleType={ModuleType.DrumMachine}
+          props={props as ModuleTypeToPropsMapping[ModuleType.DrumMachine]}
+          updateProp={blockUpdateProp("source")}
+        />
+      );
+    }
   }
+}
 
-  const propValue = modulePropsById.get(slot.binding.moduleId)?.[
-    slot.binding.propKey
-  ];
-
-  return isSlotInitialValue(propValue) ? propValue : undefined;
+function renderFxEditor(
+  effectProfileId: EffectProfileId,
+  moduleId: string,
+  props: Record<string, unknown>,
+  // ponytail: any needed — props come from compiled track, type safety via switch
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  updateProp: TUpdateProp<any>,
+) {
+  const shared = { id: moduleId, name: effectProfileId };
+  switch (effectProfileId) {
+    case "chorus":
+      return (
+        <Chorus
+          {...shared}
+          moduleType={ModuleType.Chorus}
+          props={props as ModuleTypeToPropsMapping[ModuleType.Chorus]}
+          updateProp={updateProp}
+        />
+      );
+    case "delay":
+      return (
+        <Delay
+          {...shared}
+          moduleType={ModuleType.Delay}
+          props={props as ModuleTypeToPropsMapping[ModuleType.Delay]}
+          updateProp={updateProp}
+        />
+      );
+    case "reverb":
+      return (
+        <Reverb
+          {...shared}
+          moduleType={ModuleType.Reverb}
+          props={props as ModuleTypeToPropsMapping[ModuleType.Reverb]}
+          updateProp={updateProp}
+        />
+      );
+    case "distortion":
+      return (
+        <Distortion
+          {...shared}
+          moduleType={ModuleType.Distortion}
+          props={props as ModuleTypeToPropsMapping[ModuleType.Distortion]}
+          updateProp={updateProp}
+        />
+      );
+    case "compressor":
+      return (
+        <Compressor
+          {...shared}
+          moduleType={ModuleType.Compressor}
+          props={props as ModuleTypeToPropsMapping[ModuleType.Compressor]}
+          updateProp={updateProp}
+        />
+      );
+  }
 }
 
 type InstrumentEditorProps = {
@@ -179,8 +288,6 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
 
     return compileTrack(createTrackFromDocument(activeTrack));
   }, [activeTrack]);
-  const controllerPages =
-    compiledActiveTrack?.launchControlXL3.resolvedPages ?? [];
   const controllerModulePropsById = useMemo(
     () =>
       new Map(
@@ -230,19 +337,33 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
     );
   };
 
-  const setControllerSlotValue = (
-    slot: ControllerSlot,
-    value: SlotInitialValue,
-  ) => {
-    setDocument((current) =>
-      updateTrackControllerSlotValue(
-        current,
-        activeTrackIndex,
-        getControllerSlotDocumentKey(slot),
-        value,
-      ),
-    );
-  };
+  const makeBlockUpdateProp =
+    <T extends ModuleType>(blockKey: string): TUpdateProp<T> =>
+    <K extends keyof ModuleTypeToPropsMapping[T]>(propKey: K) =>
+    (value: ModuleTypeToPropsMapping[T][K]) => {
+      setDocument((current) =>
+        updateTrackControllerSlotValue(
+          current,
+          activeTrackIndex,
+          `${blockKey}.${String(propKey)}`,
+          value as SlotInitialValue,
+        ),
+      );
+    };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const makeThreeOscUpdateProp = (suffix: string): TUpdateProp<any> =>
+    ((propKey: string) => (value: SlotInitialValue) => {
+      setDocument((current) =>
+        updateTrackControllerSlotValue(
+          current,
+          activeTrackIndex,
+          `source.${propKey}${suffix}`,
+          value,
+        ),
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }) as TUpdateProp<any>;
 
   const handleSave = async () => {
     setSaving(true);
@@ -567,6 +688,92 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
               </CardContent>
             </Card>
 
+            {activeAudioSource.type === "internal" &&
+              activeTrack.sourceProfileId !== "unassigned" &&
+              (() => {
+                const sourceEditor = renderSourceEditor(
+                  activeTrack.sourceProfileId,
+                  controllerModulePropsById,
+                  makeBlockUpdateProp,
+                  makeThreeOscUpdateProp,
+                );
+                return sourceEditor ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Source</CardTitle>
+                    </CardHeader>
+                    <CardContent>{sourceEditor}</CardContent>
+                  </Card>
+                ) : null;
+              })()}
+
+            {(() => {
+              const ampEnvelopeProps = controllerModulePropsById.get(
+                "amp.envelope",
+              ) as ModuleTypeToPropsMapping[ModuleType.Envelope] | undefined;
+              return ampEnvelopeProps ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Amp Envelope</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <EnvelopeEditor
+                      id="amp.envelope"
+                      name="AmpEnvelope"
+                      moduleType={ModuleType.Envelope}
+                      props={ampEnvelopeProps}
+                      updateProp={makeBlockUpdateProp<ModuleType.Envelope>(
+                        "amp",
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+              ) : null;
+            })()}
+
+            {(() => {
+              const filterProps = controllerModulePropsById.get(
+                "filter.main",
+              ) as ModuleTypeToPropsMapping[ModuleType.Filter] | undefined;
+              const filterEnvelopeProps = controllerModulePropsById.get(
+                "filter.envelope",
+              ) as ModuleTypeToPropsMapping[ModuleType.Envelope] | undefined;
+              if (!filterProps && !filterEnvelopeProps) return null;
+              return (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Filter</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Stack gap={6}>
+                      {filterProps && (
+                        <FilterEditor
+                          id="filter.main"
+                          name="Filter"
+                          moduleType={ModuleType.Filter}
+                          props={filterProps}
+                          updateProp={makeBlockUpdateProp<ModuleType.Filter>(
+                            "filter",
+                          )}
+                        />
+                      )}
+                      {filterEnvelopeProps && (
+                        <EnvelopeEditor
+                          id="filter.envelope"
+                          name="FilterEnvelope"
+                          moduleType={ModuleType.Envelope}
+                          props={filterEnvelopeProps}
+                          updateProp={makeBlockUpdateProp<ModuleType.Envelope>(
+                            "filter",
+                          )}
+                        />
+                      )}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+
             <Card>
               <CardHeader>
                 <CardTitle>FX Chain</CardTitle>
@@ -576,178 +783,40 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                  {activeTrack.fxChain.map((effectProfileId, index) => (
-                    <Stack gap={2} key={`${activeTrack.key}-fx-${index + 1}`}>
-                      <Label>{`FX ${index + 1}`}</Label>
-                      <OptionSelect
-                        label={`Select FX ${index + 1}`}
-                        value={effectProfileId}
-                        options={EFFECT_OPTIONS}
-                        onChange={(value: EffectProfileId) => {
-                          setTrackFx(index as 0 | 1 | 2 | 3, value);
-                        }}
-                      />
-                    </Stack>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Controller Slots</CardTitle>
-                <CardDescription>
-                  Set the initial values loaded into Pi for the same track
-                  controls exposed on the controller
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
                 <Stack gap={4}>
-                  {controllerPages.map((page) => (
-                    <Surface
-                      key={`${activeTrack.key}-${page.pageKey}`}
-                      tone="subtle"
-                      className="rounded-xl p-4"
-                    >
-                      <Stack gap={4}>
-                        <Stack gap={1}>
-                          <Text weight="semibold">
-                            {CONTROLLER_PAGE_LABELS[page.pageKey]}
-                          </Text>
-                          <Text tone="muted" size="xs">
-                            Controller page {page.controllerPage}
-                          </Text>
+                  {activeTrack.fxChain.map((effectProfileId, index) => {
+                    const fxKey = `fx${index + 1}`;
+                    const moduleId = `${fxKey}.main`;
+                    const fxProps = controllerModulePropsById.get(moduleId);
+                    return (
+                      <Surface
+                        key={`${activeTrack.key}-fx-${index + 1}`}
+                        tone="subtle"
+                        className="rounded-xl p-4"
+                      >
+                        <Stack gap={3}>
+                          <Stack gap={2} className="max-w-48">
+                            <Label>{`FX ${index + 1}`}</Label>
+                            <OptionSelect
+                              label={`Select FX ${index + 1}`}
+                              value={effectProfileId}
+                              options={EFFECT_OPTIONS}
+                              onChange={(value: EffectProfileId) => {
+                                setTrackFx(index as 0 | 1 | 2 | 3, value);
+                              }}
+                            />
+                          </Stack>
+                          {fxProps &&
+                            renderFxEditor(
+                              effectProfileId,
+                              moduleId,
+                              fxProps,
+                              makeBlockUpdateProp(fxKey),
+                            )}
                         </Stack>
-
-                        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                          {page.regions.map((region) => {
-                            const slots = region.slots.filter(
-                              (slot): slot is ControllerSlot =>
-                                slot.kind === "slot",
-                            );
-
-                            if (slots.length === 0) {
-                              return null;
-                            }
-
-                            return (
-                              <Surface
-                                key={`${page.pageKey}-${region.position}`}
-                                tone="canvas"
-                                className="rounded-lg p-4"
-                              >
-                                <Stack gap={3}>
-                                  <Text weight="medium">
-                                    {region.position === "top"
-                                      ? "Upper Row"
-                                      : "Lower Row"}
-                                  </Text>
-
-                                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    {slots.map((slot) => {
-                                      const inputId = getControllerSlotId(
-                                        activeTrack.key,
-                                        page.pageKey,
-                                        slot,
-                                      );
-                                      const slotValue = getControllerSlotValue(
-                                        slot,
-                                        controllerModulePropsById,
-                                      );
-
-                                      if (slot.valueSpec.kind === "number") {
-                                        return (
-                                          <Stack
-                                            gap={2}
-                                            key={`${slot.blockKey}-${slot.slotKey}`}
-                                          >
-                                            <Fader
-                                              id={inputId}
-                                              name={slot.label}
-                                              min={slot.valueSpec.min}
-                                              max={slot.valueSpec.max}
-                                              step={slot.valueSpec.step}
-                                              exp={slot.valueSpec.exp}
-                                              value={
-                                                typeof slotValue === "number"
-                                                  ? slotValue
-                                                  : undefined
-                                              }
-                                              orientation="horizontal"
-                                              onChange={(_, nextValue) => {
-                                                setControllerSlotValue(
-                                                  slot,
-                                                  nextValue,
-                                                );
-                                              }}
-                                            />
-                                          </Stack>
-                                        );
-                                      }
-
-                                      if (slot.valueSpec.kind === "boolean") {
-                                        return (
-                                          <Stack
-                                            gap={2}
-                                            key={`${slot.blockKey}-${slot.slotKey}`}
-                                          >
-                                            <Label htmlFor={inputId}>
-                                              {slot.label}
-                                            </Label>
-                                            <Switch
-                                              id={inputId}
-                                              aria-label={slot.label}
-                                              checked={slotValue === true}
-                                              color="info"
-                                              onCheckedChange={(checked) => {
-                                                setControllerSlotValue(
-                                                  slot,
-                                                  checked,
-                                                );
-                                              }}
-                                            />
-                                          </Stack>
-                                        );
-                                      }
-
-                                      return (
-                                        <Stack
-                                          gap={2}
-                                          key={`${slot.blockKey}-${slot.slotKey}`}
-                                        >
-                                          <Label>{slot.label}</Label>
-                                          <OptionSelect
-                                            label={`Select ${slot.label}`}
-                                            value={
-                                              typeof slotValue === "string" ||
-                                              typeof slotValue === "number"
-                                                ? slotValue
-                                                : slot.valueSpec.options[0]
-                                            }
-                                            options={getControllerEnumOptions(
-                                              slot,
-                                              slot.valueSpec.options,
-                                            )}
-                                            onChange={(value) => {
-                                              setControllerSlotValue(
-                                                slot,
-                                                value as SlotInitialValue,
-                                              );
-                                            }}
-                                          />
-                                        </Stack>
-                                      );
-                                    })}
-                                  </div>
-                                </Stack>
-                              </Surface>
-                            );
-                          })}
-                        </div>
-                      </Stack>
-                    </Surface>
-                  ))}
+                      </Surface>
+                    );
+                  })}
                 </Stack>
               </CardContent>
             </Card>

@@ -861,7 +861,9 @@ export default function InstrumentPerformance({
 
                         <PerformanceBand
                           bandKey="global"
-                          sections={[{ label: "Global Controls", startIndex: 0 }]}
+                          sections={[
+                            { label: "Global Controls", startIndex: 0 },
+                          ]}
                           slots={displayState.globalBand.slots}
                         />
                         <PerformanceBand
