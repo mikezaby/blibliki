@@ -1,9 +1,11 @@
-import { ModuleType, TransportState } from "@blibliki/engine";
-import { getValueSpecForModuleProp } from "@/blocks/helpers";
+import { TransportState } from "@blibliki/engine";
 import type { InstrumentRuntimeMode } from "@/compiler/instrumentTypes";
 import type { CompiledLaunchControlXL3Page } from "@/compiler/types";
 import type { InstrumentGlobalBlock } from "@/document/types";
-import { launchControlXL3GlobalRow } from "@/hardware/launchControlXL3/globalRow";
+import {
+  getGlobalControlValueSpec,
+  launchControlXL3GlobalRow,
+} from "@/hardware/launchControlXL3/globalRow";
 import type { PageRegionPosition } from "@/pages/Page";
 import type { SlotInitialValue } from "@/slots/BaseSlot";
 import type { Fixed8, TrackPageKey } from "@/types";
@@ -169,35 +171,6 @@ function getGlobalRawValue(
   }
 }
 
-function getGlobalValueSpec(
-  key: (typeof launchControlXL3GlobalRow)[number]["key"],
-): ValueSpec | undefined {
-  switch (key) {
-    case "tempo":
-      return getValueSpecForModuleProp(ModuleType.TransportControl, "bpm");
-    case "swing":
-      return getValueSpecForModuleProp(ModuleType.TransportControl, "swing");
-    case "masterFilterCutoff":
-      return getValueSpecForModuleProp(ModuleType.Filter, "cutoff");
-    case "masterFilterResonance":
-      return getValueSpecForModuleProp(ModuleType.Filter, "Q");
-    case "reverbSend":
-      return getValueSpecForModuleProp(ModuleType.Reverb, "mix");
-    case "delaySend":
-      return getValueSpecForModuleProp(ModuleType.Delay, "mix");
-    case "masterVolume":
-      return getValueSpecForModuleProp(ModuleType.Volume, "volume");
-    case "probabilityAmount":
-      return getValueSpecForModuleProp(
-        ModuleType.StepSequencer,
-        "probabilityAmount",
-      );
-    default:
-      key satisfies never;
-      return undefined;
-  }
-}
-
 function createGlobalBandState(globalBlock: InstrumentGlobalBlock) {
   return {
     slots: launchControlXL3GlobalRow.map((control) => ({
@@ -207,7 +180,7 @@ function createGlobalBandState(globalBlock: InstrumentGlobalBlock) {
       cc: control.cc,
       valueText: formatGlobalValue(globalBlock, control.key),
       rawValue: getGlobalRawValue(globalBlock, control.key),
-      valueSpec: getGlobalValueSpec(control.key),
+      valueSpec: getGlobalControlValueSpec(control.key),
     })) as Fixed8<GlobalDisplaySlotState>,
   };
 }

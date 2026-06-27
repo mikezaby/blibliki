@@ -1,5 +1,7 @@
+import { ModuleType } from "@blibliki/engine";
+import { getValueSpecForModuleProp } from "@/blocks/helpers";
 import type { InstrumentGlobalBlock } from "@/document/types";
-import type { Fixed8 } from "@/types";
+import type { Fixed8, ValueSpec } from "@/types";
 
 export type InstrumentGlobalControlKey = keyof InstrumentGlobalBlock;
 
@@ -61,3 +63,32 @@ export const launchControlXL3GlobalRow: Fixed8<LaunchControlXL3GlobalControl> =
       cc: 20,
     },
   ];
+
+export function getGlobalControlValueSpec(
+  key: InstrumentGlobalControlKey,
+): ValueSpec {
+  switch (key) {
+    case "tempo":
+      return getValueSpecForModuleProp(ModuleType.TransportControl, "bpm");
+    case "swing":
+      return getValueSpecForModuleProp(ModuleType.TransportControl, "swing");
+    case "masterFilterCutoff":
+      return getValueSpecForModuleProp(ModuleType.Filter, "cutoff");
+    case "masterFilterResonance":
+      return getValueSpecForModuleProp(ModuleType.Filter, "Q");
+    case "reverbSend":
+      return getValueSpecForModuleProp(ModuleType.Reverb, "mix");
+    case "delaySend":
+      return getValueSpecForModuleProp(ModuleType.Delay, "mix");
+    case "masterVolume":
+      return getValueSpecForModuleProp(ModuleType.Volume, "volume");
+    case "probabilityAmount":
+      return getValueSpecForModuleProp(
+        ModuleType.StepSequencer,
+        "probabilityAmount",
+      );
+    default:
+      key satisfies never;
+      throw Error(`Unknown global control key ${String(key)}`);
+  }
+}

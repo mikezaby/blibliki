@@ -1,6 +1,7 @@
 import type {
   EffectProfileId,
   InstrumentDocument,
+  InstrumentGlobalBlock,
   InstrumentTrackControllerSlotValues,
   InstrumentTrackDocument,
 } from "@/instruments/document";
@@ -9,6 +10,16 @@ export function cloneInstrumentDocument(
   document: InstrumentDocument,
 ): InstrumentDocument {
   return structuredClone(document);
+}
+
+export function updateGlobalBlock(
+  document: InstrumentDocument,
+  key: keyof InstrumentGlobalBlock,
+  value: number,
+): InstrumentDocument {
+  const next = cloneInstrumentDocument(document);
+  next.globalBlock[key] = value;
+  return next;
 }
 
 export function updateTrackDocument(

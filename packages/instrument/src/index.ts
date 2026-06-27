@@ -5,6 +5,10 @@ export { default as LfoBlock } from "./blocks/LfoBlock";
 export { default as TrackGainBlock } from "./blocks/TrackGainBlock";
 export { default as InstrumentDocumentModel } from "./document/InstrumentDocument";
 export { createDefaultInstrumentDocument } from "./document/defaultDocument";
+export {
+  CURRENT_INSTRUMENT_VERSION,
+  migrateInstrumentDocument,
+} from "./document/version";
 export type {
   EffectProfileId,
   InstrumentDocument,
@@ -65,6 +69,14 @@ export type {
 } from "./blocks/types";
 export { launchControlXL3PageMap } from "./hardware/launchControlXL3/pageMap";
 export type { LaunchControlXL3PageMapEntry } from "./hardware/launchControlXL3/pageMap";
+export {
+  getGlobalControlValueSpec,
+  launchControlXL3GlobalRow,
+} from "./hardware/launchControlXL3/globalRow";
+export type {
+  InstrumentGlobalControlKey,
+  LaunchControlXL3GlobalControl,
+} from "./hardware/launchControlXL3/globalRow";
 export {
   createEmptyPageRegion,
   createPage,

@@ -7,6 +7,9 @@ import {
 import {
   compileTrack,
   createTrackFromDocument,
+  getGlobalControlValueSpec,
+  launchControlXL3GlobalRow,
+  migrateInstrumentDocument,
   type SlotInitialValue,
 } from "@blibliki/instrument";
 import { Instrument, type IInstrument } from "@blibliki/models";
@@ -18,6 +21,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Encoder,
   Fader,
   Input,
   Label,
@@ -59,6 +63,7 @@ import type {
 import {
   cloneInstrumentDocument,
   selectTrackAudioSource,
+  updateGlobalBlock,
   updateTrackControllerSlotValue,
   updateTrackDocument,
   updateTrackFxChain,
@@ -284,7 +289,10 @@ export default function InstrumentEditor({
 function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
   const dispatch = useAppDispatch();
   const initialDocument = useMemo(
-    () => cloneInstrumentDocument(instrument.document as InstrumentDocument),
+    () =>
+      cloneInstrumentDocument(
+        migrateInstrumentDocument(instrument.document as InstrumentDocument),
+      ),
     [instrument],
   );
   const [name, setName] = useState(instrument.name);
@@ -554,6 +562,49 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
                       }}
                     />
                   </Stack>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Global Controls</CardTitle>
+                <CardDescription>
+                  Initial values for the performance global block (tempo, swing,
+                  master FX) applied when the performance starts
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-6 md:grid-cols-4 xl:grid-cols-8">
+                  {launchControlXL3GlobalRow.map((control) => {
+                    const spec = getGlobalControlValueSpec(control.key);
+                    if (spec.kind !== "number") return null;
+
+                    return (
+                      <Stack key={control.key} align="center" gap={2}>
+                        <Encoder
+                          name={control.label}
+                          value={document.globalBlock[control.key]}
+                          min={spec.min}
+                          max={spec.max}
+                          step={spec.step}
+                          exp={spec.exp}
+                          onChange={(next) => {
+                            setDocument((current) =>
+                              updateGlobalBlock(current, control.key, next),
+                            );
+                          }}
+                        />
+                        <Text
+                          tone="muted"
+                          size="xs"
+                          className="text-center uppercase tracking-wide"
+                        >
+                          {control.label}
+                        </Text>
+                      </Stack>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
