@@ -162,6 +162,7 @@ export default class AudioRecorder extends Module<ModuleType.AudioRecorder> {
     }
     // ponytail: stop is immediate; quantized stop is future work.
     this.postStop(this.context.currentTime);
+    this.markStopped();
   }
 
   // Transport started — fire an armed recording at the precise context time.
@@ -175,6 +176,14 @@ export default class AudioRecorder extends Module<ModuleType.AudioRecorder> {
   stop(contextTime: ContextTime): void {
     if (!this.state.isRecording) return;
     this.postStop(contextTime);
+    this.markStopped();
+  }
+
+  // Reflect "stopped" immediately; the encoded blob still arrives later via the
+  // worklet's "done" message (onRecordingComplete).
+  private markStopped() {
+    this.state = { isRecording: false };
+    this.triggerPropsUpdate();
   }
 
   private get quantize(): Quantize {

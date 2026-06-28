@@ -80,6 +80,9 @@ export class Engine {
 
   midiDeviceManager: MidiDeviceManager;
 
+  /** Module id of the AudioRecorder designated to record the whole session. */
+  sessionRecorderId?: string;
+
   static getById(id: string): Engine {
     const engine = Engine._engines.get(id);
     assertDefined(engine);
@@ -208,6 +211,32 @@ export class Engine {
   pause() {
     const actionAt = this.context.currentTime;
     this.transport.stop(actionAt);
+  }
+
+  private get sessionRecorder() {
+    if (!this.sessionRecorderId) return undefined;
+    const module = this.modules.get(this.sessionRecorderId);
+    return module?.moduleType === ModuleType.AudioRecorder ? module : undefined;
+  }
+
+  get isSessionRecording(): boolean {
+    return this.sessionRecorder?.state.isRecording ?? false;
+  }
+
+  /**
+   * Toggle whole-session recording. Recording is transport-coupled: starting it
+   * also starts the transport, and any transport stop ends it.
+   */
+  toggleSessionRecording() {
+    const recorder = this.sessionRecorder;
+    if (!recorder) return;
+
+    if (recorder.state.isRecording) {
+      this.stop(); // transport stop fires the recorder's stop() override
+    } else {
+      recorder.record(); // arms; fired sample-accurately on transport start
+      if (this.transport.state !== TransportState.playing) void this.start();
+    }
   }
 
   get bpm() {

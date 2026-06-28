@@ -10,6 +10,7 @@ import {
   createMasterFilterModule,
   createMasterModule,
   createMasterVolumeModule,
+  createSessionRecorderModule,
   createMidiInputModule,
   createMidiMapperModule,
   createMidiOutputModule,
@@ -80,6 +81,10 @@ export function createInstrumentRuntimeModules(options: {
       runtime.masterVolumeId,
       "Instrument Master Volume",
       document,
+    ),
+    createSessionRecorderModule(
+      runtime.sessionRecorderId,
+      "Instrument Session Recorder",
     ),
     ...(noteInputSelection === false || !runtime.noteInputId
       ? []

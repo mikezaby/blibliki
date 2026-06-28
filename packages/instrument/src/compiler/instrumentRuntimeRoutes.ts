@@ -55,6 +55,7 @@ export function createMasterRoutes(
     | "globalDelayId"
     | "globalReverbId"
     | "masterVolumeId"
+    | "sessionRecorderId"
   >,
 ): IRoute[] {
   return [
@@ -63,6 +64,17 @@ export function createMasterRoutes(
       tracks,
       masterFilterId: runtime.masterFilterId,
     }),
+    // Non-destructive tap: the session recorder listens to the final mix
+    // (AudioRecorder passes audio through, so it doesn't alter the chain).
+    {
+      id: createRuntimeRouteId(
+        "instrument",
+        { moduleId: runtime.masterVolumeId, ioName: "out" },
+        { moduleId: runtime.sessionRecorderId, ioName: "in" },
+      ),
+      source: { moduleId: runtime.masterVolumeId, ioName: "out" },
+      destination: { moduleId: runtime.sessionRecorderId, ioName: "in" },
+    },
     {
       id: createRuntimeRouteId(
         "instrument",
@@ -152,6 +164,7 @@ export function createInstrumentRuntimeRoutes(options: {
     | "masterFilterId"
     | "masterId"
     | "masterVolumeId"
+    | "sessionRecorderId"
     | "midiMapperId"
   >;
   trackNoteRuntimes: readonly InstrumentTrackNoteRuntime[];

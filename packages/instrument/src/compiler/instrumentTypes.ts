@@ -95,6 +95,7 @@ export type CompiledInstrumentEnginePatch = {
     globalDelayId: string;
     globalReverbId: string;
     masterVolumeId: string;
+    sessionRecorderId: string;
     midiMapperId: string;
     noteInputId?: string;
     controllerInputId?: string;

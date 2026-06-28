@@ -64,8 +64,17 @@ export abstract class BaseController {
     }
   }
 
+  /** Generic session-record toggle (start transport + record, or stop both). */
+  toggleRecord() {
+    this.engine.toggleSessionRecording();
+  }
+
   protected get isPlaying() {
     return this.transport.state === TransportState.playing;
+  }
+
+  protected get isRecording() {
+    return this.engine.isSessionRecording;
   }
 
   dispose() {

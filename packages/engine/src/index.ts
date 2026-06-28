@@ -119,4 +119,7 @@ export type {
   IWavetableTable,
   IDrumMachine,
   IDrumMachineProps,
+  IAudioRecorder,
+  IAudioRecorderProps,
+  IAudioRecorderState,
 } from "./modules";

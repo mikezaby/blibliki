@@ -89,6 +89,9 @@ enum Control {
 
 const PLAY_STOPPED_COLOR = 101;
 const PLAY_PLAYING_COLOR = 16;
+// ponytail: best-guess red on/off for the Record LED; tune on the device.
+const RECORD_RECORDING_COLOR = 5;
+const RECORD_IDLE_COLOR = 117;
 const CHANNEL_BUTTON_OFF_COLOR = Color.Gray6;
 const CHANNEL_BUTTON_PROGRAMMED_COLOR = 45;
 const CHANNEL_BUTTON_PLAYHEAD_COLOR = 16;
@@ -174,6 +177,10 @@ export class LaunchControlXL3 extends BaseController {
         break;
       }
       case RECORD_CC:
+        if (event.ccValue === 127) {
+          this.toggleRecord();
+          this.updateTransportColors();
+        }
         break;
       default:
         this.setColor(event.cc, this.getColor(event.cc, event.ccValue));
@@ -203,6 +210,10 @@ export class LaunchControlXL3 extends BaseController {
     this.setColor(
       Control.Play,
       this.isPlaying ? PLAY_PLAYING_COLOR : PLAY_STOPPED_COLOR,
+    );
+    this.setColor(
+      Control.Record,
+      this.isRecording ? RECORD_RECORDING_COLOR : RECORD_IDLE_COLOR,
     );
   }
 

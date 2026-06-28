@@ -212,3 +212,15 @@ export function createMasterVolumeModule(
     },
   };
 }
+
+export function createSessionRecorderModule(
+  id: string,
+  name: string,
+): RuntimeModule<ModuleType.AudioRecorder> {
+  return {
+    id,
+    name,
+    moduleType: EngineModuleType.AudioRecorder,
+    props: { quantize: "bar" },
+  };
+}

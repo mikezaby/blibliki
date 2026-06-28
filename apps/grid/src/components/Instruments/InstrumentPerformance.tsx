@@ -1,4 +1,4 @@
-import { Engine, TransportState } from "@blibliki/engine";
+import { Engine, ModuleType, TransportState } from "@blibliki/engine";
 import {
   createInstrumentControllerSession,
   createInstrumentEnginePatch,
@@ -521,6 +521,23 @@ function formatTrackVolume(volume?: number) {
   return volume === undefined ? "--" : `${volume.toFixed(1)} dB`;
 }
 
+function downloadWav(blob: Blob, instrumentName: string) {
+  if (typeof document === "undefined") return;
+
+  const safeName =
+    instrumentName.replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "") ||
+    "instrument";
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `${safeName}-${stamp}.wav`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
 export default function InstrumentPerformance({
   instrument,
   onInstrumentChange,
@@ -615,6 +632,16 @@ export default function InstrumentPerformance({
 
         engineInstance = engine;
         controllerSessionInstance = controllerSession;
+
+        // Auto-download the session recording when it stops (browser only).
+        if (engine.sessionRecorderId) {
+          const recorder = engine.findModule(engine.sessionRecorderId);
+          if (recorder.moduleType === ModuleType.AudioRecorder) {
+            recorder.onRecordingComplete = (blob) => {
+              downloadWav(blob, sessionSource.instrument.name);
+            };
+          }
+        }
 
         if (cancelled) {
           controllerSession.dispose();

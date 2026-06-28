@@ -134,6 +134,7 @@ export function createInstrumentRuntimeState(options: {
       masterOptions === false
         ? undefined
         : (masterOptions.id ?? createInstrumentRuntimeModuleId("master")),
+    sessionRecorderId: createInstrumentRuntimeModuleId("sessionRecorder"),
     ...globalMappingRuntimeIds,
     midiMapperId:
       createOptions.midiMapper?.id ??

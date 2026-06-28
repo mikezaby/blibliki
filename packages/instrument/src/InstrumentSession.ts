@@ -88,11 +88,16 @@ type EngineStateObserver = {
   ) => void;
 };
 
+type EngineSessionRecorder = {
+  sessionRecorderId?: string;
+};
+
 export type InstrumentControllerEngine = MidiInputLookup &
   EngineModuleUpdater &
   EngineTransportController &
   EnginePropsObserver &
   EngineStateObserver &
+  EngineSessionRecorder &
   LiveDisplayEngine;
 
 export type CreateInstrumentControllerSessionOptions = {
@@ -138,6 +143,10 @@ export class InstrumentSession implements InstrumentControllerSession {
   ) {
     this.currentRuntimePatch = runtimePatch;
     this.currentNotice = options.initialDisplayNotice;
+
+    // Designate this instrument's recorder so the controller's Record button
+    // (engine.toggleSessionRecording) records the full instrument mix.
+    engine.sessionRecorderId = runtimePatch.runtime.sessionRecorderId;
     this.persistenceFlow = new InstrumentSessionPersistenceFlow({
       isDisposed: () => this.disposed,
       onNoticeChange: (notice) => {

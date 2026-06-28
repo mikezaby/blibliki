@@ -1,4 +1,9 @@
-import { Engine, moduleSchemas, ModuleType } from "@blibliki/engine";
+import {
+  Engine,
+  IAudioRecorderState,
+  moduleSchemas,
+  ModuleType,
+} from "@blibliki/engine";
 import { Button, Stack, Surface, Text } from "@blibliki/ui";
 import { useEffect, useState } from "react";
 import { useModuleState } from "@/hooks";
@@ -20,10 +25,14 @@ const AudioRecorder: ModuleComponent<ModuleType.AudioRecorder> = (props) => {
   } = props;
 
   const quantizeSchema = moduleSchemas[ModuleType.AudioRecorder].quantize;
-  const { isRecording = false, durationSeconds = 0 } = useModuleState(
+  // useModuleState returns {} until the module's first state update, so the
+  // fields can be absent at runtime despite their required type.
+  const recorderState = useModuleState(
     id,
     ModuleType.AudioRecorder,
-  );
+  ) as Partial<IAudioRecorderState>;
+  const isRecording = recorderState.isRecording ?? false;
+  const durationSeconds = recorderState.durationSeconds ?? 0;
 
   const [url, setUrl] = useState<string | null>(null);
 
