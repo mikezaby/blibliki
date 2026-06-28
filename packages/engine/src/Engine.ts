@@ -224,15 +224,17 @@ export class Engine {
   }
 
   /**
-   * Toggle whole-session recording. Recording is transport-coupled: starting it
-   * also starts the transport, and any transport stop ends it.
+   * Toggle whole-session recording. Starting also starts the transport, but
+   * stopping affects recording ONLY — the transport is left untouched so
+   * reverb/delay tails (after a separate transport stop) keep being captured
+   * until the user stops recording.
    */
   toggleSessionRecording() {
     const recorder = this.sessionRecorder;
     if (!recorder) return;
 
     if (recorder.state.isRecording) {
-      this.stop(); // transport stop fires the recorder's stop() override
+      recorder.stopRecording(); // stop recording only; transport untouched
     } else {
       recorder.record(); // arms; fired sample-accurately on transport start
       if (this.transport.state !== TransportState.playing) void this.start();

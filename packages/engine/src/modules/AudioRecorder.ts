@@ -172,12 +172,9 @@ export default class AudioRecorder extends Module<ModuleType.AudioRecorder> {
     this.postStart(contextTime);
   }
 
-  // Transport stopped — stop an in-progress recording.
-  stop(contextTime: ContextTime): void {
-    if (!this.state.isRecording) return;
-    this.postStop(contextTime);
-    this.markStopped();
-  }
+  // Recording is intentionally independent of the transport: stopping the
+  // transport must NOT stop recording, so reverb/delay tails keep being captured
+  // until stopRecording() is called explicitly. (No stop(contextTime) override.)
 
   // Reflect "stopped" immediately; the encoded blob still arrives later via the
   // worklet's "done" message (onRecordingComplete).

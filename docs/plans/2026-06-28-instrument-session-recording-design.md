@@ -16,12 +16,14 @@ worklet capture).
 | Action | State | Result |
 |---|---|---|
 | Rec | idle | start recording **+** start transport (recording aligned to transport start) |
-| Rec | recording | stop transport **+** recording |
-| Play | recording | stop transport **+** recording |
-| Play | idle | normal transport toggle (no recording) |
+| Rec | recording | stop **recording only** (transport untouched) |
+| Play | playing | stop **transport only** — reverb/delay tails ring out and keep being recorded |
+| Play | stopped | start transport |
 
-Recording is **transport-coupled** in v1: it only runs while the transport plays, so
-"Play stops recording" falls out for free (any transport stop fires the recorder's stop).
+Recording start is **coupled** to the transport (Rec from idle starts both, sample-aligned),
+but recording **stop is independent**: stopping the transport does NOT stop recording, so
+effect tails fade out and are captured until the user explicitly stops recording (Rec again).
+This means recording can outlive the transport — the user controls when capture ends.
 
 ## Layers (respecting package boundaries)
 
@@ -33,13 +35,16 @@ the trigger is generic and lives in the engine; the instrument only *designates*
 - `sessionRecorderId?: string` — id of the `AudioRecorder` designated as session recorder.
 - `get isSessionRecording(): boolean` — reads that recorder's `state.isRecording`.
 - `toggleSessionRecording()`:
-  - recording → `this.stop()` (transport stop; the recorder's `stop(contextTime)` override
-    fires `postStop`, ending recording sample-accurately with the transport).
+  - recording → `recorder.stopRecording()` (recording only; transport left running/stopped
+    as-is, so effect tails keep being captured).
   - idle → `recorder.record()` (arms it), then `this.start()` if not already playing. On
     transport start the recorder's `start(contextTime)` override fires at the exact
     transport-start sample — recording is sample-aligned with the transport, no quantize
     needed on this path.
   - no-op if no/unknown `sessionRecorderId` (so non-instrument engines, e.g. grid, are safe).
+
+`AudioRecorder` deliberately has **no** `stop(contextTime)` lifecycle override, so a transport
+stop never ends recording.
 
 ### 2. Controller — generic, reusable
 
