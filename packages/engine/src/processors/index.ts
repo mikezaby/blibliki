@@ -2,6 +2,7 @@ import { assertNever, Context } from "@blibliki/utils";
 import { customEnvelopeProcessorURL } from "./custom-envelope-processor";
 import { filterProcessorURL } from "./filter-processor";
 import { lfoProcessorURL } from "./lfo-processor";
+import { recorderProcessorURL } from "./recorder-processor";
 import { scaleProcessorURL } from "./scale-processor";
 import { wavetableProcessorURL } from "./wavetable-processor";
 
@@ -11,6 +12,7 @@ export enum CustomWorklet {
   LFOProcessor = "LFOProcessor",
   CustomEnvelopeProcessor = "CustomEnvelopeProcessor",
   WavetableProcessor = "WavetableProcessor",
+  RecorderProcessor = "RecorderProcessor",
 }
 
 export async function loadProcessors(context: Context) {
@@ -19,6 +21,7 @@ export async function loadProcessors(context: Context) {
   await context.addModule(lfoProcessorURL);
   await context.addModule(customEnvelopeProcessorURL);
   await context.addModule(wavetableProcessorURL);
+  await context.addModule(recorderProcessorURL);
 }
 
 export function newAudioWorklet(context: Context, worklet: CustomWorklet) {
@@ -33,6 +36,8 @@ export function newAudioWorklet(context: Context, worklet: CustomWorklet) {
       return context.newAudioWorklet("custom-envelope-processor");
     case CustomWorklet.WavetableProcessor:
       return context.newAudioWorklet("wavetable-processor");
+    case CustomWorklet.RecorderProcessor:
+      return context.newAudioWorklet("recorder-processor");
     default:
       assertNever(worklet);
   }

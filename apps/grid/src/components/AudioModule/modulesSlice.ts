@@ -147,6 +147,10 @@ export const AvailableModules: Record<
     name: "Drum Machine",
     moduleType: ModuleType.DrumMachine,
   },
+  [ModuleType.AudioRecorder]: {
+    name: "Audio Recorder",
+    moduleType: ModuleType.AudioRecorder,
+  },
 };
 
 const modulesAdapter = createEntityAdapter<ModuleInfo>({});

@@ -1,6 +1,7 @@
 import { ModuleType, ModuleTypeToPropsMapping } from "@blibliki/engine";
 import { ReactNode } from "react";
 import { useAppDispatch } from "@/hooks";
+import AudioRecorder from "./AudioRecorder";
 import Chorus from "./Chorus";
 import Compressor from "./Compressor";
 import Constant from "./Constant";
@@ -83,6 +84,7 @@ const COMPONENT_MAPPING: {
   [ModuleType.Noise]: Noise,
   [ModuleType.Reverb]: Reverb,
   [ModuleType.DrumMachine]: DrumMachine,
+  [ModuleType.AudioRecorder]: AudioRecorder,
 };
 
 export default function AudioModule<T extends ModuleType>(audioModuleProps: {

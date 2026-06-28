@@ -5,6 +5,11 @@ import VoiceScheduler, {
   IVoiceSchedulerProps,
   voiceSchedulerPropSchema,
 } from "@/core/module/VoiceScheduler";
+import AudioRecorder, {
+  audioRecorderPropSchema,
+  IAudioRecorderProps,
+  IAudioRecorderState,
+} from "./AudioRecorder";
 import Chorus, { chorusPropSchema, IChorusProps } from "./Chorus";
 import Compressor, {
   compressorPropSchema,
@@ -106,6 +111,7 @@ export enum ModuleType {
   Noise = "Noise",
   Reverb = "Reverb",
   DrumMachine = "DrumMachine",
+  AudioRecorder = "AudioRecorder",
 }
 
 export type ModuleTypeToPropsMapping = {
@@ -137,6 +143,7 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.Noise]: INoiseProps;
   [ModuleType.Reverb]: IReverbProps;
   [ModuleType.DrumMachine]: IDrumMachineProps;
+  [ModuleType.AudioRecorder]: IAudioRecorderProps;
 };
 
 export type ModuleTypeToStateMapping = {
@@ -168,6 +175,7 @@ export type ModuleTypeToStateMapping = {
   [ModuleType.Noise]: never;
   [ModuleType.Reverb]: never;
   [ModuleType.DrumMachine]: never;
+  [ModuleType.AudioRecorder]: IAudioRecorderState;
 };
 
 export type ModuleTypeToModuleMapping = {
@@ -199,6 +207,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.Noise]: Noise;
   [ModuleType.Reverb]: Reverb;
   [ModuleType.DrumMachine]: DrumMachine;
+  [ModuleType.AudioRecorder]: AudioRecorder;
 };
 
 export const moduleSchemas = {
@@ -230,6 +239,7 @@ export const moduleSchemas = {
   [ModuleType.Noise]: noisePropSchema,
   [ModuleType.Reverb]: reverbPropSchema,
   [ModuleType.DrumMachine]: drumMachinePropSchema,
+  [ModuleType.AudioRecorder]: audioRecorderPropSchema,
 };
 
 export type { IOscillator } from "./Oscillator";
@@ -298,6 +308,13 @@ export { DelayTimeMode } from "./Delay";
 export type { IDelay, IDelayProps } from "./Delay";
 export type { IDistortion, IDistortionProps } from "./Distortion";
 export type { IChorus, IChorusProps } from "./Chorus";
+export type {
+  IAudioRecorder,
+  IAudioRecorderProps,
+  IAudioRecorderState,
+  Quantize,
+} from "./AudioRecorder";
+export { default as AudioRecorder } from "./AudioRecorder";
 export type { ICompressor, ICompressorProps } from "./Compressor";
 
 export type AnyModule = Module<ModuleType>;
@@ -390,6 +407,8 @@ export function createModule(
       return Reverb.create(Reverb, engineId, params);
     case ModuleType.DrumMachine:
       return DrumMachine.create(DrumMachine, engineId, params);
+    case ModuleType.AudioRecorder:
+      return AudioRecorder.create(AudioRecorder, engineId, params);
     default:
       assertNever(params);
   }
