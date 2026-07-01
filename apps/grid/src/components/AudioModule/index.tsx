@@ -21,13 +21,16 @@ import MidiMapper from "./MidiMapper";
 import MidiOutput from "./MidiOutput";
 import Noise from "./Noise";
 import Oscillator from "./Oscillator";
+import Oscilloscope from "./Oscilloscope";
 import Reverb from "./Reverb";
 import Scale from "./Scale";
+import Spectrum from "./Spectrum";
 import StepSequencer from "./StepSequencer";
 import StereoPanner from "./StereoPanner";
 import TransportControl from "./TransportControl";
 import VoiceScheduler from "./VoiceScheduler";
 import Volume from "./Volume";
+import VuMeter from "./VuMeter";
 import Wavetable from "./Wavetable";
 import { updateModule } from "./modulesSlice";
 
@@ -76,6 +79,9 @@ const COMPONENT_MAPPING: {
   [ModuleType.Distortion]: Distortion,
   [ModuleType.Scale]: Scale,
   [ModuleType.Inspector]: Inspector,
+  [ModuleType.Oscilloscope]: Oscilloscope,
+  [ModuleType.VuMeter]: VuMeter,
+  [ModuleType.Spectrum]: Spectrum,
   [ModuleType.StereoPanner]: StereoPanner,
   [ModuleType.StepSequencer]: StepSequencer,
   [ModuleType.TransportControl]: TransportControl,

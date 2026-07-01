@@ -105,6 +105,18 @@ export const AvailableModules: Record<
     name: "Inspector",
     moduleType: ModuleType.Inspector,
   },
+  [ModuleType.Oscilloscope]: {
+    name: "Oscilloscope",
+    moduleType: ModuleType.Oscilloscope,
+  },
+  [ModuleType.VuMeter]: {
+    name: "VU Meter",
+    moduleType: ModuleType.VuMeter,
+  },
+  [ModuleType.Spectrum]: {
+    name: "Spectrum",
+    moduleType: ModuleType.Spectrum,
+  },
   [ModuleType.Constant]: { name: "Constant", moduleType: ModuleType.Constant },
   [ModuleType.Chorus]: { name: "Chorus", moduleType: ModuleType.Chorus },
   [ModuleType.Compressor]: {

@@ -56,8 +56,13 @@ import Oscillator, {
   IOscillatorProps,
   oscillatorPropSchema,
 } from "./Oscillator";
+import Oscilloscope, {
+  IOscilloscopeProps,
+  oscilloscopePropSchema,
+} from "./Oscilloscope";
 import Reverb, { IReverbProps, reverbPropSchema } from "./Reverb";
 import Scale, { IScaleProps, scalePropSchema } from "./Scale";
+import Spectrum, { ISpectrumProps, spectrumPropSchema } from "./Spectrum";
 import StepSequencer, {
   IStepSequencerProps,
   IStepSequencerState,
@@ -76,6 +81,7 @@ import VirtualMidi, {
   virtualMidiPropSchema,
 } from "./VirtualMidi";
 import Volume, { IVolumeProps, volumePropSchema } from "./Volume";
+import VuMeter, { IVuMeterProps, vuMeterPropSchema } from "./VuMeter";
 import Wavetable, {
   IWavetableProps,
   IWavetableState,
@@ -97,6 +103,9 @@ export enum ModuleType {
   Scale = "Scale",
   StereoPanner = "StereoPanner",
   Inspector = "Inspector",
+  Oscilloscope = "Oscilloscope",
+  VuMeter = "VuMeter",
+  Spectrum = "Spectrum",
   Chorus = "Chorus",
   Compressor = "Compressor",
   Constant = "Constant",
@@ -129,6 +138,9 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.Scale]: IScaleProps;
   [ModuleType.StereoPanner]: IStereoPannerProps;
   [ModuleType.Inspector]: IInspectorProps;
+  [ModuleType.Oscilloscope]: IOscilloscopeProps;
+  [ModuleType.VuMeter]: IVuMeterProps;
+  [ModuleType.Spectrum]: ISpectrumProps;
   [ModuleType.Chorus]: IChorusProps;
   [ModuleType.Compressor]: ICompressorProps;
   [ModuleType.Constant]: IConstantProps;
@@ -161,6 +173,9 @@ export type ModuleTypeToStateMapping = {
   [ModuleType.Scale]: never;
   [ModuleType.StereoPanner]: never;
   [ModuleType.Inspector]: never;
+  [ModuleType.Oscilloscope]: never;
+  [ModuleType.VuMeter]: never;
+  [ModuleType.Spectrum]: never;
   [ModuleType.Chorus]: never;
   [ModuleType.Compressor]: never;
   [ModuleType.Constant]: never;
@@ -193,6 +208,9 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.Scale]: Scale;
   [ModuleType.StereoPanner]: StereoPanner;
   [ModuleType.Inspector]: Inspector;
+  [ModuleType.Oscilloscope]: Oscilloscope;
+  [ModuleType.VuMeter]: VuMeter;
+  [ModuleType.Spectrum]: Spectrum;
   [ModuleType.Chorus]: Chorus;
   [ModuleType.Compressor]: Compressor;
   [ModuleType.Constant]: Constant;
@@ -225,6 +243,9 @@ export const moduleSchemas = {
   [ModuleType.Scale]: scalePropSchema,
   [ModuleType.StereoPanner]: stereoPannerPropSchema,
   [ModuleType.Inspector]: inspectorPropSchema,
+  [ModuleType.Oscilloscope]: oscilloscopePropSchema,
+  [ModuleType.VuMeter]: vuMeterPropSchema,
+  [ModuleType.Spectrum]: spectrumPropSchema,
   [ModuleType.Chorus]: chorusPropSchema,
   [ModuleType.Compressor]: compressorPropSchema,
   [ModuleType.Constant]: constantPropSchema,
@@ -275,6 +296,9 @@ export type {
 } from "./MidiChannelFilter";
 export type { IMidiOutput, IMidiOutputProps } from "./MidiOutput";
 export type { IStereoPanner } from "./StereoPanner";
+export type { IOscilloscope, IOscilloscopeProps } from "./Oscilloscope";
+export type { IVuMeter, IVuMeterProps } from "./VuMeter";
+export type { ISpectrum, ISpectrumProps } from "./Spectrum";
 export type {
   IStepSequencer,
   IStepSequencerProps,
@@ -379,6 +403,12 @@ export function createModule(
       return StereoPanner.create(StereoPanner, engineId, params);
     case ModuleType.Inspector:
       return Inspector.create(Inspector, engineId, params);
+    case ModuleType.Oscilloscope:
+      return Oscilloscope.create(Oscilloscope, engineId, params);
+    case ModuleType.VuMeter:
+      return VuMeter.create(VuMeter, engineId, params);
+    case ModuleType.Spectrum:
+      return Spectrum.create(Spectrum, engineId, params);
     case ModuleType.Chorus:
       return Chorus.create(Chorus, engineId, params);
     case ModuleType.Compressor:
