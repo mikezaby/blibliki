@@ -3,7 +3,10 @@ import {
   createInstrumentRuntimeModuleId,
   createTrackRuntimeModuleId,
 } from "@/core/runtimeIds";
-import type { InstrumentTrackDocument } from "@/document/types";
+import type {
+  InstrumentTrackAudioSource,
+  InstrumentTrackDocument,
+} from "@/document/types";
 import { DEFAULT_ACTIVE_PAGE } from "./createInstrumentMidiMapperProps";
 import type {
   CompiledInstrument,
@@ -32,6 +35,21 @@ export function isInstrumentTrackEnabled(
   return trackDocument.enabled !== false;
 }
 
+// Tracks that take audio in and process it (a track-chain destination or the
+// master bus) rather than generating notes internally. These have no note
+// runtime regardless of their (inert) noteSource.
+export function isAudioBusTrack(
+  audioSource: InstrumentTrackAudioSource | undefined,
+) {
+  return audioSource?.type === "track" || audioSource?.type === "master";
+}
+
+export function isMasterTrack(
+  audioSource: InstrumentTrackAudioSource | undefined,
+) {
+  return audioSource?.type === "master";
+}
+
 export function normalizeInstrumentMasterOptions(
   masterOptions: CreateInstrumentEnginePatchOptions["master"],
 ): InstrumentMasterOptions {
@@ -41,10 +59,6 @@ export function normalizeInstrumentMasterOptions(
 export function createInstrumentGlobalMappingRuntimeIds() {
   return {
     transportControlId: createInstrumentRuntimeModuleId("transportControl"),
-    masterFilterId: createInstrumentRuntimeModuleId("masterFilter"),
-    globalDelayId: createInstrumentRuntimeModuleId("globalDelay"),
-    globalReverbId: createInstrumentRuntimeModuleId("globalReverb"),
-    masterVolumeId: createInstrumentRuntimeModuleId("masterVolume"),
   } as const;
 }
 

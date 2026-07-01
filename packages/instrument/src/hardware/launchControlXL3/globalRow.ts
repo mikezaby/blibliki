@@ -5,12 +5,22 @@ import type { Fixed8, ValueSpec } from "@/types";
 
 export type InstrumentGlobalControlKey = keyof InstrumentGlobalBlock;
 
+// `key: null` reserves an unused encoder position. The former master filter /
+// reverb / delay controls (knobs 3-6) now live on the master track, so those
+// positions are left unmapped while Tempo/Swing/Prob/Volume keep their knobs.
 export type LaunchControlXL3GlobalControl = {
-  key: InstrumentGlobalControlKey;
+  key: InstrumentGlobalControlKey | null;
   label: string;
   shortLabel: string;
   cc: number;
 };
+
+const EMPTY_GLOBAL_CONTROL = (cc: number): LaunchControlXL3GlobalControl => ({
+  key: null,
+  label: "",
+  shortLabel: "",
+  cc,
+});
 
 export const launchControlXL3GlobalRow: Fixed8<LaunchControlXL3GlobalControl> =
   [
@@ -26,30 +36,10 @@ export const launchControlXL3GlobalRow: Fixed8<LaunchControlXL3GlobalControl> =
       shortLabel: "SWG",
       cc: 14,
     },
-    {
-      key: "masterFilterCutoff",
-      label: "Master Filter Cutoff",
-      shortLabel: "MCF",
-      cc: 15,
-    },
-    {
-      key: "masterFilterResonance",
-      label: "Master Filter Resonance",
-      shortLabel: "MRQ",
-      cc: 16,
-    },
-    {
-      key: "reverbSend",
-      label: "Reverb Send",
-      shortLabel: "REV",
-      cc: 17,
-    },
-    {
-      key: "delaySend",
-      label: "Delay Send",
-      shortLabel: "DLY",
-      cc: 18,
-    },
+    EMPTY_GLOBAL_CONTROL(15),
+    EMPTY_GLOBAL_CONTROL(16),
+    EMPTY_GLOBAL_CONTROL(17),
+    EMPTY_GLOBAL_CONTROL(18),
     {
       key: "probabilityAmount",
       label: "Prob Amount",
@@ -72,14 +62,6 @@ export function getGlobalControlValueSpec(
       return getValueSpecForModuleProp(ModuleType.TransportControl, "bpm");
     case "swing":
       return getValueSpecForModuleProp(ModuleType.TransportControl, "swing");
-    case "masterFilterCutoff":
-      return getValueSpecForModuleProp(ModuleType.Filter, "cutoff");
-    case "masterFilterResonance":
-      return getValueSpecForModuleProp(ModuleType.Filter, "Q");
-    case "reverbSend":
-      return getValueSpecForModuleProp(ModuleType.Reverb, "mix");
-    case "delaySend":
-      return getValueSpecForModuleProp(ModuleType.Delay, "mix");
     case "masterVolume":
       return getValueSpecForModuleProp(ModuleType.Volume, "volume");
     case "probabilityAmount":

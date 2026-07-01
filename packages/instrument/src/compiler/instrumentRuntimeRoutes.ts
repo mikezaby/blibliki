@@ -1,9 +1,14 @@
 import type { IRoute } from "@blibliki/engine";
-import { createRuntimeRouteId } from "@/core/runtimeRoutes";
+import { scopeTrackIO } from "@/compiler/scoping";
+import {
+  createExpandedRoutes,
+  createRuntimeRouteId,
+} from "@/core/runtimeRoutes";
 import type { InstrumentTrackDocument } from "@/document/types";
 import type BaseTrack from "@/tracks/BaseTrack";
 import { createInstrumentAudioRoutes } from "./instrumentAudioRouting";
 import type { SerializableRuntimeModule } from "./instrumentRuntimeModules";
+import { isAudioBusTrack, isMasterTrack } from "./instrumentRuntimeState";
 import type { CompiledInstrumentEnginePatch } from "./instrumentTypes";
 
 export type InstrumentTrackNoteRuntime = {
@@ -17,7 +22,7 @@ export function createTrackNoteRuntime(
   noteInputId: string | undefined,
   stepSequencerId: string | undefined,
 ): InstrumentTrackNoteRuntime {
-  if (trackDocument.audioSource?.type === "track") {
+  if (isAudioBusTrack(trackDocument.audioSource)) {
     return { modules: [], routes: [] };
   }
 
@@ -45,75 +50,55 @@ export function createTrackNoteRuntime(
   );
 }
 
+function findMasterTrack(
+  trackDocuments: readonly InstrumentTrackDocument[],
+  tracks: readonly BaseTrack[],
+): BaseTrack {
+  const masterTrackDocument = trackDocuments.find((trackDocument) =>
+    isMasterTrack(trackDocument.audioSource),
+  );
+  if (!masterTrackDocument) {
+    throw new Error("Instrument is missing a master track");
+  }
+
+  const masterTrack = tracks.find(
+    (track) => track.key === masterTrackDocument.key,
+  );
+  if (!masterTrack) {
+    throw new Error("Instrument master track instance was not compiled");
+  }
+
+  return masterTrack;
+}
+
 export function createMasterRoutes(
   trackDocuments: readonly InstrumentTrackDocument[],
   tracks: readonly BaseTrack[],
   runtime: Pick<
     CompiledInstrumentEnginePatch["runtime"],
-    | "masterId"
-    | "masterFilterId"
-    | "globalDelayId"
-    | "globalReverbId"
-    | "masterVolumeId"
-    | "sessionRecorderId"
+    "masterId" | "sessionRecorderId"
   >,
 ): IRoute[] {
+  const masterTrack = findMasterTrack(trackDocuments, tracks);
+  const masterOutputPlugs = scopeTrackIO(
+    masterTrack.key,
+    masterTrack,
+    masterTrack.findOutput("audio out"),
+    "output",
+  ).plugs;
+
   return [
-    ...createInstrumentAudioRoutes({
-      trackDocuments,
-      tracks,
-      masterFilterId: runtime.masterFilterId,
-    }),
-    // Non-destructive tap: the session recorder listens to the final mix
-    // (AudioRecorder passes audio through, so it doesn't alter the chain).
-    {
-      id: createRuntimeRouteId(
-        "instrument",
-        { moduleId: runtime.masterVolumeId, ioName: "out" },
-        { moduleId: runtime.sessionRecorderId, ioName: "in" },
-      ),
-      source: { moduleId: runtime.masterVolumeId, ioName: "out" },
-      destination: { moduleId: runtime.sessionRecorderId, ioName: "in" },
-    },
-    {
-      id: createRuntimeRouteId(
-        "instrument",
-        { moduleId: runtime.masterFilterId, ioName: "out" },
-        { moduleId: runtime.globalDelayId, ioName: "in" },
-      ),
-      source: { moduleId: runtime.masterFilterId, ioName: "out" },
-      destination: { moduleId: runtime.globalDelayId, ioName: "in" },
-    },
-    {
-      id: createRuntimeRouteId(
-        "instrument",
-        { moduleId: runtime.globalDelayId, ioName: "out" },
-        { moduleId: runtime.globalReverbId, ioName: "in" },
-      ),
-      source: { moduleId: runtime.globalDelayId, ioName: "out" },
-      destination: { moduleId: runtime.globalReverbId, ioName: "in" },
-    },
-    {
-      id: createRuntimeRouteId(
-        "instrument",
-        { moduleId: runtime.globalReverbId, ioName: "out" },
-        { moduleId: runtime.masterVolumeId, ioName: "in" },
-      ),
-      source: { moduleId: runtime.globalReverbId, ioName: "out" },
-      destination: { moduleId: runtime.masterVolumeId, ioName: "in" },
-    },
+    ...createInstrumentAudioRoutes({ trackDocuments, tracks, masterTrack }),
+    // The master track output feeds the engine Master, and is tapped
+    // non-destructively by the session recorder (AudioRecorder passes audio
+    // through, so it doesn't alter the chain).
+    ...createExpandedRoutes("instrument", masterOutputPlugs, [
+      { moduleId: runtime.sessionRecorderId, ioName: "in" },
+    ]),
     ...(runtime.masterId
-      ? [
-          {
-            id: createRuntimeRouteId(
-              "instrument",
-              { moduleId: runtime.masterVolumeId, ioName: "out" },
-              { moduleId: runtime.masterId, ioName: "in" },
-            ),
-            source: { moduleId: runtime.masterVolumeId, ioName: "out" },
-            destination: { moduleId: runtime.masterId, ioName: "in" },
-          },
-        ]
+      ? createExpandedRoutes("instrument", masterOutputPlugs, [
+          { moduleId: runtime.masterId, ioName: "in" },
+        ])
       : []),
   ];
 }
@@ -159,11 +144,7 @@ export function createInstrumentRuntimeRoutes(options: {
     CompiledInstrumentEnginePatch["runtime"],
     | "controllerInputId"
     | "controllerOutputId"
-    | "globalDelayId"
-    | "globalReverbId"
-    | "masterFilterId"
     | "masterId"
-    | "masterVolumeId"
     | "sessionRecorderId"
     | "midiMapperId"
   >;

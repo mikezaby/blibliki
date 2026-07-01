@@ -28,7 +28,7 @@ describe("InstrumentRuntime", () => {
     );
 
     expect(runtime.document).toEqual({
-      version: "2",
+      version: "3",
       name: "Default Instrument",
       templateId: "default-performance-instrument",
       hardwareProfileId: "launchcontrolxl3-pi-lcd",
@@ -41,10 +41,6 @@ describe("InstrumentRuntime", () => {
       runtime: {
         masterId: "instrument.runtime.master",
         transportControlId: "instrument.runtime.transportControl",
-        masterFilterId: "instrument.runtime.masterFilter",
-        globalDelayId: "instrument.runtime.globalDelay",
-        globalReverbId: "instrument.runtime.globalReverb",
-        masterVolumeId: "instrument.runtime.masterVolume",
         midiMapperId: "instrument.runtime.midiMapper",
         noteInputId: "instrument.runtime.noteInput",
         controllerInputId: "instrument.runtime.controllerInput",
@@ -106,10 +102,11 @@ describe("InstrumentRuntime", () => {
       selectedStepIndex: 0,
     });
 
+    // The master track (last) has only filterMod + fx, so previousPage -> fx.
     const wrappedPage = navigateInstrumentRuntime(wrappedTrack, "previousPage");
     expect(wrappedPage.runtime.navigation).toEqual({
       activeTrackIndex: 7,
-      activePage: "sourceAmp",
+      activePage: "fx",
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,

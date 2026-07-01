@@ -29,7 +29,7 @@ describe("Instrument", () => {
     const instrument = Instrument.fromRuntimePatch(runtimePatch);
 
     expect(instrument.runtimeState.document).toEqual({
-      version: "2",
+      version: "3",
       name: "Default Instrument",
       templateId: "default-performance-instrument",
       hardwareProfileId: "launchcontrolxl3-pi-lcd",
@@ -88,9 +88,10 @@ describe("Instrument", () => {
       },
     );
 
+    // Index -1 wraps to the master track (last), which falls back to filterMod.
     expect(instrument.runtimeState.navigation).toEqual({
       activeTrackIndex: 7,
-      activePage: "sourceAmp",
+      activePage: "filterMod",
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,

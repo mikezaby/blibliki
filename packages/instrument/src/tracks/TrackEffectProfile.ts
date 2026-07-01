@@ -2,6 +2,7 @@ import ChorusBlock from "@/blocks/effects/ChorusBlock";
 import CompressorBlock from "@/blocks/effects/CompressorBlock";
 import DelayBlock from "@/blocks/effects/DelayBlock";
 import DistortionBlock from "@/blocks/effects/DistortionBlock";
+import NoneBlock from "@/blocks/effects/NoneBlock";
 import ReverbBlock from "@/blocks/effects/ReverbBlock";
 import type { EffectProfileId } from "@/document/types";
 import { EMPTY_SLOT_REF, type PageSlotRef } from "@/pages/Page";
@@ -28,6 +29,8 @@ export function createEffectBlock(
   effectProfileId: EffectProfileId,
 ) {
   switch (effectProfileId) {
+    case "none":
+      return new NoneBlock(key);
     case "distortion":
       return new DistortionBlock(key);
     case "compressor":
@@ -46,6 +49,8 @@ export function createEffectPageSlots(
   effectProfileId: EffectProfileId,
 ): PageSlotRef[] {
   switch (effectProfileId) {
+    case "none":
+      return [EMPTY_SLOT_REF, EMPTY_SLOT_REF, EMPTY_SLOT_REF, EMPTY_SLOT_REF];
     case "distortion":
       return [
         createTrackSlot(blockKey, "drive"),

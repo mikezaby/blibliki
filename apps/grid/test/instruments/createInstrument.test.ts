@@ -11,8 +11,8 @@ describe("createNewInstrumentForUser", () => {
       expect.objectContaining({
         name: "Default Instrument",
         globalBlock: expect.objectContaining({
-          reverbSend: 0,
-          delaySend: 0,
+          masterVolume: 0,
+          probabilityAmount: 1,
         }),
         tracks: expect.arrayContaining([
           expect.objectContaining({
@@ -20,6 +20,11 @@ describe("createNewInstrumentForUser", () => {
             audioSource: { type: "internal" },
             sourceProfileId: "unassigned",
             noteSource: "externalMidi",
+          }),
+          expect.objectContaining({
+            key: "master",
+            audioSource: { type: "master" },
+            fxChain: ["none", "none", "none", "none"],
           }),
         ]),
       }),

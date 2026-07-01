@@ -9,15 +9,12 @@ import type {
 
 export const DEFAULT_ACTIVE_PAGE: TrackPageKey = "sourceAmp";
 const FADER_CCS = [5, 6, 7, 8, 9, 10, 11, 12] as const;
+const MASTER_FADER_CC = 12;
 const SEQ_EDIT_CC_MIN = 13;
 const SEQ_EDIT_CC_MAX = 36;
 
 export type InstrumentGlobalMappingRuntimeIds = {
   transportControlId: string;
-  masterFilterId: string;
-  globalDelayId: string;
-  globalReverbId: string;
-  masterVolumeId: string;
 };
 
 function getTrackPageMappings(
@@ -57,6 +54,7 @@ export function createInstrumentMidiMapperProps(
   );
 
   const props = {
+    // The master track is a normal navigable track (compiled last).
     tracks: compiledInstrument.tracks.map((track, trackIndex) => ({
       name: track.name,
       mappings: getTrackPageMappings(
@@ -90,21 +88,45 @@ export function createInstrumentMidiMapperProps(
 export function createInstrumentFaderGlobalMappings(
   compiledInstrument: CompiledInstrument,
 ) {
-  return compiledInstrument.tracks.map((track, trackIndex) => ({
-    cc: FADER_CCS[trackIndex],
-    moduleId: `${track.key}.trackGain.main`,
-    moduleType: ModuleType.Volume,
-    propName: "volume",
-    mode: MidiMappingMode.direct,
-  }));
+  // One fader per track, with the master bus pinned to the physical last fader
+  // when present. This keeps disabled/skipped note tracks from shifting the
+  // master away from CC 12.
+  const hasMasterTrack = compiledInstrument.tracks.some(
+    (track) => track.audioSource.type === "master",
+  );
+  const noteTrackFaderCcs = hasMasterTrack ? FADER_CCS.slice(0, -1) : FADER_CCS;
+  let noteTrackFaderIndex = 0;
+
+  return compiledInstrument.tracks.flatMap((track) => {
+    const cc =
+      track.audioSource.type === "master"
+        ? MASTER_FADER_CC
+        : noteTrackFaderCcs[noteTrackFaderIndex++];
+    if (cc === undefined) {
+      return [];
+    }
+
+    return [
+      {
+        cc,
+        moduleId: `${track.key}.trackGain.main`,
+        moduleType: ModuleType.Volume,
+        propName: "volume",
+        mode: MidiMappingMode.direct,
+      },
+    ];
+  });
 }
 
 export function createInstrumentEncoderGlobalMappings(
   runtimeIds: InstrumentGlobalMappingRuntimeIds,
+  masterTrackKey: string,
   stepSequencerIds: Record<string, string> = {},
 ) {
   return launchControlXL3GlobalRow.flatMap((control) => {
     switch (control.key) {
+      case null:
+        return [];
       case "tempo":
         return {
           cc: control.cc,
@@ -121,42 +143,10 @@ export function createInstrumentEncoderGlobalMappings(
           propName: "swing",
           mode: MidiMappingMode.incDec,
         };
-      case "masterFilterCutoff":
-        return {
-          cc: control.cc,
-          moduleId: runtimeIds.masterFilterId,
-          moduleType: ModuleType.Filter,
-          propName: "cutoff",
-          mode: MidiMappingMode.incDec,
-        };
-      case "masterFilterResonance":
-        return {
-          cc: control.cc,
-          moduleId: runtimeIds.masterFilterId,
-          moduleType: ModuleType.Filter,
-          propName: "Q",
-          mode: MidiMappingMode.incDec,
-        };
-      case "reverbSend":
-        return {
-          cc: control.cc,
-          moduleId: runtimeIds.globalReverbId,
-          moduleType: ModuleType.Reverb,
-          propName: "mix",
-          mode: MidiMappingMode.incDec,
-        };
-      case "delaySend":
-        return {
-          cc: control.cc,
-          moduleId: runtimeIds.globalDelayId,
-          moduleType: ModuleType.Delay,
-          propName: "mix",
-          mode: MidiMappingMode.incDec,
-        };
       case "masterVolume":
         return {
           cc: control.cc,
-          moduleId: runtimeIds.masterVolumeId,
+          moduleId: `${masterTrackKey}.trackGain.main`,
           moduleType: ModuleType.Volume,
           propName: "volume",
           mode: MidiMappingMode.incDec,

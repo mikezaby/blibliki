@@ -4,6 +4,13 @@ import { describe, expect, it } from "vitest";
 import { createInstrumentEnginePatch } from "@/compiler/createInstrumentEnginePatch";
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
 
+// The master track replaces the former global effect chain: every track's
+// audio out feeds the master track's audio in (its filter block), and the
+// master track's output gain feeds the engine Master.
+const MASTER_IN = "master.filter.main";
+const MASTER_OUT = "master.trackGain.main";
+const ENGINE_MASTER = "instrument.runtime.master";
+
 function hasRoute(
   routes: ReturnType<typeof createInstrumentEnginePatch>["patch"]["routes"],
   sourceModuleId: string,
@@ -18,6 +25,18 @@ function hasRoute(
   );
 }
 
+// Replaces the note tracks with the given ones while preserving the required
+// master track, so the compiled instrument always has its master bus.
+function useNoteTracks(
+  document: ReturnType<typeof createDefaultInstrumentDocument>,
+  noteTracks: ReturnType<typeof createDefaultInstrumentDocument>["tracks"],
+) {
+  const master = document.tracks.find(
+    (track) => track.audioSource?.type === "master",
+  )!;
+  document.tracks = [...noteTracks, master];
+}
+
 describe("createInstrumentEnginePatch", () => {
   it("converts version 1 master gain when creating the runtime volume module", () => {
     const document = createDefaultInstrumentDocument();
@@ -26,7 +45,7 @@ describe("createInstrumentEnginePatch", () => {
 
     const runtime = createInstrumentEnginePatch(document);
     const masterVolume = runtime.patch.modules.find(
-      (module) => module.id === runtime.runtime.masterVolumeId,
+      (module) => module.id === MASTER_OUT,
     );
 
     expect(masterVolume?.moduleType).toBe(ModuleType.Volume);
@@ -53,10 +72,6 @@ describe("createInstrumentEnginePatch", () => {
     expect(runtime.runtime).toMatchObject({
       masterId: "instrument.runtime.master",
       transportControlId: "instrument.runtime.transportControl",
-      masterFilterId: "instrument.runtime.masterFilter",
-      globalDelayId: "instrument.runtime.globalDelay",
-      globalReverbId: "instrument.runtime.globalReverb",
-      masterVolumeId: "instrument.runtime.masterVolume",
       midiMapperId: "instrument.runtime.midiMapper",
       noteInputId: "instrument.runtime.noteInput",
       controllerInputId: "instrument.runtime.controllerInput",
@@ -85,16 +100,14 @@ describe("createInstrumentEnginePatch", () => {
             id === "instrument.runtime.controllerOutput" ||
             id === "instrument.runtime.midiMapper" ||
             id === "instrument.runtime.transportControl" ||
-            id === "instrument.runtime.masterFilter" ||
-            id === "instrument.runtime.globalDelay" ||
-            id === "instrument.runtime.globalReverb" ||
-            id === "instrument.runtime.masterVolume" ||
             id === "instrument.runtime.master" ||
+            id === "master.filter.main" ||
+            id === "master.trackGain.main" ||
             id === "track-1.runtime.midiChannelFilter" ||
             id === "track-1.runtime.voiceScheduler" ||
             id === "track-1.source.main" ||
-            id === "track-8.fx4.main" ||
-            id === "track-8.trackGain.main",
+            id === "track-7.fx4.main" ||
+            id === "track-7.trackGain.main",
         )
         .sort((left, right) => left.id.localeCompare(right.id)),
     ).toEqual([
@@ -107,24 +120,8 @@ describe("createInstrumentEnginePatch", () => {
         moduleType: ModuleType.MidiOutput,
       },
       {
-        id: "instrument.runtime.globalDelay",
-        moduleType: ModuleType.Delay,
-      },
-      {
-        id: "instrument.runtime.globalReverb",
-        moduleType: ModuleType.Reverb,
-      },
-      {
         id: "instrument.runtime.master",
         moduleType: ModuleType.Master,
-      },
-      {
-        id: "instrument.runtime.masterFilter",
-        moduleType: ModuleType.Filter,
-      },
-      {
-        id: "instrument.runtime.masterVolume",
-        moduleType: ModuleType.Volume,
       },
       {
         id: "instrument.runtime.midiMapper",
@@ -139,6 +136,14 @@ describe("createInstrumentEnginePatch", () => {
         moduleType: ModuleType.TransportControl,
       },
       {
+        id: "master.filter.main",
+        moduleType: ModuleType.Filter,
+      },
+      {
+        id: "master.trackGain.main",
+        moduleType: ModuleType.Volume,
+      },
+      {
         id: "track-1.runtime.midiChannelFilter",
         moduleType: ModuleType.MidiChannelFilter,
       },
@@ -151,11 +156,11 @@ describe("createInstrumentEnginePatch", () => {
         moduleType: ModuleType.Oscillator,
       },
       {
-        id: "track-8.fx4.main",
+        id: "track-7.fx4.main",
         moduleType: ModuleType.Reverb,
       },
       {
-        id: "track-8.trackGain.main",
+        id: "track-7.trackGain.main",
         moduleType: ModuleType.Volume,
       },
     ]);
@@ -190,55 +195,15 @@ describe("createInstrumentEnginePatch", () => {
       ),
     ).toBe(true);
 
+    // Every note track feeds the master track's audio in (its filter block).
     expect(
-      runtime.patch.routes.some(
-        ({ source, destination }) =>
-          source.moduleId === "track-8.trackGain.main" &&
-          source.ioName === "out" &&
-          destination.moduleId === "instrument.runtime.masterFilter" &&
-          destination.ioName === "in",
-      ),
+      hasRoute(runtime.patch.routes, "track-7.trackGain.main", MASTER_IN),
     ).toBe(true);
 
-    expect(
-      runtime.patch.routes.some(
-        ({ source, destination }) =>
-          source.moduleId === "instrument.runtime.masterFilter" &&
-          source.ioName === "out" &&
-          destination.moduleId === "instrument.runtime.globalDelay" &&
-          destination.ioName === "in",
-      ),
-    ).toBe(true);
-
-    expect(
-      runtime.patch.routes.some(
-        ({ source, destination }) =>
-          source.moduleId === "instrument.runtime.globalDelay" &&
-          source.ioName === "out" &&
-          destination.moduleId === "instrument.runtime.globalReverb" &&
-          destination.ioName === "in",
-      ),
-    ).toBe(true);
-
-    expect(
-      runtime.patch.routes.some(
-        ({ source, destination }) =>
-          source.moduleId === "instrument.runtime.globalReverb" &&
-          source.ioName === "out" &&
-          destination.moduleId === "instrument.runtime.masterVolume" &&
-          destination.ioName === "in",
-      ),
-    ).toBe(true);
-
-    expect(
-      runtime.patch.routes.some(
-        ({ source, destination }) =>
-          source.moduleId === "instrument.runtime.masterVolume" &&
-          source.ioName === "out" &&
-          destination.moduleId === "instrument.runtime.master" &&
-          destination.ioName === "in",
-      ),
-    ).toBe(true);
+    // The master track output feeds the engine Master.
+    expect(hasRoute(runtime.patch.routes, MASTER_OUT, ENGINE_MASTER)).toBe(
+      true,
+    );
 
     const midiMapper = runtime.patch.modules.find(
       (module) => module.id === runtime.runtime.midiMapperId,
@@ -250,6 +215,7 @@ describe("createInstrumentEnginePatch", () => {
 
     const midiMapperProps = midiMapper.props as IMidiMapperProps;
 
+    // 7 note tracks plus the master track (a normal navigable track).
     expect(midiMapperProps.tracks).toHaveLength(8);
     expect(midiMapperProps.activeTrack).toBe(0);
     expect(midiMapperProps.tracks[0]?.name).toBe("track-1");
@@ -259,7 +225,7 @@ describe("createInstrumentEnginePatch", () => {
         mode: "incDec",
       }),
     );
-    expect(midiMapperProps.tracks[7]?.name).toBe("track-8");
+    expect(midiMapperProps.tracks[7]?.name).toBe("Master");
     expect(midiMapperProps.globalMappings).toEqual([
       expect.objectContaining({
         cc: 13,
@@ -276,36 +242,8 @@ describe("createInstrumentEnginePatch", () => {
         mode: "incDec",
       }),
       expect.objectContaining({
-        cc: 15,
-        moduleId: "instrument.runtime.masterFilter",
-        moduleType: ModuleType.Filter,
-        propName: "cutoff",
-        mode: "incDec",
-      }),
-      expect.objectContaining({
-        cc: 16,
-        moduleId: "instrument.runtime.masterFilter",
-        moduleType: ModuleType.Filter,
-        propName: "Q",
-        mode: "incDec",
-      }),
-      expect.objectContaining({
-        cc: 17,
-        moduleId: "instrument.runtime.globalReverb",
-        moduleType: ModuleType.Reverb,
-        propName: "mix",
-        mode: "incDec",
-      }),
-      expect.objectContaining({
-        cc: 18,
-        moduleId: "instrument.runtime.globalDelay",
-        moduleType: ModuleType.Delay,
-        propName: "mix",
-        mode: "incDec",
-      }),
-      expect.objectContaining({
         cc: 20,
-        moduleId: "instrument.runtime.masterVolume",
+        moduleId: "master.trackGain.main",
         moduleType: ModuleType.Volume,
         propName: "volume",
         mode: "incDec",
@@ -361,7 +299,7 @@ describe("createInstrumentEnginePatch", () => {
       }),
       expect.objectContaining({
         cc: 12,
-        moduleId: "track-8.trackGain.main",
+        moduleId: "master.trackGain.main",
         moduleType: ModuleType.Volume,
         propName: "volume",
         mode: "direct",
@@ -383,7 +321,9 @@ describe("createInstrumentEnginePatch", () => {
 
     document.tracks = document.tracks.map((track, index) => ({
       ...track,
-      enabled: index === 1 || index === 5,
+      // Keep the master track enabled; the instrument requires it.
+      enabled:
+        index === 1 || index === 5 || track.audioSource?.type === "master",
     }));
     document.tracks[1] = {
       ...track2,
@@ -401,7 +341,7 @@ describe("createInstrumentEnginePatch", () => {
     const runtime = createInstrumentEnginePatch(document);
 
     expect(runtime.compiledInstrument.tracks.map((track) => track.key)).toEqual(
-      ["track-2", "track-6"],
+      ["track-2", "track-6", "master"],
     );
     expect(runtime.runtime.navigation.activeTrackIndex).toBe(0);
     expect(runtime.runtime.stepSequencerIds).toEqual({
@@ -428,11 +368,23 @@ describe("createInstrumentEnginePatch", () => {
 
     const midiMapperProps = midiMapper.props as IMidiMapperProps;
 
-    expect(midiMapperProps.tracks).toHaveLength(2);
+    expect(midiMapperProps.tracks).toHaveLength(3);
     expect(midiMapperProps.tracks.map((track) => track.name)).toEqual([
       "track-2",
       "track-6",
+      "Master",
     ]);
+    expect(midiMapperProps.globalMappings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          cc: 12,
+          moduleId: "master.trackGain.main",
+          moduleType: ModuleType.Volume,
+          propName: "volume",
+          mode: "direct",
+        }),
+      ]),
+    );
   });
 
   it("keeps a processing-track sequencer without voice note runtime", () => {
@@ -466,7 +418,7 @@ describe("createInstrumentEnginePatch", () => {
 
   it("does not create shared note input for processing-only tracks", () => {
     const document = createDefaultInstrumentDocument();
-    document.tracks = [
+    useNoteTracks(document, [
       {
         ...document.tracks[0]!,
         audioSource: {
@@ -475,7 +427,7 @@ describe("createInstrumentEnginePatch", () => {
           mode: "parallel",
         },
       },
-    ];
+    ]);
 
     const runtime = createInstrumentEnginePatch(document);
 
@@ -515,29 +467,17 @@ describe("createInstrumentEnginePatch", () => {
     const runtime = createInstrumentEnginePatch(document);
 
     expect(
-      runtime.patch.routes.some(
-        ({ source, destination }) =>
-          source.moduleId === "track-1.trackGain.main" &&
-          source.ioName === "out" &&
-          destination.moduleId === "instrument.runtime.masterFilter" &&
-          destination.ioName === "in",
-      ),
+      hasRoute(runtime.patch.routes, "track-1.trackGain.main", MASTER_IN),
     ).toBe(true);
 
-    expect(
-      runtime.patch.routes.some(
-        ({ source, destination }) =>
-          source.moduleId === "track-1.lfo1.main" &&
-          source.ioName === "out" &&
-          destination.moduleId === "instrument.runtime.masterFilter" &&
-          destination.ioName === "in",
-      ),
-    ).toBe(false);
+    expect(hasRoute(runtime.patch.routes, "track-1.lfo1.main", MASTER_IN)).toBe(
+      false,
+    );
   });
 
   it("routes a parallel processing track while keeping both master routes", () => {
     const document = createDefaultInstrumentDocument();
-    document.tracks = document.tracks.slice(0, 2);
+    useNoteTracks(document, document.tracks.slice(0, 2));
     document.tracks[1] = {
       ...document.tracks[1]!,
       audioSource: {
@@ -547,22 +487,22 @@ describe("createInstrumentEnginePatch", () => {
       },
     };
 
-    const { patch, runtime } = createInstrumentEnginePatch(document);
+    const { patch } = createInstrumentEnginePatch(document);
 
     expect(
       hasRoute(patch.routes, "track-1.fx4.main", "track-2.filter.main"),
     ).toBe(true);
-    expect(
-      hasRoute(patch.routes, "track-1.trackGain.main", runtime.masterFilterId),
-    ).toBe(true);
-    expect(
-      hasRoute(patch.routes, "track-2.trackGain.main", runtime.masterFilterId),
-    ).toBe(true);
+    expect(hasRoute(patch.routes, "track-1.trackGain.main", MASTER_IN)).toBe(
+      true,
+    );
+    expect(hasRoute(patch.routes, "track-2.trackGain.main", MASTER_IN)).toBe(
+      true,
+    );
   });
 
   it("routes a serial processing track without the source master route", () => {
     const document = createDefaultInstrumentDocument();
-    document.tracks = document.tracks.slice(0, 2);
+    useNoteTracks(document, document.tracks.slice(0, 2));
     document.tracks[1] = {
       ...document.tracks[1]!,
       audioSource: {
@@ -572,22 +512,22 @@ describe("createInstrumentEnginePatch", () => {
       },
     };
 
-    const { patch, runtime } = createInstrumentEnginePatch(document);
+    const { patch } = createInstrumentEnginePatch(document);
 
     expect(
       hasRoute(patch.routes, "track-1.fx4.main", "track-2.filter.main"),
     ).toBe(true);
-    expect(
-      hasRoute(patch.routes, "track-1.trackGain.main", runtime.masterFilterId),
-    ).toBe(false);
-    expect(
-      hasRoute(patch.routes, "track-2.trackGain.main", runtime.masterFilterId),
-    ).toBe(true);
+    expect(hasRoute(patch.routes, "track-1.trackGain.main", MASTER_IN)).toBe(
+      false,
+    );
+    expect(hasRoute(patch.routes, "track-2.trackGain.main", MASTER_IN)).toBe(
+      true,
+    );
   });
 
   it("routes a serial processing chain through each track", () => {
     const document = createDefaultInstrumentDocument();
-    document.tracks = document.tracks.slice(0, 3);
+    useNoteTracks(document, document.tracks.slice(0, 3));
     document.tracks[1] = {
       ...document.tracks[1]!,
       audioSource: {
@@ -605,7 +545,7 @@ describe("createInstrumentEnginePatch", () => {
       },
     };
 
-    const { patch, runtime } = createInstrumentEnginePatch(document);
+    const { patch } = createInstrumentEnginePatch(document);
 
     expect(
       hasRoute(patch.routes, "track-1.fx4.main", "track-2.filter.main"),
@@ -613,20 +553,20 @@ describe("createInstrumentEnginePatch", () => {
     expect(
       hasRoute(patch.routes, "track-2.fx4.main", "track-3.filter.main"),
     ).toBe(true);
-    expect(
-      hasRoute(patch.routes, "track-1.trackGain.main", runtime.masterFilterId),
-    ).toBe(false);
-    expect(
-      hasRoute(patch.routes, "track-2.trackGain.main", runtime.masterFilterId),
-    ).toBe(false);
-    expect(
-      hasRoute(patch.routes, "track-3.trackGain.main", runtime.masterFilterId),
-    ).toBe(true);
+    expect(hasRoute(patch.routes, "track-1.trackGain.main", MASTER_IN)).toBe(
+      false,
+    );
+    expect(hasRoute(patch.routes, "track-2.trackGain.main", MASTER_IN)).toBe(
+      false,
+    );
+    expect(hasRoute(patch.routes, "track-3.trackGain.main", MASTER_IN)).toBe(
+      true,
+    );
   });
 
   it("supports serial and parallel destinations from one source", () => {
     const document = createDefaultInstrumentDocument();
-    document.tracks = document.tracks.slice(0, 3);
+    useNoteTracks(document, document.tracks.slice(0, 3));
     document.tracks[1] = {
       ...document.tracks[1]!,
       audioSource: {
@@ -644,7 +584,7 @@ describe("createInstrumentEnginePatch", () => {
       },
     };
 
-    const { patch, runtime } = createInstrumentEnginePatch(document);
+    const { patch } = createInstrumentEnginePatch(document);
 
     expect(
       hasRoute(patch.routes, "track-1.fx4.main", "track-2.filter.main"),
@@ -652,20 +592,20 @@ describe("createInstrumentEnginePatch", () => {
     expect(
       hasRoute(patch.routes, "track-1.fx4.main", "track-3.filter.main"),
     ).toBe(true);
-    expect(
-      hasRoute(patch.routes, "track-1.trackGain.main", runtime.masterFilterId),
-    ).toBe(false);
-    expect(
-      hasRoute(patch.routes, "track-2.trackGain.main", runtime.masterFilterId),
-    ).toBe(true);
-    expect(
-      hasRoute(patch.routes, "track-3.trackGain.main", runtime.masterFilterId),
-    ).toBe(true);
+    expect(hasRoute(patch.routes, "track-1.trackGain.main", MASTER_IN)).toBe(
+      false,
+    );
+    expect(hasRoute(patch.routes, "track-2.trackGain.main", MASTER_IN)).toBe(
+      true,
+    );
+    expect(hasRoute(patch.routes, "track-3.trackGain.main", MASTER_IN)).toBe(
+      true,
+    );
   });
 
   it("ignores disabled tracks without repairing their serial chains", () => {
     const document = createDefaultInstrumentDocument();
-    document.tracks = document.tracks.slice(0, 3);
+    useNoteTracks(document, document.tracks.slice(0, 3));
     document.tracks[1] = {
       ...document.tracks[1]!,
       enabled: false,
@@ -684,22 +624,25 @@ describe("createInstrumentEnginePatch", () => {
       },
     };
 
-    const { patch, runtime } = createInstrumentEnginePatch(document);
+    const { patch } = createInstrumentEnginePatch(document);
 
-    expect(
-      hasRoute(patch.routes, "track-1.trackGain.main", runtime.masterFilterId),
-    ).toBe(true);
+    expect(hasRoute(patch.routes, "track-1.trackGain.main", MASTER_IN)).toBe(
+      true,
+    );
     expect(
       hasRoute(patch.routes, "track-2.fx4.main", "track-3.filter.main"),
     ).toBe(false);
-    expect(
-      hasRoute(patch.routes, "track-3.trackGain.main", runtime.masterFilterId),
-    ).toBe(true);
+    expect(hasRoute(patch.routes, "track-3.trackGain.main", MASTER_IN)).toBe(
+      true,
+    );
   });
 
   it("compiles missing sources and feedback routes without validation", () => {
     const missingSourceDocument = createDefaultInstrumentDocument();
-    missingSourceDocument.tracks = missingSourceDocument.tracks.slice(0, 1);
+    useNoteTracks(
+      missingSourceDocument,
+      missingSourceDocument.tracks.slice(0, 1),
+    );
     missingSourceDocument.tracks[0] = {
       ...missingSourceDocument.tracks[0]!,
       audioSource: {
@@ -717,12 +660,12 @@ describe("createInstrumentEnginePatch", () => {
       hasRoute(
         missingSourceRuntime.patch.routes,
         "track-1.trackGain.main",
-        missingSourceRuntime.runtime.masterFilterId,
+        MASTER_IN,
       ),
     ).toBe(true);
 
     const feedbackDocument = createDefaultInstrumentDocument();
-    feedbackDocument.tracks = feedbackDocument.tracks.slice(0, 2);
+    useNoteTracks(feedbackDocument, feedbackDocument.tracks.slice(0, 2));
     feedbackDocument.tracks[0] = {
       ...feedbackDocument.tracks[0]!,
       audioSource: {
@@ -758,20 +701,35 @@ describe("createInstrumentEnginePatch", () => {
     ).toBe(true);
   });
 
-  it("starts the global delay and reverb runtime modules dry", () => {
+  it("builds a clean master track with no global effect modules", () => {
     const runtime = createInstrumentEnginePatch(
       createDefaultInstrumentDocument(),
     );
 
-    const globalDelay = runtime.patch.modules.find(
-      (module) => module.id === "instrument.runtime.globalDelay",
-    );
-    const globalReverb = runtime.patch.modules.find(
-      (module) => module.id === "instrument.runtime.globalReverb",
+    // The former global effect modules are gone.
+    expect(
+      runtime.patch.modules.some((module) =>
+        [
+          "instrument.runtime.globalDelay",
+          "instrument.runtime.globalReverb",
+        ].includes(module.id),
+      ),
+    ).toBe(false);
+
+    // The default master track is clean: its fx slots are passthrough (Volume),
+    // not Delay/Reverb modules.
+    const masterFxTypes = runtime.patch.modules
+      .filter((module) => /^master\.fx\d\.main$/.test(module.id))
+      .map((module) => module.moduleType);
+    expect(masterFxTypes).toHaveLength(4);
+    expect(masterFxTypes.every((type) => type === ModuleType.Volume)).toBe(
+      true,
     );
 
-    expect(globalDelay?.props).toMatchObject({ mix: 0 });
-    expect(globalReverb?.props).toMatchObject({ mix: 0 });
+    // The master track output feeds the engine Master.
+    expect(hasRoute(runtime.patch.routes, MASTER_OUT, ENGINE_MASTER)).toBe(
+      true,
+    );
   });
 
   it("hydrates saved controller slot values into the initial runtime patch", () => {

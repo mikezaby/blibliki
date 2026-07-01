@@ -77,7 +77,7 @@ describe("createLiveInstrumentDisplayState", () => {
             ? { ...module, props: { ...module.props, attack: 0.5 } }
             : module.id === "instrument.runtime.transportControl"
               ? { ...module, props: { ...module.props, bpm: 132, swing: 0.25 } }
-              : module.id === "instrument.runtime.masterVolume"
+              : module.id === "master.trackGain.main"
                 ? { ...module, props: { ...module.props, volume: -12 } }
                 : module,
       ]),

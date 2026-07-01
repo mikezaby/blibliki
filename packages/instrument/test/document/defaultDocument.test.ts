@@ -6,6 +6,14 @@ import {
 } from "@/profiles/hardwareProfile";
 import { DEFAULT_TEMPLATE_ID, getTemplate } from "@/templates/defaultTemplate";
 
+function noteTracks(
+  document: ReturnType<typeof createDefaultInstrumentDocument>,
+) {
+  return document.tracks.filter(
+    (track) => track.audioSource?.type !== "master",
+  );
+}
+
 describe("createDefaultInstrumentDocument metadata", () => {
   it("uses the known template and hardware profile registries", () => {
     const document = createDefaultInstrumentDocument();
@@ -40,29 +48,37 @@ describe("createDefaultInstrumentDocument metadata", () => {
   it("marks every default track as enabled", () => {
     const document = createDefaultInstrumentDocument();
 
+    // 7 note tracks plus the master track.
     expect(document.tracks).toHaveLength(8);
     expect(document.tracks.every((track) => track.enabled)).toBe(true);
   });
 
-  it("assigns eight voices to every default track", () => {
+  it("assigns eight voices to every default note track", () => {
     const document = createDefaultInstrumentDocument();
 
-    expect(document.tracks.every((track) => track.voices === 8)).toBe(true);
+    expect(noteTracks(document).every((track) => track.voices === 8)).toBe(
+      true,
+    );
   });
 
-  it("uses an internal audio source for every default track", () => {
+  it("uses an internal audio source for every default note track", () => {
     const document = createDefaultInstrumentDocument();
 
     expect(
-      document.tracks.every((track) => track.audioSource?.type === "internal"),
+      noteTracks(document).every(
+        (track) => track.audioSource?.type === "internal",
+      ),
     ).toBe(true);
   });
 
-  it("starts global delay and reverb sends dry", () => {
+  it("appends a clean master track", () => {
     const document = createDefaultInstrumentDocument();
+    const master = document.tracks.find(
+      (track) => track.audioSource?.type === "master",
+    );
 
-    expect(document.globalBlock.delaySend).toBe(0);
-    expect(document.globalBlock.reverbSend).toBe(0);
+    expect(master?.key).toBe("master");
+    expect(master?.fxChain).toEqual(["none", "none", "none", "none"]);
   });
 
   it("initializes sequencer steps with empty CC messages", () => {

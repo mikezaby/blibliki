@@ -20,6 +20,17 @@ function createSeededInstrumentDocument(): InstrumentDocument {
   return document;
 }
 
+// Keeps the required master track when reducing to a subset of note tracks.
+function useNoteTracks(
+  document: InstrumentDocument,
+  noteTracks: InstrumentDocument["tracks"],
+) {
+  const master = document.tracks.find(
+    (track) => track.audioSource?.type === "master",
+  )!;
+  document.tracks = [...noteTracks, master];
+}
+
 function createStepSequencerInstrumentDocument(): InstrumentDocument {
   const document = createSeededInstrumentDocument();
   const firstTrack = document.tracks[0];
@@ -52,17 +63,19 @@ describe("InstrumentNavigation", () => {
       selectedStepIndex: 99,
     });
 
+    // Index -1 wraps to the last track, which is the master track. It has no
+    // sourceAmp page, so the page falls back to its first page (filterMod).
     expect(navigation.serialize()).toEqual({
       activeTrackIndex: 7,
-      activePage: "sourceAmp",
+      activePage: "filterMod",
       mode: "performance",
       shiftPressed: true,
       sequencerPageIndex: 1,
       selectedStepIndex: 15,
     });
-    expect(navigation.activeTrack.key).toBe("track-8");
-    expect(navigation.activePage.pageKey).toBe("sourceAmp");
-    expect(navigation.visiblePage.pageKey).toBe("sourceAmp");
+    expect(navigation.activeTrack.key).toBe("master");
+    expect(navigation.activePage.pageKey).toBe("filterMod");
+    expect(navigation.visiblePage.pageKey).toBe("filterMod");
   });
 
   it("navigates tracks and pages in performance mode", () => {
@@ -82,6 +95,8 @@ describe("InstrumentNavigation", () => {
       selectedStepIndex: 0,
     });
 
+    // Wrapping backwards lands on the master track (last track), which keeps
+    // filterMod since it exposes that page.
     const wrappedTrack = nextPage.navigate("previousTrack");
     expect(wrappedTrack.serialize()).toEqual({
       activeTrackIndex: 7,
@@ -92,10 +107,11 @@ describe("InstrumentNavigation", () => {
       selectedStepIndex: 0,
     });
 
+    // The master track has only filterMod + fx, so previousPage wraps to fx.
     const wrappedPage = wrappedTrack.navigate("previousPage");
     expect(wrappedPage.serialize()).toEqual({
       activeTrackIndex: 7,
-      activePage: "sourceAmp",
+      activePage: "fx",
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,
@@ -105,7 +121,7 @@ describe("InstrumentNavigation", () => {
 
   it("falls back to the first page available on a processing track", () => {
     const document = createSeededInstrumentDocument();
-    document.tracks = document.tracks.slice(0, 2);
+    useNoteTracks(document, document.tracks.slice(0, 2));
     document.tracks[1] = {
       ...document.tracks[1]!,
       audioSource: {
@@ -134,7 +150,7 @@ describe("InstrumentNavigation", () => {
 
   it("normalizes the initial runtime page for a processing track", () => {
     const document = createSeededInstrumentDocument();
-    document.tracks = document.tracks.slice(0, 2);
+    useNoteTracks(document, document.tracks.slice(0, 2));
     document.tracks[1] = {
       ...document.tracks[1]!,
       audioSource: {
@@ -158,7 +174,7 @@ describe("InstrumentNavigation", () => {
 
   it("allows sequencer edit mode for processing-track CC automation", () => {
     const document = createSeededInstrumentDocument();
-    document.tracks = document.tracks.slice(0, 2);
+    useNoteTracks(document, document.tracks.slice(0, 2));
     document.tracks[1] = {
       ...document.tracks[1]!,
       noteSource: "stepSequencer",

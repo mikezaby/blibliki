@@ -1,6 +1,7 @@
 import { PlaybackMode, Resolution } from "@blibliki/engine";
 import { DEFAULT_HARDWARE_PROFILE_ID } from "@/profiles/hardwareProfile";
 import { DEFAULT_TEMPLATE_ID } from "@/templates/defaultTemplate";
+import { createMasterTrackDocument } from "./masterTrack";
 import type {
   EffectProfileId,
   InstrumentDocument,
@@ -64,15 +65,14 @@ export function createDefaultInstrumentDocument(): InstrumentDocument {
     globalBlock: {
       tempo: 120,
       swing: 0,
-      masterFilterCutoff: 20_000,
-      masterFilterResonance: 1,
-      reverbSend: 0,
-      delaySend: 0,
       masterVolume: 0,
       probabilityAmount: 1,
     },
-    tracks: Array.from({ length: 8 }, (_, index) =>
-      createDefaultTrack(index + 1),
-    ),
+    // 7 note tracks + the master track = 8 channels, so the master lands on
+    // the last fader.
+    tracks: [
+      ...Array.from({ length: 7 }, (_, index) => createDefaultTrack(index + 1)),
+      createMasterTrackDocument(),
+    ],
   };
 }

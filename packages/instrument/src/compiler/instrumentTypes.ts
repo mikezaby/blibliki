@@ -91,10 +91,6 @@ export type CompiledInstrumentEnginePatch = {
   runtime: {
     masterId?: string;
     transportControlId: string;
-    masterFilterId: string;
-    globalDelayId: string;
-    globalReverbId: string;
-    masterVolumeId: string;
     sessionRecorderId: string;
     midiMapperId: string;
     noteInputId?: string;

@@ -109,60 +109,13 @@ function resolveGlobalSlotValue(
           typeof value === "number" ? formatPercent(value) : slot.valueText,
       };
     }
-    case "masterFilterCutoff": {
-      const value = getModuleProp(
-        engine,
-        runtimePatch.runtime.masterFilterId,
-        "cutoff",
-      );
-      return {
-        rawValue: typeof value === "number" ? value : slot.rawValue,
-        valueText:
-          typeof value === "number" ? formatNum(value) : slot.valueText,
-      };
-    }
-    case "masterFilterResonance": {
-      const value = getModuleProp(
-        engine,
-        runtimePatch.runtime.masterFilterId,
-        "Q",
-      );
-      return {
-        rawValue: typeof value === "number" ? value : slot.rawValue,
-        valueText:
-          typeof value === "number" ? formatNum(value) : slot.valueText,
-      };
-    }
-    case "reverbSend": {
-      const value = getModuleProp(
-        engine,
-        runtimePatch.runtime.globalReverbId,
-        "mix",
-      );
-      return {
-        rawValue: typeof value === "number" ? value : slot.rawValue,
-        valueText:
-          typeof value === "number" ? formatPercent(value) : slot.valueText,
-      };
-    }
-    case "delaySend": {
-      const value = getModuleProp(
-        engine,
-        runtimePatch.runtime.globalDelayId,
-        "mix",
-      );
-      return {
-        rawValue: typeof value === "number" ? value : slot.rawValue,
-        valueText:
-          typeof value === "number" ? formatPercent(value) : slot.valueText,
-      };
-    }
     case "masterVolume": {
-      const value = getModuleProp(
-        engine,
-        runtimePatch.runtime.masterVolumeId,
-        "volume",
-      );
+      const masterTrackKey = runtimePatch.compiledInstrument.tracks.find(
+        (track) => track.audioSource.type === "master",
+      )?.key;
+      const value = masterTrackKey
+        ? getModuleProp(engine, `${masterTrackKey}.trackGain.main`, "volume")
+        : undefined;
       return {
         rawValue: typeof value === "number" ? value : slot.rawValue,
         valueText:

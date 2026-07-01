@@ -75,18 +75,12 @@ function createSavedGlobalBlock(
     patch,
     runtimePatch.runtime.transportControlId,
   );
-  const masterFilterProps = getModuleProps(
-    patch,
-    runtimePatch.runtime.masterFilterId,
-  );
-  const delayProps = getModuleProps(patch, runtimePatch.runtime.globalDelayId);
-  const reverbProps = getModuleProps(
-    patch,
-    runtimePatch.runtime.globalReverbId,
-  );
+  const masterTrackKey = runtimePatch.compiledInstrument.tracks.find(
+    (track) => track.audioSource.type === "master",
+  )?.key;
   const masterVolumeProps = getModuleProps(
     patch,
-    runtimePatch.runtime.masterVolumeId,
+    masterTrackKey ? `${masterTrackKey}.trackGain.main` : undefined,
   );
   const firstStepSequencerProps = getModuleProps(
     patch,
@@ -102,22 +96,6 @@ function createSavedGlobalBlock(
       typeof transportControlProps?.swing === "number"
         ? transportControlProps.swing
         : document.globalBlock.swing,
-    masterFilterCutoff:
-      typeof masterFilterProps?.cutoff === "number"
-        ? masterFilterProps.cutoff
-        : document.globalBlock.masterFilterCutoff,
-    masterFilterResonance:
-      typeof masterFilterProps?.Q === "number"
-        ? masterFilterProps.Q
-        : document.globalBlock.masterFilterResonance,
-    delaySend:
-      typeof delayProps?.mix === "number"
-        ? delayProps.mix
-        : document.globalBlock.delaySend,
-    reverbSend:
-      typeof reverbProps?.mix === "number"
-        ? reverbProps.mix
-        : document.globalBlock.reverbSend,
     masterVolume:
       typeof masterVolumeProps?.volume === "number"
         ? masterVolumeProps.volume

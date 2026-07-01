@@ -849,7 +849,12 @@ export default function InstrumentPerformance({
   // Source outputs to meter, derived from the live runtime patch so the track
   // meter follows the active track (changing it resets that meter's peak hold).
   const runtimePatch = state.controllerSession?.getRuntimePatch();
-  const masterMeterSourceId = runtimePatch?.runtime.masterVolumeId;
+  const masterTrackKey = runtimePatch?.compiledInstrument.tracks.find(
+    (track) => track.audioSource.type === "master",
+  )?.key;
+  const masterMeterSourceId = masterTrackKey
+    ? `${masterTrackKey}.trackGain.main`
+    : undefined;
   const activeTrack = runtimePatch
     ? runtimePatch.compiledInstrument.tracks[
         runtimePatch.runtime.navigation.activeTrackIndex

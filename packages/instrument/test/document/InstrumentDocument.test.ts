@@ -5,7 +5,7 @@ describe("createDefaultInstrumentDocument", () => {
   it("creates the fixed parent instrument document shape for the default template", () => {
     const document = createDefaultInstrumentDocument();
 
-    expect(document.version).toBe("2");
+    expect(document.version).toBe("3");
     expect(document.name).toBe("Default Instrument");
     expect(document.templateId).toBe("default-performance-instrument");
     expect(document.hardwareProfileId).toBe("launchcontrolxl3-pi-lcd");
@@ -13,10 +13,6 @@ describe("createDefaultInstrumentDocument", () => {
     expect(document.globalBlock).toEqual({
       tempo: 120,
       swing: 0,
-      masterFilterCutoff: 20000,
-      masterFilterResonance: 1,
-      reverbSend: 0,
-      delaySend: 0,
       masterVolume: 0,
       probabilityAmount: 1,
     });
@@ -98,12 +94,12 @@ describe("createDefaultInstrumentDocument", () => {
         fxChain: ["distortion", "chorus", "delay", "reverb"],
       },
       {
-        key: "track-8",
-        midiChannel: 8,
+        key: "master",
+        midiChannel: 16,
         noteSource: "externalMidi",
-        audioSource: { type: "internal" },
+        audioSource: { type: "master" },
         sourceProfileId: "unassigned",
-        fxChain: ["distortion", "chorus", "delay", "reverb"],
+        fxChain: ["none", "none", "none", "none"],
       },
     ]);
   });

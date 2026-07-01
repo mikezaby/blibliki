@@ -577,21 +577,26 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
               <CardContent>
                 <div className="grid grid-cols-2 gap-6 md:grid-cols-4 xl:grid-cols-8">
                   {launchControlXL3GlobalRow.map((control) => {
+                    // Unused encoder positions (former master effects) have no key.
+                    if (!control.key) return null;
+
                     const spec = getGlobalControlValueSpec(control.key);
                     if (spec.kind !== "number") return null;
 
+                    const controlKey = control.key;
+
                     return (
-                      <Stack key={control.key} align="center" gap={2}>
+                      <Stack key={controlKey} align="center" gap={2}>
                         <Encoder
                           name={control.label}
-                          value={document.globalBlock[control.key]}
+                          value={document.globalBlock[controlKey]}
                           min={spec.min}
                           max={spec.max}
                           step={spec.step}
                           exp={spec.exp}
                           onChange={(next) => {
                             setDocument((current) =>
-                              updateGlobalBlock(current, control.key, next),
+                              updateGlobalBlock(current, controlKey, next),
                             );
                           }}
                         />
