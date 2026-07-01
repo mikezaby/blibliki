@@ -341,6 +341,156 @@ function ConsoleStat({
   );
 }
 
+// Compact peak meter for the performance sidebar. Reuses the VuMeter engine
+// module (its per-channel analysers) but renders minimally to match the console
+// styling instead of the grid's chunky canvas.
+const METER_MIN_DB = -60;
+const METER_MAX_DB = 6; // headroom so 0 dBFS isn't pinned to the far edge
+const METER_W = 240;
+const METER_BAR_H = 9;
+const METER_BAR_GAP = 6;
+const METER_H = METER_BAR_H * 2 + METER_BAR_GAP;
+
+function levelToDb(level: number) {
+  return level > 0 ? 20 * Math.log10(level) : -Infinity;
+}
+
+function dbToFrac(db: number) {
+  return Math.min(
+    1,
+    Math.max(0, (db - METER_MIN_DB) / (METER_MAX_DB - METER_MIN_DB)),
+  );
+}
+
+function drawMeter(
+  canvas: HTMLCanvasElement | null,
+  smoothed: [number, number],
+) {
+  const ctx = canvas?.getContext("2d");
+  if (!ctx) return;
+
+  ctx.clearRect(0, 0, METER_W, METER_H);
+
+  const amber = dbToFrac(-14);
+  const red = dbToFrac(0);
+  const soft = 0.05;
+  const gradient = ctx.createLinearGradient(0, 0, METER_W, 0);
+  gradient.addColorStop(0, "#a3e635");
+  gradient.addColorStop(amber - soft, "#a3e635");
+  gradient.addColorStop(amber + soft, "#fbbf24");
+  gradient.addColorStop(red - soft, "#fbbf24");
+  gradient.addColorStop(red + soft, "#f87171");
+  gradient.addColorStop(1, "#f87171");
+
+  smoothed.forEach((level, ch) => {
+    const y = ch * (METER_BAR_H + METER_BAR_GAP);
+    ctx.fillStyle = "#27272a";
+    ctx.fillRect(0, y, METER_W, METER_BAR_H);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, y, dbToFrac(levelToDb(level)) * METER_W, METER_BAR_H);
+  });
+}
+
+function PerformanceMeter({
+  engine,
+  label,
+  sourceModuleId,
+  resetKey,
+}: {
+  engine: Engine;
+  label: string;
+  sourceModuleId: string;
+  // Extra dependency that resets peak hold when it changes (e.g. active track),
+  // even for a meter whose source module stays the same (like Master).
+  resetKey: string;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const readoutRef = useRef<HTMLSpanElement>(null);
+
+  // Re-runs (and so resets peak hold) when the metered source or resetKey
+  // changes, e.g. the performer selects a different track.
+  useEffect(() => {
+    let meterId: string | undefined;
+    let routeId: string | undefined;
+    try {
+      meterId = engine.addModule({
+        name: "Performance Meter",
+        moduleType: ModuleType.VuMeter,
+        props: {},
+      }).id;
+      routeId = engine.addRoute({
+        source: { moduleId: sourceModuleId, ioName: "out" },
+        destination: { moduleId: meterId, ioName: "in" },
+      }).id;
+    } catch {
+      return;
+    }
+
+    let running = true;
+    const smoothed: [number, number] = [0, 0];
+    const hold: [number, number] = [0, 0]; // max since this source was selected
+
+    const render = () => {
+      if (!running || !meterId) return;
+
+      const module = engine.findModule(meterId);
+      if (module.moduleType === ModuleType.VuMeter) {
+        const [peakL, peakR] = module.getPeaks();
+        // Instant attack, smoothed release (matches the grid VuMeter ballistics).
+        smoothed[0] = Math.max(peakL, 0.8 * smoothed[0]);
+        smoothed[1] = Math.max(peakR, 0.8 * smoothed[1]);
+        hold[0] = Math.max(hold[0], peakL);
+        hold[1] = Math.max(hold[1], peakR);
+
+        drawMeter(canvasRef.current, smoothed);
+
+        if (readoutRef.current) {
+          const db = levelToDb(Math.max(hold[0], hold[1]));
+          readoutRef.current.textContent = Number.isFinite(db)
+            ? `${db.toFixed(1)} dB`
+            : "-∞ dB";
+        }
+      }
+
+      requestAnimationFrame(render);
+    };
+    render();
+
+    return () => {
+      running = false;
+      try {
+        if (routeId) engine.removeRoute(routeId);
+        if (meterId) engine.removeModule(meterId);
+      } catch {
+        // Engine may already be torn down on unmount.
+      }
+    };
+  }, [engine, sourceModuleId, resetKey]);
+
+  return (
+    <div className="px-4 py-3">
+      <div className="flex items-baseline justify-between">
+        <span className="font-mono text-xs uppercase tracking-[0.24em] text-zinc-500">
+          {label}
+        </span>
+        <span
+          ref={readoutRef}
+          className="font-mono text-xs uppercase tracking-[0.12em] text-zinc-300"
+        >
+          -∞ dB
+        </span>
+      </div>
+      <canvas
+        ref={canvasRef}
+        width={METER_W}
+        height={METER_H}
+        className="mt-2 w-full"
+        style={{ height: METER_H }}
+      />
+    </div>
+  );
+}
+
 function EncoderGlyph({
   normalized,
   inactive,
@@ -696,6 +846,18 @@ export default function InstrumentPerformance({
   }, []);
 
   const displayState = state.displayState;
+  // Source outputs to meter, derived from the live runtime patch so the track
+  // meter follows the active track (changing it resets that meter's peak hold).
+  const runtimePatch = state.controllerSession?.getRuntimePatch();
+  const masterMeterSourceId = runtimePatch?.runtime.masterVolumeId;
+  const activeTrack = runtimePatch
+    ? runtimePatch.compiledInstrument.tracks[
+        runtimePatch.runtime.navigation.activeTrackIndex
+      ]
+    : undefined;
+  const trackMeterSourceId = activeTrack
+    ? `${activeTrack.key}.trackGain.main`
+    : undefined;
   const pageBankLabel = displayState
     ? `${displayState.upperBand.title} / ${displayState.lowerBand.title}`
     : "--";
@@ -819,6 +981,22 @@ export default function InstrumentPerformance({
                         : "--"
                     }
                   />
+                  {state.engine && masterMeterSourceId ? (
+                    <PerformanceMeter
+                      engine={state.engine}
+                      label="Master"
+                      sourceModuleId={masterMeterSourceId}
+                      resetKey={activeTrack?.key ?? ""}
+                    />
+                  ) : null}
+                  {state.engine && trackMeterSourceId ? (
+                    <PerformanceMeter
+                      engine={state.engine}
+                      label="Track"
+                      sourceModuleId={trackMeterSourceId}
+                      resetKey={activeTrack?.key ?? ""}
+                    />
+                  ) : null}
                 </aside>
 
                 <div className="instrument-performance-display">

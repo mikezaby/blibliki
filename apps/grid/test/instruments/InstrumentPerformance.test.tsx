@@ -131,7 +131,7 @@ describe("InstrumentPerformance", () => {
         selectedStepIndex: 0,
       },
     },
-    compiledInstrument: {},
+    compiledInstrument: { tracks: [] },
   };
   let displayState = {
     header: {
@@ -220,6 +220,7 @@ describe("InstrumentPerformance", () => {
     createInstrumentControllerSessionMock.mockImplementation(
       (_engine, _runtimePatch, options) => ({
         getDisplayState: () => displayState,
+        getRuntimePatch: () => runtimePatch,
         dispose: vi.fn(),
         options,
       }),
