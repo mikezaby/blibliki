@@ -37,6 +37,13 @@ export type InstrumentTrackAudioSource =
       type: "track";
       trackKey: string;
       mode: "parallel" | "serial";
+    }
+  | {
+      // The master bus: receives every non-serial track's output and feeds the
+      // engine Master. Built like a "track" audio-input track (audio in ->
+      // filter -> fx -> trackGain -> audio out) but is the fixed mix
+      // destination rather than a 1:1 chain from a single source track.
+      type: "master";
     };
 
 export type SourceProfileId =
@@ -48,6 +55,7 @@ export type SourceProfileId =
   | "drumMachine";
 
 export type EffectProfileId =
+  | "none"
   | "distortion"
   | "compressor"
   | "chorus"
@@ -58,10 +66,9 @@ export type InstrumentLatencyHint = "interactive" | "playback";
 export type InstrumentGlobalBlock = {
   tempo: number;
   swing: number;
-  masterFilterCutoff: number;
-  masterFilterResonance: number;
-  reverbSend: number;
-  delaySend: number;
+  // masterVolume drives the master track's trackGain (see the master track in
+  // document.tracks). The former master filter / reverb / delay globals now
+  // live on the master track's own filter and fx blocks.
   masterVolume: number;
   probabilityAmount: number;
 };

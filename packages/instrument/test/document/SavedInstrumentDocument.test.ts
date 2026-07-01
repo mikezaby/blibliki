@@ -10,7 +10,7 @@ describe("createSavedInstrumentDocument", () => {
     const runtimePatch = createInstrumentEnginePatch(document);
     const patch = structuredClone(runtimePatch.patch);
     const masterVolume = patch.modules.find(
-      (module) => module.id === runtimePatch.runtime.masterVolumeId,
+      (module) => module.id === "master.trackGain.main",
     );
 
     if (!masterVolume) {
@@ -22,7 +22,7 @@ describe("createSavedInstrumentDocument", () => {
     const saved = createSavedInstrumentDocument(document, runtimePatch, patch);
 
     expect(saved.globalBlock.masterVolume).toBe(-18);
-    expect(saved.version).toBe("2");
+    expect(saved.version).toBe("3");
   });
 
   it("migrates version 1 master volume when the runtime module is unavailable", () => {
@@ -32,13 +32,13 @@ describe("createSavedInstrumentDocument", () => {
     const runtimePatch = createInstrumentEnginePatch(document);
     const patch = structuredClone(runtimePatch.patch);
     patch.modules = patch.modules.filter(
-      (module) => module.id !== runtimePatch.runtime.masterVolumeId,
+      (module) => module.id !== "master.trackGain.main",
     );
 
     const saved = createSavedInstrumentDocument(document, runtimePatch, patch);
 
     expect(saved.globalBlock.masterVolume).toBeCloseTo(-6.02, 2);
-    expect(saved.version).toBe("2");
+    expect(saved.version).toBe("3");
   });
 
   it("writes normalized audio sources for enabled and disabled tracks", () => {
@@ -63,7 +63,10 @@ describe("createSavedInstrumentDocument", () => {
 
   it("preserves dormant source controls while saving a processing track", () => {
     const document = createDefaultInstrumentDocument();
-    document.tracks = document.tracks.slice(0, 2);
+    const master = document.tracks.find(
+      (track) => track.audioSource?.type === "master",
+    )!;
+    document.tracks = [...document.tracks.slice(0, 2), master];
     document.tracks[1] = {
       ...document.tracks[1]!,
       audioSource: {

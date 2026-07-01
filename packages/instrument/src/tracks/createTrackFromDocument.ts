@@ -65,11 +65,19 @@ export function createTrackFromDocument(
   trackDocument: InstrumentTrackDocument,
   defaultVoices = 8,
 ) {
+  // The master track is an audio-input track (audio in -> filter -> fx ->
+  // trackGain), so it builds like a "track" source.
+  const audioSourceType =
+    trackDocument.audioSource?.type === "internal" ||
+    trackDocument.audioSource === undefined
+      ? "internal"
+      : "track";
+
   return applyControllerSlotValues(
     new Track(trackDocument.key, {
       voices: trackDocument.voices ?? defaultVoices,
       midiChannel: trackDocument.midiChannel,
-      audioSourceType: trackDocument.audioSource?.type ?? "internal",
+      audioSourceType,
       sourceProfileId: trackDocument.sourceProfileId,
       fxChain: trackDocument.fxChain,
     }),

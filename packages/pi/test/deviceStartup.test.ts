@@ -97,10 +97,6 @@ describe("startDeviceDeployment", () => {
             runtime: {
               masterId: "instrument.runtime.master",
               transportControlId: "instrument.runtime.transportControl",
-              masterFilterId: "instrument.runtime.masterFilter",
-              globalDelayId: "instrument.runtime.globalDelay",
-              globalReverbId: "instrument.runtime.globalReverb",
-              masterVolumeId: "instrument.runtime.masterVolume",
               midiMapperId: "instrument.runtime.midiMapper",
               channelFilterIds: {},
               stepSequencerIds: {},

@@ -3,7 +3,10 @@ import {
   createInstrumentRuntimeModuleId,
   createTrackRuntimeModuleId,
 } from "@/core/runtimeIds";
-import type { InstrumentTrackDocument } from "@/document/types";
+import type {
+  InstrumentTrackAudioSource,
+  InstrumentTrackDocument,
+} from "@/document/types";
 import { DEFAULT_ACTIVE_PAGE } from "./createInstrumentMidiMapperProps";
 import type {
   CompiledInstrument,
@@ -32,6 +35,31 @@ export function isInstrumentTrackEnabled(
   return trackDocument.enabled !== false;
 }
 
+// Tracks that take audio in and process it (a track-chain destination or the
+// master bus) rather than generating notes internally. These have no note
+// runtime regardless of their (inert) noteSource.
+export function isAudioBusTrack(
+  audioSource: InstrumentTrackAudioSource | undefined,
+) {
+  return audioSource?.type === "track" || audioSource?.type === "master";
+}
+
+export function isMasterTrack(
+  audioSource: InstrumentTrackAudioSource | undefined,
+) {
+  return audioSource?.type === "master";
+}
+
+// The master track is a real compiled track but is not part of the performance
+// track cycle, so navigation and the midi-mapper track list count note tracks
+// only. (The master track is always compiled last, so note-track indices are
+// stable between the full and note-only track lists.)
+export function countNoteTracks(
+  tracks: readonly { audioSource: InstrumentTrackAudioSource }[],
+) {
+  return tracks.filter((track) => track.audioSource.type !== "master").length;
+}
+
 export function normalizeInstrumentMasterOptions(
   masterOptions: CreateInstrumentEnginePatchOptions["master"],
 ): InstrumentMasterOptions {
@@ -41,10 +69,6 @@ export function normalizeInstrumentMasterOptions(
 export function createInstrumentGlobalMappingRuntimeIds() {
   return {
     transportControlId: createInstrumentRuntimeModuleId("transportControl"),
-    masterFilterId: createInstrumentRuntimeModuleId("masterFilter"),
-    globalDelayId: createInstrumentRuntimeModuleId("globalDelay"),
-    globalReverbId: createInstrumentRuntimeModuleId("globalReverb"),
-    masterVolumeId: createInstrumentRuntimeModuleId("masterVolume"),
   } as const;
 }
 
@@ -82,7 +106,7 @@ export function normalizeInstrumentNavigation(
     0;
 
   const activeTrackIndex = normalizeActiveTrackIndex(
-    compiledInstrument.tracks.length,
+    countNoteTracks(compiledInstrument.tracks),
     requestedActiveTrackIndex,
   );
   const activeTrack = compiledInstrument.tracks[activeTrackIndex];

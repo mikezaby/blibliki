@@ -30,7 +30,7 @@ describe("createInstrumentRuntimeState", () => {
     );
 
     expect(runtime.document).toEqual({
-      version: "2",
+      version: "3",
       name: "Default Instrument",
       templateId: "default-performance-instrument",
       hardwareProfileId: "launchcontrolxl3-pi-lcd",
@@ -43,10 +43,6 @@ describe("createInstrumentRuntimeState", () => {
       runtime: {
         masterId: "instrument.runtime.master",
         transportControlId: "instrument.runtime.transportControl",
-        masterFilterId: "instrument.runtime.masterFilter",
-        globalDelayId: "instrument.runtime.globalDelay",
-        globalReverbId: "instrument.runtime.globalReverb",
-        masterVolumeId: "instrument.runtime.masterVolume",
         midiMapperId: "instrument.runtime.midiMapper",
         noteInputId: "instrument.runtime.noteInput",
         controllerInputId: "instrument.runtime.controllerInput",
@@ -68,10 +64,6 @@ describe("createInstrumentRuntimeState", () => {
     expect(runtime.globalBlock).toEqual({
       tempo: 120,
       swing: 0,
-      masterFilterCutoff: 20000,
-      masterFilterResonance: 1,
-      reverbSend: 0,
-      delaySend: 0,
       masterVolume: 0,
       probabilityAmount: 1,
     });

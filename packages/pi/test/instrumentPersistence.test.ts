@@ -94,34 +94,17 @@ describe("createSavedInstrumentDocument", () => {
         swing: 18,
       }),
     );
+    // The master filter now lives on the master track; its edits persist as the
+    // master track's controller slot values.
+    livePatch = updateModuleProps(livePatch, "master.filter.main", (props) => ({
+      ...props,
+      cutoff: 1400,
+      Q: 6.5,
+    }));
+    // Master volume is the master track's output gain.
     livePatch = updateModuleProps(
       livePatch,
-      runtimePatch.runtime.masterFilterId,
-      (props) => ({
-        ...props,
-        cutoff: 1400,
-        Q: 6.5,
-      }),
-    );
-    livePatch = updateModuleProps(
-      livePatch,
-      runtimePatch.runtime.globalDelayId,
-      (props) => ({
-        ...props,
-        mix: 0.37,
-      }),
-    );
-    livePatch = updateModuleProps(
-      livePatch,
-      runtimePatch.runtime.globalReverbId,
-      (props) => ({
-        ...props,
-        mix: 0.61,
-      }),
-    );
-    livePatch = updateModuleProps(
-      livePatch,
-      runtimePatch.runtime.masterVolumeId,
+      "master.trackGain.main",
       (props) => ({
         ...props,
         volume: -3,
@@ -183,12 +166,15 @@ describe("createSavedInstrumentDocument", () => {
     expect(savedDocument.globalBlock).toEqual({
       tempo: 138,
       swing: 18,
-      masterFilterCutoff: 1400,
-      masterFilterResonance: 6.5,
-      delaySend: 0.37,
-      reverbSend: 0.61,
       masterVolume: -3,
       probabilityAmount: 1,
+    });
+    const masterTrack = savedDocument.tracks.find(
+      (track) => track.audioSource?.type === "master",
+    );
+    expect(masterTrack?.controllerSlotValues).toMatchObject({
+      "filter.cutoff": 1400,
+      "filter.Q": 6.5,
     });
     expect(savedDocument.tracks[0]?.controllerSlotValues).toMatchObject({
       "fx1.drive": 0.91,

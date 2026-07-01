@@ -7,6 +7,7 @@ import {
 } from "@/core/midiPortSelection";
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
 import type { InstrumentDocument } from "@/document/types";
+import { migrateInstrumentDocument } from "@/document/version";
 import { createTrackFromDocument } from "@/tracks/createTrackFromDocument";
 import { compileInstrument } from "./compileInstrument";
 import {
@@ -24,7 +25,9 @@ import {
   createInstrumentGlobalMappingRuntimeIds,
   createInstrumentRuntimeState,
   createInstrumentStepSequencerIds,
+  isAudioBusTrack,
   isInstrumentTrackEnabled,
+  isMasterTrack,
   normalizeInstrumentMasterOptions,
   normalizeInstrumentNavigation,
 } from "./instrumentRuntimeState";
@@ -34,9 +37,12 @@ import type {
 } from "./instrumentTypes";
 
 export function createInstrumentEnginePatch(
-  document: InstrumentDocument = createDefaultInstrumentDocument(),
+  inputDocument: InstrumentDocument = createDefaultInstrumentDocument(),
   options: CreateInstrumentEnginePatchOptions = {},
 ): CompiledInstrumentEnginePatch {
+  // Bring pre-v3 documents up to date (adds the master track) so every caller
+  // gets a compilable instrument regardless of the stored version.
+  const document = migrateInstrumentDocument(inputDocument);
   const enabledTrackDocuments = document.tracks.filter(
     isInstrumentTrackEnabled,
   );
@@ -48,9 +54,15 @@ export function createInstrumentEnginePatch(
   );
   const hasExternalMidiTracks = enabledTrackDocuments.some(
     (track) =>
-      track.audioSource?.type !== "track" &&
+      !isAudioBusTrack(track.audioSource) &&
       track.noteSource === "externalMidi",
   );
+  const masterTrackKey = enabledTrackDocuments.find((track) =>
+    isMasterTrack(track.audioSource),
+  )?.key;
+  if (!masterTrackKey) {
+    throw new Error("Instrument must have an enabled master track");
+  }
   const baseNoteInputSelection = normalizePortSelection(
     options.noteInput,
     DEFAULT_NOTE_INPUT,
@@ -76,6 +88,7 @@ export function createInstrumentEnginePatch(
   const globalMappings = [
     ...createInstrumentEncoderGlobalMappings(
       globalMappingRuntimeIds,
+      masterTrackKey,
       stepSequencerIds,
     ),
     ...createInstrumentFaderGlobalMappings(compiledInstrument),

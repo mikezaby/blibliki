@@ -60,46 +60,17 @@ describe("createInstrumentDisplayState", () => {
         valueText: "0%",
       }),
     );
-    expect(displayState.globalBand.slots[2]).toEqual(
-      expect.objectContaining({
-        key: "masterFilterCutoff",
-        label: "Master Filter Cutoff",
-        shortLabel: "MCF",
-        cc: 15,
-        rawValue: 20000,
-        valueText: "20000",
-      }),
-    );
-    expect(displayState.globalBand.slots[3]).toEqual(
-      expect.objectContaining({
-        key: "masterFilterResonance",
-        label: "Master Filter Resonance",
-        shortLabel: "MRQ",
-        cc: 16,
-        rawValue: 1,
-        valueText: "1",
-      }),
-    );
-    expect(displayState.globalBand.slots[4]).toEqual(
-      expect.objectContaining({
-        key: "reverbSend",
-        label: "Reverb Send",
-        shortLabel: "REV",
-        cc: 17,
-        rawValue: 0,
-        valueText: "0%",
-      }),
-    );
-    expect(displayState.globalBand.slots[5]).toEqual(
-      expect.objectContaining({
-        key: "delaySend",
-        label: "Delay Send",
-        shortLabel: "DLY",
-        cc: 18,
-        rawValue: 0,
-        valueText: "0%",
-      }),
-    );
+    // Slots 2-5 are unused: the former master filter / reverb / delay controls
+    // now live on the master track.
+    for (const emptyIndex of [2, 3, 4, 5]) {
+      expect(displayState.globalBand.slots[emptyIndex]).toEqual(
+        expect.objectContaining({
+          key: "",
+          cc: 13 + emptyIndex,
+          valueText: "--",
+        }),
+      );
+    }
     expect(displayState.globalBand.slots[6]).toEqual(
       expect.objectContaining({
         key: "probabilityAmount",

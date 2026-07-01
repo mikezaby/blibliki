@@ -29,7 +29,7 @@ describe("Instrument", () => {
     const instrument = Instrument.fromRuntimePatch(runtimePatch);
 
     expect(instrument.runtimeState.document).toEqual({
-      version: "2",
+      version: "3",
       name: "Default Instrument",
       templateId: "default-performance-instrument",
       hardwareProfileId: "launchcontrolxl3-pi-lcd",

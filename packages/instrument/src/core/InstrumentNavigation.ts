@@ -1,3 +1,4 @@
+import { countNoteTracks } from "@/compiler/instrumentRuntimeState";
 import type {
   CompiledInstrumentEnginePatch,
   CompiledInstrumentLaunchControlXL3PageSummary,
@@ -51,7 +52,7 @@ function normalizeNavigation(
 ): InstrumentNavigationState {
   const activeTrackIndex = wrapIndex(
     navigation.activeTrackIndex,
-    runtimePatch.compiledInstrument.tracks.length,
+    countNoteTracks(runtimePatch.compiledInstrument.tracks),
   );
   const pageKeys = getPageKeys(runtimePatch, activeTrackIndex);
   const activePage = pageKeys.includes(navigation.activePage)

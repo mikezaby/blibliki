@@ -42,7 +42,7 @@ function createTrackToTrackRoutes(
 function createDirectMasterRoutes(
   trackDocuments: readonly InstrumentTrackDocument[],
   tracks: readonly BaseTrack[],
-  masterFilterId: string,
+  masterTrack: BaseTrack,
 ): IRoute[] {
   const tracksByKey = new Map(tracks.map((track) => [track.key, track]));
   const serialSourceKeys = new Set(
@@ -59,12 +59,16 @@ function createDirectMasterRoutes(
       return [trackDocument.audioSource.trackKey];
     }),
   );
-  const mixDestinationPlugs: BlockPlug[] = [
-    { moduleId: masterFilterId, ioName: "in" },
-  ];
+  const mixDestinationPlugs: BlockPlug[] = scopeTrackIO(
+    masterTrack.key,
+    masterTrack,
+    masterTrack.findInput("audio in"),
+    "input",
+  ).plugs;
 
   return tracks.flatMap((track) => {
-    if (serialSourceKeys.has(track.key)) {
+    // The master track is the mix destination, not one of the mixed sources.
+    if (track.key === masterTrack.key || serialSourceKeys.has(track.key)) {
       return [];
     }
 
@@ -80,13 +84,13 @@ function createDirectMasterRoutes(
 export function createInstrumentAudioRoutes(options: {
   trackDocuments: readonly InstrumentTrackDocument[];
   tracks: readonly BaseTrack[];
-  masterFilterId: string;
+  masterTrack: BaseTrack;
 }): IRoute[] {
-  const { trackDocuments, tracks, masterFilterId } = options;
+  const { trackDocuments, tracks, masterTrack } = options;
   const tracksByKey = new Map(tracks.map((track) => [track.key, track]));
 
   return [
     ...createTrackToTrackRoutes(trackDocuments, tracksByKey),
-    ...createDirectMasterRoutes(trackDocuments, tracks, masterFilterId),
+    ...createDirectMasterRoutes(trackDocuments, tracks, masterTrack),
   ];
 }

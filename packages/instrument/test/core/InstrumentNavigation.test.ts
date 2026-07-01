@@ -20,6 +20,17 @@ function createSeededInstrumentDocument(): InstrumentDocument {
   return document;
 }
 
+// Keeps the required master track when reducing to a subset of note tracks.
+function useNoteTracks(
+  document: InstrumentDocument,
+  noteTracks: InstrumentDocument["tracks"],
+) {
+  const master = document.tracks.find(
+    (track) => track.audioSource?.type === "master",
+  )!;
+  document.tracks = [...noteTracks, master];
+}
+
 function createStepSequencerInstrumentDocument(): InstrumentDocument {
   const document = createSeededInstrumentDocument();
   const firstTrack = document.tracks[0];
@@ -105,7 +116,7 @@ describe("InstrumentNavigation", () => {
 
   it("falls back to the first page available on a processing track", () => {
     const document = createSeededInstrumentDocument();
-    document.tracks = document.tracks.slice(0, 2);
+    useNoteTracks(document, document.tracks.slice(0, 2));
     document.tracks[1] = {
       ...document.tracks[1]!,
       audioSource: {
@@ -134,7 +145,7 @@ describe("InstrumentNavigation", () => {
 
   it("normalizes the initial runtime page for a processing track", () => {
     const document = createSeededInstrumentDocument();
-    document.tracks = document.tracks.slice(0, 2);
+    useNoteTracks(document, document.tracks.slice(0, 2));
     document.tracks[1] = {
       ...document.tracks[1]!,
       audioSource: {
@@ -158,7 +169,7 @@ describe("InstrumentNavigation", () => {
 
   it("allows sequencer edit mode for processing-track CC automation", () => {
     const document = createSeededInstrumentDocument();
-    document.tracks = document.tracks.slice(0, 2);
+    useNoteTracks(document, document.tracks.slice(0, 2));
     document.tracks[1] = {
       ...document.tracks[1]!,
       noteSource: "stepSequencer",

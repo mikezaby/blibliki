@@ -122,18 +122,12 @@ function formatGlobalValue(
   key: (typeof launchControlXL3GlobalRow)[number]["key"],
 ) {
   switch (key) {
+    case null:
+      return "--";
     case "tempo":
       return `${globalBlock.tempo} BPM`;
     case "swing":
       return formatPercent(globalBlock.swing);
-    case "masterFilterCutoff":
-      return formatNum(globalBlock.masterFilterCutoff);
-    case "masterFilterResonance":
-      return formatNum(globalBlock.masterFilterResonance);
-    case "reverbSend":
-      return formatPercent(globalBlock.reverbSend);
-    case "delaySend":
-      return formatPercent(globalBlock.delaySend);
     case "masterVolume":
       return formatVolume(globalBlock.masterVolume);
     case "probabilityAmount":
@@ -149,18 +143,12 @@ function getGlobalRawValue(
   key: (typeof launchControlXL3GlobalRow)[number]["key"],
 ) {
   switch (key) {
+    case null:
+      return undefined;
     case "tempo":
       return globalBlock.tempo;
     case "swing":
       return globalBlock.swing;
-    case "masterFilterCutoff":
-      return globalBlock.masterFilterCutoff;
-    case "masterFilterResonance":
-      return globalBlock.masterFilterResonance;
-    case "reverbSend":
-      return globalBlock.reverbSend;
-    case "delaySend":
-      return globalBlock.delaySend;
     case "masterVolume":
       return globalBlock.masterVolume;
     case "probabilityAmount":
@@ -174,13 +162,15 @@ function getGlobalRawValue(
 function createGlobalBandState(globalBlock: InstrumentGlobalBlock) {
   return {
     slots: launchControlXL3GlobalRow.map((control) => ({
-      key: control.key,
+      key: control.key ?? "",
       label: control.label,
       shortLabel: control.shortLabel,
       cc: control.cc,
       valueText: formatGlobalValue(globalBlock, control.key),
       rawValue: getGlobalRawValue(globalBlock, control.key),
-      valueSpec: getGlobalControlValueSpec(control.key),
+      valueSpec: control.key
+        ? getGlobalControlValueSpec(control.key)
+        : undefined,
     })) as Fixed8<GlobalDisplaySlotState>,
   };
 }

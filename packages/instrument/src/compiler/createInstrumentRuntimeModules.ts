@@ -5,11 +5,7 @@ import type {
 } from "@/document/types";
 import { createInstrumentMidiMapperProps } from "./createInstrumentMidiMapperProps";
 import {
-  createGlobalDelayModule,
-  createGlobalReverbModule,
-  createMasterFilterModule,
   createMasterModule,
-  createMasterVolumeModule,
   createSessionRecorderModule,
   createMidiInputModule,
   createMidiMapperModule,
@@ -60,26 +56,6 @@ export function createInstrumentRuntimeModules(options: {
     createTransportControlModule(
       runtime.transportControlId,
       "Instrument Transport Control",
-      document,
-    ),
-    createMasterFilterModule(
-      runtime.masterFilterId,
-      "Instrument Master Filter",
-      document,
-    ),
-    createGlobalDelayModule(
-      runtime.globalDelayId,
-      "Instrument Global Delay",
-      document,
-    ),
-    createGlobalReverbModule(
-      runtime.globalReverbId,
-      "Instrument Global Reverb",
-      document,
-    ),
-    createMasterVolumeModule(
-      runtime.masterVolumeId,
-      "Instrument Master Volume",
       document,
     ),
     createSessionRecorderModule(

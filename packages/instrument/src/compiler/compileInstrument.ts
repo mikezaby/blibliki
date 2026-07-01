@@ -1,3 +1,4 @@
+import { isMasterTrackDocument } from "@/document/masterTrack";
 import type {
   InstrumentDocument,
   InstrumentTrackDocument,
@@ -64,8 +65,21 @@ export function compileInstrument(
     throw new Error("Instrument must have at least one enabled track");
   }
 
+  // masterVolume is a global value applied to the master track's output gain.
+  const masterVolume = normalizeMasterVolume(document);
   const tracks = enabledTrackDocuments.map((trackDocument) =>
-    compileInstrumentTrack(trackDocument, options),
+    compileInstrumentTrack(
+      isMasterTrackDocument(trackDocument)
+        ? {
+            ...trackDocument,
+            controllerSlotValues: {
+              ...trackDocument.controllerSlotValues,
+              "trackGain.volume": masterVolume,
+            },
+          }
+        : trackDocument,
+      options,
+    ),
   );
 
   return {

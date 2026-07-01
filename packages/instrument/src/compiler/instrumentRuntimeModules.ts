@@ -1,15 +1,10 @@
 import type { ICreateModule, ModuleType } from "@blibliki/engine";
-import {
-  DelayTimeMode,
-  ModuleType as EngineModuleType,
-  ReverbType,
-} from "@blibliki/engine";
+import { ModuleType as EngineModuleType } from "@blibliki/engine";
 import type { MidiPortSelection } from "@/core/midiPortSelection";
 import type {
   InstrumentDocument,
   InstrumentTrackDocument,
 } from "@/document/types";
-import { normalizeMasterVolume } from "@/document/version";
 import type { CompiledInstrumentMidiMapperProps } from "./instrumentTypes";
 
 type RuntimeModule<T extends ModuleType> = ICreateModule<T> & { id: string };
@@ -135,80 +130,6 @@ export function createTransportControlModule(
     props: {
       bpm: document.globalBlock.tempo,
       swing: document.globalBlock.swing,
-    },
-  };
-}
-
-export function createMasterFilterModule(
-  id: string,
-  name: string,
-  document: InstrumentDocument,
-): RuntimeModule<ModuleType.Filter> & { voices: number } {
-  return {
-    id,
-    name,
-    moduleType: EngineModuleType.Filter,
-    voices: 1,
-    props: {
-      cutoff: document.globalBlock.masterFilterCutoff,
-      envelopeAmount: 0,
-      type: "lowpass",
-      Q: document.globalBlock.masterFilterResonance,
-    },
-  };
-}
-
-export function createGlobalDelayModule(
-  id: string,
-  name: string,
-  document: InstrumentDocument,
-): RuntimeModule<ModuleType.Delay> {
-  return {
-    id,
-    name,
-    moduleType: EngineModuleType.Delay,
-    props: {
-      time: 250,
-      timeMode: DelayTimeMode.short,
-      sync: false,
-      division: "1/4",
-      feedback: 0.3,
-      mix: document.globalBlock.delaySend,
-      stereo: false,
-    },
-  };
-}
-
-export function createGlobalReverbModule(
-  id: string,
-  name: string,
-  document: InstrumentDocument,
-): RuntimeModule<ModuleType.Reverb> {
-  return {
-    id,
-    name,
-    moduleType: EngineModuleType.Reverb,
-    props: {
-      mix: document.globalBlock.reverbSend,
-      decayTime: 1.5,
-      preDelay: 0,
-      type: ReverbType.room,
-    },
-  };
-}
-
-export function createMasterVolumeModule(
-  id: string,
-  name: string,
-  document: InstrumentDocument,
-): RuntimeModule<ModuleType.Volume> & { voices: number } {
-  return {
-    id,
-    name,
-    moduleType: EngineModuleType.Volume,
-    voices: 1,
-    props: {
-      volume: normalizeMasterVolume(document),
     },
   };
 }

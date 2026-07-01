@@ -41,6 +41,7 @@ export type SourceProfileId =
   | "drumMachine";
 
 export type EffectProfileId =
+  | "none"
   | "distortion"
   | "compressor"
   | "chorus"
@@ -51,10 +52,6 @@ export type InstrumentLatencyHint = "interactive" | "playback";
 export type InstrumentGlobalBlock = {
   tempo: number;
   swing: number;
-  masterFilterCutoff: number;
-  masterFilterResonance: number;
-  reverbSend: number;
-  delaySend: number;
   masterVolume: number;
   probabilityAmount: number;
 };
@@ -119,7 +116,8 @@ export type InstrumentDocument = {
   tracks: InstrumentTrackDocument[];
 };
 
-const DEFAULT_VERSION = "2";
+const DEFAULT_VERSION = "3";
+const MASTER_TRACK_KEY = "master";
 const DEFAULT_NAME = "Default Instrument";
 const DEFAULT_TEMPLATE_ID = "default-performance-instrument";
 const DEFAULT_HARDWARE_PROFILE_ID = "launchcontrolxl3-pi-lcd";
@@ -163,6 +161,28 @@ function createDefaultTrack(trackNo: number): InstrumentTrackDocument {
   };
 }
 
+// The master track: a clean audio bus that all tracks feed into and which
+// outputs to the engine Master. Handled like any other track.
+function createMasterTrack(): InstrumentTrackDocument {
+  return {
+    key: MASTER_TRACK_KEY,
+    name: "Master",
+    enabled: true,
+    voices: 1,
+    midiChannel: 16,
+    noteSource: "externalMidi",
+    audioSource: { type: "master" },
+    sourceProfileId: "unassigned",
+    fxChain: ["none", "none", "none", "none"],
+    sequencer: {
+      loopLength: 1,
+      resolution: Resolution.sixteenth,
+      playbackMode: PlaybackMode.loop,
+      pages: [{ name: "Page 1", steps: [] }],
+    },
+  };
+}
+
 export function createDefaultInstrumentDocument(): InstrumentDocument {
   return {
     version: DEFAULT_VERSION,
@@ -173,15 +193,12 @@ export function createDefaultInstrumentDocument(): InstrumentDocument {
     globalBlock: {
       tempo: 120,
       swing: 0,
-      masterFilterCutoff: 20_000,
-      masterFilterResonance: 1,
-      reverbSend: 0,
-      delaySend: 0,
       masterVolume: 0,
       probabilityAmount: 1,
     },
-    tracks: Array.from({ length: 8 }, (_, index) =>
-      createDefaultTrack(index + 1),
-    ),
+    tracks: [
+      ...Array.from({ length: 8 }, (_, index) => createDefaultTrack(index + 1)),
+      createMasterTrack(),
+    ],
   };
 }

@@ -1,4 +1,5 @@
 import { MidiMappingMode, ModuleType } from "@blibliki/engine";
+import { countNoteTracks } from "@/compiler/instrumentRuntimeState";
 import { launchControlXL3GlobalRow } from "@/hardware/launchControlXL3/globalRow";
 import type { TrackPageKey } from "@/types";
 import type {
@@ -14,10 +15,6 @@ const SEQ_EDIT_CC_MAX = 36;
 
 export type InstrumentGlobalMappingRuntimeIds = {
   transportControlId: string;
-  masterFilterId: string;
-  globalDelayId: string;
-  globalReverbId: string;
-  masterVolumeId: string;
 };
 
 function getTrackPageMappings(
@@ -53,18 +50,25 @@ export function createInstrumentMidiMapperProps(
 ): CompiledInstrumentMidiMapperProps {
   const activeTrackIndex = Math.max(
     0,
-    Math.min(navigation.activeTrackIndex, compiledInstrument.tracks.length - 1),
+    Math.min(
+      navigation.activeTrackIndex,
+      countNoteTracks(compiledInstrument.tracks) - 1,
+    ),
   );
 
   const props = {
-    tracks: compiledInstrument.tracks.map((track, trackIndex) => ({
-      name: track.name,
-      mappings: getTrackPageMappings(
-        compiledInstrument,
-        trackIndex,
-        navigation.activePage,
-      ),
-    })),
+    // The master track is not part of the performance track cycle. It is always
+    // compiled last, so filtering it keeps note-track indices aligned.
+    tracks: compiledInstrument.tracks
+      .filter((track) => track.audioSource.type !== "master")
+      .map((track, trackIndex) => ({
+        name: track.name,
+        mappings: getTrackPageMappings(
+          compiledInstrument,
+          trackIndex,
+          navigation.activePage,
+        ),
+      })),
     activeTrack: activeTrackIndex,
     globalMappings,
   };
@@ -90,21 +94,28 @@ export function createInstrumentMidiMapperProps(
 export function createInstrumentFaderGlobalMappings(
   compiledInstrument: CompiledInstrument,
 ) {
-  return compiledInstrument.tracks.map((track, trackIndex) => ({
-    cc: FADER_CCS[trackIndex],
-    moduleId: `${track.key}.trackGain.main`,
-    moduleType: ModuleType.Volume,
-    propName: "volume",
-    mode: MidiMappingMode.direct,
-  }));
+  // The master track has its own Main Volume encoder, so it is excluded from
+  // the per-note-track fader row (CC 5-12).
+  return compiledInstrument.tracks
+    .filter((track) => track.audioSource.type !== "master")
+    .map((track, trackIndex) => ({
+      cc: FADER_CCS[trackIndex],
+      moduleId: `${track.key}.trackGain.main`,
+      moduleType: ModuleType.Volume,
+      propName: "volume",
+      mode: MidiMappingMode.direct,
+    }));
 }
 
 export function createInstrumentEncoderGlobalMappings(
   runtimeIds: InstrumentGlobalMappingRuntimeIds,
+  masterTrackKey: string,
   stepSequencerIds: Record<string, string> = {},
 ) {
   return launchControlXL3GlobalRow.flatMap((control) => {
     switch (control.key) {
+      case null:
+        return [];
       case "tempo":
         return {
           cc: control.cc,
@@ -121,42 +132,10 @@ export function createInstrumentEncoderGlobalMappings(
           propName: "swing",
           mode: MidiMappingMode.incDec,
         };
-      case "masterFilterCutoff":
-        return {
-          cc: control.cc,
-          moduleId: runtimeIds.masterFilterId,
-          moduleType: ModuleType.Filter,
-          propName: "cutoff",
-          mode: MidiMappingMode.incDec,
-        };
-      case "masterFilterResonance":
-        return {
-          cc: control.cc,
-          moduleId: runtimeIds.masterFilterId,
-          moduleType: ModuleType.Filter,
-          propName: "Q",
-          mode: MidiMappingMode.incDec,
-        };
-      case "reverbSend":
-        return {
-          cc: control.cc,
-          moduleId: runtimeIds.globalReverbId,
-          moduleType: ModuleType.Reverb,
-          propName: "mix",
-          mode: MidiMappingMode.incDec,
-        };
-      case "delaySend":
-        return {
-          cc: control.cc,
-          moduleId: runtimeIds.globalDelayId,
-          moduleType: ModuleType.Delay,
-          propName: "mix",
-          mode: MidiMappingMode.incDec,
-        };
       case "masterVolume":
         return {
           cc: control.cc,
-          moduleId: runtimeIds.masterVolumeId,
+          moduleId: `${masterTrackKey}.trackGain.main`,
           moduleType: ModuleType.Volume,
           propName: "volume",
           mode: MidiMappingMode.incDec,

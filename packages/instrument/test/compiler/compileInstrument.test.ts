@@ -7,22 +7,18 @@ describe("compileInstrument", () => {
   it("compiles the default instrument document into per-track compiled units", () => {
     const compiled = compileInstrument(createDefaultInstrumentDocument());
 
-    expect(compiled.version).toBe("2");
+    expect(compiled.version).toBe("3");
     expect(compiled.name).toBe("Default Instrument");
     expect(compiled.templateId).toBe("default-performance-instrument");
     expect(compiled.hardwareProfileId).toBe("launchcontrolxl3-pi-lcd");
     expect(compiled.globalBlock).toEqual({
       tempo: 120,
       swing: 0,
-      masterFilterCutoff: 20000,
-      masterFilterResonance: 1,
-      reverbSend: 0,
-      delaySend: 0,
       masterVolume: 0,
       probabilityAmount: 1,
     });
 
-    expect(compiled.tracks).toHaveLength(8);
+    expect(compiled.tracks).toHaveLength(9);
     expect(
       compiled.tracks.map(
         ({
@@ -115,6 +111,16 @@ describe("compileInstrument", () => {
         compiledTrackKey: "track-8",
         pageKeys: ["sourceAmp", "filterMod", "fx"],
       },
+      {
+        key: "master",
+        midiChannel: 16,
+        noteSource: "externalMidi",
+        sourceProfileId: "unassigned",
+        fxChain: ["none", "none", "none", "none"],
+        compiledTrackKey: "master",
+        // No sourceAmp page: the master track has no internal source.
+        pageKeys: ["filterMod", "fx"],
+      },
     ]);
   });
 
@@ -125,7 +131,7 @@ describe("compileInstrument", () => {
 
     const compiled = compileInstrument(document);
 
-    expect(compiled.version).toBe("2");
+    expect(compiled.version).toBe("3");
     expect(compiled.globalBlock.masterVolume).toBeCloseTo(-6.02, 2);
   });
 
@@ -164,11 +170,15 @@ describe("compileInstrument", () => {
 
     const compiled = compileInstrument(document);
 
+    // The master track is always compiled (and last).
     expect(compiled.tracks.map((track) => track.key)).toEqual([
       "track-2",
       "track-7",
+      "master",
     ]);
-    expect(compiled.tracks.map((track) => track.midiChannel)).toEqual([2, 7]);
+    expect(compiled.tracks.map((track) => track.midiChannel)).toEqual([
+      2, 7, 16,
+    ]);
     expect(
       compiled.launchControlXL3.pages.map((page) => page.trackKey),
     ).toEqual([
@@ -178,6 +188,8 @@ describe("compileInstrument", () => {
       "track-7",
       "track-7",
       "track-7",
+      "master",
+      "master",
     ]);
   });
 
