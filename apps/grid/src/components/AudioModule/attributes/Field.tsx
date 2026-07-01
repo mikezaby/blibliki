@@ -75,6 +75,7 @@ export const InputField = <T extends string | number>({
         <div className="flex justify-center">
           <Encoder
             name={label}
+            size="sm"
             min={schema.min}
             max={schema.max}
             step={schema.step}

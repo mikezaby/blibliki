@@ -26,7 +26,7 @@ const meta = {
   argTypes: {
     size: {
       control: "select",
-      options: ["sm", "md"],
+      options: ["xs", "sm", "md", "lg"],
     },
     onChange: {
       control: false,
@@ -41,6 +41,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Playground: Story = {
+  args: {
+    size: "lg",
+  },
+
   render: (args) => {
     const [value, setValue] = useState(Number(args.value ?? 0));
 
@@ -63,8 +67,38 @@ export const Playground: Story = {
 export const Sizes: Story = {
   render: () => (
     <div className="sb-row">
-      <Encoder name="Rate small" value={0.2} min={0} max={1} step={0.01} size="sm" />
-      <Encoder name="Rate medium" value={0.68} min={0} max={1} step={0.01} size="md" />
+      <Encoder
+        name="Rate xs"
+        value={0.2}
+        min={0}
+        max={1}
+        step={0.01}
+        size="xs"
+      />
+      <Encoder
+        name="Rate small"
+        value={0.4}
+        min={0}
+        max={1}
+        step={0.01}
+        size="sm"
+      />
+      <Encoder
+        name="Rate medium"
+        value={0.68}
+        min={0}
+        max={1}
+        step={0.01}
+        size="md"
+      />
+      <Encoder
+        name="Rate large"
+        value={0.85}
+        min={0}
+        max={1}
+        step={0.01}
+        size="lg"
+      />
     </div>
   ),
 };

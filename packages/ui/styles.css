@@ -1219,8 +1219,8 @@
   }
 
   .ui-encoder {
-    --ui-encoder-size: 4rem;
-    --ui-encoder-value-size: 0.8125rem;
+    --ui-encoder-size: 3rem;
+    --ui-encoder-value-size: 0.75rem;
     --ui-encoder-ring: var(--ui-color-primary-500);
     --ui-encoder-track: color-mix(
       in oklab,
@@ -1245,12 +1245,22 @@
     transition: opacity 120ms ease;
   }
 
+  .ui-encoder--size-xs {
+    --ui-encoder-size: 2rem;
+    --ui-encoder-value-size: 0.625rem;
+  }
+
   .ui-encoder--size-sm {
-    --ui-encoder-size: 3.25rem;
+    --ui-encoder-size: 2.5rem;
     --ui-encoder-value-size: 0.6875rem;
   }
 
   .ui-encoder--size-md {
+    --ui-encoder-size: 3rem;
+    --ui-encoder-value-size: 0.75rem;
+  }
+
+  .ui-encoder--size-lg {
     --ui-encoder-size: 4rem;
     --ui-encoder-value-size: 0.8125rem;
   }
@@ -1305,7 +1315,7 @@
   .ui-encoder__dial::after {
     content: "";
     position: absolute;
-    inset: 0.35rem;
+    inset: calc(var(--ui-encoder-size) * 0.09);
     border-radius: 9999px;
     border: 1px solid var(--ui-encoder-border);
     background: var(--ui-encoder-core);

@@ -214,7 +214,7 @@ Same size variants as Input.
 - `name: string`, `onChange: (value: number) => void`
 - `value?`, `defaultValue?`, `min?` (0), `max?` (1), `step?` (0.01)
 - `exp?: number` — exponential curve (e.g. 2 for frequency)
-- `size?: "sm" | "md"`, `disabled?: boolean`
+- `size?: "xs" | "sm" | "md" | "lg"`, `disabled?: boolean`
 - `formatValue?: (value: number) => string`
 - Full range in 80px vertical drag; Shift key = 8× finer
 - Keyboard: arrows (±1 step), PageUp/Down (±10 steps), Home/End

@@ -10,7 +10,7 @@ import {
 } from "react";
 import { cn } from "@/lib/cn";
 
-type EncoderSize = "sm" | "md";
+type EncoderSize = "xs" | "sm" | "md" | "lg";
 
 type DragState = {
   pointerId: number;
@@ -289,8 +289,7 @@ const Encoder = forwardRef<HTMLDivElement, EncoderProps>(
         data-size={size}
         className={cn(
           "ui-encoder",
-          size === "sm" && "ui-encoder--size-sm",
-          size === "md" && "ui-encoder--size-md",
+          `ui-encoder--size-${size}`,
           disabled && "ui-encoder--disabled",
           className,
         )}
