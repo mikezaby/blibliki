@@ -238,6 +238,45 @@ describe("InstrumentEditor", () => {
     expect(screen.getByRole("option", { name: "compressor" })).toBeDefined();
   });
 
+  it("allows clearing a selected track effect slot back to none", async () => {
+    const saveSpy = vi.spyOn(Instrument.prototype, "save").mockResolvedValue();
+
+    render(
+      <Provider store={store}>
+        <InstrumentEditor
+          instrument={{
+            id: "instrument-1",
+            name: "Clearable FX Instrument",
+            userId: "user-1",
+            document: createDefaultInstrumentDocument(),
+          }}
+        />
+      </Provider>,
+    );
+
+    const firstEffect = getComboboxByValue("distortion");
+    firstEffect.focus();
+    fireEvent.keyDown(firstEffect, { key: "ArrowDown" });
+    fireEvent.click(screen.getByRole("option", { name: "none" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save Instrument" }));
+
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+
+    const savedInstrument = saveSpy.mock.instances[0] as Instrument;
+    const savedDocument = savedInstrument.document as ReturnType<
+      typeof createDefaultInstrumentDocument
+    >;
+
+    expect(savedDocument.tracks[0]?.fxChain).toEqual([
+      "none",
+      "chorus",
+      "delay",
+      "reverb",
+    ]);
+  });
+
   it("selects and saves a parallel track audio source", async () => {
     const saveSpy = vi.spyOn(Instrument.prototype, "save").mockResolvedValue();
 
