@@ -18,7 +18,7 @@ describe("compileInstrument", () => {
       probabilityAmount: 1,
     });
 
-    expect(compiled.tracks).toHaveLength(9);
+    expect(compiled.tracks).toHaveLength(8);
     expect(
       compiled.tracks.map(
         ({
@@ -103,15 +103,6 @@ describe("compileInstrument", () => {
         pageKeys: ["sourceAmp", "filterMod", "fx"],
       },
       {
-        key: "track-8",
-        midiChannel: 8,
-        noteSource: "externalMidi",
-        sourceProfileId: "unassigned",
-        fxChain: ["distortion", "chorus", "delay", "reverb"],
-        compiledTrackKey: "track-8",
-        pageKeys: ["sourceAmp", "filterMod", "fx"],
-      },
-      {
         key: "master",
         midiChannel: 16,
         noteSource: "externalMidi",
@@ -166,7 +157,7 @@ describe("compileInstrument", () => {
       noteSource: "stepSequencer",
       sourceProfileId: "threeOsc",
     };
-    document.tracks[7] = { ...document.tracks[7]!, enabled: false };
+    // Index 7 is the master track; leave it enabled.
 
     const compiled = compileInstrument(document);
 

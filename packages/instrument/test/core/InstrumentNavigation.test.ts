@@ -63,17 +63,19 @@ describe("InstrumentNavigation", () => {
       selectedStepIndex: 99,
     });
 
+    // Index -1 wraps to the last track, which is the master track. It has no
+    // sourceAmp page, so the page falls back to its first page (filterMod).
     expect(navigation.serialize()).toEqual({
       activeTrackIndex: 7,
-      activePage: "sourceAmp",
+      activePage: "filterMod",
       mode: "performance",
       shiftPressed: true,
       sequencerPageIndex: 1,
       selectedStepIndex: 15,
     });
-    expect(navigation.activeTrack.key).toBe("track-8");
-    expect(navigation.activePage.pageKey).toBe("sourceAmp");
-    expect(navigation.visiblePage.pageKey).toBe("sourceAmp");
+    expect(navigation.activeTrack.key).toBe("master");
+    expect(navigation.activePage.pageKey).toBe("filterMod");
+    expect(navigation.visiblePage.pageKey).toBe("filterMod");
   });
 
   it("navigates tracks and pages in performance mode", () => {
@@ -93,6 +95,8 @@ describe("InstrumentNavigation", () => {
       selectedStepIndex: 0,
     });
 
+    // Wrapping backwards lands on the master track (last track), which keeps
+    // filterMod since it exposes that page.
     const wrappedTrack = nextPage.navigate("previousTrack");
     expect(wrappedTrack.serialize()).toEqual({
       activeTrackIndex: 7,
@@ -103,10 +107,11 @@ describe("InstrumentNavigation", () => {
       selectedStepIndex: 0,
     });
 
+    // The master track has only filterMod + fx, so previousPage wraps to fx.
     const wrappedPage = wrappedTrack.navigate("previousPage");
     expect(wrappedPage.serialize()).toEqual({
       activeTrackIndex: 7,
-      activePage: "sourceAmp",
+      activePage: "fx",
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,

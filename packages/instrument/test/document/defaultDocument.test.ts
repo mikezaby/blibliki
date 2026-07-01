@@ -48,8 +48,8 @@ describe("createDefaultInstrumentDocument metadata", () => {
   it("marks every default track as enabled", () => {
     const document = createDefaultInstrumentDocument();
 
-    // 8 note tracks plus the master track.
-    expect(document.tracks).toHaveLength(9);
+    // 7 note tracks plus the master track.
+    expect(document.tracks).toHaveLength(8);
     expect(document.tracks.every((track) => track.enabled)).toBe(true);
   });
 

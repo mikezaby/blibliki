@@ -1,5 +1,4 @@
 import { MidiMappingMode, ModuleType } from "@blibliki/engine";
-import { countNoteTracks } from "@/compiler/instrumentRuntimeState";
 import { launchControlXL3GlobalRow } from "@/hardware/launchControlXL3/globalRow";
 import type { TrackPageKey } from "@/types";
 import type {
@@ -10,6 +9,7 @@ import type {
 
 export const DEFAULT_ACTIVE_PAGE: TrackPageKey = "sourceAmp";
 const FADER_CCS = [5, 6, 7, 8, 9, 10, 11, 12] as const;
+const MASTER_FADER_CC = 12;
 const SEQ_EDIT_CC_MIN = 13;
 const SEQ_EDIT_CC_MAX = 36;
 
@@ -50,25 +50,19 @@ export function createInstrumentMidiMapperProps(
 ): CompiledInstrumentMidiMapperProps {
   const activeTrackIndex = Math.max(
     0,
-    Math.min(
-      navigation.activeTrackIndex,
-      countNoteTracks(compiledInstrument.tracks) - 1,
-    ),
+    Math.min(navigation.activeTrackIndex, compiledInstrument.tracks.length - 1),
   );
 
   const props = {
-    // The master track is not part of the performance track cycle. It is always
-    // compiled last, so filtering it keeps note-track indices aligned.
-    tracks: compiledInstrument.tracks
-      .filter((track) => track.audioSource.type !== "master")
-      .map((track, trackIndex) => ({
-        name: track.name,
-        mappings: getTrackPageMappings(
-          compiledInstrument,
-          trackIndex,
-          navigation.activePage,
-        ),
-      })),
+    // The master track is a normal navigable track (compiled last).
+    tracks: compiledInstrument.tracks.map((track, trackIndex) => ({
+      name: track.name,
+      mappings: getTrackPageMappings(
+        compiledInstrument,
+        trackIndex,
+        navigation.activePage,
+      ),
+    })),
     activeTrack: activeTrackIndex,
     globalMappings,
   };
@@ -94,17 +88,34 @@ export function createInstrumentMidiMapperProps(
 export function createInstrumentFaderGlobalMappings(
   compiledInstrument: CompiledInstrument,
 ) {
-  // The master track has its own Main Volume encoder, so it is excluded from
-  // the per-note-track fader row (CC 5-12).
-  return compiledInstrument.tracks
-    .filter((track) => track.audioSource.type !== "master")
-    .map((track, trackIndex) => ({
-      cc: FADER_CCS[trackIndex],
-      moduleId: `${track.key}.trackGain.main`,
-      moduleType: ModuleType.Volume,
-      propName: "volume",
-      mode: MidiMappingMode.direct,
-    }));
+  // One fader per track, with the master bus pinned to the physical last fader
+  // when present. This keeps disabled/skipped note tracks from shifting the
+  // master away from CC 12.
+  const hasMasterTrack = compiledInstrument.tracks.some(
+    (track) => track.audioSource.type === "master",
+  );
+  const noteTrackFaderCcs = hasMasterTrack ? FADER_CCS.slice(0, -1) : FADER_CCS;
+  let noteTrackFaderIndex = 0;
+
+  return compiledInstrument.tracks.flatMap((track) => {
+    const cc =
+      track.audioSource.type === "master"
+        ? MASTER_FADER_CC
+        : noteTrackFaderCcs[noteTrackFaderIndex++];
+    if (cc === undefined) {
+      return [];
+    }
+
+    return [
+      {
+        cc,
+        moduleId: `${track.key}.trackGain.main`,
+        moduleType: ModuleType.Volume,
+        propName: "volume",
+        mode: MidiMappingMode.direct,
+      },
+    ];
+  });
 }
 
 export function createInstrumentEncoderGlobalMappings(

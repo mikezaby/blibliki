@@ -196,8 +196,10 @@ export function createDefaultInstrumentDocument(): InstrumentDocument {
       masterVolume: 0,
       probabilityAmount: 1,
     },
+    // 7 note tracks + the master track = 8 channels, so the master lands on
+    // the last fader.
     tracks: [
-      ...Array.from({ length: 8 }, (_, index) => createDefaultTrack(index + 1)),
+      ...Array.from({ length: 7 }, (_, index) => createDefaultTrack(index + 1)),
       createMasterTrack(),
     ],
   };

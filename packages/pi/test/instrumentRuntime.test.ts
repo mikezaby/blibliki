@@ -161,14 +161,15 @@ describe("createInstrumentRuntimeState", () => {
     });
 
     const wrappedTrackState = createInstrumentRuntimeState(wrappedTrack);
-    expect(wrappedTrackState.activeTrack.key).toBe("track-8");
+    expect(wrappedTrackState.activeTrack.key).toBe("master");
     expect(wrappedTrackState.activePage.pageKey).toBe("filterMod");
     expect(wrappedTrackState.activePage.trackIndex).toBe(7);
 
+    // The master track (last) has only filterMod + fx, so previousPage -> fx.
     const wrappedPage = navigateInstrumentRuntime(wrappedTrack, "previousPage");
     expect(wrappedPage.runtime.navigation).toEqual({
       activeTrackIndex: 7,
-      activePage: "sourceAmp",
+      activePage: "fx",
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,

@@ -17,7 +17,7 @@ describe("createDefaultInstrumentDocument", () => {
       probabilityAmount: 1,
     });
 
-    expect(document.tracks).toHaveLength(9);
+    expect(document.tracks).toHaveLength(8);
     expect(
       document.tracks.map(
         ({
@@ -88,14 +88,6 @@ describe("createDefaultInstrumentDocument", () => {
       {
         key: "track-7",
         midiChannel: 7,
-        noteSource: "externalMidi",
-        audioSource: { type: "internal" },
-        sourceProfileId: "unassigned",
-        fxChain: ["distortion", "chorus", "delay", "reverb"],
-      },
-      {
-        key: "track-8",
-        midiChannel: 8,
         noteSource: "externalMidi",
         audioSource: { type: "internal" },
         sourceProfileId: "unassigned",

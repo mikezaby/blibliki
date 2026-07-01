@@ -50,16 +50,6 @@ export function isMasterTrack(
   return audioSource?.type === "master";
 }
 
-// The master track is a real compiled track but is not part of the performance
-// track cycle, so navigation and the midi-mapper track list count note tracks
-// only. (The master track is always compiled last, so note-track indices are
-// stable between the full and note-only track lists.)
-export function countNoteTracks(
-  tracks: readonly { audioSource: InstrumentTrackAudioSource }[],
-) {
-  return tracks.filter((track) => track.audioSource.type !== "master").length;
-}
-
 export function normalizeInstrumentMasterOptions(
   masterOptions: CreateInstrumentEnginePatchOptions["master"],
 ): InstrumentMasterOptions {
@@ -106,7 +96,7 @@ export function normalizeInstrumentNavigation(
     0;
 
   const activeTrackIndex = normalizeActiveTrackIndex(
-    countNoteTracks(compiledInstrument.tracks),
+    compiledInstrument.tracks.length,
     requestedActiveTrackIndex,
   );
   const activeTrack = compiledInstrument.tracks[activeTrackIndex];

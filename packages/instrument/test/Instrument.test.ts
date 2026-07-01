@@ -88,9 +88,10 @@ describe("Instrument", () => {
       },
     );
 
+    // Index -1 wraps to the master track (last), which falls back to filterMod.
     expect(instrument.runtimeState.navigation).toEqual({
       activeTrackIndex: 7,
-      activePage: "sourceAmp",
+      activePage: "filterMod",
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,

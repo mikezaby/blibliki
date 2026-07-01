@@ -68,7 +68,7 @@ describe("createInstrumentEnginePatch", () => {
 
     const runtime = createInstrumentEnginePatch(document);
 
-    expect(runtime.compiledInstrument.tracks).toHaveLength(9);
+    expect(runtime.compiledInstrument.tracks).toHaveLength(8);
     expect(runtime.runtime).toMatchObject({
       masterId: "instrument.runtime.master",
       transportControlId: "instrument.runtime.transportControl",
@@ -106,8 +106,8 @@ describe("createInstrumentEnginePatch", () => {
             id === "track-1.runtime.midiChannelFilter" ||
             id === "track-1.runtime.voiceScheduler" ||
             id === "track-1.source.main" ||
-            id === "track-8.fx4.main" ||
-            id === "track-8.trackGain.main",
+            id === "track-7.fx4.main" ||
+            id === "track-7.trackGain.main",
         )
         .sort((left, right) => left.id.localeCompare(right.id)),
     ).toEqual([
@@ -156,11 +156,11 @@ describe("createInstrumentEnginePatch", () => {
         moduleType: ModuleType.Oscillator,
       },
       {
-        id: "track-8.fx4.main",
+        id: "track-7.fx4.main",
         moduleType: ModuleType.Reverb,
       },
       {
-        id: "track-8.trackGain.main",
+        id: "track-7.trackGain.main",
         moduleType: ModuleType.Volume,
       },
     ]);
@@ -197,7 +197,7 @@ describe("createInstrumentEnginePatch", () => {
 
     // Every note track feeds the master track's audio in (its filter block).
     expect(
-      hasRoute(runtime.patch.routes, "track-8.trackGain.main", MASTER_IN),
+      hasRoute(runtime.patch.routes, "track-7.trackGain.main", MASTER_IN),
     ).toBe(true);
 
     // The master track output feeds the engine Master.
@@ -215,7 +215,7 @@ describe("createInstrumentEnginePatch", () => {
 
     const midiMapperProps = midiMapper.props as IMidiMapperProps;
 
-    // The master track is not part of the performance track cycle.
+    // 7 note tracks plus the master track (a normal navigable track).
     expect(midiMapperProps.tracks).toHaveLength(8);
     expect(midiMapperProps.activeTrack).toBe(0);
     expect(midiMapperProps.tracks[0]?.name).toBe("track-1");
@@ -225,7 +225,7 @@ describe("createInstrumentEnginePatch", () => {
         mode: "incDec",
       }),
     );
-    expect(midiMapperProps.tracks[7]?.name).toBe("track-8");
+    expect(midiMapperProps.tracks[7]?.name).toBe("Master");
     expect(midiMapperProps.globalMappings).toEqual([
       expect.objectContaining({
         cc: 13,
@@ -299,7 +299,7 @@ describe("createInstrumentEnginePatch", () => {
       }),
       expect.objectContaining({
         cc: 12,
-        moduleId: "track-8.trackGain.main",
+        moduleId: "master.trackGain.main",
         moduleType: ModuleType.Volume,
         propName: "volume",
         mode: "direct",
@@ -368,11 +368,23 @@ describe("createInstrumentEnginePatch", () => {
 
     const midiMapperProps = midiMapper.props as IMidiMapperProps;
 
-    expect(midiMapperProps.tracks).toHaveLength(2);
+    expect(midiMapperProps.tracks).toHaveLength(3);
     expect(midiMapperProps.tracks.map((track) => track.name)).toEqual([
       "track-2",
       "track-6",
+      "Master",
     ]);
+    expect(midiMapperProps.globalMappings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          cc: 12,
+          moduleId: "master.trackGain.main",
+          moduleType: ModuleType.Volume,
+          propName: "volume",
+          mode: "direct",
+        }),
+      ]),
+    );
   });
 
   it("keeps a processing-track sequencer without voice note runtime", () => {

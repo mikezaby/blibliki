@@ -102,10 +102,11 @@ describe("InstrumentRuntime", () => {
       selectedStepIndex: 0,
     });
 
+    // The master track (last) has only filterMod + fx, so previousPage -> fx.
     const wrappedPage = navigateInstrumentRuntime(wrappedTrack, "previousPage");
     expect(wrappedPage.runtime.navigation).toEqual({
       activeTrackIndex: 7,
-      activePage: "sourceAmp",
+      activePage: "fx",
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,
