@@ -35,6 +35,34 @@ function createStepSequencerInstrumentDocument(): InstrumentDocument {
   return document;
 }
 
+function createMacroInstrumentDocument(): InstrumentDocument {
+  const document = createSeededInstrumentDocument();
+
+  document.globalController = {
+    ...document.globalController,
+    macros: document.globalController.macros.map((macro, index) =>
+      index === 0
+        ? {
+            ...macro,
+            enabled: true,
+            value: 0.5,
+            mappings: [
+              {
+                moduleId: "track-1.filter.main",
+                propKey: "cutoff",
+                min: 1000,
+                max: 5000,
+                exp: 0,
+              },
+            ],
+          }
+        : macro,
+    ),
+  };
+
+  return document;
+}
+
 describe("LaunchControlXL3Surface", () => {
   it("maps track navigation controls to instrument navigation", () => {
     const surface = new LaunchControlXL3Surface();
@@ -113,5 +141,54 @@ describe("LaunchControlXL3Surface", () => {
       stepIndex: 3,
     });
     expect(result.runtimePatch.runtime.navigation.selectedStepIndex).toBe(3);
+  });
+
+  it("maps enabled macro encoder movement to macro value and target prop updates", () => {
+    const surface = new LaunchControlXL3Surface();
+    const runtimePatch = createInstrumentEnginePatch(
+      createMacroInstrumentDocument(),
+    );
+
+    const result = surface.reduceEvent(
+      runtimePatch,
+      MidiEvent.fromCC(15, 65, 0),
+    );
+
+    const macro =
+      result.runtimePatch.compiledInstrument.globalController.macros[0];
+    expect(macro?.value).toBeCloseTo(0.51);
+    expect(result.command).toEqual({
+      type: "macro",
+      cc: 15,
+      updates: [
+        {
+          id: "track-1.filter.main",
+          moduleType: ModuleType.Filter,
+          changes: {
+            props: {
+              cutoff: 3040,
+            },
+          },
+        },
+      ],
+    });
+  });
+
+  it("ignores disabled macro encoder movement", () => {
+    const surface = new LaunchControlXL3Surface();
+    const document = createMacroInstrumentDocument();
+    document.globalController.macros[0] = {
+      ...document.globalController.macros[0]!,
+      enabled: false,
+    };
+    const runtimePatch = createInstrumentEnginePatch(document);
+
+    const result = surface.reduceEvent(
+      runtimePatch,
+      MidiEvent.fromCC(15, 65, 0),
+    );
+
+    expect(result.command).toEqual({ type: "none" });
+    expect(result.runtimePatch).toBe(runtimePatch);
   });
 });

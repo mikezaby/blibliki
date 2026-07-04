@@ -255,6 +255,15 @@ export class InstrumentSession implements InstrumentControllerSession {
       return;
     }
 
+    if (result.command.type === "macro") {
+      for (const update of result.command.updates) {
+        this.engine.updateModule(update);
+      }
+      this.sendHardwareDisplayEvents(
+        encoderDisplayEvents(this.getDisplayState(), result.command.cc),
+      );
+    }
+
     if (
       result.command.type === "seqEdit.toggle" ||
       result.command.type === "seqEdit.page"

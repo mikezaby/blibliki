@@ -1,7 +1,18 @@
-import { MidiEvent } from "@blibliki/engine";
+import {
+  type IUpdateModule,
+  MidiEvent,
+  moduleSchemas,
+  ModuleType,
+} from "@blibliki/engine";
 import { Instrument } from "@/Instrument";
 import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
 import type { InstrumentNavigationAction } from "@/core/InstrumentNavigation";
+import { launchControlXL3GlobalRow } from "@/hardware/launchControlXL3/globalRow";
+import {
+  calculateMacroMappingValue,
+  reduceMacroValue,
+} from "@/macros/macroMapping";
+import type { MacroEncoder } from "@/macros/types";
 
 type LaunchControlXL3Command =
   | {
@@ -26,6 +37,11 @@ type LaunchControlXL3Command =
   | {
       type: "persistence";
       action: "saveDraft" | "discardDraft";
+    }
+  | {
+      type: "macro";
+      cc: number;
+      updates: IUpdateModule<ModuleType>[];
     };
 
 export type LaunchControlXL3Result = {
@@ -72,6 +88,133 @@ function navigateInstrument(
     .serializeEnginePatch();
 }
 
+function findMacroControl(cc: number) {
+  return launchControlXL3GlobalRow.find(
+    (control) => control.cc === cc && control.slotId,
+  );
+}
+
+function findMacroForControl(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  control: NonNullable<ReturnType<typeof findMacroControl>>,
+) {
+  const slotId = control.slotId;
+  if (!slotId) {
+    return;
+  }
+
+  const assignment =
+    runtimePatch.compiledInstrument.globalController.encoderSlots[slotId];
+  if (assignment?.type !== "macro") {
+    return;
+  }
+
+  return runtimePatch.compiledInstrument.globalController.macros.find(
+    (macro) => macro.id === assignment.macroId,
+  );
+}
+
+function replaceMacro(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  macro: MacroEncoder,
+): CompiledInstrumentEnginePatch {
+  return {
+    ...runtimePatch,
+    compiledInstrument: {
+      ...runtimePatch.compiledInstrument,
+      globalController: {
+        ...runtimePatch.compiledInstrument.globalController,
+        macros: runtimePatch.compiledInstrument.globalController.macros.map(
+          (candidate) => (candidate.id === macro.id ? macro : candidate),
+        ),
+      },
+    },
+  };
+}
+
+function createMacroUpdate(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  macroValue: number,
+  mapping: MacroEncoder["mappings"][number],
+): IUpdateModule<ModuleType> | undefined {
+  const module = runtimePatch.patch.modules.find(
+    (candidate) => candidate.id === mapping.moduleId,
+  );
+  if (!module) {
+    return;
+  }
+
+  const propSchema = (
+    moduleSchemas[module.moduleType] as Record<string, unknown>
+  )[mapping.propKey];
+  if (
+    !propSchema ||
+    typeof propSchema !== "object" ||
+    (propSchema as { kind?: unknown }).kind !== "number"
+  ) {
+    return;
+  }
+
+  const value = calculateMacroMappingValue(
+    macroValue,
+    mapping,
+    propSchema as { min: number; max: number; exp?: number },
+  );
+
+  return {
+    id: mapping.moduleId,
+    moduleType: module.moduleType,
+    changes: {
+      props: {
+        [mapping.propKey]: value,
+      },
+    },
+  } as IUpdateModule<ModuleType>;
+}
+
+function applyMacroEncoderEvent(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  cc: number,
+  ccValue: number,
+): LaunchControlXL3Result | undefined {
+  if (runtimePatch.runtime.navigation.mode !== "performance") {
+    return;
+  }
+
+  const control = findMacroControl(cc);
+  if (!control) {
+    return;
+  }
+
+  const macro = findMacroForControl(runtimePatch, control);
+  if (!macro?.enabled) {
+    return createNoopResult(runtimePatch);
+  }
+
+  const nextMacro = {
+    ...macro,
+    value: reduceMacroValue(macro.value, ccValue),
+  };
+  const nextRuntimePatch = replaceMacro(runtimePatch, nextMacro);
+
+  return {
+    runtimePatch: nextRuntimePatch,
+    command: {
+      type: "macro",
+      cc,
+      updates: nextMacro.mappings.flatMap((mapping) => {
+        const update = createMacroUpdate(
+          nextRuntimePatch,
+          nextMacro.value,
+          mapping,
+        );
+
+        return update ? [update] : [];
+      }),
+    },
+  };
+}
+
 export class LaunchControlXL3Surface {
   reduceEvent(
     runtimePatch: CompiledInstrumentEnginePatch,
@@ -90,6 +233,15 @@ export class LaunchControlXL3Surface {
           type: "none",
         },
       };
+    }
+
+    const macroResult = applyMacroEncoderEvent(
+      runtimePatch,
+      event.cc,
+      event.ccValue,
+    );
+    if (macroResult) {
+      return macroResult;
     }
 
     if (event.ccValue !== 127) {
