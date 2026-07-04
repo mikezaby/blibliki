@@ -45,6 +45,13 @@ export {
   type OptionSelectProps,
 } from "./components/select";
 export {
+  AutocompleteSelect,
+  type AutocompleteSelectInput,
+  type AutocompleteSelectOption,
+  type AutocompleteSelectProps,
+  type AutocompleteSelectValue,
+} from "./components/autocomplete-select";
+export {
   Fader,
   type FaderProps,
   type MarkProps,

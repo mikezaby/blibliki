@@ -196,14 +196,15 @@ describe("InstrumentEditor", () => {
     fireEvent.change(screen.getByLabelText("Macro 1 Name"), {
       target: { value: "Tone Sweep" },
     });
+    fireEvent.click(screen.getByRole("combobox", { name: "Macro 1 Targets" }));
     fireEvent.change(screen.getByLabelText("Search Macro 1 Targets"), {
       target: { value: "track-2 cutoff" },
     });
     expect(
-      screen.queryByRole("button", { name: "track-1 / filter.main / Cutoff" }),
+      screen.queryByRole("option", { name: "track-1 / filter.main / Cutoff" }),
     ).toBeNull();
     fireEvent.click(
-      screen.getByRole("button", { name: "track-2 / filter.main / Cutoff" }),
+      screen.getByRole("option", { name: "track-2 / filter.main / Cutoff" }),
     );
     fireEvent.click(
       screen.getByRole("button", { name: "Add Macro 1 Mapping" }),

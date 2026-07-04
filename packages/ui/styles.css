@@ -1218,6 +1218,88 @@
     height: 0.875rem;
   }
 
+  .ui-autocomplete {
+    position: relative;
+    display: inline-block;
+    min-width: 0;
+  }
+
+  .ui-autocomplete-trigger {
+    width: 100%;
+  }
+
+  .ui-autocomplete-content {
+    position: fixed;
+    z-index: 1000;
+    min-width: min(26rem, max(100%, 16rem));
+    max-width: min(32rem, calc(100vw - 2rem));
+    overflow: hidden;
+    border: 1px solid var(--ui-color-border-subtle);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-color-surface-raised);
+    color: var(--ui-color-text-primary);
+    box-shadow: 0 10px 22px
+      color-mix(in oklab, var(--ui-color-text-primary), transparent 82%);
+    padding: 0.25rem;
+    pointer-events: auto;
+    animation: ui-select-in 120ms ease;
+  }
+
+  .ui-autocomplete-search {
+    width: 100%;
+    margin-bottom: 0.25rem;
+  }
+
+  .ui-autocomplete-list {
+    max-height: 16rem;
+    overflow-y: auto;
+  }
+
+  .ui-autocomplete-option {
+    position: relative;
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    align-items: center;
+    border: 1px solid transparent;
+    border-radius: calc(var(--ui-radius-sm) + 1px);
+    background: transparent;
+    color: var(--ui-color-text-primary);
+    padding: 0.5rem 0.625rem;
+    font: inherit;
+    font-size: 0.875rem;
+    line-height: 1.2;
+    text-align: left;
+    cursor: pointer;
+    outline: none;
+    transition:
+      background-color 100ms ease,
+      color 100ms ease,
+      border-color 100ms ease;
+  }
+
+  .ui-autocomplete-option:hover,
+  .ui-autocomplete-option:focus-visible,
+  .ui-autocomplete-option[aria-selected="true"] {
+    background: color-mix(
+      in oklab,
+      var(--ui-color-primary-500),
+      var(--ui-color-surface-raised) 88%
+    );
+    color: var(--ui-color-text-primary);
+    border-color: color-mix(
+      in oklab,
+      var(--ui-color-border-subtle),
+      var(--ui-color-primary-500) 14%
+    );
+  }
+
+  .ui-autocomplete-empty {
+    padding: 0.625rem;
+    font-size: 0.875rem;
+    color: var(--ui-color-text-muted);
+  }
+
   .ui-encoder {
     --ui-encoder-size: 3rem;
     --ui-encoder-value-size: 0.75rem;

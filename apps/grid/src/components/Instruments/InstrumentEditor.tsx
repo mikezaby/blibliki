@@ -25,6 +25,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  AutocompleteSelect,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -341,25 +342,6 @@ function getOrderedMappingRange(mapping: MacroMapping) {
   return min <= max ? { min, max } : { min: max, max: min };
 }
 
-function filterMacroTargetOptions(
-  options: MacroTargetOption[],
-  search: string,
-) {
-  const tokens = search
-    .toLowerCase()
-    .split(/\s+/)
-    .map((token) => token.trim())
-    .filter(Boolean);
-
-  if (tokens.length === 0) {
-    return options;
-  }
-
-  return options.filter((option) =>
-    tokens.every((token) => option.searchText.includes(token)),
-  );
-}
-
 function renderFxEditor(
   effectProfileId: EffectProfileId,
   moduleId: string,
@@ -443,9 +425,6 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
   const [activePageIndex, setActivePageIndex] = useState(0);
   const [saving, setSaving] = useState(false);
   const [macroTargetById, setMacroTargetById] = useState<
-    Record<string, string>
-  >({});
-  const [macroTargetSearchById, setMacroTargetSearchById] = useState<
     Record<string, string>
   >({});
 
@@ -863,11 +842,6 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
                     const macroNo = index + 1;
                     const nameInputId = `macro-${macro.id}-name`;
                     const selectedTarget = getSelectedMacroTarget(macro.id);
-                    const searchValue = macroTargetSearchById[macro.id] ?? "";
-                    const filteredTargetOptions = filterMacroTargetOptions(
-                      macroTargetOptions,
-                      searchValue,
-                    );
 
                     return (
                       <Surface
@@ -965,61 +939,27 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
                                 >
                                   <Stack gap={3}>
                                     <Stack gap={2}>
-                                      <Label
-                                        htmlFor={`macro-${macro.id}-target-search`}
-                                      >
-                                        {`Search Macro ${macroNo} Targets`}
-                                      </Label>
-                                      <Input
-                                        id={`macro-${macro.id}-target-search`}
-                                        value={searchValue}
-                                        placeholder="Search by track, module, or prop"
-                                        onChange={(event) => {
-                                          setMacroTargetSearchById(
-                                            (current) => ({
-                                              ...current,
-                                              [macro.id]: event.target.value,
-                                            }),
-                                          );
+                                      <Label>{`Macro ${macroNo} Target`}</Label>
+                                      <AutocompleteSelect
+                                        label={`Macro ${macroNo} Targets`}
+                                        value={selectedTarget?.value}
+                                        options={macroTargetOptions}
+                                        searchPlaceholder="Search by track, module, or prop"
+                                        emptyText="No numeric targets match the current search"
+                                        className="w-full"
+                                        triggerClassName="w-full"
+                                        onChange={(value) => {
+                                          if (typeof value !== "string") {
+                                            return;
+                                          }
+
+                                          setMacroTargetById((current) => ({
+                                            ...current,
+                                            [macro.id]: value,
+                                          }));
                                         }}
                                       />
                                     </Stack>
-
-                                    {filteredTargetOptions.length > 0 ? (
-                                      <div className="grid max-h-60 grid-cols-1 gap-2 overflow-y-auto md:grid-cols-2">
-                                        {filteredTargetOptions.map((option) => (
-                                          <Button
-                                            key={option.value}
-                                            type="button"
-                                            variant={
-                                              selectedTarget?.value ===
-                                              option.value
-                                                ? "contained"
-                                                : "outlined"
-                                            }
-                                            color={
-                                              selectedTarget?.value ===
-                                              option.value
-                                                ? "info"
-                                                : "neutral"
-                                            }
-                                            onClick={() => {
-                                              setMacroTargetById((current) => ({
-                                                ...current,
-                                                [macro.id]: option.value,
-                                              }));
-                                            }}
-                                          >
-                                            {option.name}
-                                          </Button>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <Text tone="muted" size="sm">
-                                        No numeric targets match the current
-                                        search
-                                      </Text>
-                                    )}
 
                                     <Button
                                       type="button"

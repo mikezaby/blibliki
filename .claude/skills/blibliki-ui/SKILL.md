@@ -254,6 +254,20 @@ Same size variants as Input.
 `options` accepts: `string[]`, `number[]`, `{name, value}[]`, `{id, name}[]`.  
 Auto-sizing trigger width from longest option.
 
+**`AutocompleteSelect`** (select with searchable popup, use for large option sets):
+```tsx
+<AutocompleteSelect
+  value={val}
+  options={[
+    { name: "track-1 / filter.main / Cutoff", value: "track-1.filter.main.cutoff", searchText: "track-1 filter cutoff" },
+  ]}
+  label="Macro target"
+  onChange={setVal}
+/>
+```
+`options` accepts: `string[]`, `number[]`, `{name, value, searchText?}[]`, `{id, name, searchText?}[]`.  
+The trigger has `role="combobox"`; the popup includes a search input and filters visible text, value, and optional `searchText`.
+
 ### `Dialog` / `ContextMenu` / `DropdownMenu`
 Thin wrappers over Radix primitives with `ui-*` classes applied. Use the named re-exports directly; structure mirrors Radix composition exactly.
 
