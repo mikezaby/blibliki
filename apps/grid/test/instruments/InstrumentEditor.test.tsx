@@ -163,11 +163,15 @@ describe("InstrumentEditor", () => {
     ).toBeNull();
   });
 
-  it("renders and saves global macro slot settings", async () => {
+  it("manages global macro mappings in a searchable modal", async () => {
     const saveSpy = vi.spyOn(Instrument.prototype, "save").mockResolvedValue();
     const document = createDefaultInstrumentDocument();
     document.tracks[0] = {
       ...document.tracks[0]!,
+      sourceProfileId: "osc",
+    };
+    document.tracks[1] = {
+      ...document.tracks[1]!,
       sourceProfileId: "osc",
     };
 
@@ -185,15 +189,26 @@ describe("InstrumentEditor", () => {
     );
 
     expect(screen.getByText("Global Macros")).toBeDefined();
-    expect(screen.getAllByLabelText(/Macro [1-4] Name/)).toHaveLength(4);
+    expect(screen.queryByLabelText("Macro 1 Name")).toBeNull();
 
+    fireEvent.click(screen.getByRole("button", { name: "Manage Macro 1" }));
     fireEvent.click(screen.getByRole("switch", { name: "Enable Macro 1" }));
     fireEvent.change(screen.getByLabelText("Macro 1 Name"), {
       target: { value: "Tone Sweep" },
     });
+    fireEvent.change(screen.getByLabelText("Search Macro 1 Targets"), {
+      target: { value: "track-2 cutoff" },
+    });
+    expect(
+      screen.queryByRole("button", { name: "track-1 / filter.main / Cutoff" }),
+    ).toBeNull();
+    fireEvent.click(
+      screen.getByRole("button", { name: "track-2 / filter.main / Cutoff" }),
+    );
     fireEvent.click(
       screen.getByRole("button", { name: "Add Macro 1 Mapping" }),
     );
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
     fireEvent.click(screen.getByRole("button", { name: "Save Instrument" }));
 
     await waitFor(() => {
@@ -211,7 +226,7 @@ describe("InstrumentEditor", () => {
         name: "Tone Sweep",
         mappings: [
           expect.objectContaining({
-            moduleId: "track-1.filter.main",
+            moduleId: "track-2.filter.main",
             propKey: "cutoff",
           }),
         ],
