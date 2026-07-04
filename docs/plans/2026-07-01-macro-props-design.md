@@ -14,6 +14,17 @@ yet an implementation plan.
 
 - Macro encoders live in a global encoder row or similar performance surface.
   Exact placement is not part of this design yet.
+- A macro is not hardcoded to the global row. Macro definitions are generic
+  controller data that can be mounted onto specific encoder slots.
+- The first concrete mount target is the Launch Control global row's currently
+  empty encoder positions.
+- The default template exposes four global-row macro encoder slots, matching
+  those empty Launch Control encoder positions.
+- Each macro encoder slot can be enabled or disabled.
+- The user can name each macro so it is recognizable in the UI and controller
+  display surfaces.
+- Templates may pre-populate macro encoder slots. This is template
+  configuration, not hardcoded macro behavior.
 - In instrument edit mode, editing a macro encoder opens a modal.
 - The modal lets the user select target module props from modules that exist in
   the current instrument/runtime graph.
@@ -23,6 +34,8 @@ yet an implementation plan.
 
 ## Confirmed Decisions
 
+- V1 macro mappings use the absolute model only. Moving a macro directly writes
+  computed values to its target module props.
 - Macro value is stored internally as a normalized number in the range `0..1`.
 - Macro polarity is part of the macro definition:
   - `unipolar`: displayed/edited as `0..1`, default value `0`.
@@ -39,9 +52,22 @@ yet an implementation plan.
   - `max === undefined`: use target prop schema `max`.
   - `exp === undefined`: use target prop schema `exp`, or linear if absent.
   - `exp: 0`: explicitly force linear behavior.
+- Mapping ranges are always stored in ascending order. `max` must be greater
+  than `min`.
+- `inverted` remains a dedicated boolean. It reverses the macro value before
+  mapping into the ordered range, instead of representing inversion by swapping
+  `min` and `max`.
 - Macro application should set real module props through the existing module
   prop update mechanism. There is no separate hidden modulation layer in the
   first design.
+- Manual edits to a target prop after mapping do not update macro state. The
+  next macro movement writes the value produced by the macro mapping.
+- The default instrument exposes four macro encoders in the global row.
+- Macro storage follows the owning controller scope. A macro mounted in a global
+  encoder slot is stored with global controller data. A future macro mounted in
+  a track/page slot should be stored with that track/page's controller data.
+- Relative macro behavior is deferred until there is a concrete performance
+  workflow that needs it.
 
 ## Candidate Data Model
 
@@ -51,6 +77,7 @@ type MacroPolarity = "unipolar" | "bipolar";
 type MacroEncoder = {
   id: string;
   name: string;
+  enabled: boolean;
   value: number; // normalized 0..1
   polarity: MacroPolarity;
   mappings: MacroMapping[];
@@ -63,6 +90,16 @@ type MacroMapping = {
   max?: number;
   exp?: number;
   inverted?: boolean;
+};
+
+type EncoderSlotAssignment =
+  | { type: "empty" }
+  | { type: "globalControl"; key: string }
+  | { type: "macro"; macroId: string };
+
+type MacroControllerScope = {
+  macros: MacroEncoder[];
+  encoderSlots: Record<string, EncoderSlotAssignment>;
 };
 ```
 
@@ -93,8 +130,11 @@ shows the changed cutoff value.
 This model is simple, easy to serialize, and matches the idea of a macro as a
 remote control for several low-level props. The drawback is that manual edits to
 the target prop and macro movement can feel like they fight over the same value.
+For v1 this trade-off is acceptable because the behavior is explicit: the macro
+owns the target value whenever it moves, while normal prop editing remains the
+same outside macro movement.
 
-## Relative Macro Model
+## Deferred: Relative Macro Model
 
 The relative model treats the normal module prop value as a baseline and the
 macro as an offset/intensity control around that baseline.
@@ -131,20 +171,9 @@ encoder, while macros move relative to those values. The unresolved question is
 how baseline updates should work when the target prop is manually edited after a
 macro has already moved.
 
-## Open Questions
-
-- Should v1 implement only the absolute model, only the relative model, or
-  support both with a mapping mode?
-- If relative mappings exist, should their baseline be stored per mapping or
-  derived from the current module prop value?
-- When a user manually edits a prop targeted by a macro, should that edit update
-  the macro baseline, leave the macro mapping untouched, or create an
-  out-of-sync state until the macro moves again?
-- Should `inverted` remain a dedicated boolean, or should users express
-  inversion by swapping `min` and `max`?
-- Where should macro definitions live in the saved instrument document: global
-  block, track/instrument controller block, or a dedicated macro block?
-- How many macro encoders should the default instrument expose?
+Relative mappings are intentionally out of scope for v1. If they are added
+later, they should be introduced as an explicit mapping mode rather than by
+changing the behavior of existing absolute mappings.
 
 ## Likely First Implementation Direction
 
@@ -153,6 +182,6 @@ metadata. The macro edit modal can enumerate modules, filter their schemas to
 numeric props, and create mappings that inherit schema `min`, `max`, and `exp`
 unless explicitly overridden.
 
-Before implementation, decide whether the macro should be absolute or relative.
-That choice affects the saved document schema, the macro edit UI, and how manual
-prop edits interact with macro movement.
+The first implementation should avoid a mapping mode field. Every mapping is an
+absolute mapping. A future relative model can add an explicit `mode` field with
+document migration only when the feature is ready.
