@@ -14,10 +14,14 @@ const propSchema = {
 describe("macro mapping", () => {
   it("maps a normalized macro value into the target range", () => {
     expect(
-      calculateMacroMappingValue(0.5, { moduleId: "filter", propKey: "cutoff" }, {
-        min: 0,
-        max: 100,
-      }),
+      calculateMacroMappingValue(
+        0.5,
+        { moduleId: "filter", propKey: "cutoff" },
+        {
+          min: 0,
+          max: 100,
+        },
+      ),
     ).toBe(50);
   });
 

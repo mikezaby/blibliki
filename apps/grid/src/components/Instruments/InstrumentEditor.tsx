@@ -235,14 +235,12 @@ function renderSourceEditor(
 }
 
 function getModuleSchema(moduleType: ModuleType): Record<string, PropSchema> {
-  return moduleSchemas[moduleType] as Record<string, PropSchema>;
+  return moduleSchemas[moduleType];
 }
 
 function createMacroTargetOptions(
   trackKey: string,
-  modules: NonNullable<
-    ReturnType<typeof compileTrack>
-  >["engine"]["modules"],
+  modules: NonNullable<ReturnType<typeof compileTrack>>["engine"]["modules"],
 ): MacroTargetOption[] {
   const options: MacroTargetOption[] = [];
 
@@ -818,8 +816,8 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
               <CardHeader>
                 <CardTitle>Global Macros</CardTitle>
                 <CardDescription>
-                  Four template-mounted global-row macro encoders for
-                  controller performance mappings
+                  Four template-mounted global-row macro encoders for controller
+                  performance mappings
                 </CardDescription>
               </CardHeader>
               <CardContent>

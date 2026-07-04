@@ -191,7 +191,9 @@ describe("InstrumentEditor", () => {
     fireEvent.change(screen.getByLabelText("Macro 1 Name"), {
       target: { value: "Tone Sweep" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Add Macro 1 Mapping" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Add Macro 1 Mapping" }),
+    );
     fireEvent.click(screen.getByRole("button", { name: "Save Instrument" }));
 
     await waitFor(() => {

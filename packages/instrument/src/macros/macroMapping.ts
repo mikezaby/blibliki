@@ -14,7 +14,8 @@ function clamp(value: number, min: number, max: number) {
 }
 
 export function reduceMacroValue(currentValue: number, ccValue: number) {
-  const nextValue = currentValue + getRelativeDelta(ccValue) * MACRO_ENCODER_STEP;
+  const nextValue =
+    currentValue + getRelativeDelta(ccValue) * MACRO_ENCODER_STEP;
 
   return clamp(nextValue, 0, 1);
 }

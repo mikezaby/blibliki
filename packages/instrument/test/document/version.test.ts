@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
 import {
-  DEFAULT_GLOBAL_MACRO_IDS,
-  GLOBAL_MACRO_SLOT_IDS,
-} from "@/macros/defaultMacros";
-import {
   CURRENT_INSTRUMENT_VERSION,
   migrateInstrumentDocument,
 } from "@/document/version";
+import {
+  DEFAULT_GLOBAL_MACRO_IDS,
+  GLOBAL_MACRO_SLOT_IDS,
+} from "@/macros/defaultMacros";
 
 describe("migrateInstrumentDocument", () => {
   it("returns the same document when already current", () => {

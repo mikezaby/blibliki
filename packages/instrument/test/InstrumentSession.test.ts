@@ -413,9 +413,10 @@ describe("InstrumentSession", () => {
         },
       },
     });
-    expect(session.getRuntimePatch().compiledInstrument.globalController.macros[0]?.value).toBeCloseTo(
-      0.51,
-    );
+    expect(
+      session.getRuntimePatch().compiledInstrument.globalController.macros[0]
+        ?.value,
+    ).toBeCloseTo(0.51);
     expect(runtimeMacroValues.at(-1)).toBeCloseTo(0.51);
     expect(displayMacroValues.at(-1)).toBe("51%");
   });

@@ -3,6 +3,7 @@ import {
   MidiEvent,
   moduleSchemas,
   ModuleType,
+  type NumberProp,
 } from "@blibliki/engine";
 import { Instrument } from "@/Instrument";
 import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
@@ -132,6 +133,25 @@ function replaceMacro(
   };
 }
 
+function isNumberPropSchema(propSchema: unknown): propSchema is NumberProp {
+  return (
+    propSchema !== null &&
+    typeof propSchema === "object" &&
+    "kind" in propSchema &&
+    propSchema.kind === "number"
+  );
+}
+
+function getNumberPropSchema(
+  moduleType: ModuleType,
+  propKey: string,
+): NumberProp | undefined {
+  const schema: Record<string, unknown> = moduleSchemas[moduleType];
+  const propSchema = schema[propKey];
+
+  return isNumberPropSchema(propSchema) ? propSchema : undefined;
+}
+
 function createMacroUpdate(
   runtimePatch: CompiledInstrumentEnginePatch,
   macroValue: number,
@@ -144,22 +164,12 @@ function createMacroUpdate(
     return;
   }
 
-  const propSchema = (
-    moduleSchemas[module.moduleType] as Record<string, unknown>
-  )[mapping.propKey];
-  if (
-    !propSchema ||
-    typeof propSchema !== "object" ||
-    (propSchema as { kind?: unknown }).kind !== "number"
-  ) {
+  const propSchema = getNumberPropSchema(module.moduleType, mapping.propKey);
+  if (!propSchema) {
     return;
   }
 
-  const value = calculateMacroMappingValue(
-    macroValue,
-    mapping,
-    propSchema as { min: number; max: number; exp?: number },
-  );
+  const value = calculateMacroMappingValue(macroValue, mapping, propSchema);
 
   return {
     id: mapping.moduleId,
@@ -169,7 +179,7 @@ function createMacroUpdate(
         [mapping.propKey]: value,
       },
     },
-  } as IUpdateModule<ModuleType>;
+  };
 }
 
 function applyMacroEncoderEvent(
