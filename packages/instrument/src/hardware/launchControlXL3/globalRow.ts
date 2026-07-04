@@ -1,6 +1,7 @@
 import { ModuleType } from "@blibliki/engine";
 import { getValueSpecForModuleProp } from "@/blocks/helpers";
 import type { InstrumentGlobalBlock } from "@/document/types";
+import { GLOBAL_MACRO_SLOT_IDS } from "@/macros/defaultMacros";
 import type { Fixed8, ValueSpec } from "@/types";
 
 export type InstrumentGlobalControlKey = keyof InstrumentGlobalBlock;
@@ -10,13 +11,18 @@ export type InstrumentGlobalControlKey = keyof InstrumentGlobalBlock;
 // positions are left unmapped while Tempo/Swing/Prob/Volume keep their knobs.
 export type LaunchControlXL3GlobalControl = {
   key: InstrumentGlobalControlKey | null;
+  slotId?: string;
   label: string;
   shortLabel: string;
   cc: number;
 };
 
-const EMPTY_GLOBAL_CONTROL = (cc: number): LaunchControlXL3GlobalControl => ({
+const MACRO_GLOBAL_CONTROL = (
+  slotId: string,
+  cc: number,
+): LaunchControlXL3GlobalControl => ({
   key: null,
+  slotId,
   label: "",
   shortLabel: "",
   cc,
@@ -36,10 +42,10 @@ export const launchControlXL3GlobalRow: Fixed8<LaunchControlXL3GlobalControl> =
       shortLabel: "SWG",
       cc: 14,
     },
-    EMPTY_GLOBAL_CONTROL(15),
-    EMPTY_GLOBAL_CONTROL(16),
-    EMPTY_GLOBAL_CONTROL(17),
-    EMPTY_GLOBAL_CONTROL(18),
+    MACRO_GLOBAL_CONTROL(GLOBAL_MACRO_SLOT_IDS[0], 15),
+    MACRO_GLOBAL_CONTROL(GLOBAL_MACRO_SLOT_IDS[1], 16),
+    MACRO_GLOBAL_CONTROL(GLOBAL_MACRO_SLOT_IDS[2], 17),
+    MACRO_GLOBAL_CONTROL(GLOBAL_MACRO_SLOT_IDS[3], 18),
     {
       key: "probabilityAmount",
       label: "Prob Amount",

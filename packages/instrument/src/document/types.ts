@@ -1,4 +1,5 @@
 import type { PlaybackMode, Resolution } from "@blibliki/engine";
+import type { MacroControllerScope } from "@/macros/types";
 import type { SlotInitialValue } from "@/slots/BaseSlot";
 
 export type InstrumentSequencerDivision =
@@ -130,5 +131,6 @@ export type InstrumentDocument = {
   hardwareProfileId: string;
   latencyHint?: InstrumentLatencyHint;
   globalBlock: InstrumentGlobalBlock;
+  globalController: MacroControllerScope;
   tracks: InstrumentTrackDocument[];
 };

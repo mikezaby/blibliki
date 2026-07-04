@@ -4,6 +4,10 @@ import {
   CURRENT_INSTRUMENT_VERSION,
   migrateInstrumentDocument,
 } from "@/document/version";
+import {
+  DEFAULT_GLOBAL_MACRO_IDS,
+  GLOBAL_MACRO_SLOT_IDS,
+} from "@/macros/defaultMacros";
 
 describe("migrateInstrumentDocument", () => {
   it("returns the same document when already current", () => {
@@ -59,6 +63,25 @@ describe("migrateInstrumentDocument", () => {
       "filter.Q": 6.5,
       "fx1.mix": 0.37,
       "fx2.mix": 0.61,
+    });
+  });
+
+  it("fills default global macro controller data when missing", () => {
+    const document = createDefaultInstrumentDocument();
+    delete (
+      document as Partial<ReturnType<typeof createDefaultInstrumentDocument>>
+    ).globalController;
+
+    const migrated = migrateInstrumentDocument(document);
+
+    expect(migrated.globalController.macros.map((macro) => macro.id)).toEqual(
+      DEFAULT_GLOBAL_MACRO_IDS,
+    );
+    expect(
+      migrated.globalController.encoderSlots[GLOBAL_MACRO_SLOT_IDS[0]],
+    ).toEqual({
+      type: "macro",
+      macroId: DEFAULT_GLOBAL_MACRO_IDS[0],
     });
   });
 });

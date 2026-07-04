@@ -6,6 +6,7 @@ import {
   getGlobalControlValueSpec,
   launchControlXL3GlobalRow,
 } from "@/hardware/launchControlXL3/globalRow";
+import type { MacroControllerScope, MacroEncoder } from "@/macros/types";
 import type { PageRegionPosition } from "@/pages/Page";
 import type { SlotInitialValue } from "@/slots/BaseSlot";
 import type { Fixed8, TrackPageKey } from "@/types";
@@ -43,6 +44,8 @@ export type DisplayBandState = {
 
 export type GlobalDisplaySlotState = {
   key: string;
+  slotId?: string;
+  macroId?: string;
   label: string;
   shortLabel: string;
   cc: number;
@@ -86,6 +89,7 @@ export type CreateInstrumentDisplayStateInput = {
   transportState?: TransportState;
   mode?: InstrumentRuntimeMode;
   globalBlock: InstrumentGlobalBlock;
+  globalController: MacroControllerScope;
   visiblePage: CompiledLaunchControlXL3Page;
 };
 
@@ -115,6 +119,14 @@ function formatPercent(value: number) {
 
 function formatVolume(value: number) {
   return `${value} dB`;
+}
+
+function formatMacroValue(macro: MacroEncoder) {
+  if (macro.polarity === "bipolar") {
+    return `${Math.round((macro.value * 2 - 1) * 100)}%`;
+  }
+
+  return formatPercent(macro.value);
 }
 
 function formatGlobalValue(
@@ -159,19 +171,64 @@ function getGlobalRawValue(
   }
 }
 
-function createGlobalBandState(globalBlock: InstrumentGlobalBlock) {
+function findMacroForGlobalControl(
+  globalController: MacroControllerScope,
+  control: (typeof launchControlXL3GlobalRow)[number],
+) {
+  if (!control.slotId) {
+    return undefined;
+  }
+
+  const assignment = globalController.encoderSlots[control.slotId];
+  if (assignment?.type !== "macro") {
+    return undefined;
+  }
+
+  return globalController.macros.find(
+    (macro) => macro.id === assignment.macroId,
+  );
+}
+
+function createGlobalBandState(
+  globalBlock: InstrumentGlobalBlock,
+  globalController: MacroControllerScope,
+) {
   return {
-    slots: launchControlXL3GlobalRow.map((control) => ({
-      key: control.key ?? "",
-      label: control.label,
-      shortLabel: control.shortLabel,
-      cc: control.cc,
-      valueText: formatGlobalValue(globalBlock, control.key),
-      rawValue: getGlobalRawValue(globalBlock, control.key),
-      valueSpec: control.key
-        ? getGlobalControlValueSpec(control.key)
-        : undefined,
-    })) as Fixed8<GlobalDisplaySlotState>,
+    slots: launchControlXL3GlobalRow.map((control) => {
+      const macro = findMacroForGlobalControl(globalController, control);
+      if (macro) {
+        return {
+          key: macro.id,
+          slotId: control.slotId,
+          macroId: macro.id,
+          label: macro.name,
+          shortLabel: macro.name,
+          cc: control.cc,
+          inactive: !macro.enabled,
+          valueText: formatMacroValue(macro),
+          rawValue: macro.value,
+          valueSpec: {
+            kind: "number",
+            min: 0,
+            max: 1,
+            step: 0.01,
+          },
+        };
+      }
+
+      return {
+        key: control.key ?? "",
+        slotId: control.slotId,
+        label: control.label,
+        shortLabel: control.shortLabel,
+        cc: control.cc,
+        valueText: formatGlobalValue(globalBlock, control.key),
+        rawValue: getGlobalRawValue(globalBlock, control.key),
+        valueSpec: control.key
+          ? getGlobalControlValueSpec(control.key)
+          : undefined,
+      };
+    }) as Fixed8<GlobalDisplaySlotState>,
   };
 }
 
@@ -242,6 +299,7 @@ export function createInstrumentDisplayState({
   transportState = TransportState.stopped,
   mode = "performance",
   globalBlock,
+  globalController,
   visiblePage,
 }: CreateInstrumentDisplayStateInput): InstrumentDisplayState {
   const [upperRegion, lowerRegion] = visiblePage.regions;
@@ -256,7 +314,7 @@ export function createInstrumentDisplayState({
       transportState,
       mode,
     },
-    globalBand: createGlobalBandState(globalBlock),
+    globalBand: createGlobalBandState(globalBlock, globalController),
     upperBand: createBandState(upperRegion),
     lowerBand: createBandState(lowerRegion),
   };

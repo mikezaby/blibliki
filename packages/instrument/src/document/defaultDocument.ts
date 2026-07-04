@@ -1,4 +1,5 @@
 import { PlaybackMode, Resolution } from "@blibliki/engine";
+import { createDefaultGlobalController } from "@/macros/defaultMacros";
 import { DEFAULT_HARDWARE_PROFILE_ID } from "@/profiles/hardwareProfile";
 import { DEFAULT_TEMPLATE_ID } from "@/templates/defaultTemplate";
 import { createMasterTrackDocument } from "./masterTrack";
@@ -68,6 +69,7 @@ export function createDefaultInstrumentDocument(): InstrumentDocument {
       masterVolume: 0,
       probabilityAmount: 1,
     },
+    globalController: createDefaultGlobalController(),
     // 7 note tracks + the master track = 8 channels, so the master lands on
     // the last fader.
     tracks: [

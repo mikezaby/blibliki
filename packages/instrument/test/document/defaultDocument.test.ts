@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
 import {
+  DEFAULT_GLOBAL_MACRO_IDS,
+  GLOBAL_MACRO_SLOT_IDS,
+} from "@/macros/defaultMacros";
+import {
   DEFAULT_HARDWARE_PROFILE_ID,
   getHardwareProfile,
 } from "@/profiles/hardwareProfile";
@@ -87,5 +91,38 @@ describe("createDefaultInstrumentDocument metadata", () => {
     expect(
       document.tracks[0]?.sequencer.pages[0]?.steps[0]?.ccMessages,
     ).toEqual([]);
+  });
+
+  it("mounts four disabled macro encoders into the default global row", () => {
+    const document = createDefaultInstrumentDocument();
+
+    expect(document.globalController.macros).toEqual(
+      DEFAULT_GLOBAL_MACRO_IDS.map((id, index) => ({
+        id,
+        name: `Macro ${index + 1}`,
+        enabled: false,
+        value: 0,
+        polarity: "unipolar",
+        mappings: [],
+      })),
+    );
+    expect(document.globalController.encoderSlots).toEqual({
+      [GLOBAL_MACRO_SLOT_IDS[0]]: {
+        type: "macro",
+        macroId: DEFAULT_GLOBAL_MACRO_IDS[0],
+      },
+      [GLOBAL_MACRO_SLOT_IDS[1]]: {
+        type: "macro",
+        macroId: DEFAULT_GLOBAL_MACRO_IDS[1],
+      },
+      [GLOBAL_MACRO_SLOT_IDS[2]]: {
+        type: "macro",
+        macroId: DEFAULT_GLOBAL_MACRO_IDS[2],
+      },
+      [GLOBAL_MACRO_SLOT_IDS[3]]: {
+        type: "macro",
+        macroId: DEFAULT_GLOBAL_MACRO_IDS[3],
+      },
+    });
   });
 });

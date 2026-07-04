@@ -66,6 +66,35 @@ function createSequencedInstrumentDocument() {
   return document;
 }
 
+function createMacroInstrumentDocument() {
+  const document = createSeededInstrumentDocument();
+
+  document.globalController = {
+    ...document.globalController,
+    macros: document.globalController.macros.map((macro, index) =>
+      index === 0
+        ? {
+            ...macro,
+            enabled: true,
+            name: "Tone Sweep",
+            value: 0.5,
+            mappings: [
+              {
+                moduleId: "track-1.filter.main",
+                propKey: "cutoff",
+                min: 1000,
+                max: 5000,
+                exp: 0,
+              },
+            ],
+          }
+        : macro,
+    ),
+  };
+
+  return document;
+}
+
 function createControllerInputDevice() {
   const listeners: ((event: MidiEvent) => void)[] = [];
 
@@ -323,5 +352,72 @@ describe("InstrumentSession", () => {
     });
 
     expect(ledEvents).toHaveLength(ledEventCount);
+  });
+
+  it("applies enabled macro encoder updates through the live engine", () => {
+    const runtimePatch = createInstrumentEnginePatch(
+      createMacroInstrumentDocument(),
+    );
+    const inputDevice = createControllerInputDevice();
+    const updateCalls: IUpdateModule<ModuleType>[] = [];
+    const runtimeMacroValues: number[] = [];
+    const displayMacroValues: string[] = [];
+    const modules = new Map(
+      runtimePatch.patch.modules.map((module) => [module.id, module]),
+    );
+
+    const session = new InstrumentSession(
+      {
+        findMidiInputDeviceByFuzzyName: () => ({
+          device: inputDevice,
+          score: 1,
+        }),
+        findModule: (id) => {
+          const module = modules.get(id);
+          if (!module) {
+            throw new Error(`Module ${id} not found`);
+          }
+
+          return module;
+        },
+        state: TransportState.stopped,
+        start: () => Promise.resolve(),
+        stop: () => undefined,
+        updateModule: (params) => {
+          updateCalls.push(params);
+          return params;
+        },
+      },
+      runtimePatch,
+      {
+        onRuntimePatchChange: (nextRuntimePatch) => {
+          runtimeMacroValues.push(
+            nextRuntimePatch.compiledInstrument.globalController.macros[0]!
+              .value,
+          );
+        },
+        onDisplayStateChange: (displayState) => {
+          displayMacroValues.push(displayState.globalBand.slots[2].valueText);
+        },
+      },
+    );
+
+    inputDevice.emit(MidiEvent.fromCC(15, 65, 0));
+
+    expect(updateCalls).toContainEqual({
+      id: "track-1.filter.main",
+      moduleType: ModuleType.Filter,
+      changes: {
+        props: {
+          cutoff: 3040,
+        },
+      },
+    });
+    expect(
+      session.getRuntimePatch().compiledInstrument.globalController.macros[0]
+        ?.value,
+    ).toBeCloseTo(0.51);
+    expect(runtimeMacroValues.at(-1)).toBeCloseTo(0.51);
+    expect(displayMacroValues.at(-1)).toBe("51%");
   });
 });

@@ -2,6 +2,7 @@ import { ModuleType } from "@blibliki/engine";
 import { describe, expect, it } from "vitest";
 import { compileInstrument } from "@/compiler/compileInstrument";
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
+import { DEFAULT_GLOBAL_MACRO_IDS } from "@/macros/defaultMacros";
 
 describe("compileInstrument", () => {
   it("compiles the default instrument document into per-track compiled units", () => {
@@ -17,6 +18,9 @@ describe("compileInstrument", () => {
       masterVolume: 0,
       probabilityAmount: 1,
     });
+    expect(compiled.globalController.macros.map((macro) => macro.id)).toEqual(
+      DEFAULT_GLOBAL_MACRO_IDS,
+    );
 
     expect(compiled.tracks).toHaveLength(8);
     expect(

@@ -91,6 +91,7 @@ export function compileInstrument(
       ...document.globalBlock,
       masterVolume: normalizeMasterVolume(document),
     },
+    globalController: document.globalController,
     tracks,
     launchControlXL3: {
       pages: compileLaunchControlPages(tracks),

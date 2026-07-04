@@ -275,6 +275,7 @@ export function createSavedInstrumentDocument(
     ...document,
     version: CURRENT_INSTRUMENT_VERSION,
     globalBlock: createSavedGlobalBlock(document, runtimePatch, patch),
+    globalController: runtimePatch.compiledInstrument.globalController,
     tracks: document.tracks.map((trackDocument) =>
       createSavedTrackDocument(trackDocument, runtimePatch, patch),
     ),

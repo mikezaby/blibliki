@@ -6,6 +6,7 @@ import type {
   InstrumentTrackAudioSource,
   SourceProfileId,
 } from "@/document/types";
+import type { MacroControllerScope } from "@/macros/types";
 import type { TrackPageKey } from "@/types";
 import type { CompiledMidiMapperProps } from "./types";
 import type { MidiPortSelection } from "./types";
@@ -52,6 +53,7 @@ export type CompiledInstrument = {
   templateId: string;
   hardwareProfileId: string;
   globalBlock: InstrumentGlobalBlock;
+  globalController: MacroControllerScope;
   tracks: CompiledInstrumentTrack[];
   launchControlXL3: {
     pages: CompiledInstrumentLaunchControlXL3PageSummary[];

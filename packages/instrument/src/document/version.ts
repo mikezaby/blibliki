@@ -1,4 +1,5 @@
 import { moduleSchemas, ModuleType } from "@blibliki/engine";
+import { createDefaultGlobalController } from "@/macros/defaultMacros";
 import {
   createMasterTrackDocument,
   isMasterTrackDocument,
@@ -20,8 +21,19 @@ type LegacyGlobalBlock = {
   reverbSend?: number;
   delaySend?: number;
 };
+type LegacyInstrumentDocument = Omit<InstrumentDocument, "globalController"> & {
+  globalController?: InstrumentDocument["globalController"];
+};
 
-export function normalizeMasterVolume(document: InstrumentDocument) {
+function hasGlobalController(
+  document: LegacyInstrumentDocument,
+): document is InstrumentDocument {
+  return document.globalController !== undefined;
+}
+
+export function normalizeMasterVolume(
+  document: Pick<InstrumentDocument, "globalBlock" | "version">,
+) {
   if (document.version !== "1") {
     return document.globalBlock.masterVolume;
   }
@@ -68,9 +80,15 @@ function createMigratedMasterTrack(legacy: LegacyGlobalBlock) {
 // corrupting any dB value written back against the old version. v2 -> v3 also
 // moves the global effect chain onto a master track.
 export function migrateInstrumentDocument(
-  document: InstrumentDocument,
+  document: LegacyInstrumentDocument,
 ): InstrumentDocument {
-  if (document.version === CURRENT_INSTRUMENT_VERSION) {
+  const globalController =
+    document.globalController ?? createDefaultGlobalController();
+
+  if (
+    document.version === CURRENT_INSTRUMENT_VERSION &&
+    hasGlobalController(document)
+  ) {
     return document;
   }
 
@@ -88,6 +106,7 @@ export function migrateInstrumentDocument(
       masterVolume: normalizeMasterVolume(document),
       probabilityAmount: document.globalBlock.probabilityAmount,
     },
+    globalController,
     tracks,
   };
 }

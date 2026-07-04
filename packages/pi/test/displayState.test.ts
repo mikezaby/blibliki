@@ -60,14 +60,20 @@ describe("createInstrumentDisplayState", () => {
         valueText: "0%",
       }),
     );
-    // Slots 2-5 are unused: the former master filter / reverb / delay controls
-    // now live on the master track.
-    for (const emptyIndex of [2, 3, 4, 5]) {
-      expect(displayState.globalBand.slots[emptyIndex]).toEqual(
+    for (const macroIndex of [0, 1, 2, 3]) {
+      const slotIndex = macroIndex + 2;
+      const macroNo = macroIndex + 1;
+
+      expect(displayState.globalBand.slots[slotIndex]).toEqual(
         expect.objectContaining({
-          key: "",
-          cc: 13 + emptyIndex,
-          valueText: "--",
+          key: `global-macro-${macroNo}`,
+          label: `Macro ${macroNo}`,
+          shortLabel: `Macro ${macroNo}`,
+          macroId: `global-macro-${macroNo}`,
+          cc: 15 + macroIndex,
+          rawValue: 0,
+          valueText: "0%",
+          inactive: true,
         }),
       );
     }
