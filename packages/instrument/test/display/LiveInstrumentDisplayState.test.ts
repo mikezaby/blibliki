@@ -76,4 +76,52 @@ describe("LiveInstrumentDisplayState", () => {
       }),
     );
   });
+
+  it("renders enabled global macro slots from the runtime patch", () => {
+    const document = createSeededInstrumentDocument();
+    document.globalController = {
+      ...document.globalController,
+      macros: document.globalController.macros.map((macro, index) =>
+        index === 0
+          ? {
+              ...macro,
+              enabled: true,
+              name: "Tone Sweep",
+              value: 0.42,
+            }
+          : macro,
+      ),
+    };
+    const runtimePatch = createInstrumentEnginePatch(document);
+    const modules = new Map(
+      runtimePatch.patch.modules.map((module) => [module.id, module]),
+    );
+
+    const displayState = createLiveInstrumentDisplayState(
+      {
+        findModule: (id: string) => {
+          const module = modules.get(id);
+          if (!module) {
+            throw new Error(`Module ${id} not found`);
+          }
+
+          return module;
+        },
+      },
+      runtimePatch,
+    );
+
+    expect(displayState.globalBand.slots[2]).toEqual(
+      expect.objectContaining({
+        key: "global-macro-1",
+        macroId: "global-macro-1",
+        label: "Tone Sweep",
+        shortLabel: "Tone Sweep",
+        cc: 15,
+        inactive: false,
+        rawValue: 0.42,
+        valueText: "42%",
+      }),
+    );
+  });
 });

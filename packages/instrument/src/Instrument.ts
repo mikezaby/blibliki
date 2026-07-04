@@ -20,6 +20,7 @@ import {
   type InstrumentDisplayState,
 } from "@/display/InstrumentDisplayState";
 import type { InstrumentGlobalBlock } from "@/document/types";
+import type { MacroControllerScope } from "@/macros/types";
 import type { TrackPageKey } from "@/types";
 
 export type InstrumentRuntimeState = {
@@ -36,6 +37,7 @@ export type InstrumentRuntimeState = {
     runtime: CompiledInstrumentEnginePatch["runtime"];
   };
   globalBlock: InstrumentGlobalBlock;
+  globalController: MacroControllerScope;
   navigation: InstrumentNavigationState;
   activeTrack: CompiledInstrumentTrack;
   activePage: CompiledInstrumentLaunchControlXL3PageSummary;
@@ -146,6 +148,7 @@ export class Instrument {
         runtime: this.runtimePatch.runtime,
       },
       globalBlock: this.runtimePatch.compiledInstrument.globalBlock,
+      globalController: this.runtimePatch.compiledInstrument.globalController,
       navigation: this.navigation.serialize(),
       activeTrack: this.navigation.activeTrack,
       activePage: this.navigation.activePage,
@@ -169,6 +172,7 @@ export class Instrument {
       transportState: runtimeState.patch.transportState,
       mode: runtimeState.navigation.mode,
       globalBlock: runtimeState.globalBlock,
+      globalController: runtimeState.globalController,
       visiblePage: runtimeState.visiblePage,
     });
   }
