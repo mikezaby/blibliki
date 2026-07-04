@@ -1,6 +1,8 @@
 import { PlaybackMode, Resolution } from "@blibliki/engine";
+import { createDefaultGlobalController } from "@blibliki/instrument";
 import type {
   InstrumentTrackAudioSource,
+  MacroControllerScope,
   SlotInitialValue,
 } from "@blibliki/instrument";
 
@@ -113,6 +115,7 @@ export type InstrumentDocument = {
   hardwareProfileId: string;
   latencyHint?: InstrumentLatencyHint;
   globalBlock: InstrumentGlobalBlock;
+  globalController: MacroControllerScope;
   tracks: InstrumentTrackDocument[];
 };
 
@@ -196,6 +199,7 @@ export function createDefaultInstrumentDocument(): InstrumentDocument {
       masterVolume: 0,
       probabilityAmount: 1,
     },
+    globalController: createDefaultGlobalController(),
     // 7 note tracks + the master track = 8 channels, so the master lands on
     // the last fader.
     tracks: [

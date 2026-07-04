@@ -163,6 +163,60 @@ describe("InstrumentEditor", () => {
     ).toBeNull();
   });
 
+  it("renders and saves global macro slot settings", async () => {
+    const saveSpy = vi.spyOn(Instrument.prototype, "save").mockResolvedValue();
+    const document = createDefaultInstrumentDocument();
+    document.tracks[0] = {
+      ...document.tracks[0]!,
+      sourceProfileId: "osc",
+    };
+
+    render(
+      <Provider store={store}>
+        <InstrumentEditor
+          instrument={{
+            id: "instrument-1",
+            name: "Macro Instrument",
+            userId: "user-1",
+            document,
+          }}
+        />
+      </Provider>,
+    );
+
+    expect(screen.getByText("Global Macros")).toBeDefined();
+    expect(screen.getAllByLabelText(/Macro [1-4] Name/)).toHaveLength(4);
+
+    fireEvent.click(screen.getByRole("switch", { name: "Enable Macro 1" }));
+    fireEvent.change(screen.getByLabelText("Macro 1 Name"), {
+      target: { value: "Tone Sweep" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Add Macro 1 Mapping" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save Instrument" }));
+
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+
+    const savedInstrument = saveSpy.mock.instances[0] as Instrument;
+    const savedDocument = savedInstrument.document as ReturnType<
+      typeof createDefaultInstrumentDocument
+    >;
+
+    expect(savedDocument.globalController.macros[0]).toEqual(
+      expect.objectContaining({
+        enabled: true,
+        name: "Tone Sweep",
+        mappings: [
+          expect.objectContaining({
+            moduleId: "track-1.filter.main",
+            propKey: "cutoff",
+          }),
+        ],
+      }),
+    );
+  });
+
   it("allows editing the active track voices", () => {
     render(
       <Provider store={store}>

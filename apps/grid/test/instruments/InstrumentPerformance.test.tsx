@@ -55,11 +55,16 @@ vi.mock("@blibliki/engine", async (importOriginal) => {
   };
 });
 
-vi.mock("@blibliki/instrument", () => ({
-  createInstrumentEnginePatch: createInstrumentEnginePatchMock,
-  createInstrumentControllerSession: createInstrumentControllerSessionMock,
-  createSavedInstrumentDocument: createSavedInstrumentDocumentMock,
-}));
+vi.mock("@blibliki/instrument", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@blibliki/instrument")>();
+
+  return {
+    ...actual,
+    createInstrumentEnginePatch: createInstrumentEnginePatchMock,
+    createInstrumentControllerSession: createInstrumentControllerSessionMock,
+    createSavedInstrumentDocument: createSavedInstrumentDocumentMock,
+  };
+});
 
 vi.mock("@blibliki/models", () => {
   class MockInstrument {

@@ -3,6 +3,8 @@ import {
   ModuleTypeToPropsMapping,
   cloneWavetablePresetTables,
   getWavetablePresetById,
+  moduleSchemas,
+  type PropSchema,
 } from "@blibliki/engine";
 import {
   compileTrack,
@@ -10,6 +12,8 @@ import {
   getGlobalControlValueSpec,
   launchControlXL3GlobalRow,
   migrateInstrumentDocument,
+  type MacroEncoder,
+  type MacroMapping,
   type SlotInitialValue,
 } from "@blibliki/instrument";
 import { Instrument, type IInstrument } from "@blibliki/models";
@@ -99,6 +103,17 @@ const LOOP_LENGTH_OPTIONS = [1, 2, 3, 4] as const;
 const LATENCY_HINT_OPTIONS = ["interactive", "playback"] as const;
 const TRACK_VOICES_MIN = 1;
 const TRACK_VOICES_MAX = 64;
+
+type MacroTargetOption = {
+  name: string;
+  value: string;
+  moduleId: string;
+  propKey: string;
+  min: number;
+  max: number;
+  exp?: number;
+};
+
 function renderSourceEditor(
   sourceProfileId: SourceProfileId,
   modulePropsById: Map<string, Record<string, unknown>>,
@@ -219,6 +234,100 @@ function renderSourceEditor(
   }
 }
 
+function getModuleSchema(moduleType: ModuleType): Record<string, PropSchema> {
+  return moduleSchemas[moduleType] as Record<string, PropSchema>;
+}
+
+function createMacroTargetOptions(
+  trackKey: string,
+  modules: NonNullable<
+    ReturnType<typeof compileTrack>
+  >["engine"]["modules"],
+): MacroTargetOption[] {
+  const options: MacroTargetOption[] = [];
+
+  modules.forEach((module) => {
+    const schema = getModuleSchema(module.moduleType);
+
+    Object.entries(schema).forEach(([propKey, propSchema]) => {
+      if (propSchema.kind !== "number") {
+        return;
+      }
+
+      const scopedModuleId = `${trackKey}.${module.id}`;
+
+      options.push({
+        name: `${module.id} ${propSchema.label}`,
+        value: `${scopedModuleId}.${propKey}`,
+        moduleId: scopedModuleId,
+        propKey,
+        min: propSchema.min,
+        max: propSchema.max,
+        exp: propSchema.exp,
+      });
+    });
+  });
+
+  return options;
+}
+
+function getPreferredMacroTarget(
+  options: MacroTargetOption[],
+): MacroTargetOption | undefined {
+  return (
+    options.find(
+      (option) =>
+        option.moduleId.endsWith(".filter.main") && option.propKey === "cutoff",
+    ) ?? options[0]
+  );
+}
+
+function createMacroMapping(option: MacroTargetOption): MacroMapping {
+  return {
+    moduleId: option.moduleId,
+    propKey: option.propKey,
+    min: option.min,
+    max: option.max,
+    exp: option.exp,
+    inverted: false,
+  };
+}
+
+function updateGlobalMacro(
+  document: InstrumentDocument,
+  macroId: string,
+  update: (macro: MacroEncoder) => MacroEncoder,
+): InstrumentDocument {
+  const next = cloneInstrumentDocument(document);
+
+  next.globalController.macros = next.globalController.macros.map((macro) =>
+    macro.id === macroId ? update(macro) : macro,
+  );
+
+  return next;
+}
+
+function updateMacroMapping(
+  document: InstrumentDocument,
+  macroId: string,
+  mappingIndex: number,
+  update: (mapping: MacroMapping) => MacroMapping,
+): InstrumentDocument {
+  return updateGlobalMacro(document, macroId, (macro) => ({
+    ...macro,
+    mappings: macro.mappings.map((mapping, index) =>
+      index === mappingIndex ? update(mapping) : mapping,
+    ),
+  }));
+}
+
+function getOrderedMappingRange(mapping: MacroMapping) {
+  const min = mapping.min ?? 0;
+  const max = mapping.max ?? 1;
+
+  return min <= max ? { min, max } : { min: max, max: min };
+}
+
 function renderFxEditor(
   effectProfileId: EffectProfileId,
   moduleId: string,
@@ -301,6 +410,9 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
   const [activeTrackIndex, setActiveTrackIndex] = useState(0);
   const [activePageIndex, setActivePageIndex] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [macroTargetById, setMacroTargetById] = useState<
+    Record<string, string>
+  >({});
 
   const activeTrack = document.tracks[activeTrackIndex] ?? document.tracks[0];
   const activeAudioSource = activeTrack?.audioSource ?? { type: "internal" };
@@ -324,6 +436,16 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
         ]),
       ),
     [compiledActiveTrack],
+  );
+  const macroTargetOptions = useMemo(
+    () =>
+      activeTrack
+        ? createMacroTargetOptions(
+            activeTrack.key,
+            compiledActiveTrack?.engine.modules ?? [],
+          )
+        : [],
+    [activeTrack, compiledActiveTrack],
   );
 
   const trackOptions = useMemo(
@@ -391,6 +513,83 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }) as TUpdateProp<any>;
+
+  const getSelectedMacroTarget = (
+    macroId: string,
+  ): MacroTargetOption | undefined => {
+    const selectedValue = macroTargetById[macroId];
+    return (
+      macroTargetOptions.find((option) => option.value === selectedValue) ??
+      getPreferredMacroTarget(macroTargetOptions)
+    );
+  };
+
+  const setMacroEnabled = (macroId: string, enabled: boolean) => {
+    setDocument((current) =>
+      updateGlobalMacro(current, macroId, (macro) => ({
+        ...macro,
+        enabled,
+      })),
+    );
+  };
+
+  const setMacroName = (macroId: string, name: string) => {
+    setDocument((current) =>
+      updateGlobalMacro(current, macroId, (macro) => ({
+        ...macro,
+        name,
+      })),
+    );
+  };
+
+  const addMacroMapping = (macroId: string) => {
+    const selectedTarget = getSelectedMacroTarget(macroId);
+    if (!selectedTarget) {
+      return;
+    }
+
+    setDocument((current) =>
+      updateGlobalMacro(current, macroId, (macro) => ({
+        ...macro,
+        mappings: [...macro.mappings, createMacroMapping(selectedTarget)],
+      })),
+    );
+  };
+
+  const setMacroMappingRange = (
+    macroId: string,
+    mappingIndex: number,
+    key: "min" | "max",
+    value: number,
+  ) => {
+    setDocument((current) =>
+      updateMacroMapping(current, macroId, mappingIndex, (mapping) => {
+        const range = getOrderedMappingRange(mapping);
+        const nextRange =
+          key === "min"
+            ? { min: value, max: Math.max(value, range.max) }
+            : { min: Math.min(range.min, value), max: value };
+
+        return {
+          ...mapping,
+          ...nextRange,
+        };
+      }),
+    );
+  };
+
+  const setMacroMappingInverted = (
+    macroId: string,
+    mappingIndex: number,
+    inverted: boolean,
+  ) => {
+    setDocument((current) =>
+      updateMacroMapping(current, macroId, mappingIndex, (mapping) => ({
+        ...mapping,
+        inverted,
+      })),
+    );
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -609,6 +808,203 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
                           {control.label}
                         </Text>
                       </Stack>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Global Macros</CardTitle>
+                <CardDescription>
+                  Four template-mounted global-row macro encoders for
+                  controller performance mappings
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  {document.globalController.macros.map((macro, index) => {
+                    const macroNo = index + 1;
+                    const nameInputId = `macro-${macro.id}-name`;
+                    const selectedTarget = getSelectedMacroTarget(macro.id);
+                    const targetSelectOptions = macroTargetOptions.map(
+                      (option) => ({
+                        name: option.name,
+                        value: option.value,
+                      }),
+                    );
+
+                    return (
+                      <Surface
+                        key={macro.id}
+                        tone="subtle"
+                        border="subtle"
+                        className="p-4"
+                      >
+                        <Stack gap={4}>
+                          <Stack
+                            direction="row"
+                            align="center"
+                            justify="between"
+                            gap={3}
+                          >
+                            <Text weight="semibold">{`Macro ${macroNo}`}</Text>
+                            <Switch
+                              aria-label={`Enable Macro ${macroNo}`}
+                              checked={macro.enabled}
+                              color="info"
+                              onCheckedChange={(enabled) => {
+                                setMacroEnabled(macro.id, enabled);
+                              }}
+                            />
+                          </Stack>
+
+                          <Stack gap={2}>
+                            <Label htmlFor={nameInputId}>
+                              {`Macro ${macroNo} Name`}
+                            </Label>
+                            <Input
+                              id={nameInputId}
+                              value={macro.name}
+                              onChange={(event) => {
+                                setMacroName(macro.id, event.target.value);
+                              }}
+                            />
+                          </Stack>
+
+                          <Stack gap={2}>
+                            <Label>{`Macro ${macroNo} Mapping Target`}</Label>
+                            {targetSelectOptions.length > 0 ? (
+                              <OptionSelect
+                                label={`Select Macro ${macroNo} target`}
+                                value={selectedTarget?.value ?? ""}
+                                options={targetSelectOptions}
+                                onChange={(value: string) => {
+                                  setMacroTargetById((current) => ({
+                                    ...current,
+                                    [macro.id]: value,
+                                  }));
+                                }}
+                              />
+                            ) : (
+                              <Text tone="muted" size="sm">
+                                No numeric targets on the active track
+                              </Text>
+                            )}
+                          </Stack>
+
+                          <Button
+                            type="button"
+                            variant="outlined"
+                            color="neutral"
+                            disabled={!selectedTarget}
+                            onClick={() => {
+                              addMacroMapping(macro.id);
+                            }}
+                          >
+                            {`Add Macro ${macroNo} Mapping`}
+                          </Button>
+
+                          {macro.mappings.map((mapping, mappingIndex) => {
+                            const range = getOrderedMappingRange(mapping);
+                            const targetName =
+                              macroTargetOptions.find(
+                                (option) =>
+                                  option.moduleId === mapping.moduleId &&
+                                  option.propKey === mapping.propKey,
+                              )?.name ??
+                              `${mapping.moduleId}.${mapping.propKey}`;
+
+                            return (
+                              <Surface
+                                key={`${mapping.moduleId}.${mapping.propKey}.${mappingIndex}`}
+                                tone="panel"
+                                border="subtle"
+                                className="p-3"
+                              >
+                                <Stack gap={3}>
+                                  <Text size="sm" weight="medium">
+                                    {targetName}
+                                  </Text>
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <Stack gap={2}>
+                                      <Label
+                                        htmlFor={`macro-${macro.id}-mapping-${mappingIndex}-min`}
+                                      >
+                                        Min
+                                      </Label>
+                                      <Input
+                                        id={`macro-${macro.id}-mapping-${mappingIndex}-min`}
+                                        type="number"
+                                        value={range.min}
+                                        onChange={(event) => {
+                                          const value =
+                                            event.target.valueAsNumber;
+                                          if (!Number.isFinite(value)) return;
+                                          setMacroMappingRange(
+                                            macro.id,
+                                            mappingIndex,
+                                            "min",
+                                            value,
+                                          );
+                                        }}
+                                      />
+                                    </Stack>
+                                    <Stack gap={2}>
+                                      <Label
+                                        htmlFor={`macro-${macro.id}-mapping-${mappingIndex}-max`}
+                                      >
+                                        Max
+                                      </Label>
+                                      <Input
+                                        id={`macro-${macro.id}-mapping-${mappingIndex}-max`}
+                                        type="number"
+                                        value={range.max}
+                                        onChange={(event) => {
+                                          const value =
+                                            event.target.valueAsNumber;
+                                          if (!Number.isFinite(value)) return;
+                                          setMacroMappingRange(
+                                            macro.id,
+                                            mappingIndex,
+                                            "max",
+                                            value,
+                                          );
+                                        }}
+                                      />
+                                    </Stack>
+                                  </div>
+                                  <Stack
+                                    direction="row"
+                                    align="center"
+                                    justify="between"
+                                    gap={3}
+                                  >
+                                    <Text tone="muted" size="sm">
+                                      Invert
+                                    </Text>
+                                    <Switch
+                                      aria-label={`Invert Macro ${macroNo} Mapping ${
+                                        mappingIndex + 1
+                                      }`}
+                                      checked={mapping.inverted === true}
+                                      color="info"
+                                      onCheckedChange={(inverted) => {
+                                        setMacroMappingInverted(
+                                          macro.id,
+                                          mappingIndex,
+                                          inverted,
+                                        );
+                                      }}
+                                    />
+                                  </Stack>
+                                </Stack>
+                              </Surface>
+                            );
+                          })}
+                        </Stack>
+                      </Surface>
                     );
                   })}
                 </div>
