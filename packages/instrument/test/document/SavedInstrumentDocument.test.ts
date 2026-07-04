@@ -122,4 +122,72 @@ describe("createSavedInstrumentDocument", () => {
       { cc: 1, value: 64 },
     ]);
   });
+
+  it("saves runtime macro state while preserving mapped target prop values", () => {
+    const document = createDefaultInstrumentDocument();
+    document.tracks[0] = {
+      ...document.tracks[0]!,
+      sourceProfileId: "osc",
+    };
+    document.globalController.macros[0] = {
+      ...document.globalController.macros[0]!,
+      enabled: true,
+      name: "Tone Sweep",
+      value: 0.5,
+      mappings: [
+        {
+          moduleId: "track-1.filter.main",
+          propKey: "cutoff",
+          min: 1000,
+          max: 5000,
+          exp: 0,
+        },
+      ],
+    };
+    const runtimePatch = createInstrumentEnginePatch(document);
+    const runtimeAfterMacro = structuredClone(runtimePatch);
+    runtimeAfterMacro.compiledInstrument.globalController.macros[0] = {
+      ...runtimeAfterMacro.compiledInstrument.globalController.macros[0]!,
+      value: 0.73,
+    };
+    const patch = structuredClone(runtimePatch.patch);
+    const filter = patch.modules.find(
+      (module) =>
+        module.id === "track-1.filter.main" &&
+        module.moduleType === ModuleType.Filter,
+    );
+    if (!filter) {
+      throw new Error("Expected track filter module");
+    }
+    filter.props = {
+      ...filter.props,
+      cutoff: 3920,
+    };
+
+    const saved = createSavedInstrumentDocument(
+      document,
+      runtimeAfterMacro,
+      patch,
+    );
+
+    expect(saved.globalController.macros[0]).toEqual(
+      expect.objectContaining({
+        enabled: true,
+        name: "Tone Sweep",
+        value: 0.73,
+        mappings: [
+          {
+            moduleId: "track-1.filter.main",
+            propKey: "cutoff",
+            min: 1000,
+            max: 5000,
+            exp: 0,
+          },
+        ],
+      }),
+    );
+    expect(saved.tracks[0]?.controllerSlotValues).toMatchObject({
+      "filter.cutoff": 3920,
+    });
+  });
 });
