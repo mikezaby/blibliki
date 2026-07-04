@@ -45,6 +45,18 @@ export {
   createModulePropSlot,
   getValueSpecForModuleProp,
 } from "./blocks/helpers";
+export {
+  createDefaultGlobalController,
+  DEFAULT_GLOBAL_MACRO_IDS,
+  GLOBAL_MACRO_SLOT_IDS,
+} from "./macros/defaultMacros";
+export type {
+  EncoderSlotAssignment,
+  MacroControllerScope,
+  MacroEncoder,
+  MacroMapping,
+  MacroPolarity,
+} from "./macros/types";
 export { default as ChorusBlock } from "./blocks/effects/ChorusBlock";
 export { default as CompressorBlock } from "./blocks/effects/CompressorBlock";
 export { default as DelayBlock } from "./blocks/effects/DelayBlock";

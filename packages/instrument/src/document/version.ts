@@ -1,4 +1,5 @@
 import { moduleSchemas, ModuleType } from "@blibliki/engine";
+import { createDefaultGlobalController } from "@/macros/defaultMacros";
 import {
   createMasterTrackDocument,
   isMasterTrackDocument,
@@ -70,7 +71,13 @@ function createMigratedMasterTrack(legacy: LegacyGlobalBlock) {
 export function migrateInstrumentDocument(
   document: InstrumentDocument,
 ): InstrumentDocument {
-  if (document.version === CURRENT_INSTRUMENT_VERSION) {
+  const globalController =
+    document.globalController ?? createDefaultGlobalController();
+
+  if (
+    document.version === CURRENT_INSTRUMENT_VERSION &&
+    document.globalController
+  ) {
     return document;
   }
 
@@ -88,6 +95,7 @@ export function migrateInstrumentDocument(
       masterVolume: normalizeMasterVolume(document),
       probabilityAmount: document.globalBlock.probabilityAmount,
     },
+    globalController,
     tracks,
   };
 }
