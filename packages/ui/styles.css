@@ -1226,12 +1226,31 @@
 
   .ui-autocomplete-trigger {
     width: 100%;
+    padding-right: 2rem;
+    font-family: inherit;
+    cursor: text;
+    text-overflow: ellipsis;
+  }
+
+  .ui-autocomplete-trigger::placeholder {
+    color: var(--ui-color-text-muted);
+  }
+
+  .ui-autocomplete-chevron {
+    position: absolute;
+    top: 50%;
+    right: 0.75rem;
+    transform: translateY(-50%);
+    pointer-events: none;
   }
 
   .ui-autocomplete-content {
-    position: fixed;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
     z-index: 1000;
-    min-width: min(26rem, max(100%, 16rem));
+    width: 100%;
+    min-width: 16rem;
     max-width: min(32rem, calc(100vw - 2rem));
     overflow: hidden;
     border: 1px solid var(--ui-color-border-subtle);
@@ -1243,11 +1262,6 @@
     padding: 0.25rem;
     pointer-events: auto;
     animation: ui-select-in 120ms ease;
-  }
-
-  .ui-autocomplete-search {
-    width: 100%;
-    margin-bottom: 0.25rem;
   }
 
   .ui-autocomplete-list {

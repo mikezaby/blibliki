@@ -266,7 +266,7 @@ Auto-sizing trigger width from longest option.
 />
 ```
 `options` accepts: `string[]`, `number[]`, `{name, value, searchText?}[]`, `{id, name, searchText?}[]`.  
-The trigger has `role="combobox"`; the popup includes a search input and filters visible text, value, and optional `searchText`.
+The trigger is a searchable `<input role="combobox">` — you type directly in it to filter (visible text, value, and optional `searchText`). The popup renders inline (not portaled) so it works inside a Radix `Dialog`'s scroll-lock.
 
 ### `Dialog` / `ContextMenu` / `DropdownMenu`
 Thin wrappers over Radix primitives with `ui-*` classes applied. Use the named re-exports directly; structure mirrors Radix composition exactly.

@@ -1,6 +1,5 @@
 import type { ComponentProps } from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
 
 export type AutocompleteSelectValue = string | number;
@@ -135,14 +134,10 @@ function AutocompleteSelect<T extends AutocompleteSelectValue | undefined>({
   onChange,
 }: AutocompleteSelectProps<T>) {
   const id = useId();
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [contentPosition, setContentPosition] = useState<{
-    top: number;
-    left: number;
-    width: number;
-  }>();
   const normalizedOptions = useMemo(
     () => normalizeAutocompleteOptions(options),
     [options],
@@ -167,122 +162,97 @@ function AutocompleteSelect<T extends AutocompleteSelectValue | undefined>({
       return;
     }
 
-    const updateContentPosition = () => {
-      const trigger = triggerRef.current;
-      if (!trigger) {
-        return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!wrapperRef.current?.contains(event.target as Node)) {
+        close();
       }
-
-      const rect = trigger.getBoundingClientRect();
-      setContentPosition({
-        top: rect.bottom + 4,
-        left: rect.left,
-        width: rect.width,
-      });
     };
 
-    updateContentPosition();
-    window.addEventListener("resize", updateContentPosition);
-    window.addEventListener("scroll", updateContentPosition, true);
+    document.addEventListener("pointerdown", onPointerDown);
 
     return () => {
-      window.removeEventListener("resize", updateContentPosition);
-      window.removeEventListener("scroll", updateContentPosition, true);
+      document.removeEventListener("pointerdown", onPointerDown);
     };
   }, [open]);
 
-  const content =
-    open && typeof document !== "undefined"
-      ? createPortal(
-          <div
-            className={cn("ui-autocomplete-content", contentClassName)}
-            role="presentation"
-            style={{
-              top: contentPosition?.top ?? 0,
-              left: contentPosition?.left ?? 0,
-              minWidth: contentPosition?.width,
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") {
+  const content = open ? (
+    // Rendered inline and absolutely positioned under the trigger so it stays
+    // inside a Radix Dialog's scroll-lock allowlist and its transformed
+    // containing block — a body portal can't be wheel-scrolled there, and
+    // position: fixed would resolve against the dialog's transform.
+    <div
+      className={cn("ui-autocomplete-content", contentClassName)}
+      role="presentation"
+    >
+      <div
+        id={`${id}-listbox`}
+        role="listbox"
+        aria-labelledby={`${id}-trigger`}
+        className="ui-autocomplete-list"
+      >
+        {filteredOptions.length > 0 ? (
+          filteredOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="option"
+              aria-selected={option.value === value}
+              className="ui-autocomplete-option"
+              // Select before the input's blur can close the popup.
+              onMouseDown={(event) => {
+                event.preventDefault();
+                onChange(option.value as T);
                 close();
-              }
-            }}
-          >
-            <input
-              aria-label={`Search ${triggerLabel}`}
-              className="ui-input ui-input--size-sm ui-autocomplete-search"
-              placeholder={searchPlaceholder}
-              value={search}
-              autoFocus
-              onChange={(event) => {
-                setSearch(event.target.value);
               }}
-            />
-            <div
-              id={`${id}-listbox`}
-              role="listbox"
-              aria-labelledby={`${id}-trigger`}
-              className="ui-autocomplete-list"
             >
-              {filteredOptions.length > 0 ? (
-                filteredOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    role="option"
-                    aria-selected={option.value === value}
-                    className="ui-autocomplete-option"
-                    onClick={() => {
-                      onChange(option.value as T);
-                      close();
-                    }}
-                  >
-                    <span className="ui-select-item-text">{option.name}</span>
-                  </button>
-                ))
-              ) : (
-                <div className="ui-autocomplete-empty">{emptyText}</div>
-              )}
-            </div>
-          </div>,
-          document.body,
-        )
-      : null;
+              <span className="ui-select-item-text">{option.name}</span>
+            </button>
+          ))
+        ) : (
+          <div className="ui-autocomplete-empty">{emptyText}</div>
+        )}
+      </div>
+    </div>
+  ) : null;
 
   return (
-    <div
-      className={cn("ui-autocomplete", className)}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
-          close();
-        }
-      }}
-    >
-      <button
+    <div ref={wrapperRef} className={cn("ui-autocomplete", className)}>
+      <input
         ref={triggerRef}
         id={`${id}-trigger`}
-        type="button"
         role="combobox"
         aria-controls={`${id}-listbox`}
         aria-expanded={open}
+        aria-autocomplete="list"
         aria-label={triggerLabel}
         data-size={size}
-        data-placeholder={selectedOption ? undefined : ""}
+        data-placeholder={open || selectedOption ? undefined : ""}
         data-disabled={disabled ? "" : undefined}
         className={cn(
           "ui-select-trigger ui-autocomplete-trigger",
           triggerClassName,
         )}
         disabled={disabled}
-        onClick={() => {
+        placeholder={open ? searchPlaceholder : placeholder}
+        value={open ? search : displayValue}
+        onFocus={() => {
           if (!disabled) {
-            setOpen((current) => !current);
+            setSearch("");
+            setOpen(true);
           }
         }}
-      >
-        <span className="ui-select-value">{displayValue}</span>
-        <SelectChevronDownIcon className="ui-select-chevron" />
-      </button>
+        onChange={(event) => {
+          setSearch(event.target.value);
+          setOpen(true);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            close();
+            triggerRef.current?.blur();
+          }
+        }}
+      />
+      <SelectChevronDownIcon className="ui-select-chevron ui-autocomplete-chevron" />
       {content}
     </div>
   );

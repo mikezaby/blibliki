@@ -556,6 +556,27 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
     );
   };
 
+  const setMacroValue = (macroId: string, value: number) => {
+    setDocument((current) =>
+      updateGlobalMacro(current, macroId, (macro) => ({
+        ...macro,
+        value,
+      })),
+    );
+  };
+
+  // Resolve the macro mounted on a global-row slot (knobs 3-6), if any.
+  const getSlotMacro = (
+    slotId: string | undefined,
+  ): MacroEncoder | undefined => {
+    if (!slotId) return undefined;
+    const assignment = document.globalController.encoderSlots[slotId];
+    if (assignment?.type !== "macro") return undefined;
+    return document.globalController.macros.find(
+      (macro) => macro.id === assignment.macroId,
+    );
+  };
+
   const addMacroMapping = (macroId: string) => {
     const selectedTarget = getSelectedMacroTarget(macroId);
     if (!selectedTarget) {
@@ -784,15 +805,41 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
               <CardHeader>
                 <CardTitle>Global Controls</CardTitle>
                 <CardDescription>
-                  Initial values for the performance global block (tempo, swing,
-                  master FX) applied when the performance starts
+                  Initial values for the performance global row (tempo, swing,
+                  macros, prob, volume) applied when the performance starts
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-6 md:grid-cols-4 xl:grid-cols-8">
                   {launchControlXL3GlobalRow.map((control) => {
-                    // Unused encoder positions (former master effects) have no key.
-                    if (!control.key) return null;
+                    // Knobs 3-6 carry macro encoders instead of a global-block
+                    // key; render their default value so it can be assigned here.
+                    if (!control.key) {
+                      const macro = getSlotMacro(control.slotId);
+                      if (!macro) return null;
+
+                      return (
+                        <Stack key={control.slotId} align="center" gap={2}>
+                          <Encoder
+                            name={macro.name}
+                            value={macro.value}
+                            min={0}
+                            max={1}
+                            step={0.01}
+                            onChange={(next) => {
+                              setMacroValue(macro.id, next);
+                            }}
+                          />
+                          <Text
+                            tone="muted"
+                            size="xs"
+                            className="text-center uppercase tracking-wide"
+                          >
+                            {macro.name}
+                          </Text>
+                        </Stack>
+                      );
+                    }
 
                     const spec = getGlobalControlValueSpec(control.key);
                     if (spec.kind !== "number") return null;
