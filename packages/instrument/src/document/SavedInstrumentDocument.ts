@@ -15,6 +15,8 @@ import {
   CURRENT_INSTRUMENT_VERSION,
   normalizeMasterVolume,
 } from "@/document/version";
+import { getMacroNumberSchema, totalMacroOffset } from "@/macros/macroMapping";
+import type { MacroEncoder } from "@/macros/types";
 
 function isTrackEnabled(trackDocument: InstrumentTrackDocument) {
   return trackDocument.enabled !== false;
@@ -110,6 +112,7 @@ function createSavedGlobalBlock(
 function createSavedControllerSlotValues(
   track: CompiledInstrumentEnginePatch["compiledInstrument"]["tracks"][number],
   patch: IEngineSerialize,
+  macros: MacroEncoder[],
   existingValues: InstrumentTrackControllerSlotValues = {},
 ): InstrumentTrackControllerSlotValues | undefined {
   const slotValues: InstrumentTrackControllerSlotValues = {
@@ -131,7 +134,32 @@ function createSavedControllerSlotValues(
           continue;
         }
 
-        slotValues[`${slot.blockKey}.${slot.slotKey}`] = value;
+        // The engine prop holds base + macro offset. Store the clean base by
+        // subtracting the macro's current contribution, so reload doesn't
+        // double-apply the offset.
+        // ponytail: base is derived (engine - offset), not stored separately.
+        // If a macro offset saturates the prop's hard limit at save time, the
+        // clamped-away amount can't be recovered and the base drifts. Store a
+        // dedicated base per slot if that edge starts to bite.
+        let baseValue = value;
+        if (typeof value === "number") {
+          const moduleType = patch.modules.find(
+            (module) => module.id === slot.binding.moduleId,
+          )?.moduleType;
+          const exp = moduleType
+            ? getMacroNumberSchema(moduleType, slot.binding.propKey)?.exp
+            : undefined;
+          baseValue =
+            value -
+            totalMacroOffset(
+              macros,
+              slot.binding.moduleId,
+              slot.binding.propKey,
+              exp,
+            );
+        }
+
+        slotValues[`${slot.blockKey}.${slot.slotKey}`] = baseValue;
       }
     }
   }
@@ -235,6 +263,7 @@ function createSavedTrackDocument(
     controllerSlotValues: createSavedControllerSlotValues(
       compiledTrack,
       patch,
+      runtimePatch.compiledInstrument.globalController.macros,
       trackDocument.controllerSlotValues,
     ),
     sequencer: pages

@@ -305,11 +305,13 @@ function getPreferredMacroTarget(
 }
 
 function createMacroMapping(option: MacroTargetOption): MacroMapping {
+  // min/max are signed offsets from the target's base value (not absolute
+  // values). Default to a full upward sweep; rest (0) leaves the base untouched.
   return {
     moduleId: option.moduleId,
     propKey: option.propKey,
-    min: option.min,
-    max: option.max,
+    min: 0,
+    max: option.max - option.min,
     exp: option.exp,
     inverted: false,
   };
@@ -444,7 +446,7 @@ function SortableMacroEncoder({
       <Encoder
         name={macro.name}
         value={macro.value}
-        min={0}
+        min={macro.polarity === "bipolar" ? -1 : 0}
         max={1}
         step={0.01}
         onChange={onValueChange}
@@ -616,6 +618,18 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
     );
   };
 
+  const setMacroBipolar = (macroId: string, bipolar: boolean) => {
+    setDocument((current) =>
+      updateGlobalMacro(current, macroId, (macro) => ({
+        ...macro,
+        polarity: bipolar ? "bipolar" : "unipolar",
+        // Snap to rest when switching so the encoder can't sit below a
+        // unipolar macro's 0 floor.
+        value: bipolar ? macro.value : Math.max(0, macro.value),
+      })),
+    );
+  };
+
   const setMacroValue = (macroId: string, value: number) => {
     setDocument((current) =>
       updateGlobalMacro(current, macroId, (macro) => ({
@@ -761,6 +775,17 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
               </Stack>
               <Stack direction="row" align="center" gap={3}>
                 <Text tone="muted" size="sm">
+                  Bipolar
+                </Text>
+                <Switch
+                  aria-label={`Make Macro ${macroNo} bipolar`}
+                  checked={macro.polarity === "bipolar"}
+                  color="info"
+                  onCheckedChange={(bipolar) => {
+                    setMacroBipolar(macro.id, bipolar);
+                  }}
+                />
+                <Text tone="muted" size="sm">
                   Enabled
                 </Text>
                 <Switch
@@ -838,7 +863,7 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
                         <Label
                           htmlFor={`macro-${macro.id}-mapping-${mappingIndex}-min`}
                         >
-                          Min
+                          Min offset
                         </Label>
                         <Input
                           id={`macro-${macro.id}-mapping-${mappingIndex}-min`}
@@ -862,7 +887,7 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
                         <Label
                           htmlFor={`macro-${macro.id}-mapping-${mappingIndex}-max`}
                         >
-                          Max
+                          Max offset
                         </Label>
                         <Input
                           id={`macro-${macro.id}-mapping-${mappingIndex}-max`}

@@ -1,19 +1,26 @@
-import {
-  type IUpdateModule,
-  MidiEvent,
-  moduleSchemas,
-  ModuleType,
-  type NumberProp,
-} from "@blibliki/engine";
+import { MidiEvent, ModuleType } from "@blibliki/engine";
 import { Instrument } from "@/Instrument";
 import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
 import type { InstrumentNavigationAction } from "@/core/InstrumentNavigation";
 import { launchControlXL3GlobalRow } from "@/hardware/launchControlXL3/globalRow";
 import {
-  calculateMacroMappingValue,
+  getMacroNumberSchema,
+  macroOffsetDelta,
   reduceMacroValue,
 } from "@/macros/macroMapping";
 import type { MacroEncoder } from "@/macros/types";
+
+// A macro turn nudges each target's engine prop by `delta` (the change in the
+// macro's offset), leaving the base — the target's dedicated encoder value —
+// untouched. The session reads the live prop and clamps to the schema bounds.
+export type MacroPropAdjustment = {
+  moduleId: string;
+  moduleType: ModuleType;
+  propKey: string;
+  delta: number;
+  clampMin: number;
+  clampMax: number;
+};
 
 type LaunchControlXL3Command =
   | {
@@ -42,7 +49,7 @@ type LaunchControlXL3Command =
   | {
       type: "macro";
       cc: number;
-      updates: IUpdateModule<ModuleType>[];
+      adjustments: MacroPropAdjustment[];
     };
 
 export type LaunchControlXL3Result = {
@@ -133,30 +140,13 @@ function replaceMacro(
   };
 }
 
-function isNumberPropSchema(propSchema: unknown): propSchema is NumberProp {
-  return (
-    propSchema !== null &&
-    typeof propSchema === "object" &&
-    "kind" in propSchema &&
-    propSchema.kind === "number"
-  );
-}
-
-function getNumberPropSchema(
-  moduleType: ModuleType,
-  propKey: string,
-): NumberProp | undefined {
-  const schema: Record<string, unknown> = moduleSchemas[moduleType];
-  const propSchema = schema[propKey];
-
-  return isNumberPropSchema(propSchema) ? propSchema : undefined;
-}
-
-function createMacroUpdate(
+function createMacroAdjustment(
   runtimePatch: CompiledInstrumentEnginePatch,
-  macroValue: number,
   mapping: MacroEncoder["mappings"][number],
-): IUpdateModule<ModuleType> | undefined {
+  oldValue: number,
+  newValue: number,
+  polarity: MacroEncoder["polarity"],
+): MacroPropAdjustment | undefined {
   const module = runtimePatch.patch.modules.find(
     (candidate) => candidate.id === mapping.moduleId,
   );
@@ -164,21 +154,29 @@ function createMacroUpdate(
     return;
   }
 
-  const propSchema = getNumberPropSchema(module.moduleType, mapping.propKey);
+  const propSchema = getMacroNumberSchema(module.moduleType, mapping.propKey);
   if (!propSchema) {
     return;
   }
 
-  const value = calculateMacroMappingValue(macroValue, mapping, propSchema);
+  const delta = macroOffsetDelta(
+    oldValue,
+    newValue,
+    mapping,
+    polarity,
+    propSchema.exp,
+  );
+  if (delta === 0) {
+    return;
+  }
 
   return {
-    id: mapping.moduleId,
+    moduleId: mapping.moduleId,
     moduleType: module.moduleType,
-    changes: {
-      props: {
-        [mapping.propKey]: value,
-      },
-    },
+    propKey: mapping.propKey,
+    delta,
+    clampMin: propSchema.min,
+    clampMax: propSchema.max,
   };
 }
 
@@ -203,7 +201,7 @@ function applyMacroEncoderEvent(
 
   const nextMacro = {
     ...macro,
-    value: reduceMacroValue(macro.value, ccValue),
+    value: reduceMacroValue(macro.value, ccValue, macro.polarity),
   };
   const nextRuntimePatch = replaceMacro(runtimePatch, nextMacro);
 
@@ -212,14 +210,16 @@ function applyMacroEncoderEvent(
     command: {
       type: "macro",
       cc,
-      updates: nextMacro.mappings.flatMap((mapping) => {
-        const update = createMacroUpdate(
+      adjustments: nextMacro.mappings.flatMap((mapping) => {
+        const adjustment = createMacroAdjustment(
           nextRuntimePatch,
-          nextMacro.value,
           mapping,
+          macro.value,
+          nextMacro.value,
+          nextMacro.polarity,
         );
 
-        return update ? [update] : [];
+        return adjustment ? [adjustment] : [];
       }),
     },
   };
