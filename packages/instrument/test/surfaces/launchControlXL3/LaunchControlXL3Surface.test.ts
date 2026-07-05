@@ -143,7 +143,7 @@ describe("LaunchControlXL3Surface", () => {
     expect(result.runtimePatch.runtime.navigation.selectedStepIndex).toBe(3);
   });
 
-  it("maps enabled macro encoder movement to macro value and target prop updates", () => {
+  it("maps enabled macro movement to an offset delta on the target prop", () => {
     const surface = new LaunchControlXL3Surface();
     const runtimePatch = createInstrumentEnginePatch(
       createMacroInstrumentDocument(),
@@ -157,21 +157,19 @@ describe("LaunchControlXL3Surface", () => {
     const macro =
       result.runtimePatch.compiledInstrument.globalController.macros[0];
     expect(macro?.value).toBeCloseTo(0.51);
-    expect(result.command).toEqual({
-      type: "macro",
-      cc: 15,
-      updates: [
-        {
-          id: "track-1.filter.main",
-          moduleType: ModuleType.Filter,
-          changes: {
-            props: {
-              cutoff: 3040,
-            },
-          },
-        },
-      ],
-    });
+    if (result.command.type !== "macro") {
+      throw new Error("Expected a macro command");
+    }
+    expect(result.command.cc).toBe(15);
+    expect(result.command.adjustments).toHaveLength(1);
+    const adjustment = result.command.adjustments[0]!;
+    expect(adjustment.moduleId).toBe("track-1.filter.main");
+    expect(adjustment.moduleType).toBe(ModuleType.Filter);
+    expect(adjustment.propKey).toBe("cutoff");
+    // Linear (exp 0) offset endpoints 1000..5000; a 0.01 step of a 5000 span.
+    expect(adjustment.delta).toBeCloseTo(50);
+    expect(adjustment.clampMin).toBe(20);
+    expect(adjustment.clampMax).toBe(20000);
   });
 
   it("ignores disabled macro encoder movement", () => {

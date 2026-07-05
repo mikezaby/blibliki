@@ -256,8 +256,22 @@ export class InstrumentSession implements InstrumentControllerSession {
     }
 
     if (result.command.type === "macro") {
-      for (const update of result.command.updates) {
-        this.engine.updateModule(update);
+      for (const adjustment of result.command.adjustments) {
+        // Read the live base (dedicated-encoder value) and add the macro's
+        // offset delta on top, so the two layers compose without clobbering.
+        const live = this.engine.findModule(adjustment.moduleId).props?.[
+          adjustment.propKey
+        ];
+        const base = typeof live === "number" ? live : 0;
+        const next = Math.max(
+          adjustment.clampMin,
+          Math.min(adjustment.clampMax, base + adjustment.delta),
+        );
+        this.engine.updateModule({
+          id: adjustment.moduleId,
+          moduleType: adjustment.moduleType,
+          changes: { props: { [adjustment.propKey]: next } },
+        });
       }
       this.sendHardwareDisplayEvents(
         encoderDisplayEvents(this.getDisplayState(), result.command.cc),

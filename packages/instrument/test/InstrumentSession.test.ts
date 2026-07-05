@@ -402,17 +402,26 @@ describe("InstrumentSession", () => {
       },
     );
 
+    // The macro nudges the live engine prop by its offset delta (base intact),
+    // so read the live cutoff first and expect base + delta, clamped to schema.
+    const liveProps: Record<string, unknown> | undefined = modules.get(
+      "track-1.filter.main",
+    )?.props;
+    const liveCutoffBefore = liveProps?.cutoff;
+    if (typeof liveCutoffBefore !== "number") {
+      throw new Error("Expected a live filter cutoff");
+    }
+
     inputDevice.emit(MidiEvent.fromCC(15, 65, 0));
 
-    expect(updateCalls).toContainEqual({
-      id: "track-1.filter.main",
-      moduleType: ModuleType.Filter,
-      changes: {
-        props: {
-          cutoff: 3040,
-        },
-      },
-    });
+    // value 0.5 -> 0.51 with linear offset endpoints 1000..5000 => delta 50.
+    const expectedCutoff = Math.min(20000, Math.max(20, liveCutoffBefore + 50));
+    const cutoffCall = updateCalls.find(
+      (call) => call.id === "track-1.filter.main",
+    );
+    expect(
+      (cutoffCall?.changes.props as { cutoff?: number } | undefined)?.cutoff,
+    ).toBeCloseTo(expectedCutoff);
     expect(
       session.getRuntimePatch().compiledInstrument.globalController.macros[0]
         ?.value,

@@ -123,7 +123,7 @@ describe("createSavedInstrumentDocument", () => {
     ]);
   });
 
-  it("saves runtime macro state while preserving mapped target prop values", () => {
+  it("saves runtime macro state and the clean base of mapped target props", () => {
     const document = createDefaultInstrumentDocument();
     document.tracks[0] = {
       ...document.tracks[0]!,
@@ -186,8 +186,11 @@ describe("createSavedInstrumentDocument", () => {
         ],
       }),
     );
+    // The engine prop holds base + macro offset. With value 0.73 and linear
+    // offset endpoints 1000..5000, the offset is 0.73 * 5000 = 3650, so the
+    // stored base is 3920 - 3650 = 270 (kept clean, not double-applied).
     expect(saved.tracks[0]?.controllerSlotValues).toMatchObject({
-      "filter.cutoff": 3920,
+      "filter.cutoff": 270,
     });
   });
 });

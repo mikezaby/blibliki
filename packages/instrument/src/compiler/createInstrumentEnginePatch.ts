@@ -8,6 +8,7 @@ import {
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
 import type { InstrumentDocument } from "@/document/types";
 import { migrateInstrumentDocument } from "@/document/version";
+import { applyMacroOffsetsToModules } from "@/macros/macroMapping";
 import { createTrackFromDocument } from "@/tracks/createTrackFromDocument";
 import { compileInstrument } from "./compileInstrument";
 import {
@@ -144,6 +145,13 @@ export function createInstrumentEnginePatch(
     ),
     ...runtimeModules,
   ];
+  const serializedModules = patchModules.map(toEngineSerializableModule);
+  // Engine modules carry the clean base (controllerSlotValues). Layer each
+  // enabled macro's offset on top so the patch sounds right at load.
+  applyMacroOffsetsToModules(
+    serializedModules,
+    compiledInstrument.globalController.macros,
+  );
 
   return {
     compiledInstrument,
@@ -153,7 +161,7 @@ export function createInstrumentEnginePatch(
       timeSignature: options.timeSignature ?? [
         ...DEFAULT_INSTRUMENT_TIME_SIGNATURE,
       ],
-      modules: patchModules.map(toEngineSerializableModule),
+      modules: serializedModules,
       routes: [
         ...compiledInstrument.tracks.flatMap(
           (track) => track.compiledTrack.engine.routes,
