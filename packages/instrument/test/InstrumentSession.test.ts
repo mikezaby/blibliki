@@ -404,8 +404,10 @@ describe("InstrumentSession", () => {
 
     // The macro nudges the live engine prop by its offset delta (base intact),
     // so read the live cutoff first and expect base + delta, clamped to schema.
-    const liveCutoffBefore = modules.get("track-1.filter.main")?.props
-      .cutoff as number | undefined;
+    const liveProps: Record<string, unknown> | undefined = modules.get(
+      "track-1.filter.main",
+    )?.props;
+    const liveCutoffBefore = liveProps?.cutoff;
     if (typeof liveCutoffBefore !== "number") {
       throw new Error("Expected a live filter cutoff");
     }

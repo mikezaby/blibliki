@@ -122,10 +122,8 @@ function formatVolume(value: number) {
 }
 
 function formatMacroValue(macro: MacroEncoder) {
-  if (macro.polarity === "bipolar") {
-    return `${Math.round((macro.value * 2 - 1) * 100)}%`;
-  }
-
+  // macro.value is already native to the polarity: unipolar 0..1, bipolar
+  // -1..1 (0 = centre). So the percentage is a direct scale for both.
   return formatPercent(macro.value);
 }
 
