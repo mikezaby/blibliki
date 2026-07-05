@@ -188,22 +188,26 @@ describe("InstrumentEditor", () => {
       </Provider>,
     );
 
-    expect(screen.getByText("Global Macros")).toBeDefined();
+    expect(screen.getByText("Global Controls")).toBeDefined();
     expect(screen.queryByLabelText("Macro 1 Name")).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: "Manage Macro 1" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit Macro 1" }));
     fireEvent.click(screen.getByRole("switch", { name: "Enable Macro 1" }));
     fireEvent.change(screen.getByLabelText("Macro 1 Name"), {
       target: { value: "Tone Sweep" },
     });
-    fireEvent.click(screen.getByRole("combobox", { name: "Macro 1 Targets" }));
-    fireEvent.change(screen.getByLabelText("Search Macro 1 Targets"), {
+    // The AutocompleteSelect combobox opens on focus and doubles as its search.
+    const targetCombobox = screen.getByRole("combobox", {
+      name: "Macro 1 Targets",
+    });
+    fireEvent.focus(targetCombobox);
+    fireEvent.change(targetCombobox, {
       target: { value: "track-2 cutoff" },
     });
     expect(
       screen.queryByRole("option", { name: "track-1 / filter.main / Cutoff" }),
     ).toBeNull();
-    fireEvent.click(
+    fireEvent.mouseDown(
       screen.getByRole("option", { name: "track-2 / filter.main / Cutoff" }),
     );
     fireEvent.click(

@@ -34,23 +34,24 @@ describe("AutocompleteSelect", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("combobox", { name: "Macro target" }));
+    const combobox = screen.getByRole("combobox", { name: "Macro target" });
+    expect(screen.queryByRole("listbox")).toBeNull();
+
+    // Opens on focus and renders the listbox inline (not portaled).
+    fireEvent.focus(combobox);
     expect(
       container.contains(screen.getByRole("listbox", { name: "Macro target" })),
-    ).toBe(false);
+    ).toBe(true);
 
-    fireEvent.change(
-      screen.getByRole("textbox", { name: "Search Macro target" }),
-      {
-        target: { value: "track-2 cutoff" },
-      },
-    );
+    // The combobox input doubles as the search field.
+    fireEvent.change(combobox, { target: { value: "track-2 cutoff" } });
 
     expect(
       screen.queryByRole("option", { name: "track-1 / filter.main / Cutoff" }),
     ).toBeNull();
 
-    fireEvent.click(
+    // Options commit on mouseDown (before the input blur closes the popup).
+    fireEvent.mouseDown(
       screen.getByRole("option", { name: "track-2 / filter.main / Cutoff" }),
     );
 
