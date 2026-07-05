@@ -91,6 +91,7 @@ export interface EncoderProps extends Omit<
   min?: number;
   step?: number;
   exp?: number;
+  bipolar?: boolean;
   size?: EncoderSize;
   disabled?: boolean;
   formatValue?: (value: number) => string;
@@ -109,6 +110,7 @@ const Encoder = forwardRef<HTMLDivElement, EncoderProps>(
       min = 0,
       step = 0.01,
       exp,
+      bipolar = false,
       size = "md",
       disabled = false,
       formatValue,
@@ -135,6 +137,22 @@ const Encoder = forwardRef<HTMLDivElement, EncoderProps>(
     );
 
     const progress = max === min ? 0 : (currentSliderValue - min) / (max - min);
+
+    // Bipolar fill anchors at the zero value (clamped into range) instead of min,
+    // so the ring fills as a band from zero toward the current value.
+    const anchor =
+      max === min
+        ? 0
+        : bipolar
+          ? clamp(
+              (calcSliderValue(clamp(0, min, max), min, max, exp) - min) /
+                (max - min),
+              0,
+              1,
+            )
+          : 0;
+    const fillStart = Math.min(anchor, progress) * 270;
+    const fillEnd = Math.max(anchor, progress) * 270;
 
     const displayValue = formatValue
       ? formatValue(currentValue)
@@ -297,7 +315,8 @@ const Encoder = forwardRef<HTMLDivElement, EncoderProps>(
           {
             ...style,
             "--ui-encoder-angle": `${-135 + progress * 270}deg`,
-            "--ui-encoder-fill": `${progress * 270}deg`,
+            "--ui-encoder-fill-start": `${fillStart}deg`,
+            "--ui-encoder-fill-end": `${fillEnd}deg`,
           } as CSSProperties
         }
         onKeyDown={handleKeyDown}

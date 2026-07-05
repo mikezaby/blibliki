@@ -148,6 +148,30 @@ export const PrecisionDrag: Story = {
   },
 };
 
+export const Bipolar: Story = {
+  render: () => (
+    <div className="sb-row">
+      <Encoder
+        name="Pan left"
+        value={-0.5}
+        min={-1}
+        max={1}
+        step={0.01}
+        bipolar
+      />
+      <Encoder name="Center" value={0} min={-1} max={1} step={0.01} bipolar />
+      <Encoder
+        name="Pan right"
+        value={0.5}
+        min={-1}
+        max={1}
+        step={0.01}
+        bipolar
+      />
+    </div>
+  ),
+};
+
 export const Disabled: Story = {
   render: () => (
     <Encoder

@@ -1397,9 +1397,11 @@
     background-color: var(--ui-color-surface-2);
     background-image: conic-gradient(
       from -135deg,
-      var(--ui-encoder-ring) 0deg,
-      var(--ui-encoder-ring) var(--ui-encoder-fill),
-      var(--ui-encoder-track) var(--ui-encoder-fill),
+      var(--ui-encoder-track) 0deg,
+      var(--ui-encoder-track) var(--ui-encoder-fill-start),
+      var(--ui-encoder-ring) var(--ui-encoder-fill-start),
+      var(--ui-encoder-ring) var(--ui-encoder-fill-end),
+      var(--ui-encoder-track) var(--ui-encoder-fill-end),
       var(--ui-encoder-track) 270deg,
       transparent 270deg
     );

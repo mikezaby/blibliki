@@ -449,6 +449,7 @@ function SortableMacroEncoder({
         min={macro.polarity === "bipolar" ? -1 : 0}
         max={1}
         step={0.01}
+        bipolar={macro.polarity === "bipolar"}
         onChange={onValueChange}
       />
       <Text

@@ -108,4 +108,28 @@ describe("Encoder", () => {
 
     expect(encoder.getAttribute("aria-valuenow")).toBe("0.51");
   });
+
+  it("fills a bipolar ring as a band from the zero position to the value", () => {
+    render(
+      <Encoder
+        name="Pan"
+        min={-1}
+        max={1}
+        step={0.01}
+        value={0.5}
+        bipolar
+        onChange={vi.fn()}
+      />,
+    );
+
+    const encoder = screen.getByRole("slider", { name: "Pan" });
+
+    // Zero sits at the center (135deg of the 270deg sweep); value 0.5 is at 202.5deg.
+    expect(encoder.style.getPropertyValue("--ui-encoder-fill-start")).toBe(
+      "135deg",
+    );
+    expect(encoder.style.getPropertyValue("--ui-encoder-fill-end")).toBe(
+      "202.5deg",
+    );
+  });
 });
