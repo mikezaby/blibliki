@@ -124,4 +124,54 @@ describe("LiveInstrumentDisplayState", () => {
       }),
     );
   });
+
+  it("exposes the native -1..1 range for bipolar macros so the fill centres", () => {
+    const document = createSeededInstrumentDocument();
+    document.globalController = {
+      ...document.globalController,
+      macros: document.globalController.macros.map((macro, index) =>
+        index === 0
+          ? {
+              ...macro,
+              enabled: true,
+              polarity: "bipolar" as const,
+              value: -0.5,
+            }
+          : macro,
+      ),
+    };
+    const runtimePatch = createInstrumentEnginePatch(document);
+    const modules = new Map(
+      runtimePatch.patch.modules.map((module) => [module.id, module]),
+    );
+
+    const displayState = createLiveInstrumentDisplayState(
+      {
+        findModule: (id: string) => {
+          const module = modules.get(id);
+          if (!module) {
+            throw new Error(`Module ${id} not found`);
+          }
+
+          return module;
+        },
+      },
+      runtimePatch,
+    );
+
+    const slot = displayState.globalBand.slots[2];
+    expect(slot).toEqual(
+      expect.objectContaining({
+        macroId: "global-macro-1",
+        rawValue: -0.5,
+        valueText: "-50%",
+      }),
+    );
+    expect(slot.valueSpec).toEqual({
+      kind: "number",
+      min: -1,
+      max: 1,
+      step: 0.01,
+    });
+  });
 });

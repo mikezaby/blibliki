@@ -42,6 +42,10 @@ type BandKey = "global" | "upper" | "lower";
 type CellVisualValue = {
   kind: "number" | "enum" | "boolean" | "text";
   visualNormalized: number | null;
+  // Position (0..1) the fill arc anchors at. Defaults to 0 (fill from min); a
+  // bipolar range (min < 0 < max) anchors at the zero value so the arc fills
+  // as a band from center toward the value.
+  anchorNormalized?: number;
   showEncoder: boolean;
   empty: boolean;
 };
@@ -73,16 +77,28 @@ function formatPointValue(value: number) {
   return value.toFixed(2);
 }
 
-function createEncoderArcPath(normalized: number | null) {
-  if (normalized === null || normalized <= 0) {
+export function createEncoderArcPath(normalized: number | null, anchor = 0) {
+  if (normalized === null) {
     return "";
   }
 
   const safeNormalized = clamp(normalized, 0, 1);
-  const start = createEncoderPoint(ENCODER_RADIUS, ENCODER_START_ANGLE);
-  const endAngle = ENCODER_START_ANGLE + safeNormalized * ENCODER_SWEEP_ANGLE;
-  const end = createEncoderPoint(ENCODER_RADIUS, endAngle);
-  const largeArc = safeNormalized > 2 / 3 ? 1 : 0;
+  const safeAnchor = clamp(anchor, 0, 1);
+  const lo = Math.min(safeAnchor, safeNormalized);
+  const hi = Math.max(safeAnchor, safeNormalized);
+  if (hi - lo <= 0) {
+    return "";
+  }
+
+  const start = createEncoderPoint(
+    ENCODER_RADIUS,
+    ENCODER_START_ANGLE + lo * ENCODER_SWEEP_ANGLE,
+  );
+  const end = createEncoderPoint(
+    ENCODER_RADIUS,
+    ENCODER_START_ANGLE + hi * ENCODER_SWEEP_ANGLE,
+  );
+  const largeArc = hi - lo > 2 / 3 ? 1 : 0;
 
   return `M ${formatPointValue(start.x)} ${formatPointValue(start.y)} A ${ENCODER_RADIUS} ${ENCODER_RADIUS} 0 ${largeArc} 1 ${formatPointValue(end.x)} ${formatPointValue(end.y)}`;
 }
@@ -216,14 +232,15 @@ function parseCellVisualValue(slot: BandCell): CellVisualValue {
   if (slot.valueSpec?.kind === "number" && typeof slot.rawValue === "number") {
     const { min, max, exp } = slot.valueSpec;
     if (min !== undefined && max !== undefined && min !== max) {
+      const applyExp = (n: number) =>
+        exp !== undefined && exp !== 1 ? Math.pow(n, 1 / exp) : n;
       const normalized = clamp((slot.rawValue - min) / (max - min), 0, 1);
+      const bipolar = min < 0 && max > 0;
 
       return {
         kind: "number",
-        visualNormalized:
-          exp !== undefined && exp !== 1
-            ? Math.pow(normalized, 1 / exp)
-            : normalized,
+        visualNormalized: applyExp(normalized),
+        anchorNormalized: bipolar ? applyExp((0 - min) / (max - min)) : 0,
         showEncoder: true,
         empty: false,
       };
@@ -493,14 +510,16 @@ function PerformanceMeter({
 
 function EncoderGlyph({
   normalized,
+  anchor,
   inactive,
   accent,
 }: {
   normalized: number | null;
+  anchor?: number;
   inactive: boolean;
   accent: boolean;
 }) {
-  const activeArcPath = createEncoderArcPath(normalized);
+  const activeArcPath = createEncoderArcPath(normalized, anchor);
 
   return (
     <svg
@@ -619,6 +638,7 @@ function PerformanceBand({
                   {visual.showEncoder ? (
                     <EncoderGlyph
                       normalized={visual.visualNormalized}
+                      anchor={visual.anchorNormalized}
                       inactive={inactive}
                       accent={bandKey === "upper" && !visual.empty}
                     />

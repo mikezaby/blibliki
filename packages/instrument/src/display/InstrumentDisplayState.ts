@@ -207,7 +207,9 @@ function createGlobalBandState(
           rawValue: macro.value,
           valueSpec: {
             kind: "number",
-            min: 0,
+            // Match the macro's native range so bipolar knobs render a
+            // centre-anchored fill (edit mode already uses -1..1).
+            min: macro.polarity === "bipolar" ? -1 : 0,
             max: 1,
             step: 0.01,
           },
