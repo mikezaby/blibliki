@@ -43,8 +43,10 @@ import {
   Surface,
   Text,
 } from "@blibliki/ui";
+import { DragDropProvider } from "@dnd-kit/react";
+import { useSortable, isSortable } from "@dnd-kit/react/sortable";
 import { Link } from "@tanstack/react-router";
-import { Pencil, Save } from "lucide-react";
+import { GripVertical, Pencil, Save } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import type { TUpdateProp } from "@/components/AudioModule";
 import Chorus from "@/components/AudioModule/Chorus";
@@ -111,6 +113,11 @@ const LOOP_LENGTH_OPTIONS = [1, 2, 3, 4] as const;
 const LATENCY_HINT_OPTIONS = ["interactive", "playback"] as const;
 const TRACK_VOICES_MIN = 1;
 const TRACK_VOICES_MAX = 64;
+
+// Global-row knobs that carry reorderable macro encoders (knobs 3-6).
+const MACRO_SLOT_IDS = launchControlXL3GlobalRow
+  .filter((control) => !control.key && control.slotId)
+  .map((control) => control.slotId!);
 
 type MacroTargetOption = {
   name: string;
@@ -401,6 +408,58 @@ function renderFxEditor(
   }
 }
 
+type SortableMacroEncoderProps = {
+  macro: MacroEncoder;
+  index: number;
+  editDialog: ReactNode;
+  onValueChange: (value: number) => void;
+};
+
+// One reorderable macro knob. The grip is the drag handle; dnd-kit shifts the
+// neighbouring knobs live so the drop position is visible before releasing.
+function SortableMacroEncoder({
+  macro,
+  index,
+  editDialog,
+  onValueChange,
+}: SortableMacroEncoderProps) {
+  const { ref, handleRef, isDragging } = useSortable({ id: macro.id, index });
+
+  return (
+    <div
+      ref={ref}
+      className="flex flex-col items-center gap-2"
+      style={{ opacity: isDragging ? 0.4 : 1 }}
+    >
+      <Stack direction="row" align="center" gap={1}>
+        <IconButton
+          ref={handleRef}
+          icon={<GripVertical size={14} />}
+          aria-label={`Reorder ${macro.name}`}
+          size="xs"
+          className="cursor-grab touch-none active:cursor-grabbing"
+        />
+        {editDialog}
+      </Stack>
+      <Encoder
+        name={macro.name}
+        value={macro.value}
+        min={0}
+        max={1}
+        step={0.01}
+        onChange={onValueChange}
+      />
+      <Text
+        tone="muted"
+        size="xs"
+        className="text-center uppercase tracking-wide"
+      >
+        {macro.name}
+      </Text>
+    </div>
+  );
+}
+
 type InstrumentEditorProps = {
   instrument: IInstrument;
 };
@@ -576,6 +635,41 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
     return document.globalController.macros.find(
       (macro) => macro.id === assignment.macroId,
     );
+  };
+
+  // Reassign macros across the fixed global-row knobs so their visual order
+  // matches the sequence produced by the drag (the others shift to fill).
+  const reorderMacros = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+
+    setDocument((current) => {
+      const order = MACRO_SLOT_IDS.map((id) => {
+        const assignment = current.globalController.encoderSlots[id];
+        return assignment?.type === "macro" ? assignment.macroId : undefined;
+      });
+      if (
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= order.length ||
+        toIndex >= order.length
+      ) {
+        return current;
+      }
+
+      const [moved] = order.splice(fromIndex, 1);
+      order.splice(toIndex, 0, moved);
+
+      const encoderSlots = { ...current.globalController.encoderSlots };
+      MACRO_SLOT_IDS.forEach((id, index) => {
+        const macroId = order[index];
+        if (macroId) encoderSlots[id] = { type: "macro", macroId };
+      });
+
+      return {
+        ...current,
+        globalController: { ...current.globalController, encoderSlots },
+      };
+    });
   };
 
   const addMacroMapping = (macroId: string) => {
@@ -1007,36 +1101,67 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-6 md:grid-cols-4 xl:grid-cols-8">
-                  {launchControlXL3GlobalRow.map((control) => {
-                    // Knobs 3-6 carry macro encoders instead of a global-block
-                    // key; render their default value so it can be assigned here.
-                    if (!control.key) {
-                      const macro = getSlotMacro(control.slotId);
-                      if (!macro) return null;
+                <DragDropProvider
+                  onDragEnd={(event) => {
+                    if (event.canceled) return;
+                    const { source } = event.operation;
+                    if (!isSortable(source)) return;
+                    reorderMacros(source.initialIndex, source.index);
+                  }}
+                >
+                  <div className="grid grid-cols-2 gap-6 md:grid-cols-4 xl:grid-cols-8">
+                    {launchControlXL3GlobalRow.map((control) => {
+                      // Knobs 3-6 carry reorderable macro encoders instead of a
+                      // global-block key; render their default value here.
+                      if (!control.key) {
+                        const macro = getSlotMacro(control.slotId);
+                        if (!macro) return null;
 
-                      const macroIndex =
-                        document.globalController.macros.indexOf(macro);
+                        const macroIndex =
+                          document.globalController.macros.indexOf(macro);
+
+                        return (
+                          <SortableMacroEncoder
+                            key={macro.id}
+                            macro={macro}
+                            index={MACRO_SLOT_IDS.indexOf(control.slotId!)}
+                            onValueChange={(next) => {
+                              setMacroValue(macro.id, next);
+                            }}
+                            editDialog={renderManageMacroDialog(
+                              macro,
+                              macroIndex,
+                              <IconButton
+                                icon={<Pencil size={14} />}
+                                aria-label={`Edit ${macro.name}`}
+                                size="xs"
+                              />,
+                            )}
+                          />
+                        );
+                      }
+
+                      const spec = getGlobalControlValueSpec(control.key);
+                      if (spec.kind !== "number") return null;
+
+                      const controlKey = control.key;
 
                       return (
-                        <Stack key={control.slotId} align="center" gap={2}>
-                          {renderManageMacroDialog(
-                            macro,
-                            macroIndex,
-                            <IconButton
-                              icon={<Pencil size={14} />}
-                              aria-label={`Edit ${macro.name}`}
-                              size="xs"
-                            />,
-                          )}
+                        <Stack key={controlKey} align="center" gap={2}>
+                          {/* Spacer matching the macro cells' handle row so all
+                              encoders in the row stay vertically aligned. */}
+                          <div className="h-4" />
                           <Encoder
-                            name={macro.name}
-                            value={macro.value}
-                            min={0}
-                            max={1}
-                            step={0.01}
+                            name={control.label}
+                            value={document.globalBlock[controlKey]}
+                            min={spec.min}
+                            max={spec.max}
+                            step={spec.step}
+                            exp={spec.exp}
                             onChange={(next) => {
-                              setMacroValue(macro.id, next);
+                              setDocument((current) =>
+                                updateGlobalBlock(current, controlKey, next),
+                              );
                             }}
                           />
                           <Text
@@ -1044,46 +1169,13 @@ function InstrumentEditorForm({ instrument }: InstrumentEditorProps) {
                             size="xs"
                             className="text-center uppercase tracking-wide"
                           >
-                            {macro.name}
+                            {control.label}
                           </Text>
                         </Stack>
                       );
-                    }
-
-                    const spec = getGlobalControlValueSpec(control.key);
-                    if (spec.kind !== "number") return null;
-
-                    const controlKey = control.key;
-
-                    return (
-                      <Stack key={controlKey} align="center" gap={2}>
-                        {/* Spacer matching the macro cells' edit button so all
-                            encoders in the row stay vertically aligned. */}
-                        <div className="h-4" />
-                        <Encoder
-                          name={control.label}
-                          value={document.globalBlock[controlKey]}
-                          min={spec.min}
-                          max={spec.max}
-                          step={spec.step}
-                          exp={spec.exp}
-                          onChange={(next) => {
-                            setDocument((current) =>
-                              updateGlobalBlock(current, controlKey, next),
-                            );
-                          }}
-                        />
-                        <Text
-                          tone="muted"
-                          size="xs"
-                          className="text-center uppercase tracking-wide"
-                        >
-                          {control.label}
-                        </Text>
-                      </Stack>
-                    );
-                  })}
-                </div>
+                    })}
+                  </div>
+                </DragDropProvider>
               </CardContent>
             </Card>
 
