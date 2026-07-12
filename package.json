@@ -21,7 +21,7 @@
   "workspaces": [
     "packages/*"
   ],
-  "packageManager": "pnpm@11.0.9",
+  "packageManager": "pnpm@11.10.0",
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@trivago/prettier-plugin-sort-imports": "6.0.2",
