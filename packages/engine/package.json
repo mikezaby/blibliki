@@ -38,7 +38,7 @@
   "dependencies": {
     "@blibliki/transport": "workspace:^",
     "@blibliki/utils": "workspace:^",
-    "@julusian/midi": "^3.6.1",
+    "@julusian/midi": "^3.8.1",
     "es-toolkit": "catalog:utils"
   }
 }
