@@ -35,3 +35,6 @@ dist-ssr
 .claude/settings.local.json
 
 .worktrees
+
+# Local-only docs (large manuals, scratch)
+docs/untracked/
