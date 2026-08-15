@@ -18,13 +18,13 @@
     "react-dom": "catalog:react-19"
   },
   "devDependencies": {
+    "@storybook/react-vite": "^10.5.0",
     "@types/node": "catalog:node",
     "@types/react": "catalog:react-19",
     "@types/react-dom": "catalog:react-19",
-    "globals": "17.6.0",
-    "vite": "catalog:vite",
-    "storybook": "10.4.6",
-    "@storybook/react-vite": "^10.4.6",
-    "eslint-plugin-storybook": "10.4.6"
+    "eslint-plugin-storybook": "10.5.0",
+    "globals": "17.7.0",
+    "storybook": "10.5.0",
+    "vite": "catalog:vite"
   }
 }

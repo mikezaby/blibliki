@@ -39,6 +39,6 @@
     "@blibliki/instrument": "workspace:^",
     "@blibliki/utils": "workspace:^",
     "es-toolkit": "catalog:utils",
-    "firebase": "12.15.0"
+    "firebase": "12.16.0"
   }
 }
