@@ -12,5 +12,4 @@ export type {
 export type { IPolyModule, IPolyModuleSerialize } from "./PolyModule";
 
 export type IAnyModuleSerialize<MT extends ModuleType = ModuleType> =
-  | IModuleSerialize<MT>
-  | IPolyModuleSerialize<MT>;
+  IModuleSerialize<MT> | IPolyModuleSerialize<MT>;

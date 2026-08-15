@@ -6,8 +6,7 @@ import type {
 } from "./types";
 
 export type TrackMasterOptions =
-  | Exclude<NonNullable<CreateTrackEnginePatchOptions["master"]>, false>
-  | false;
+  Exclude<NonNullable<CreateTrackEnginePatchOptions["master"]>, false> | false;
 
 export type TrackRuntimePortSelections = {
   noteInputSelection: MidiPortSelection | false;

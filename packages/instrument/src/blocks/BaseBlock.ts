@@ -79,8 +79,7 @@ export default abstract class BaseBlock {
             moduleId: module.id,
             propKey: propKey as ModulePropKey<T>,
             initialValue: module.props[propKey as ModulePropKey<T>] as
-              | SlotInitialValue
-              | undefined,
+              SlotInitialValue | undefined,
           }) as unknown as AnyBaseSlot,
         );
       },

@@ -41,10 +41,7 @@ export type TransportClockCallback = (
  * Transport properties that can be observed for changes.
  */
 export type TransportProperty =
-  | "bpm"
-  | "timeSignature"
-  | "swingAmount"
-  | "state";
+  "bpm" | "timeSignature" | "swingAmount" | "state";
 
 type TransportPropertyValueMap = {
   bpm: BPM;
@@ -147,8 +144,7 @@ export class Transport {
     contextTime: ContextTime = this.context.currentTime,
   ) {
     const callbacks = this._propertyChangeCallbacks.get(property) as
-      | TransportPropertyChangeCallback<T>[]
-      | undefined;
+      TransportPropertyChangeCallback<T>[] | undefined;
     if (callbacks) {
       callbacks.forEach((callback) => {
         callback(value, contextTime);

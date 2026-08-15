@@ -48,20 +48,10 @@ export type InstrumentTrackAudioSource =
     };
 
 export type SourceProfileId =
-  | "unassigned"
-  | "osc"
-  | "wavetable"
-  | "noise"
-  | "threeOsc"
-  | "drumMachine";
+  "unassigned" | "osc" | "wavetable" | "noise" | "threeOsc" | "drumMachine";
 
 export type EffectProfileId =
-  | "none"
-  | "distortion"
-  | "compressor"
-  | "chorus"
-  | "delay"
-  | "reverb";
+  "none" | "distortion" | "compressor" | "chorus" | "delay" | "reverb";
 export type InstrumentLatencyHint = "interactive" | "playback";
 
 export type InstrumentGlobalBlock = {

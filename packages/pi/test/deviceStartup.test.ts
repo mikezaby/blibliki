@@ -141,8 +141,7 @@ describe("startDeviceDeployment", () => {
     const onDisplayStateChange = (_displayState: InstrumentDisplayState) =>
       undefined;
     let receivedDisplayHook:
-      | ((displayState: InstrumentDisplayState) => void)
-      | undefined;
+      ((displayState: InstrumentDisplayState) => void) | undefined;
 
     await startDeviceDeployment(device, {
       loadPatch: () =>

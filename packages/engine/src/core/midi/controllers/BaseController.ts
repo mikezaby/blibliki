@@ -13,8 +13,7 @@ export abstract class BaseController {
   protected disposed = false;
   private readonly hardwareSessionKey: string;
   protected inputEventDataMutator?:
-    | ((data: number[] | Uint8Array) => number[] | Uint8Array)
-    | undefined;
+    ((data: number[] | Uint8Array) => number[] | Uint8Array) | undefined;
 
   constructor(engineId: string, ports: MatchedControllerPorts) {
     this.engineId = engineId;

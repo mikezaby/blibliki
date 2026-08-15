@@ -280,8 +280,7 @@ describe("createInstrumentControllerSession", () => {
       throw new Error("Expected the first update to target the midi mapper");
     }
     const midiMapperProps = firstUpdate.changes.props as
-      | Partial<IMidiMapperProps>
-      | undefined;
+      Partial<IMidiMapperProps> | undefined;
     expect(midiMapperProps?.activeTrack).toBe(1);
     const lastDisplayState = displayStates[displayStates.length - 1];
     expect(lastDisplayState).toBe("track-2:sourceAmp");
@@ -779,8 +778,7 @@ describe("createInstrumentControllerSession", () => {
     let startCalls = 0;
     let stopCalls = 0;
     let transportStateCallback:
-      | ((state: TransportState, actionAt: number) => void)
-      | undefined;
+      ((state: TransportState, actionAt: number) => void) | undefined;
     const displayStates: TransportState[] = [];
 
     const session = createInstrumentControllerSession(

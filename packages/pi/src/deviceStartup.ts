@@ -63,8 +63,7 @@ export type StartedInstrumentDeployment = {
 };
 
 export type StartedDeviceDeployment =
-  | StartedPatchDeployment
-  | StartedInstrumentDeployment;
+  StartedPatchDeployment | StartedInstrumentDeployment;
 
 async function loadEngine(patch: IEngineSerialize) {
   return (await Engine.load(patch)) as InstrumentSessionEngine;
@@ -248,8 +247,7 @@ export async function startDeviceDeployment(
         }
 
         const remoteDocument = remoteInstrument.document as
-          | InstrumentDocument
-          | undefined;
+          InstrumentDocument | undefined;
         if (!remoteDocument) {
           return {
             title: "RELOAD FAILED",

@@ -77,10 +77,7 @@ export abstract class Base implements IIO {
   }
 
   isAudio(): this is
-    | AudioInput
-    | AudioOutput
-    | PolyAudioInput
-    | PolyAudioOutput {
+    AudioInput | AudioOutput | PolyAudioInput | PolyAudioOutput {
     return (
       this.ioType === IOType.AudioInput ||
       this.ioType === IOType.AudioOutput ||

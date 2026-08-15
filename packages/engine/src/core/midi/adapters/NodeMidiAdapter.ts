@@ -428,8 +428,7 @@ export default class NodeMidiAdapter implements IMidiAdapter {
       // NodeMidiModule is a minimal structural subset of @julusian/midi's exports;
       // cast via unknown since the full module type no longer overlaps it.
       const midi = (await import("@julusian/midi")) as unknown as
-        | NodeMidiModule
-        | { default: NodeMidiModule };
+        NodeMidiModule | { default: NodeMidiModule };
       const midiModule = "default" in midi ? midi.default : midi;
       return new NodeMidiAccess(midiModule);
     } catch (err) {

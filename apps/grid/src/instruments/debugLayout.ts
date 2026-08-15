@@ -57,8 +57,7 @@ export function layoutDebugNodes(
 
   return nodes.map((node) => {
     const graphNode = graph.node(node.id) as
-      | { x: number; y: number }
-      | undefined;
+      { x: number; y: number } | undefined;
     const size = nodeSizes.get(node.id) ?? {
       width: DEFAULT_NODE_WIDTH,
       height: DEFAULT_NODE_HEIGHT,

@@ -8,12 +8,10 @@ export const SEQUENCER_CLIPBOARD_MIME =
 export const SEQUENCER_CLIPBOARD_TEXT_PREFIX = "blibliki:sequencer:";
 
 export type SequencerSelection =
-  | { scope: "steps"; start: number; end: number }
-  | { scope: "page" };
+  { scope: "steps"; start: number; end: number } | { scope: "page" };
 
 export type SequencerClipboardPayload =
-  | { kind: "steps"; steps: IStep[] }
-  | { kind: "page"; steps: IStep[] };
+  { kind: "steps"; steps: IStep[] } | { kind: "page"; steps: IStep[] };
 
 type SequencerClipboardEnvelope = {
   kind: typeof SEQUENCER_CLIPBOARD_KIND;

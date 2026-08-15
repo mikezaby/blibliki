@@ -7,10 +7,7 @@ import type {
 import type { CompiledLaunchControlXL3Page } from "@/compiler/types";
 
 export type InstrumentNavigationAction =
-  | "nextTrack"
-  | "previousTrack"
-  | "nextPage"
-  | "previousPage";
+  "nextTrack" | "previousTrack" | "nextPage" | "previousPage";
 
 function wrapIndex(nextIndex: number, length: number) {
   return ((nextIndex % length) + length) % length;

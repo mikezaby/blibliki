@@ -139,8 +139,7 @@ describe("MidiInput", () => {
     };
 
     const firstListener = firstKeyboard.addEventListener.mock.calls[0]?.[0] as
-      | ((event: MidiEvent) => void)
-      | undefined;
+      ((event: MidiEvent) => void) | undefined;
     const secondListener = secondKeyboard.addEventListener.mock
       .calls[0]?.[0] as ((event: MidiEvent) => void) | undefined;
 

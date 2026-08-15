@@ -30,13 +30,9 @@ export enum CollectionType {
 
 type IMappedIOProps = {
   [CollectionType.Input]:
-    | AudioInputProps
-    | PolyAudioInputProps
-    | MidiInputProps;
+    AudioInputProps | PolyAudioInputProps | MidiInputProps;
   [CollectionType.Output]:
-    | AudioOutputProps
-    | PolyAudioOutputProps
-    | MidiOutputProps;
+    AudioOutputProps | PolyAudioOutputProps | MidiOutputProps;
 };
 
 type IIOTypeTOClass = {
