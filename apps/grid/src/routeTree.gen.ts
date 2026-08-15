@@ -9,17 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as InstrumentsRouteImport } from './routes/instruments'
-import { Route as DevicesRouteImport } from './routes/devices'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PatchPatchIdRouteImport } from './routes/patch.$patchId'
+import { Route as DevicesRouteImport } from './routes/devices'
+import { Route as InstrumentsRouteImport } from './routes/instruments'
 import { Route as InstrumentInstrumentIdRouteImport } from './routes/instrument.$instrumentId'
-import { Route as InstrumentInstrumentIdPerformanceRouteImport } from './routes/instrument.$instrumentId.performance'
+import { Route as PatchPatchIdRouteImport } from './routes/patch.$patchId'
 import { Route as InstrumentInstrumentIdDebugRouteImport } from './routes/instrument.$instrumentId.debug'
+import { Route as InstrumentInstrumentIdPerformanceRouteImport } from './routes/instrument.$instrumentId.performance'
 
-const InstrumentsRoute = InstrumentsRouteImport.update({
-  id: '/instruments',
-  path: '/instruments',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevicesRoute = DevicesRouteImport.update({
@@ -27,14 +27,9 @@ const DevicesRoute = DevicesRouteImport.update({
   path: '/devices',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PatchPatchIdRoute = PatchPatchIdRouteImport.update({
-  id: '/patch/$patchId',
-  path: '/patch/$patchId',
+const InstrumentsRoute = InstrumentsRouteImport.update({
+  id: '/instruments',
+  path: '/instruments',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InstrumentInstrumentIdRoute = InstrumentInstrumentIdRouteImport.update({
@@ -42,16 +37,21 @@ const InstrumentInstrumentIdRoute = InstrumentInstrumentIdRouteImport.update({
   path: '/instrument/$instrumentId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InstrumentInstrumentIdPerformanceRoute =
-  InstrumentInstrumentIdPerformanceRouteImport.update({
-    id: '/performance',
-    path: '/performance',
-    getParentRoute: () => InstrumentInstrumentIdRoute,
-  } as any)
+const PatchPatchIdRoute = PatchPatchIdRouteImport.update({
+  id: '/patch/$patchId',
+  path: '/patch/$patchId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InstrumentInstrumentIdDebugRoute =
   InstrumentInstrumentIdDebugRouteImport.update({
     id: '/debug',
     path: '/debug',
+    getParentRoute: () => InstrumentInstrumentIdRoute,
+  } as any)
+const InstrumentInstrumentIdPerformanceRoute =
+  InstrumentInstrumentIdPerformanceRouteImport.update({
+    id: '/performance',
+    path: '/performance',
     getParentRoute: () => InstrumentInstrumentIdRoute,
   } as any)
 
@@ -123,11 +123,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/instruments': {
-      id: '/instruments'
-      path: '/instruments'
-      fullPath: '/instruments'
-      preLoaderRoute: typeof InstrumentsRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/devices': {
@@ -137,18 +137,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevicesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/patch/$patchId': {
-      id: '/patch/$patchId'
-      path: '/patch/$patchId'
-      fullPath: '/patch/$patchId'
-      preLoaderRoute: typeof PatchPatchIdRouteImport
+    '/instruments': {
+      id: '/instruments'
+      path: '/instruments'
+      fullPath: '/instruments'
+      preLoaderRoute: typeof InstrumentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/instrument/$instrumentId': {
@@ -158,18 +151,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InstrumentInstrumentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/instrument/$instrumentId/performance': {
-      id: '/instrument/$instrumentId/performance'
-      path: '/performance'
-      fullPath: '/instrument/$instrumentId/performance'
-      preLoaderRoute: typeof InstrumentInstrumentIdPerformanceRouteImport
-      parentRoute: typeof InstrumentInstrumentIdRoute
+    '/patch/$patchId': {
+      id: '/patch/$patchId'
+      path: '/patch/$patchId'
+      fullPath: '/patch/$patchId'
+      preLoaderRoute: typeof PatchPatchIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/instrument/$instrumentId/debug': {
       id: '/instrument/$instrumentId/debug'
       path: '/debug'
       fullPath: '/instrument/$instrumentId/debug'
       preLoaderRoute: typeof InstrumentInstrumentIdDebugRouteImport
+      parentRoute: typeof InstrumentInstrumentIdRoute
+    }
+    '/instrument/$instrumentId/performance': {
+      id: '/instrument/$instrumentId/performance'
+      path: '/performance'
+      fullPath: '/instrument/$instrumentId/performance'
+      preLoaderRoute: typeof InstrumentInstrumentIdPerformanceRouteImport
       parentRoute: typeof InstrumentInstrumentIdRoute
     }
   }
