@@ -1,11 +1,11 @@
-import CryptoJS from "crypto-js";
+import { sha256hex } from "./sha256";
 
 export function deterministicId(
   originalId: string,
   additionalString: string,
 ): string {
   const combinedString = `${originalId}:${additionalString}`;
-  const hash = CryptoJS.SHA256(combinedString).toString(CryptoJS.enc.Hex);
+  const hash = sha256hex(combinedString);
 
   const newId = `${hash.substring(0, 8)}-${hash.substring(
     8,
