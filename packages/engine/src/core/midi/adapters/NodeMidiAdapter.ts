@@ -271,7 +271,8 @@ class NodeMidiAccess implements IMidiAccess {
     this.pollTimer = setInterval(() => {
       this.scanPorts(true);
     }, HOT_PLUG_POLL_INTERVAL_MS);
-    this.pollTimer.unref();
+    // unref is Node-only (keeps the process from staying alive); absent in browser/DOM timers
+    (this.pollTimer as { unref?: () => void }).unref?.();
   }
 
   private scanPorts(emitEvents: boolean): void {
@@ -424,7 +425,9 @@ export default class NodeMidiAdapter implements IMidiAdapter {
   async requestMIDIAccess(): Promise<IMidiAccess | null> {
     try {
       // Dynamic import to avoid bundling in browser builds
-      const midi = (await import("@julusian/midi")) as
+      // NodeMidiModule is a minimal structural subset of @julusian/midi's exports;
+      // cast via unknown since the full module type no longer overlaps it.
+      const midi = (await import("@julusian/midi")) as unknown as
         | NodeMidiModule
         | { default: NodeMidiModule };
       const midiModule = "default" in midi ? midi.default : midi;
