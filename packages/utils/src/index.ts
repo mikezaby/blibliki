@@ -2,6 +2,16 @@ export { deterministicId } from "./deterministicId";
 export { isTextInputLikeTarget } from "./isTextInputLikeTarget";
 export type { AtLeast, Optional, AnyObject, EmptyObject } from "./types";
 export { oscilloscope } from "./oscilloscope";
+export {
+  registerNativeWorklet,
+  getNativeWorkletDefinition,
+  type NativeWorkletParamDescriptor,
+  type NativeWorkletState,
+  type NativeWorkletContext,
+  type NativeWorkletMessageHandler,
+  type NativeWorkletProcess,
+  type NativeWorkletDefinition,
+} from "./nativeWorklets";
 
 export function assertNever(value: never, message?: string): never {
   console.error("Unknown value", value);

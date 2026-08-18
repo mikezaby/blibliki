@@ -67,6 +67,7 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
     patterns,
     activePatternNo,
     activePageNo,
+    loopLength,
     stepsPerPage,
     resolution,
     playbackMode,
@@ -122,6 +123,7 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
   const addPage = () => {
     if (!currentPattern) return;
 
+    const oldPageCount = currentPattern.pages.length;
     const updatedPatterns = patterns.map((pattern, idx) => {
       if (idx !== activePatternNo) return pattern;
 
@@ -135,7 +137,13 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
     });
 
     updateProp("patterns")(updatedPatterns);
-    updateProp("activePageNo")(currentPattern.pages.length);
+    updateProp("activePageNo")(oldPageCount);
+
+    // If the loop already covered every page, extend it to include the new one
+    // so added pages play by default (a deliberately shorter loop is preserved).
+    if (loopLength >= oldPageCount) {
+      updateProp("loopLength")(oldPageCount + 1);
+    }
   };
 
   // Delete a pattern
