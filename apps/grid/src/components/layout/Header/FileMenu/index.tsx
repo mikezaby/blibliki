@@ -29,6 +29,7 @@ import { modulesSelector } from "@/components/AudioModule/modulesSlice";
 import { open as openModal } from "@/components/Modal/modalSlice";
 import { useAppDispatch, usePatch } from "@/hooks";
 import useUpload from "@/hooks/useUpload";
+import { enginePatchToGridPatch, isEnginePatch } from "@/lib/importEnginePatch";
 import { destroy, load, save } from "@/patchSlice";
 import { store } from "@/store";
 
@@ -42,7 +43,12 @@ export default function FileMenu() {
     onFilesSelected: async (value) => {
       const file = value[0]!;
       const text = await file.text();
-      const patch = JSON.parse(text) as IPatch;
+      const parsed = JSON.parse(text) as unknown;
+      // Accept both grid IPatch exports and raw engine JSON (Engine.serialize);
+      // the latter has no visual info, so lay it out automatically.
+      const patch = isEnginePatch(parsed)
+        ? enginePatchToGridPatch(parsed, file.name.replace(/\.json$/i, ""))
+        : (parsed as IPatch);
       dispatch(load({ ...patch, id: "", userId: "" }));
     },
   });
