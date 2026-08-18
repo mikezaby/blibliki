@@ -26,8 +26,9 @@ Result on the iOS 26 simulator (iPhone 17): 6 modules loaded, context running at
 work unmodified. Autoplay also worked without a tap there — do not rely on it,
 a real device still needs the user gesture.
 
-**MIDI status:** on the iOS simulator the picker lists only `Computer Keyboard`
-— WKWebView has no Web MIDI, as the plan predicted. Hardware controllers on iOS
+**MIDI status:** the app logs `web midi api: MISSING` on iOS — WKWebView has no
+`navigator.requestMIDIAccess` at all, so the picker lists only
+`Computer Keyboard`. No cable, adapter or physical device changes that. Hardware controllers on iOS
 need the CoreMIDI plugin + `CapacitorMidiAdapter` (plan step 4). Desktop Chrome
 and the Android WebView list real devices through the existing `WebMidiAdapter`.
 
@@ -85,6 +86,9 @@ WebView, per the plan):
    pnpm --filter mobile exec cap add android
    pnpm --filter mobile exec cap run android
    ```
+
+If `xcodebuild` fails with _"The signature of Capacitor.xcframework cannot be
+verified"_, delete `ios/DerivedData` and run again.
 
 Audio caveat to expect on Android: the Chromium WebView's AudioTrack latency is
 worse than iOS's, and some devices need `latencyHint: "playback"` to avoid

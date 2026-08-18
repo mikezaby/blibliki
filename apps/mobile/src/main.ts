@@ -33,6 +33,10 @@ window.addEventListener("unhandledrejection", (e) => {
   log(`unhandled: ${String(e.reason)}`);
 });
 
+log(
+  `web midi api: ${"requestMIDIAccess" in navigator ? "available" : "MISSING — needs a native plugin"}`,
+);
+
 let engine: Engine | undefined;
 let playing = false;
 let meter: { getValues(): Float32Array } | undefined;
