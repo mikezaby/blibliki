@@ -1,0 +1,26 @@
+{
+  "name": "mobile",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 4100",
+    "build": "vite build",
+    "clean:dist": "rm -rf ./dist",
+    "preview": "vite preview",
+    "ios": "pnpm run build && cap sync ios && cap run ios",
+    "tsc": "tsc --noEmit",
+    "lint": "eslint src",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
+  },
+  "dependencies": {
+    "@blibliki/engine": "workspace:^",
+    "@capacitor/core": "8.5.0",
+    "@capacitor/ios": "8.5.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.0",
+    "vite": "catalog:vite"
+  }
+}

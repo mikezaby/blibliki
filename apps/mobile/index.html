@@ -1,0 +1,46 @@
+<meta charset="utf-8" />
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1, viewport-fit=cover"
+/>
+<title>Blibliki mobile PoC</title>
+<style>
+  body {
+    margin: 0;
+    padding: env(safe-area-inset-top) 1rem 1rem;
+    font:
+      16px/1.4 -apple-system,
+      system-ui,
+      sans-serif;
+    background: #111;
+    color: #eee;
+  }
+  button {
+    width: 100%;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    font-size: 1.25rem;
+    border: 0;
+    border-radius: 0.75rem;
+    background: #2d6cdf;
+    color: #fff;
+  }
+  button:disabled {
+    opacity: 0.5;
+  }
+  #meter {
+    font-family: ui-monospace, monospace;
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  #log {
+    white-space: pre-wrap;
+    font-family: ui-monospace, monospace;
+    font-size: 13px;
+  }
+</style>
+<h1>Blibliki mobile PoC</h1>
+<button id="play">Play patch</button>
+<div id="meter"></div>
+<div id="log"></div>
+<script type="module" src="/src/main.ts"></script>
