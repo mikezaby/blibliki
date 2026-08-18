@@ -98,7 +98,16 @@ const scheduleFunction = (id: number, delay: number, type: TimerType) => {
   );
 };
 
+// The AudioBufferSourceNode-based timer above exists only to dodge browser
+// setTimeout throttling. Node and React Native don't need it (and RN's audio
+// API rejects the DOM `new AudioBuffer(...)` / `new AudioBufferSourceNode(...)`
+// forms), so both use plain JS timers — the Transport's lookahead scheduler
+// keeps audio timing precise via the audio clock regardless.
 const isNode = typeof window === "undefined";
+const isReactNative =
+  typeof navigator !== "undefined" &&
+  (navigator as { product?: string }).product === "ReactNative";
+const usePlatformTimers = isNode || isReactNative;
 
 // exported methods
 
@@ -134,10 +143,12 @@ const acSetTimeout = (func: () => void, delay: number) => {
   return id;
 };
 
-const exportedClearInterval = isNode ? clearInterval : acClearInterval;
-const exportedClearTimeout = isNode ? clearTimeout : acClearTimeout;
-const exportedSetInterval = isNode ? setInterval : acSetInterval;
-const exportedSetTimeout = isNode ? setTimeout : acSetTimeout;
+const exportedClearInterval = usePlatformTimers
+  ? clearInterval
+  : acClearInterval;
+const exportedClearTimeout = usePlatformTimers ? clearTimeout : acClearTimeout;
+const exportedSetInterval = usePlatformTimers ? setInterval : acSetInterval;
+const exportedSetTimeout = usePlatformTimers ? setTimeout : acSetTimeout;
 
 export {
   exportedClearInterval as clearInterval,
