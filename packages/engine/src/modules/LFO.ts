@@ -257,11 +257,15 @@ export class MonoLFO
   };
 
   onAfterSetFrequency: LFOSetterHooks["onAfterSetFrequency"] = (value) => {
-    this.frequencyParam.value = value;
+    // Manual Hz only applies when not tempo-synced; otherwise division drives it.
+    if (!this.props.sync) this.frequencyParam.value = value;
   };
 
   onAfterSetDivision: LFOSetterHooks["onAfterSetDivision"] = () => {
-    this.updateFrequencyFromBPM();
+    // Division only drives frequency when tempo-synced — never clobber the manual
+    // Hz. (On load, setter hooks fire for every initial prop; without this guard
+    // division overwrote the loaded frequency when sync was false.)
+    if (this.props.sync) this.updateFrequencyFromBPM();
   };
 
   onAfterSetWaveform: LFOSetterHooks["onAfterSetWaveform"] = (value) => {
