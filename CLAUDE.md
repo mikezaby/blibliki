@@ -363,6 +363,30 @@ class MonoScale extends Module<ModuleType.Scale> {
 - Do not use namespace React imports (`import * as React from "react"`).
   Use named/default imports instead (for example: `import { useMemo } from "react"` or `import type { ReactNode } from "react"`).
 
+## Web Audio API Compliance
+
+When implementing or changing ANY Web Audio API behavior, comply with the
+specification exactly — do not guess or approximate semantics. Read the relevant
+section of the spec first, then implement to match it.
+
+- Spec: https://www.w3.org/TR/webaudio-1.1/ (and the HTML `MessagePort`
+  spec for `AudioWorkletNode.port` messaging).
+- This applies especially to the React Native port's shims that stand in for real
+  Web Audio objects (`packages/utils/src/Context.native.ts`): the worklet
+  `AudioParam` shim and the `MessagePort` bridge MUST reproduce spec-defined
+  semantics, not a convenient approximation. Examples that were gotten wrong by
+  guessing and had to be fixed against the spec:
+  - `AudioParam.cancelScheduledValues(cancelTime)` cancels ONLY events with time
+    `>= cancelTime`, never all pending events.
+  - `AudioParam.setValueAtTime(value, startTime)` holds the value from
+    `startTime` until the next automation event.
+  - `MessagePort` delivery is FIFO, exactly-once, and asynchronous — never
+    latest-value-only.
+- If native platform limits prevent exact compliance (e.g. `WorkletProcessingNode`
+  has no real `AudioParam`, so audio-rate param modulation can't be delivered),
+  make it fail safe and document the deviation with a `ponytail:` comment — do
+  not silently diverge from the spec's observable behavior.
+
 ## Scope Discipline
 
 - Only make changes directly related to the current user request.
