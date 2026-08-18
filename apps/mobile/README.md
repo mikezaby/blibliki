@@ -26,9 +26,33 @@ Result on the iOS 26 simulator (iPhone 17): 6 modules loaded, context running at
 work unmodified. Autoplay also worked without a tap there — do not rely on it,
 a real device still needs the user gesture.
 
-**MIDI status:** the app logs `web midi api: MISSING` on iOS — WKWebView has no
-`navigator.requestMIDIAccess` at all, so the picker lists only
-`Computer Keyboard`. No cable, adapter or physical device changes that. Hardware controllers on iOS
+## MIDI on iOS
+
+WKWebView has no `navigator.requestMIDIAccess` at all, so the engine is fed from
+CoreMIDI instead, through a plugin written for this app:
+
+| Layer                         | File                                                             |
+| ----------------------------- | ---------------------------------------------------------------- |
+| CoreMIDI ⇄ JS bridge (Swift)  | `ios/App/App/BliblikiMidiPlugin.swift`                           |
+| MIDI 1.0 byte-stream parser   | `ios/App/App/MidiStreamParser.swift`                             |
+| Plugin registration           | `ios/App/App/MainViewController.swift`, wired in `SceneDelegate` |
+| `IMidiAdapter` implementation | `src/midi/CapacitorMidiAdapter.ts`                               |
+
+Inputs and outputs both, as raw bytes — so sysex works, which the community
+plugins do not carry (`capacitor-musetrainer-midi` is on Capacitor 4 and dead;
+`@midiative/capacitor-midi-device` only reports parsed note/velocity). Ports are
+listed by CoreMIDI unique id and the app repopulates on `portsChanged`.
+
+The parser is the part with real edge cases — running status, sysex split across
+packets, realtime bytes interleaved mid-message — so it lives in a file that
+imports nothing but Foundation and `pnpm test` compiles and runs it against
+`test/midi-parser/main.swift`. No Xcode needed.
+
+**Still unverified: real hardware.** The iOS Simulator exposes no USB MIDI, so
+the picker there shows only `Computer Keyboard`; the app confirms the plugin
+itself is live by logging `midi: CoreMIDI (native plugin)` and listing
+`BliblikiMidi` among the native plugins. Plug a controller into a real iPhone to
+finish the test. Hardware controllers on iOS
 need the CoreMIDI plugin + `CapacitorMidiAdapter` (plan step 4). Desktop Chrome
 and the Android WebView list real devices through the existing `WebMidiAdapter`.
 
@@ -94,5 +118,4 @@ Audio caveat to expect on Android: the Chromium WebView's AudioTrack latency is
 worse than iOS's, and some devices need `latencyHint: "playback"` to avoid
 glitching.
 
-Not done yet: iOS MIDI (`CapacitorMidiAdapter`), audio session config, Android,
-the performance UI. See the plan.
+Not done yet: audio session config, Android, the performance UI. See the plan.

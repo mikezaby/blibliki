@@ -44,6 +44,19 @@ export {
 export { TransportState } from "@blibliki/transport";
 export type { BPM, TimeSignature, Position } from "@blibliki/transport";
 
+// The MIDI seam: platform entries wire an adapter, apps on platforms without
+// Web MIDI (Capacitor/iOS) replace it before creating an engine.
+export { setMidiAdapterFactory } from "./core/midi/adapters";
+export type {
+  IMidiAccess,
+  IMidiAdapter,
+  IMidiInputPort,
+  IMidiMessageEvent,
+  IMidiOutputPort,
+  IMidiPort,
+  MidiMessageCallback,
+} from "./core/midi/adapters";
+
 export { Context } from "@blibliki/utils";
 export {
   encodeWavPcm16,

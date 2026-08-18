@@ -12,7 +12,8 @@
     "tsc": "tsc --noEmit",
     "lint": "eslint src",
     "format": "prettier . --write",
-    "format:check": "prettier . --check"
+    "format:check": "prettier . --check",
+    "test": "command -v swiftc >/dev/null || { echo \"skipping: swiftc not available\"; exit 0; }; out=\"${TMPDIR:-/tmp}/blibliki-midi-check\" && swiftc -o \"$out\" ios/App/App/MidiStreamParser.swift test/midi-parser/main.swift && \"$out\""
   },
   "dependencies": {
     "@blibliki/engine": "workspace:^",

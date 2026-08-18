@@ -1,9 +1,12 @@
 import {
   Engine,
   ModuleType,
+  setMidiAdapterFactory,
   type IEngineSerialize,
   type IRoute,
 } from "@blibliki/engine";
+import { Capacitor } from "@capacitor/core";
+import CapacitorMidiAdapter from "./midi/CapacitorMidiAdapter";
 import midiJson from "./patches/midi.json";
 import wavetableJson from "./patches/wavetable.json";
 
@@ -33,9 +36,25 @@ window.addEventListener("unhandledrejection", (e) => {
   log(`unhandled: ${String(e.reason)}`);
 });
 
+// WebKit has no Web MIDI, so on iOS the engine is pointed at CoreMIDI instead.
+const capacitorMidi = new CapacitorMidiAdapter();
 log(
-  `web midi api: ${"requestMIDIAccess" in navigator ? "available" : "MISSING — needs a native plugin"}`,
+  `platform ${Capacitor.getPlatform()}, native plugins: ${
+    (
+      window as unknown as {
+        Capacitor?: { PluginHeaders?: { name: string }[] };
+      }
+    ).Capacitor?.PluginHeaders?.map((p) => p.name).join(", ") ?? "none"
+  }`,
 );
+if (capacitorMidi.isSupported()) {
+  setMidiAdapterFactory(() => capacitorMidi);
+  log("midi: CoreMIDI (native plugin)");
+} else {
+  log(
+    `midi: ${"requestMIDIAccess" in navigator ? "Web MIDI" : "none — no Web MIDI, no native plugin"}`,
+  );
+}
 
 let engine: Engine | undefined;
 let playing = false;
