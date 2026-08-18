@@ -1,19 +1,13 @@
-import type {
-  NativeWorkletDefinition,
-  NativeWorkletProcess,
-} from "@blibliki/utils";
+import type { ProcessorDefinition, ProcessFunction } from "@blibliki/utils";
 
-// ONE self-contained, statically-declared top-level "worklet" function, used by
-// both platforms: web embeds its source into the AudioWorklet Blob; native
-// captures it directly (the babel plugin workletizes it). No duplication.
-// MUST stay self-contained (no imports, no module-scope refs) for both to work.
-const scaleProcess: NativeWorkletProcess = (
+// The DSP for one block. Its source is embedded into the AudioWorklet module,
+// so it MUST stay self-contained: no imports, no module-scope references.
+const scaleProcess: ProcessFunction = (
   inputs,
   outputs,
   framesToProcess,
   params,
 ) => {
-  "worklet";
   const min = params.min?.[0] ?? 1e-10;
   const max = params.max?.[0] ?? 1;
   const current = params.current?.[0] ?? 0.5;
@@ -59,7 +53,7 @@ const scaleProcess: NativeWorkletProcess = (
   }
 };
 
-const scaleProcessor: NativeWorkletDefinition = {
+const scaleProcessor: ProcessorDefinition = {
   name: "scale-processor",
   parameterDescriptors: [
     { name: "min", defaultValue: 1e-10 },

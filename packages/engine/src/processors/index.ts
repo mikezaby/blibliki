@@ -10,11 +10,10 @@ export enum CustomWorklet {
   RecorderProcessor = "RecorderProcessor",
 }
 
-// The processor load step is platform-specific: on the web it loads Blob-URL
-// AudioWorklet modules via addModule; on React Native it registers worklet DSP
-// functions. The platform entry point (index.browser / index.native) wires the
-// right implementation via setProcessorsLoader before any Engine is initialized.
-// Kept out of this neutral module so the native bundle never pulls in Blob code.
+// The load step is injected rather than imported, so this module stays free of
+// any platform-specific code: index.browser wires the Blob-URL AudioWorklet
+// loader via setProcessorsLoader before any Engine is initialized, and another
+// host could supply a different one.
 type ProcessorsLoader = (context: Context) => Promise<void>;
 
 let loader: ProcessorsLoader | null = null;

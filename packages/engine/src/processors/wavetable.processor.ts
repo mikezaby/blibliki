@@ -1,15 +1,13 @@
 import type {
-  NativeWorkletDefinition,
-  NativeWorkletMessageHandler,
-  NativeWorkletProcess,
-  NativeWorkletState,
+  ProcessorDefinition,
+  ProcessorMessageHandler,
+  ProcessFunction,
+  ProcessorState,
 } from "@blibliki/utils";
 
-// Wavetable oscillator, unified model: one top-level `process` + `createState` +
-// `onMessage`, each self-contained (web embeds the source; native workletizes it).
-// The module sends the real tables via the message bridge at construction, so
+// Wavetable oscillator: `process` + `createState` + `onMessage`, each
+// self-contained. The module sends the real tables at construction, so
 // createState starts with empty frames (brief silence until the first setTables).
-// State frames are Float32Array[], so state is cast to the concrete shape.
 type WavetableTable = { real: number[]; imag: number[] };
 
 // State is deliberately FLAT and all-numeric apart from one pre-allocated buffer:
@@ -27,7 +25,7 @@ type WavetableState = {
   positionInitialized: number;
 };
 
-const createWavetableState = (): NativeWorkletState =>
+const createWavetableState = (): ProcessorState =>
   ({
     instanceId: 0, // assigned per node by the platform Context
     frameCount: 0,
@@ -129,8 +127,7 @@ const wavetablePrepareMessage = (data: unknown): unknown => {
 // nested Float32Array[] reassigned here crashed the worklet runtime). Instead
 // state keeps one flat buffer, written in place — the same pattern the params map
 // uses. Frames are laid out end-to-end: frame f occupies [f*FRAME_SIZE, ...).
-const wavetableOnMessage: NativeWorkletMessageHandler = (data, state) => {
-  "worklet";
+const wavetableOnMessage: ProcessorMessageHandler = (data, state) => {
   if (!data || typeof data !== "object") return;
   const message = data as { type?: unknown; frames?: unknown };
   if (message.type !== "setFrames" || !Array.isArray(message.frames)) return;
@@ -155,7 +152,7 @@ const wavetableOnMessage: NativeWorkletMessageHandler = (data, state) => {
   s.frameCount = frames.length;
 };
 
-const wavetableProcess: NativeWorkletProcess = (
+const wavetableProcess: ProcessFunction = (
   _inputs,
   outputs,
   framesToProcess,
@@ -163,7 +160,6 @@ const wavetableProcess: NativeWorkletProcess = (
   state,
   ctx,
 ) => {
-  "worklet";
   const output = outputs;
   if (output.length === 0) return;
 
@@ -318,7 +314,7 @@ const wavetableProcess: NativeWorkletProcess = (
   s.lastReportedPosition = lastReportedPosition;
 };
 
-const wavetableProcessor: NativeWorkletDefinition = {
+const wavetableProcessor: ProcessorDefinition = {
   name: "wavetable-processor",
   parameterDescriptors: [
     { name: "frequency", defaultValue: 440, minValue: 0, maxValue: 25000 },

@@ -1,19 +1,14 @@
-import type {
-  NativeWorkletDefinition,
-  NativeWorkletProcess,
-} from "@blibliki/utils";
+import type { ProcessorDefinition, ProcessFunction } from "@blibliki/utils";
 
-// State-variable-ish lowpass. ONE self-contained top-level "worklet" function
-// (web embeds it, native workletizes it); per-instance state (s0, s1) is passed
-// in and mutated in place. See scale.processor.ts for the self-containment rules.
-const filterProcess: NativeWorkletProcess = (
+// State-variable-ish lowpass. Per-instance state (s0, s1) is passed in and
+// mutated in place. See scale.processor.ts for the self-containment rules.
+const filterProcess: ProcessFunction = (
   inputs,
   outputs,
   framesToProcess,
   params,
   state,
 ) => {
-  "worklet";
   const cutoff = params.cutoff;
   const resonance = params.resonance;
   if (!cutoff || !resonance) return;
@@ -58,7 +53,7 @@ const filterProcess: NativeWorkletProcess = (
   s.s1 = s1;
 };
 
-const filterProcessor: NativeWorkletDefinition = {
+const filterProcessor: ProcessorDefinition = {
   name: "filter-processor",
   parameterDescriptors: [
     { name: "cutoff", defaultValue: 1000, minValue: 20, maxValue: 20000 },

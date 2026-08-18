@@ -1,8 +1,8 @@
 import type {
-  NativeWorkletDefinition,
-  NativeWorkletMessageHandler,
-  NativeWorkletProcess,
-  NativeWorkletState,
+  ProcessorDefinition,
+  ProcessorMessageHandler,
+  ProcessFunction,
+  ProcessorState,
 } from "@blibliki/utils";
 
 // Inline recorder, unified model: passes audio through and captures a precise
@@ -19,7 +19,7 @@ type RecorderState = {
   pendingFrames: number;
 };
 
-const createRecorderState = (): NativeWorkletState =>
+const createRecorderState = (): ProcessorState =>
   ({
     startAt: null,
     stopAt: null,
@@ -29,8 +29,7 @@ const createRecorderState = (): NativeWorkletState =>
     pendingFrames: 0,
   }) satisfies RecorderState;
 
-const recorderOnMessage: NativeWorkletMessageHandler = (data, state) => {
-  "worklet";
+const recorderOnMessage: ProcessorMessageHandler = (data, state) => {
   if (!data || typeof data !== "object") return;
   const message = data as { type?: unknown; at?: unknown };
   const s = state as RecorderState;
@@ -58,7 +57,7 @@ const recorderOnMessage: NativeWorkletMessageHandler = (data, state) => {
   }
 };
 
-const recorderProcess: NativeWorkletProcess = (
+const recorderProcess: ProcessFunction = (
   inputs,
   outputs,
   framesToProcess,
@@ -66,7 +65,6 @@ const recorderProcess: NativeWorkletProcess = (
   state,
   ctx,
 ) => {
-  "worklet";
   // Flush captured audio roughly every ~0.18s (at 44.1k) to avoid ~375
   // posts/sec and keep the worklet's own memory low.
   const FLUSH_FRAMES = 8192;
@@ -151,7 +149,7 @@ const recorderProcess: NativeWorkletProcess = (
   }
 };
 
-const recorderProcessor: NativeWorkletDefinition = {
+const recorderProcessor: ProcessorDefinition = {
   name: "recorder-processor",
   parameterDescriptors: [],
   process: recorderProcess,

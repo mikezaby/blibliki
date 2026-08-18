@@ -1,15 +1,11 @@
-import type {
-  NativeWorkletDefinition,
-  NativeWorkletProcess,
-} from "@blibliki/utils";
+import type { ProcessorDefinition, ProcessFunction } from "@blibliki/utils";
 
-// ADSR envelope with a-rate trigger/reset. ONE self-contained top-level "worklet"
-// function (web embeds it, native workletizes it); per-instance state is passed
-// in and mutated in place. See scale.processor.ts for the self-containment rules.
+// ADSR envelope with a-rate trigger/reset. Per-instance state is passed in and
+// mutated in place. See scale.processor.ts for the self-containment rules.
 //
 // State fields: lasttrig, trig, lastReset, reset, stage (0=idle 1=atk 2=dec
 // 3=sus 4=rel), value.
-const customEnvelopeProcess: NativeWorkletProcess = (
+const customEnvelopeProcess: ProcessFunction = (
   _inputs,
   outputs,
   framesToProcess,
@@ -17,7 +13,6 @@ const customEnvelopeProcess: NativeWorkletProcess = (
   state,
   ctx,
 ) => {
-  "worklet";
   const output = outputs;
   if (!output[0]) return;
 
@@ -156,7 +151,7 @@ const customEnvelopeProcess: NativeWorkletProcess = (
   s.value = value;
 };
 
-const customEnvelopeProcessor: NativeWorkletDefinition = {
+const customEnvelopeProcessor: ProcessorDefinition = {
   name: "custom-envelope-processor",
   parameterDescriptors: [
     {

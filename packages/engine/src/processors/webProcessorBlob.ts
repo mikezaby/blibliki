@@ -1,12 +1,12 @@
-import type { NativeWorkletDefinition } from "@blibliki/utils";
+import type { ProcessorDefinition } from "@blibliki/utils";
 
 // Turns a processor definition into a Blob-URL AudioWorklet module by embedding
 // the definition's top-level `process` (+ createState, onMessage) source and
 // adapting web's AudioWorklet runtime (3D inputs/outputs, MessagePort, global
 // sampleRate/currentFrame) to the neutral shape the definition expects. Same
-// source runs natively via react-native-worklets — no web/native duplication.
+// definition, so adding a processor means writing DSP, not boilerplate.
 export function createProcessorBlobURL(
-  definition: NativeWorkletDefinition,
+  definition: ProcessorDefinition,
 ): string {
   const createState = definition.createState?.toString() ?? "() => ({})";
   const onMessage = definition.onMessage?.toString() ?? "null";

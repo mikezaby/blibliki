@@ -1,12 +1,9 @@
-import type {
-  NativeWorkletDefinition,
-  NativeWorkletProcess,
-} from "@blibliki/utils";
+import type { ProcessorDefinition, ProcessFunction } from "@blibliki/utils";
 
-// LFO. ONE self-contained top-level "worklet" function; per-instance phase +
-// sample-and-hold random value are passed in as state and mutated in place;
-// sampleRate comes from ctx. See scale.processor.ts for the rules.
-const lfoProcess: NativeWorkletProcess = (
+// LFO. Per-instance phase + sample-and-hold random value are passed in as state
+// and mutated in place; sampleRate comes from ctx. See scale.processor.ts for
+// the self-containment rules.
+const lfoProcess: ProcessFunction = (
   _inputs,
   outputs,
   framesToProcess,
@@ -14,7 +11,6 @@ const lfoProcess: NativeWorkletProcess = (
   state,
   ctx,
 ) => {
-  "worklet";
   const frequencyValues = params.frequency;
   const waveformValues = params.waveform;
   const phaseValues = params.phase;
@@ -79,7 +75,7 @@ const lfoProcess: NativeWorkletProcess = (
   s.randomValue = randomValue;
 };
 
-const lfoProcessor: NativeWorkletDefinition = {
+const lfoProcessor: ProcessorDefinition = {
   name: "lfo-processor",
   parameterDescriptors: [
     { name: "frequency", defaultValue: 1.0, minValue: 0.01, maxValue: 100 },
