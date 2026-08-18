@@ -28,6 +28,16 @@
   button:disabled {
     opacity: 0.5;
   }
+  select {
+    width: 100%;
+    padding: 0.75rem;
+    margin-top: 0.75rem;
+    font-size: 1rem;
+    border-radius: 0.5rem;
+    background: #222;
+    color: #eee;
+    border: 1px solid #444;
+  }
   #meter {
     font-family: ui-monospace, monospace;
     font-size: 1.25rem;
@@ -40,6 +50,8 @@
   }
 </style>
 <h1>Blibliki mobile PoC</h1>
+<select id="patch"></select>
+<select id="midi" hidden></select>
 <button id="play">Play patch</button>
 <div id="meter"></div>
 <div id="log"></div>

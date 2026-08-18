@@ -3,14 +3,33 @@
 Answers the one question the [Capacitor plan](../../docs/plans/2026-08-18-capacitor-mobile-plan.md)
 rests on: **does the real engine run inside the iOS WKWebView?**
 
-It loads `src/patch.json` (LFO → Scale → Wavetable, StepSequencer → Envelope →
-Master — i.e. the AudioWorklet processors that killed the React Native port),
-starts the transport, and shows a peak meter tapped off the signal feeding
-Master. Non-zero peak = the patch is really making sound.
+Two patches in `src/patches/`, picked from the dropdown:
+
+- **wavetable + sequencer** — LFO → Scale → Wavetable, StepSequencer → Envelope
+  → Master: the AudioWorklet processors that killed the React Native port,
+  driven by the transport.
+- **midi keyboard** — same voice, played from a MIDI input instead.
+
+A peak meter is tapped off the signal feeding Master, so "it plays" is measured,
+not assumed. The second dropdown lists the engine's actual MIDI inputs and
+rewrites the `MidiInput` module's `selectedId`: the id stored in an exported
+patch comes from the machine that exported it (`Arturia KeyStep 32` /
+`1695389404` here) and never matches anywhere else, so it must be re-picked.
 
 ```bash
 pnpm ios   # build + sync + run on a simulator/device
+pnpm dev   # same page in a desktop browser — where Web MIDI actually works
 ```
+
+Result on the iOS 26 simulator (iPhone 17): 6 modules loaded, context running at
+48 kHz, peak ~0.13. Worklets, blob-URL processor loading and the sequencer all
+work unmodified. Autoplay also worked without a tap there — do not rely on it,
+a real device still needs the user gesture.
+
+**MIDI status:** on the iOS simulator the picker lists only `Computer Keyboard`
+— WKWebView has no Web MIDI, as the plan predicted. Hardware controllers on iOS
+need the CoreMIDI plugin + `CapacitorMidiAdapter` (plan step 4). Desktop Chrome
+and the Android WebView list real devices through the existing `WebMidiAdapter`.
 
 ## Toolchain
 
@@ -71,10 +90,5 @@ Audio caveat to expect on Android: the Chromium WebView's AudioTrack latency is
 worse than iOS's, and some devices need `latencyHint: "playback"` to avoid
 glitching.
 
-Result on the iOS 26 simulator (iPhone 17): 6 modules loaded, context running at
-48 kHz, peak ~0.13. Worklets, blob-URL processor loading and the sequencer all
-work unmodified. Autoplay also worked without a tap there — do not rely on it,
-a real device still needs the user gesture.
-
-Not done yet: MIDI (`CapacitorMidiAdapter`), audio session config, Android, the
-performance UI. See the plan.
+Not done yet: iOS MIDI (`CapacitorMidiAdapter`), audio session config, Android,
+the performance UI. See the plan.
