@@ -4,9 +4,12 @@ import { afterEach, beforeEach, vi } from "vitest";
 import { Engine } from "@/Engine";
 import { setMidiAdapterFactory } from "@/core/midi/adapters";
 import { createWebMidiAdapter } from "@/core/midi/adapters/createMidiAdapter.web";
+import { setProcessorsLoader } from "@/processors";
+import { loadWebProcessors } from "@/processors/loadProcessors.web";
 
 // Tests run against source (not the built package entry), so wire the platform
 // implementations the same way index.browser does.
+setProcessorsLoader(loadWebProcessors);
 setMidiAdapterFactory(createWebMidiAdapter);
 
 declare module "vitest" {
