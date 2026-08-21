@@ -18,6 +18,7 @@
   "dependencies": {
     "@blibliki/engine": "workspace:^",
     "@blibliki/instrument": "workspace:^",
+    "@blibliki/models": "workspace:^",
     "@blibliki/ui": "workspace:^",
     "@capacitor/core": "8.5.0",
     "@capacitor/ios": "8.5.0",

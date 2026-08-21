@@ -217,6 +217,9 @@ importers:
       '@blibliki/instrument':
         specifier: workspace:^
         version: link:../../packages/instrument
+      '@blibliki/models':
+        specifier: workspace:^
+        version: link:../../packages/models
       '@blibliki/ui':
         specifier: workspace:^
         version: link:../../packages/ui

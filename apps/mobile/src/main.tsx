@@ -3,6 +3,7 @@ import { Capacitor } from "@capacitor/core";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { initializeFirebaseOnce } from "./firebase";
 import CapacitorMidiAdapter from "./midi/CapacitorMidiAdapter";
 import "./styles.css";
 
@@ -31,6 +32,10 @@ if (capacitorMidi.isSupported()) {
     `no midi on ${Capacitor.getPlatform()}: neither Web MIDI nor the native plugin is available`,
   );
 }
+
+// Instruments are read from Firestore, so this has to happen before anything
+// asks for the list.
+initializeFirebaseOnce();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

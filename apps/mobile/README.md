@@ -3,20 +3,34 @@
 Runs the Blibliki performance instrument on iOS, following the
 [Capacitor plan](../../docs/plans/2026-08-18-capacitor-mobile-plan.md).
 
-The whole app is the performance console from
+The app is two screens: pick an instrument, then play it. The second is the
+performance console from
 [`@blibliki/instrument/react`](../../packages/instrument/README.md#the-react-entry-point) —
 the same one `apps/grid` renders. `src/App.tsx` supplies the two things the
 console does not own: the instrument document and where it is stored.
 
 ```bash
-pnpm ios   # build + sync + run on a simulator/device
-pnpm dev   # same page in a desktop browser — where Web MIDI actually works
+cp .env.example .env   # values can be copied from apps/grid/.env
+pnpm ios               # build + sync + run on a simulator/device
+pnpm dev               # same app in a desktop browser — where Web MIDI works
 ```
 
-Storage is `localStorage` (`src/instrumentStore.ts`), standing in for grid's
-Firestore: the controller's save command writes the document to the device, and
-discard reads it back. A document saved by an older build is migrated on read,
-and an unreadable one falls back to the default rather than refusing to boot.
+## Instruments
+
+`src/InstrumentPicker.tsx` lists the instruments from Firestore — the same ones
+grid shows, because `Instrument.all()` is not filtered by user — with a filter
+field over the names. Picking one loads the console; the console's `backSlot`
+holds an "Instruments" button back to the list. That first tap also serves as
+the user gesture iOS wants before audio starts.
+
+There is no sign-in, so this is **read-only against Firestore**. Editing still
+works: the controller's save command writes a per-instrument draft to
+`localStorage` (`src/instrumentStore.ts`), and the console opens that draft in
+preference to the stored instrument. Discard deletes the draft and reloads from
+the cloud. Drafts are migrated on read, and one that no longer parses is
+ignored rather than blocking the instrument from opening.
+
+Without an `.env` the picker says so instead of failing inside Firestore.
 
 A Launch Control XL3 is optional — encoder cells drag vertically and answer
 arrow keys, synthesizing the same relative CC events the hardware sends.
@@ -30,6 +44,9 @@ is always right.
 Errors go to a `<pre id="errors">` element that lives outside the React root, so
 they still show when the app itself is what broke. There is no console on a
 device.
+
+Not stored yet: which instrument was open last, so the picker comes up every
+launch. Worth adding if that gets annoying between sets.
 
 ### The proof of concept this replaced
 

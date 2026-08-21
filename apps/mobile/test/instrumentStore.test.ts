@@ -1,8 +1,11 @@
 import { createDefaultInstrumentDocument } from "@blibliki/instrument";
+import type { IInstrument } from "@blibliki/models";
 import { describe, expect, it } from "vitest";
 import {
-  loadInstrumentDocument,
-  saveInstrumentDocument,
+  clearInstrumentDraft,
+  loadInstrumentDraft,
+  resolveInstrumentDocument,
+  saveInstrumentDraft,
 } from "../src/instrumentStore";
 
 function createStorage(initial: Record<string, string> = {}) {
@@ -11,33 +14,76 @@ function createStorage(initial: Record<string, string> = {}) {
   return {
     getItem: (key: string) => items.get(key) ?? null,
     setItem: (key: string, value: string) => items.set(key, value),
+    removeItem: (key: string) => items.delete(key),
+  };
+}
+
+function createInstrument(id: string, name: string): IInstrument {
+  return {
+    id,
+    name,
+    userId: "user-1",
+    document: { ...createDefaultInstrumentDocument(), name },
   };
 }
 
 describe("instrumentStore", () => {
-  it("falls back to the default document when nothing is stored", () => {
-    expect(loadInstrumentDocument(createStorage()).tracks.length).toBe(
-      createDefaultInstrumentDocument().tracks.length,
+  it("keeps a separate draft per instrument", () => {
+    const storage = createStorage();
+    const one = createInstrument("one", "One");
+    const two = createInstrument("two", "Two");
+
+    saveInstrumentDraft(storage, one.id, {
+      ...createDefaultInstrumentDocument(),
+      name: "One edited",
+    });
+
+    expect(loadInstrumentDraft(storage, one.id)?.name).toBe("One edited");
+    expect(loadInstrumentDraft(storage, two.id)).toBeUndefined();
+  });
+
+  it("opens the device draft in preference to the stored instrument", () => {
+    const storage = createStorage();
+    const instrument = createInstrument("one", "Stored name");
+
+    expect(resolveInstrumentDocument(storage, instrument).name).toBe(
+      "Stored name",
+    );
+
+    saveInstrumentDraft(storage, instrument.id, {
+      ...createDefaultInstrumentDocument(),
+      name: "Draft name",
+    });
+
+    expect(resolveInstrumentDocument(storage, instrument).name).toBe(
+      "Draft name",
     );
   });
 
-  it("round-trips a saved document", () => {
+  it("falls back to the stored instrument once the draft is discarded", () => {
     const storage = createStorage();
-    const document = {
+    const instrument = createInstrument("one", "Stored name");
+
+    saveInstrumentDraft(storage, instrument.id, {
       ...createDefaultInstrumentDocument(),
-      name: "On Device",
-    };
+      name: "Draft name",
+    });
+    clearInstrumentDraft(storage, instrument.id);
 
-    saveInstrumentDocument(storage, document);
-
-    expect(loadInstrumentDocument(storage).name).toBe("On Device");
+    expect(loadInstrumentDraft(storage, instrument.id)).toBeUndefined();
+    expect(resolveInstrumentDocument(storage, instrument).name).toBe(
+      "Stored name",
+    );
   });
 
-  it("boots on the default rather than throwing on an unreadable document", () => {
-    const storage = createStorage({ "blibliki.instrument": "{not json" });
+  it("ignores a draft that no longer parses rather than failing to open", () => {
+    const storage = createStorage({
+      "blibliki.instrument.one": "{not json",
+    });
+    const instrument = createInstrument("one", "Stored name");
 
-    expect(loadInstrumentDocument(storage).name).toBe(
-      createDefaultInstrumentDocument().name,
+    expect(resolveInstrumentDocument(storage, instrument).name).toBe(
+      "Stored name",
     );
   });
 });
