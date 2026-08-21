@@ -482,9 +482,19 @@ describe("InstrumentSession", () => {
       [106, 127],
     ]);
 
+    // CC 102 is next track, the other half of what the on-screen prev/next
+    // buttons send.
+    session.sendControlEvent(MidiEvent.fromCC(102, 127, 0));
+
+    expect(session.getRuntimePatch().runtime.navigation.activeTrackIndex).toBe(
+      1,
+    );
+
+    // A disposed session forwards nothing further.
+    const forwardedBeforeDispose = forwarded.length;
     session.dispose();
     session.sendControlEvent(MidiEvent.fromCC(106, 127, 0));
 
-    expect(forwarded).toHaveLength(1);
+    expect(forwarded).toHaveLength(forwardedBeforeDispose);
   });
 });

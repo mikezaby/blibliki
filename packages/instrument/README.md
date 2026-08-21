@@ -318,7 +318,8 @@ of the console was never themed.
 The component owns the engine, the controller session and the display; the host
 owns storage and navigation. Encoder cells drag vertically and answer arrow
 keys, synthesizing the same relative CC events a Launch Control XL3 sends, so a
-device is optional.
+device is optional. Prev/next buttons sit beside the Track and Page Bank
+readouts, sending the same navigation CCs the controller's buttons do.
 
 Consumers need three things beyond the import:
 

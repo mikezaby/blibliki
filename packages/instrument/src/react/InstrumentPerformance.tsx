@@ -5,7 +5,14 @@ import {
   TransportState,
 } from "@blibliki/engine";
 import { Button, Surface, Text, cn } from "@blibliki/ui";
-import { Maximize2, Minimize2, Play, Square } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  Minimize2,
+  Play,
+  Square,
+} from "lucide-react";
 import {
   useEffect,
   useLayoutEffect,
@@ -95,6 +102,15 @@ const EMPTY_SLOT_TEXT = "--";
 // width and then scaled as a whole to whatever screen it lands on. Nothing
 // inside reflows, so an 8-encoder band stays an 8-encoder band on a phone.
 const DESIGN_WIDTH = 1536;
+// The navigation buttons on a Launch Control XL3. On-screen prev/next plays the
+// same CCs, so navigation, LED sync and display all follow one path whether the
+// performer used the hardware or the screen.
+const TRACK_PREV_CC = 103;
+const TRACK_NEXT_CC = 102;
+const PAGE_PREV_CC = 107;
+const PAGE_NEXT_CC = 106;
+// Those buttons are momentary: the surface acts on the press, not the release.
+const BUTTON_PRESS_VALUE = 127;
 // Every encoder rendered in the bands is a relative (incDec) mapping, so a
 // gesture emits ticks around the pivot rather than an absolute position: 64
 // means "no change", above counts up, below counts down.
@@ -471,24 +487,66 @@ function getNoticeToneStyles(tone?: "info" | "success" | "warning" | "error") {
   }
 }
 
+function StepButton({
+  label,
+  onPress,
+  children,
+}: {
+  label: string;
+  onPress: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <Button
+      variant="outlined"
+      color="neutral"
+      size="icon"
+      aria-label={label}
+      onClick={onPress}
+      className="h-7 w-7 rounded-full border-zinc-700 p-0 text-zinc-300"
+    >
+      {children}
+    </Button>
+  );
+}
+
 function ConsoleStat({
   label,
   value,
   valueClassName,
+  onPrevious,
+  onNext,
 }: {
   label: string;
   value: string;
   valueClassName?: string;
+  onPrevious?: () => void;
+  onNext?: () => void;
 }) {
   return (
     <div className="px-4 py-3 shadow-inner">
-      <Text
-        asChild
-        size="xs"
-        className="font-mono uppercase tracking-[0.24em] text-zinc-500"
-      >
-        <span>{label}</span>
-      </Text>
+      <div className="flex items-center justify-between gap-2">
+        <Text
+          asChild
+          size="xs"
+          className="font-mono uppercase tracking-[0.24em] text-zinc-500"
+        >
+          <span>{label}</span>
+        </Text>
+        {onPrevious && onNext ? (
+          <div className="flex items-center gap-1">
+            <StepButton
+              label={`Previous ${label.toLowerCase()}`}
+              onPress={onPrevious}
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </StepButton>
+            <StepButton label={`Next ${label.toLowerCase()}`} onPress={onNext}>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </StepButton>
+          </div>
+        ) : null}
+      </div>
       <Text
         asChild
         className={cn(
@@ -1093,18 +1151,26 @@ export default function InstrumentPerformance({
     typeof HTMLElement !== "undefined" &&
     typeof document.documentElement.requestFullscreen === "function";
 
-  const sendEncoderTick = (cc: number, ticks: number) => {
+  const sendControlChange = (cc: number, ccValue: number) => {
     const { controllerSession, engine } = state;
     if (!controllerSession || !engine) {
       return;
     }
 
-    const ccValue =
-      RELATIVE_PIVOT + clamp(ticks, -MAX_TICKS_PER_EVENT, MAX_TICKS_PER_EVENT);
-
     controllerSession.sendControlEvent(
       MidiEvent.fromCC(cc, ccValue, engine.context.currentTime),
     );
+  };
+
+  const sendEncoderTick = (cc: number, ticks: number) => {
+    sendControlChange(
+      cc,
+      RELATIVE_PIVOT + clamp(ticks, -MAX_TICKS_PER_EVENT, MAX_TICKS_PER_EVENT),
+    );
+  };
+
+  const pressButton = (cc: number) => () => {
+    sendControlChange(cc, BUTTON_PRESS_VALUE);
   };
 
   const handleFullscreenToggle = async () => {
@@ -1201,12 +1267,19 @@ export default function InstrumentPerformance({
 
             <div className="mt-6 grid grid-cols-[18rem_minmax(0,1fr)] gap-5">
               <aside>
-                <ConsoleStat label="Track" value={trackName} />
+                <ConsoleStat
+                  label="Track"
+                  value={trackName}
+                  onPrevious={pressButton(TRACK_PREV_CC)}
+                  onNext={pressButton(TRACK_NEXT_CC)}
+                />
                 <ConsoleStat label="Track Volume" value={trackVolume} />
                 <ConsoleStat
                   label="Page Bank"
                   value={pageBankLabel}
                   valueClassName="text-sm"
+                  onPrevious={pressButton(PAGE_PREV_CC)}
+                  onNext={pressButton(PAGE_NEXT_CC)}
                 />
                 <ConsoleStat
                   label="MIDI"

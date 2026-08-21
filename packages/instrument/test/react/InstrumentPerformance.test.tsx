@@ -673,6 +673,40 @@ describe("InstrumentPerformance", () => {
     );
   });
 
+  it("navigates tracks and pages from the on-screen buttons", async () => {
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    await screen.findByRole("button", { name: "Next track" });
+
+    // The same CCs the Launch Control XL3 sends, at the press value its
+    // momentary buttons use, so navigation takes one path either way.
+    const pressed: [number | undefined, number | undefined][] = [];
+    for (const name of [
+      "Previous track",
+      "Next track",
+      "Previous page bank",
+      "Next page bank",
+    ]) {
+      fireEvent.click(screen.getByRole("button", { name }));
+      const [event] = sendControlEventMock.mock.calls.at(-1) as [
+        { cc?: number; ccValue?: number },
+      ];
+      pressed.push([event.cc, event.ccValue]);
+    }
+
+    expect(pressed).toEqual([
+      [103, 127],
+      [102, 127],
+      [107, 127],
+      [106, 127],
+    ]);
+  });
+
   it("turns an encoder cell into relative ticks on the controller session", async () => {
     // jsdom has no pointer capture; the drag only needs the call to not throw.
     Object.defineProperty(HTMLElement.prototype, "setPointerCapture", {
