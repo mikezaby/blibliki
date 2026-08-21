@@ -36,6 +36,8 @@ export default function App() {
       key={selected.id}
       name={selected.name}
       document={resolveInstrumentDocument(localStorage, selected)}
+      // Already fullscreen, and landscape-locked: there is nothing to toggle.
+      allowFullscreen={false}
       backSlot={
         <Button
           variant="text"

@@ -560,6 +560,35 @@ describe("InstrumentPerformance", () => {
     ).toEqual({ title: "RELOADED", tone: "success" });
   });
 
+  it("leaves the fullscreen button out when the host does not want one", async () => {
+    // The API is available here — beforeEach stubs it — so only the host's
+    // answer can remove the button. An installed app has nothing to toggle.
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+        allowFullscreen={false}
+      />,
+    );
+
+    await screen.findByRole("button", { name: "Start" });
+
+    expect(screen.queryByRole("button", { name: "Fullscreen" })).toBeNull();
+  });
+
+  it("keeps the fullscreen button by default, for hosts in a browser tab", async () => {
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    expect(
+      await screen.findByRole("button", { name: "Fullscreen" }),
+    ).toBeTruthy();
+  });
+
   it("leaves the fullscreen button out where there is no Fullscreen API", async () => {
     // An installed app — the iOS WebView, for one — is already fullscreen and
     // exposes no Fullscreen API, so the button has nothing to do there.

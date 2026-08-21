@@ -279,6 +279,9 @@ import { InstrumentPerformance } from "@blibliki/instrument/react";
   name={instrument.name}
   document={instrument.document}
   backSlot={<BackToEditorLink />}
+  // Defaults to true; an installed app passes false, since it has no browser
+  // chrome to escape.
+  allowFullscreen
   onPersist={async (action, document) => {
     if (action === "saveDraft") {
       await save(document);

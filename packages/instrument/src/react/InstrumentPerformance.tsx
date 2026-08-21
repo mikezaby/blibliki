@@ -43,6 +43,11 @@ export type InstrumentPerformanceProps = {
   // Rendered in the header beside the transport controls, for whatever way
   // back the host app has (a router link, a button, nothing at all).
   backSlot?: ReactNode;
+  // Whether a fullscreen control belongs here at all. Feature detection only
+  // answers whether fullscreen would work, which it does in any browser tab;
+  // whether it is worth offering is the host's to say. An installed app is
+  // already fullscreen and passes false.
+  allowFullscreen?: boolean;
   // Runs the controller's save/discard commands. The host owns storage: this
   // component only hands over the document as it stands and displays whatever
   // comes back.
@@ -914,6 +919,7 @@ export default function InstrumentPerformance({
   name,
   document: instrumentDocument,
   backSlot,
+  allowFullscreen = true,
   onPersist,
 }: InstrumentPerformanceProps) {
   const [sessionSource, setSessionSource] = useState<SessionSource>({
@@ -1081,6 +1087,7 @@ export default function InstrumentPerformance({
     displayState?.header.transportState === TransportState.playing;
   const isSequencerEdit = displayState?.header.mode === "seqEdit";
   const canToggleFullscreen =
+    allowFullscreen &&
     typeof document !== "undefined" &&
     typeof document.exitFullscreen === "function" &&
     typeof HTMLElement !== "undefined" &&
@@ -1150,9 +1157,8 @@ export default function InstrumentPerformance({
 
               <div className="flex flex-wrap items-center gap-3">
                 {backSlot}
-                {/* Only where there is browser chrome to escape. An installed
-                    app is already fullscreen and has no Fullscreen API, so the
-                    button leaves rather than sitting there greyed out. */}
+                {/* Only where there is browser chrome to escape, and only
+                    where the host asked for it. */}
                 {canToggleFullscreen ? (
                   <Button
                     variant="outlined"
