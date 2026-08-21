@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
 import InstrumentPerformance, {
   createEncoderArcPath,
-  createFitScale,
+  createFaceplateFit,
 } from "@/react/InstrumentPerformance";
 
 const {
@@ -50,6 +50,48 @@ vi.mock("@/InstrumentSession", () => ({
 vi.mock("@/document/SavedInstrumentDocument", () => ({
   createSavedInstrumentDocument: createSavedInstrumentDocumentMock,
 }));
+
+const layoutProps = ["clientWidth", "clientHeight", "offsetHeight"] as const;
+
+function restoreLayout() {
+  for (const prop of layoutProps) {
+    Reflect.deleteProperty(HTMLElement.prototype, prop);
+  }
+}
+
+// jsdom does no layout, so the fit path is fed measurements directly.
+function stubLayout({
+  stageWidth,
+  stageHeight,
+  faceplateHeight,
+}: {
+  stageWidth: number;
+  stageHeight: number;
+  faceplateHeight: number;
+}) {
+  const isStage = function (this: HTMLElement) {
+    return this.classList.contains("instrument-performance-stage");
+  };
+
+  Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+    configurable: true,
+    get(this: HTMLElement) {
+      return isStage.call(this) ? stageWidth : 0;
+    },
+  });
+  Object.defineProperty(HTMLElement.prototype, "clientHeight", {
+    configurable: true,
+    get(this: HTMLElement) {
+      return isStage.call(this) ? stageHeight : 0;
+    },
+  });
+  Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+    configurable: true,
+    get(this: HTMLElement) {
+      return this.style.width === "1536px" ? faceplateHeight : 0;
+    },
+  });
+}
 
 describe("InstrumentPerformance", () => {
   let fullscreenElement: Element | null;
@@ -187,6 +229,8 @@ describe("InstrumentPerformance", () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
+    restoreLayout();
   });
 
   it("renders the runtime inside a hardware-style performance console", async () => {
@@ -516,6 +560,49 @@ describe("InstrumentPerformance", () => {
     ).toEqual({ title: "RELOADED", tone: "success" });
   });
 
+  it("keeps the faceplate inside the stage when the window is far narrower", async () => {
+    // The whole point of measuring: a 1536px-wide faceplate on a 400px stage.
+    // It used to be centred by the layout, which put it in an implicit grid
+    // track sized to its own 1536px and walked it off screen as the stage got
+    // smaller.
+    const observers: (() => void)[] = [];
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(callback: () => void) {
+          observers.push(callback);
+        }
+        observe() {
+          // Sizes come from the stubbed layout metrics below.
+        }
+        disconnect() {
+          // Nothing to release.
+        }
+      },
+    );
+    stubLayout({ stageWidth: 400, stageHeight: 300, faceplateHeight: 900 });
+
+    const { container } = render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    const stage = container.querySelector(".instrument-performance-stage");
+    const faceplate = stage?.firstElementChild as HTMLElement;
+
+    await waitFor(() => {
+      expect(faceplate.style.transform).not.toBe("");
+    });
+
+    const scale = 400 / 1536;
+    expect(faceplate.style.transformOrigin).toBe("0 0");
+    expect(faceplate.style.transform).toBe(
+      `translate(0px, ${String((300 - 900 * scale) / 2)}px) scale(${String(scale)})`,
+    );
+  });
+
   it("turns an encoder cell into relative ticks on the controller session", async () => {
     // jsdom has no pointer capture; the drag only needs the call to not throw.
     Object.defineProperty(HTMLElement.prototype, "setPointerCapture", {
@@ -613,23 +700,38 @@ function createEncoderPoint(normalized: number) {
   };
 }
 
-describe("createFitScale", () => {
+describe("createFaceplateFit", () => {
   const DESIGN_WIDTH = 1536;
 
   it("shrinks to whichever axis runs out first", () => {
     // A phone in landscape: height is the tight one.
-    expect(createFitScale(852, 393, 900)).toBeCloseTo(393 / 900);
+    expect(createFaceplateFit(852, 393, 900).scale).toBeCloseTo(393 / 900);
     // A short, very wide stage: width still has room, height does not.
-    expect(createFitScale(3840, 600, 900)).toBeCloseTo(600 / 900);
+    expect(createFaceplateFit(3840, 600, 900).scale).toBeCloseTo(600 / 900);
   });
 
   it("grows so the console fills a stage larger than the design", () => {
     // Width is the tight axis here: 2x the design width against 2000/900.
-    expect(createFitScale(DESIGN_WIDTH * 2, 2000, 900)).toBe(2);
+    expect(createFaceplateFit(DESIGN_WIDTH * 2, 2000, 900).scale).toBe(2);
+  });
+
+  it("centres the scaled faceplate on both axes", () => {
+    const stageWidth = 400;
+    const stageHeight = 300;
+    const fit = createFaceplateFit(stageWidth, stageHeight, 900);
+
+    // Scaled width exactly fills the stage, so there is nothing left to offset.
+    expect(fit.scale).toBeCloseTo(400 / 1536);
+    expect(fit.x).toBeCloseTo(0);
+    // Height has room to spare, so the leftover is split evenly.
+    expect(fit.y).toBeCloseTo((stageHeight - 900 * fit.scale) / 2);
+    // Whatever the stage, the scaled box sits inside it on both axes.
+    expect(fit.x + DESIGN_WIDTH * fit.scale).toBeLessThanOrEqual(stageWidth);
+    expect(fit.y + 900 * fit.scale).toBeLessThanOrEqual(stageHeight);
   });
 
   it("stays at 1 until something has been measured", () => {
-    expect(createFitScale(0, 0, 0)).toBe(1);
-    expect(createFitScale(1024, 768, 0)).toBe(1);
+    expect(createFaceplateFit(0, 0, 0).scale).toBe(1);
+    expect(createFaceplateFit(1024, 768, 0).scale).toBe(1);
   });
 });

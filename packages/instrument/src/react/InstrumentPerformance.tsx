@@ -8,6 +8,7 @@ import { Button, Surface, Text, cn } from "@blibliki/ui";
 import { Maximize2, Minimize2, Play, Square } from "lucide-react";
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type KeyboardEvent,
@@ -107,26 +108,58 @@ function clamp(value: number, min: number, max: number) {
 }
 
 // Uniform scale that fits the faceplate inside the stage, growing as well as
-// shrinking so the console always fills what it is given.
-export function createFitScale(
+// shrinking so the console always fills what it is given, plus the offset that
+// centres the scaled result.
+//
+// The centring is done by hand rather than by the layout on purpose. The
+// faceplate's layout box stays DESIGN_WIDTH wide however small the stage gets,
+// and centring a box wider than its container is where the browser's own
+// alignment gets subtle: a grid item lands in an implicit `auto` track sized to
+// its own max-content, so it is centred in 1536px of track rather than in the
+// stage, and drifts off screen as the stage shrinks. With `transform-origin: 0
+// 0` and an explicit translate there is nothing left to interpret.
+export function createFaceplateFit(
   stageWidth: number,
   stageHeight: number,
   contentHeight: number,
 ) {
   if (stageWidth <= 0 || stageHeight <= 0 || contentHeight <= 0) {
-    return 1;
+    return { scale: 1, x: 0, y: 0 };
   }
 
-  return Math.min(stageWidth / DESIGN_WIDTH, stageHeight / contentHeight);
+  const scale = Math.min(
+    stageWidth / DESIGN_WIDTH,
+    stageHeight / contentHeight,
+  );
+
+  return {
+    scale,
+    x: (stageWidth - DESIGN_WIDTH * scale) / 2,
+    y: (stageHeight - contentHeight * scale) / 2,
+  };
+}
+
+export function createFaceplateStyle(fit: {
+  scale: number;
+  x: number;
+  y: number;
+}) {
+  return {
+    width: DESIGN_WIDTH,
+    transformOrigin: "0 0",
+    transform: `translate(${String(fit.x)}px, ${String(fit.y)}px) scale(${String(fit.scale)})`,
+  };
 }
 
 function useFitToScreen(
   stageRef: RefObject<HTMLDivElement | null>,
   faceplateRef: RefObject<HTMLDivElement | null>,
 ) {
-  const [scale, setScale] = useState(1);
+  const [fit, setFit] = useState({ scale: 1, x: 0, y: 0 });
 
-  useEffect(() => {
+  // Layout effect, so the first paint is already at the right size rather than
+  // flashing a 1536px-wide console on a phone.
+  useLayoutEffect(() => {
     const stage = stageRef.current;
     const faceplate = faceplateRef.current;
     // jsdom and other non-layout environments have no ResizeObserver; the
@@ -135,11 +168,11 @@ function useFitToScreen(
       return;
     }
 
-    const fit = () => {
+    const measure = () => {
       // offsetHeight is the pre-transform layout height, so the scale this
       // produces never feeds back into the measurement it came from.
-      setScale(
-        createFitScale(
+      setFit(
+        createFaceplateFit(
           stage.clientWidth,
           stage.clientHeight,
           faceplate.offsetHeight,
@@ -147,10 +180,10 @@ function useFitToScreen(
       );
     };
 
-    fit();
+    measure();
     // Observing the stage covers window resizes and orientation changes;
     // observing the faceplate covers content that grows, like a new notice.
-    const observer = new ResizeObserver(fit);
+    const observer = new ResizeObserver(measure);
     observer.observe(stage);
     observer.observe(faceplate);
 
@@ -159,7 +192,7 @@ function useFitToScreen(
     };
   }, [stageRef, faceplateRef]);
 
-  return scale;
+  return fit;
 }
 
 function toRadians(angle: number) {
@@ -893,7 +926,7 @@ export default function InstrumentPerformance({
   const documentRef = useRef(instrumentDocument);
   const stageRef = useRef<HTMLDivElement>(null);
   const faceplateRef = useRef<HTMLDivElement>(null);
-  const scale = useFitToScreen(stageRef, faceplateRef);
+  const fit = useFitToScreen(stageRef, faceplateRef);
 
   useEffect(() => {
     let cancelled = false;
@@ -1084,11 +1117,12 @@ export default function InstrumentPerformance({
     <Surface
       tone="canvas"
       ref={stageRef}
-      className="instrument-performance-stage fixed inset-0 grid place-items-center overflow-hidden bg-zinc-950"
+      className="instrument-performance-stage fixed inset-0 overflow-hidden bg-zinc-950"
     >
       <div
         ref={faceplateRef}
-        style={{ width: DESIGN_WIDTH, transform: `scale(${scale})` }}
+        className="absolute left-0 top-0"
+        style={createFaceplateStyle(fit)}
       >
         <div className="rounded-3xl bg-zinc-900/90 p-5 shadow-2xl">
           <div className="instrument-performance-faceplate rounded-3xl p-6">

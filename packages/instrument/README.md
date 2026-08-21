@@ -295,7 +295,11 @@ The console is a faceplate, not a responsive page. It is laid out once at a
 fixed 1536px design width and then scaled as a whole to fit whatever stage it
 lands on — growing as well as shrinking — so an eight-encoder band stays an
 eight-encoder band on a phone instead of reflowing into four. Nothing inside
-uses viewport breakpoints. The stage fills the viewport and carries
+uses viewport breakpoints. The scaled faceplate is centred by an explicit
+translate rather than by grid or flex alignment: its layout box stays 1536px
+wide however small the stage gets, and a grid item that wide lands in an
+implicit `auto` track sized to its own max-content, so it centres in 1536px of
+track instead of in the stage and walks off screen as the stage shrinks. The stage fills the viewport and carries
 `env(safe-area-inset-*)` padding, so a notch never covers the console. On a
 phone in landscape the scale lands around 0.4, which fits but leaves small tap
 targets; a tablet is the size this is drawn for.
