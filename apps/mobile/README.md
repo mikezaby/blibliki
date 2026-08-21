@@ -10,9 +10,8 @@ the same one `apps/grid` renders. `src/App.tsx` supplies the two things the
 console does not own: the instrument document and where it is stored.
 
 ```bash
-cp .env.example .env   # values can be copied from apps/grid/.env
-pnpm ios               # build + sync + run on a simulator/device
-pnpm dev               # same app in a desktop browser — where Web MIDI works
+pnpm ios   # build + sync + run on a simulator/device
+pnpm dev   # same app in a desktop browser — where Web MIDI actually works
 ```
 
 ## Instruments
@@ -30,7 +29,12 @@ preference to the stored instrument. Discard deletes the draft and reloads from
 the cloud. Drafts are migrated on read, and one that no longer parses is
 ignored rather than blocking the instrument from opening.
 
-Without an `.env` the picker says so instead of failing inside Firestore.
+The Firebase keys are grid's: `vite.config.ts` points `envDir` at
+`apps/grid`, so both apps read one `.env` rather than keeping two copies of the
+same six secrets. They are the same keys the web app ships to the browser —
+reads are open by design and nothing can be written without a login this app
+does not have. If that file is missing, the picker says so instead of failing
+somewhere inside Firestore.
 
 A Launch Control XL3 is optional — encoder cells drag vertically and answer
 arrow keys, synthesizing the same relative CC events the hardware sends.
