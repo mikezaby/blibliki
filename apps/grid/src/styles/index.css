@@ -1,4 +1,5 @@
 @import "./tailwind.css";
 @import "@blibliki/ui/styles.css";
+@import "@blibliki/instrument/performance.css";
 @import "./app.css";
 @import "./keyboard.css";

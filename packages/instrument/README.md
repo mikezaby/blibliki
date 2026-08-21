@@ -265,6 +265,50 @@ const session = createInstrumentControllerSession(engine, runtimePatch, {
 });
 ```
 
+## The React Entry Point
+
+`@blibliki/instrument/react` ships `InstrumentPerformance`, the on-screen
+performance console. It is a separate entry point so the root export stays
+headless — `apps/pi-display` consumes that one from Node and must never pull in
+React.
+
+```tsx
+import { InstrumentPerformance } from "@blibliki/instrument/react";
+
+<InstrumentPerformance
+  name={instrument.name}
+  document={instrument.document}
+  backSlot={<BackToEditorLink />}
+  onPersist={async (action, document) => {
+    if (action === "saveDraft") {
+      await save(document);
+      return { notice: { title: "SAVED", tone: "success" } };
+    }
+
+    // Returning a document restarts the session on it.
+    return { document: await load(), notice: { title: "RELOADED" } };
+  }}
+/>;
+```
+
+The component owns the engine, the controller session and the display; the host
+owns storage and navigation. Encoder cells drag vertically and answer arrow
+keys, synthesizing the same relative CC events a Launch Control XL3 sends, so a
+device is optional.
+
+Consumers need three things beyond the import:
+
+- `react`, `react-dom`, `@blibliki/ui` and `lucide-react` installed. They are
+  optional peers, needed only by this entry point.
+- `@import "@blibliki/instrument/performance.css";` after
+  `@blibliki/ui/styles.css`, which defines the `--ui-color-*` tokens it uses.
+- A Tailwind `@source` pointing at this package, since the component's utility
+  classes live here rather than in the app:
+
+  ```css
+  @source "../../node_modules/@blibliki/instrument/src/react";
+  ```
+
 ## How To Change The Package
 
 ### Add a Source Profile
