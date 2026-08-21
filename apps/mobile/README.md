@@ -39,6 +39,10 @@ somewhere inside Firestore.
 A Launch Control XL3 is optional — encoder cells drag vertically and answer
 arrow keys, synthesizing the same relative CC events the hardware sends.
 
+The console's fullscreen button is hidden when `Capacitor.isNativePlatform()`
+is true: the installed app is already fullscreen, while the same build opened
+in a mobile browser still has chrome worth escaping.
+
 The app is **landscape only** (`UISupportedInterfaceOrientations` in
 `ios/App/App/Info.plist`, both the phone and iPad arrays). The console is a wide
 faceplate — three bands of eight encoders — so it wants the long axis across.

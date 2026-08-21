@@ -1,6 +1,7 @@
 import { InstrumentPerformance } from "@blibliki/instrument/react";
 import { Instrument, type IInstrument } from "@blibliki/models";
 import { Button } from "@blibliki/ui";
+import { Capacitor } from "@capacitor/core";
 import { ArrowLeft } from "lucide-react";
 import { useCallback, useState } from "react";
 import InstrumentPicker from "./InstrumentPicker";
@@ -36,8 +37,11 @@ export default function App() {
       key={selected.id}
       name={selected.name}
       document={resolveInstrumentDocument(localStorage, selected)}
-      // Already fullscreen, and landscape-locked: there is nothing to toggle.
-      allowFullscreen={false}
+      // The installed app is already fullscreen and landscape-locked, so there
+      // is nothing to toggle; the same build served in a mobile browser has
+      // chrome worth escaping. Capacitor answers which one this is, so no user
+      // agent is being guessed at.
+      allowFullscreen={!Capacitor.isNativePlatform()}
       backSlot={
         <Button
           variant="text"
