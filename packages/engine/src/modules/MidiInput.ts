@@ -79,6 +79,13 @@ export default class MidiInput
     this.registerOutputs();
   }
 
+  // Pushes an event straight out of this input, bypassing the hardware device.
+  // Used by on-screen controls that stand in for a physical controller, so the
+  // event reaches the same downstream routes a real device event would.
+  sendMidi(midiEvent: MidiEvent) {
+    this.midiOutput.onMidiEvent(midiEvent);
+  }
+
   onSetSelectedId: SetterHooks<IMidiInputProps>["onSetSelectedId"] = (
     value,
   ) => {

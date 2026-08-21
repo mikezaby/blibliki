@@ -1,0 +1,31 @@
+@import "tailwindcss";
+@import "@blibliki/ui/styles.css";
+@import "@blibliki/instrument/performance.css";
+
+/* The performance console ships from @blibliki/instrument/react, so its
+ * utility classes have to be scanned from there too. */
+@source "../node_modules/@blibliki/instrument/src/react";
+
+html {
+  background: #09090b;
+}
+
+body {
+  margin: 0;
+}
+
+#errors {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 10;
+  max-height: 40vh;
+  overflow: auto;
+  margin: 0;
+  padding: 0.75rem;
+  white-space: pre-wrap;
+  font:
+    13px/1.4 ui-monospace,
+    monospace;
+  color: #fecaca;
+  background: #450a0abb;
+}

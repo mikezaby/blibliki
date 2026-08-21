@@ -7,11 +7,17 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js"
+    },
+    "./performance.css": "./performance.css",
     "./package.json": "./package.json"
   },
   "files": [
     "src",
-    "dist"
+    "dist",
+    "performance.css"
   ],
   "scripts": {
     "build": "tsdown",
@@ -24,11 +30,34 @@
     "format:check": "prettier . --check"
   },
   "devDependencies": {
+    "@blibliki/ui": "workspace:^",
+    "@testing-library/react": "16.3.2",
     "@types/node": "catalog:node",
+    "@types/react": "catalog:react-19",
+    "jsdom": "30.0.1",
+    "lucide-react": "1.31.0",
+    "react": "catalog:react-19",
+    "react-dom": "catalog:react-19",
     "vite-tsconfig-paths": "catalog:vite",
     "vitest": "catalog:test"
   },
   "dependencies": {
     "@blibliki/engine": "workspace:^"
+  },
+  "peerDependencies": {
+    "@blibliki/ui": "workspace:^",
+    "lucide-react": ">=1",
+    "react": ">=19"
+  },
+  "peerDependenciesMeta": {
+    "@blibliki/ui": {
+      "optional": true
+    },
+    "lucide-react": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
   }
 }

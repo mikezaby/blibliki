@@ -429,4 +429,72 @@ describe("InstrumentSession", () => {
     expect(runtimeMacroValues.at(-1)).toBeCloseTo(0.51);
     expect(displayMacroValues.at(-1)).toBe("51%");
   });
+
+  it("sends on-screen control events down the hardware path", () => {
+    const runtimePatch = createInstrumentEnginePatch(
+      createSeededInstrumentDocument(),
+    );
+    const controllerInputId = runtimePatch.runtime.controllerInputId;
+    if (!controllerInputId) {
+      throw new Error("Expected the runtime patch to name a controller input");
+    }
+
+    const forwarded: MidiEvent[] = [];
+    const modules = new Map(
+      runtimePatch.patch.modules.map((module) => [module.id, module]),
+    );
+
+    const session = new InstrumentSession(
+      {
+        // No hardware attached: on-screen controls must work on their own.
+        findMidiInputDeviceByFuzzyName: () => null,
+        findModule: (id) => {
+          const module = modules.get(id);
+          if (!module) {
+            throw new Error(`Module ${id} not found`);
+          }
+
+          return id === controllerInputId
+            ? {
+                ...module,
+                sendMidi: (event: MidiEvent) => forwarded.push(event),
+              }
+            : module;
+        },
+        state: TransportState.stopped,
+        start: () => Promise.resolve(),
+        stop: () => undefined,
+        updateModule: (params) => params,
+      },
+      runtimePatch,
+      {},
+    );
+
+    // CC 106 is page up: the surface reducer moves navigation on...
+    session.sendControlEvent(MidiEvent.fromCC(106, 127, 0));
+
+    expect(session.getRuntimePatch().runtime.navigation.activePage).toBe(
+      "filterMod",
+    );
+    // ...and the same event reaches the engine's midi input, so mapped props
+    // move exactly as they do when the event comes from the hardware.
+    expect(forwarded.map((event) => [event.cc, event.ccValue])).toEqual([
+      [106, 127],
+    ]);
+
+    // CC 102 is next track, the other half of what the on-screen prev/next
+    // buttons send.
+    session.sendControlEvent(MidiEvent.fromCC(102, 127, 0));
+
+    expect(session.getRuntimePatch().runtime.navigation.activeTrackIndex).toBe(
+      1,
+    );
+
+    // A disposed session forwards nothing further.
+    const forwardedBeforeDispose = forwarded.length;
+    session.dispose();
+    session.sendControlEvent(MidiEvent.fromCC(106, 127, 0));
+
+    expect(forwarded).toHaveLength(forwardedBeforeDispose);
+  });
 });

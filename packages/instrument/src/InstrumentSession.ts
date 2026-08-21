@@ -116,6 +116,7 @@ export type CreateInstrumentControllerSessionOptions = {
 export type InstrumentControllerSession = {
   getRuntimePatch: () => CompiledInstrumentEnginePatch;
   getDisplayState: () => InstrumentDisplayState;
+  sendControlEvent: (event: MidiEvent) => void;
   dispose: () => void;
 };
 
@@ -189,6 +190,24 @@ export class InstrumentSession implements InstrumentControllerSession {
       this.currentRuntimePatch,
       this.currentNotice,
     );
+  }
+
+  // Plays a synthesized controller event down the exact path a physical Launch
+  // Control XL3 event takes, so on-screen controls need no parallel input path.
+  // The engine's MidiInput module goes first because the display code below
+  // relies on the mapper having already updated props, which is the order the
+  // hardware listeners are registered in.
+  sendControlEvent(event: MidiEvent) {
+    if (this.disposed) {
+      return;
+    }
+
+    const { controllerInputId } = this.currentRuntimePatch.runtime;
+    if (controllerInputId) {
+      this.engine.findModule(controllerInputId).sendMidi?.(event);
+    }
+
+    this.handleMidiEvent(event);
   }
 
   dispose() {

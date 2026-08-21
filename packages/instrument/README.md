@@ -265,6 +265,75 @@ const session = createInstrumentControllerSession(engine, runtimePatch, {
 });
 ```
 
+## The React Entry Point
+
+`@blibliki/instrument/react` ships `InstrumentPerformance`, the on-screen
+performance console. It is a separate entry point so the root export stays
+headless — `apps/pi-display` consumes that one from Node and must never pull in
+React.
+
+```tsx
+import { InstrumentPerformance } from "@blibliki/instrument/react";
+
+<InstrumentPerformance
+  name={instrument.name}
+  document={instrument.document}
+  backSlot={<BackToEditorLink />}
+  // Defaults to true; an installed app passes false, since it has no browser
+  // chrome to escape.
+  allowFullscreen
+  onPersist={async (action, document) => {
+    if (action === "saveDraft") {
+      await save(document);
+      return { notice: { title: "SAVED", tone: "success" } };
+    }
+
+    // Returning a document restarts the session on it.
+    return { document: await load(), notice: { title: "RELOADED" } };
+  }}
+/>;
+```
+
+The console is a faceplate, not a responsive page. It is laid out once at a
+fixed 1536px design width and then scaled as a whole to fit whatever stage it
+lands on — growing as well as shrinking — so an eight-encoder band stays an
+eight-encoder band on a phone instead of reflowing into four. Nothing inside
+uses viewport breakpoints. The scaled faceplate is centred by an explicit
+translate rather than by grid or flex alignment: its layout box stays 1536px
+wide however small the stage gets, and a grid item that wide lands in an
+implicit `auto` track sized to its own max-content, so it centres in 1536px of
+track instead of in the stage and walks off screen as the stage shrinks. The stage fills the viewport and carries
+`env(safe-area-inset-*)` padding, so a notch never covers the console. On a
+phone in landscape the scale lands around 0.4, which fits but leaves small tap
+targets; a tablet is the size this is drawn for.
+
+The console declares `data-theme="dark"` on its own stage. Every colour it sets
+itself is a fixed zinc, but the stage, faceplate and display chrome are built
+from `@blibliki/ui` tokens, which otherwise follow the host's light/dark
+setting — so the same console would render one way in an app that puts `dark`
+on the root and another in one that does not. The consequence is that a host's
+theme preset no longer tints the faceplate; that is deliberate, since the rest
+of the console was never themed.
+
+The component owns the engine, the controller session and the display; the host
+owns storage and navigation. Encoder cells drag vertically and answer arrow
+keys, synthesizing the same relative CC events a Launch Control XL3 sends, so a
+device is optional. Prev/next buttons sit beside the Track and Page Bank
+readouts, sending the same navigation CCs the controller's buttons do.
+
+Consumers need three things beyond the import:
+
+- `react`, `react-dom`, `@blibliki/ui` and `lucide-react` installed. They are
+  optional peers, needed only by this entry point.
+- `@import "@blibliki/instrument/performance.css";` after
+  `@blibliki/ui/styles.css`, which defines the `--ui-color-*` tokens it uses.
+- A Tailwind `@source` pointing at this package, since the component's utility
+  classes live here rather than in the app:
+
+  ```css
+  @source "../../node_modules/@blibliki/instrument/src/react";
+  ```
+
 ## How To Change The Package
 
 ### Add a Source Profile

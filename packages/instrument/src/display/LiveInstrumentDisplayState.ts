@@ -12,6 +12,7 @@ type DisplayEngineModule = {
   props?: Record<string, unknown>;
   state?: Record<string, unknown>;
   onMidiEvent?: (event: MidiEvent) => unknown;
+  sendMidi?: (event: MidiEvent) => unknown;
 };
 
 export type LiveDisplayEngine = {

@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* The performance console ships from @blibliki/instrument/react, so its
+ * utility classes have to be scanned from there too. */
+@source "../../node_modules/@blibliki/instrument/src/react";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
