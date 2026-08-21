@@ -1,30 +1,41 @@
-# mobile — Capacitor proof of concept
+# mobile — Capacitor app
 
-Answers the one question the [Capacitor plan](../../docs/plans/2026-08-18-capacitor-mobile-plan.md)
-rests on: **does the real engine run inside the iOS WKWebView?**
+Runs the Blibliki performance instrument on iOS, following the
+[Capacitor plan](../../docs/plans/2026-08-18-capacitor-mobile-plan.md).
 
-Two patches in `src/patches/`, picked from the dropdown:
-
-- **wavetable + sequencer** — LFO → Scale → Wavetable, StepSequencer → Envelope
-  → Master: the AudioWorklet processors that killed the React Native port,
-  driven by the transport.
-- **midi keyboard** — same voice, played from a MIDI input instead.
-
-A peak meter is tapped off the signal feeding Master, so "it plays" is measured,
-not assumed. The second dropdown lists the engine's actual MIDI inputs and
-rewrites the `MidiInput` module's `selectedId`: the id stored in an exported
-patch comes from the machine that exported it (`Arturia KeyStep 32` /
-`1695389404` here) and never matches anywhere else, so it must be re-picked.
+The whole app is the performance console from
+[`@blibliki/instrument/react`](../../packages/instrument/README.md#the-react-entry-point) —
+the same one `apps/grid` renders. `src/App.tsx` supplies the two things the
+console does not own: the instrument document and where it is stored.
 
 ```bash
 pnpm ios   # build + sync + run on a simulator/device
 pnpm dev   # same page in a desktop browser — where Web MIDI actually works
 ```
 
-Result on the iOS 26 simulator (iPhone 17): 6 modules loaded, context running at
-48 kHz, peak ~0.13. Worklets, blob-URL processor loading and the sequencer all
-work unmodified. Autoplay also worked without a tap there — do not rely on it,
-a real device still needs the user gesture.
+Storage is `localStorage` (`src/instrumentStore.ts`), standing in for grid's
+Firestore: the controller's save command writes the document to the device, and
+discard reads it back. A document saved by an older build is migrated on read,
+and an unreadable one falls back to the default rather than refusing to boot.
+
+A Launch Control XL3 is optional — encoder cells drag vertically and answer
+arrow keys, synthesizing the same relative CC events the hardware sends.
+
+Errors go to a `<pre id="errors">` element that lives outside the React root, so
+they still show when the app itself is what broke. There is no console on a
+device.
+
+### The proof of concept this replaced
+
+Before the console, this app was a harness that loaded one of two exported
+patches (LFO → Scale → Wavetable driven by a StepSequencer, and the same voice
+played from MIDI) and tapped a peak meter off the signal feeding Master. It
+answered its question — on the iOS 26 simulator (iPhone 17) 6 modules loaded,
+the context ran at 48 kHz and peak read ~0.13, so worklets, blob-URL processor
+loading and the sequencer all work unmodified in WKWebView. Autoplay also worked
+without a tap there; do not rely on it, a real device still needs the user
+gesture. Recover it from git history (`git show 72d452c9`) if a minimal patch
+harness is ever needed again for debugging.
 
 ## MIDI on iOS
 
@@ -49,9 +60,9 @@ imports nothing but Foundation and `pnpm test` compiles and runs it against
 `test/midi-parser/main.swift`. No Xcode needed.
 
 **Still unverified: real hardware.** The iOS Simulator exposes no USB MIDI, so
-the picker there shows only `Computer Keyboard`; the app confirms the plugin
-itself is live by logging `midi: CoreMIDI (native plugin)` and listing
-`BliblikiMidi` among the native plugins. Plug a controller into a real iPhone to
+the picker there shows only `Computer Keyboard`; the app reports
+the absence in the on-screen error log when neither CoreMIDI nor Web MIDI is
+available. Plug a controller into a real iPhone to
 finish the test. Hardware controllers on iOS
 need the CoreMIDI plugin + `CapacitorMidiAdapter` (plan step 4). Desktop Chrome
 and the Android WebView list real devices through the existing `WebMidiAdapter`.
@@ -118,4 +129,4 @@ Audio caveat to expect on Android: the Chromium WebView's AudioTrack latency is
 worse than iOS's, and some devices need `latencyHint: "playback"` to avoid
 glitching.
 
-Not done yet: audio session config, Android, the performance UI. See the plan.
+Not done yet: audio session config and Android. See the plan.

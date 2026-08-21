@@ -13,15 +13,26 @@
     "lint": "eslint src",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "test": "command -v swiftc >/dev/null || { echo \"skipping: swiftc not available\"; exit 0; }; out=\"${TMPDIR:-/tmp}/blibliki-midi-check\" && swiftc -o \"$out\" ios/App/App/MidiStreamParser.swift test/midi-parser/main.swift && \"$out\""
+    "test": "vitest run && { command -v swiftc >/dev/null || { echo \"skipping midi parser check: swiftc not available\"; exit 0; }; out=\"${TMPDIR:-/tmp}/blibliki-midi-check\" && swiftc -o \"$out\" ios/App/App/MidiStreamParser.swift test/midi-parser/main.swift && \"$out\"; }"
   },
   "dependencies": {
     "@blibliki/engine": "workspace:^",
+    "@blibliki/instrument": "workspace:^",
+    "@blibliki/ui": "workspace:^",
     "@capacitor/core": "8.5.0",
-    "@capacitor/ios": "8.5.0"
+    "@capacitor/ios": "8.5.0",
+    "lucide-react": "1.31.0",
+    "react": "catalog:react-19",
+    "react-dom": "catalog:react-19"
   },
   "devDependencies": {
     "@capacitor/cli": "8.5.0",
-    "vite": "catalog:vite"
+    "@tailwindcss/vite": "catalog:tailwindcss",
+    "@types/react": "catalog:react-19",
+    "@types/react-dom": "catalog:react-19",
+    "@vitejs/plugin-react": "catalog:react-19",
+    "tailwindcss": "catalog:tailwindcss",
+    "vite": "catalog:vite",
+    "vitest": "catalog:test"
   }
 }

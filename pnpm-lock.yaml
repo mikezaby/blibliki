@@ -214,19 +214,52 @@ importers:
       '@blibliki/engine':
         specifier: workspace:^
         version: link:../../packages/engine
+      '@blibliki/instrument':
+        specifier: workspace:^
+        version: link:../../packages/instrument
+      '@blibliki/ui':
+        specifier: workspace:^
+        version: link:../../packages/ui
       '@capacitor/core':
         specifier: 8.5.0
         version: 8.5.0
       '@capacitor/ios':
         specifier: 8.5.0
         version: 8.5.0(@capacitor/core@8.5.0)
+      lucide-react:
+        specifier: 1.31.0
+        version: 1.31.0(react@19.2.8)
+      react:
+        specifier: catalog:react-19
+        version: 19.2.8
+      react-dom:
+        specifier: catalog:react-19
+        version: 19.2.8(react@19.2.8)
     devDependencies:
       '@capacitor/cli':
         specifier: 8.5.0
         version: 8.5.0
+      '@tailwindcss/vite':
+        specifier: catalog:tailwindcss
+        version: 4.3.3(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.12))
+      '@types/react':
+        specifier: catalog:react-19
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: catalog:react-19
+        version: 19.2.4(@types/react@19.2.18)
+      '@vitejs/plugin-react':
+        specifier: catalog:react-19
+        version: 6.0.5(babel-plugin-react-compiler@1.0.0)(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.12))
+      tailwindcss:
+        specifier: catalog:tailwindcss
+        version: 4.3.3
       vite:
         specifier: catalog:vite
         version: 8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.12)
+      vitest:
+        specifier: catalog:test
+        version: 4.1.10(@types/node@26.2.0)(jsdom@30.0.1)(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.12))
 
   apps/pi-display:
     dependencies:
