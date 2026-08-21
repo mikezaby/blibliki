@@ -304,6 +304,14 @@ track instead of in the stage and walks off screen as the stage shrinks. The sta
 phone in landscape the scale lands around 0.4, which fits but leaves small tap
 targets; a tablet is the size this is drawn for.
 
+The console declares `data-theme="dark"` on its own stage. Every colour it sets
+itself is a fixed zinc, but the stage, faceplate and display chrome are built
+from `@blibliki/ui` tokens, which otherwise follow the host's light/dark
+setting — so the same console would render one way in an app that puts `dark`
+on the root and another in one that does not. The consequence is that a host's
+theme preset no longer tints the faceplate; that is deliberate, since the rest
+of the console was never themed.
+
 The component owns the engine, the controller session and the display; the host
 owns storage and navigation. Encoder cells drag vertically and answer arrow
 keys, synthesizing the same relative CC events a Launch Control XL3 sends, so a

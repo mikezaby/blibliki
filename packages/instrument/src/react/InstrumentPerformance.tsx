@@ -1117,6 +1117,13 @@ export default function InstrumentPerformance({
     <Surface
       tone="canvas"
       ref={stageRef}
+      // The console is a dark faceplate — every colour it sets itself is a
+      // fixed zinc — but its stage, faceplate and display chrome are built from
+      // @blibliki/ui tokens, which follow the host's light/dark setting. Left to
+      // the host, the same console renders one way in grid (which puts `dark` on
+      // the root) and another in the mobile app (which does not). Declaring the
+      // mode here makes the chrome match the rest of the console everywhere.
+      data-theme="dark"
       className="instrument-performance-stage fixed inset-0 overflow-hidden bg-zinc-950"
     >
       <div

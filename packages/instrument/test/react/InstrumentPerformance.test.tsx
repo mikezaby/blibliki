@@ -560,6 +560,26 @@ describe("InstrumentPerformance", () => {
     ).toEqual({ title: "RELOADED", tone: "success" });
   });
 
+  it("renders its chrome in dark mode whatever the host theme is", async () => {
+    // The console's own colours are fixed zinc; its stage and faceplate come
+    // from @blibliki/ui tokens, which would otherwise follow the host and make
+    // grid and the mobile app disagree.
+    const { container } = render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(
+        container
+          .querySelector(".instrument-performance-stage")
+          ?.getAttribute("data-theme"),
+      ).toBe("dark");
+    });
+  });
+
   it("keeps the faceplate inside the stage when the window is far narrower", async () => {
     // The whole point of measuring: a 1536px-wide faceplate on a 400px stage.
     // It used to be centred by the layout, which put it in an implicit grid
