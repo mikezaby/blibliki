@@ -1150,22 +1150,26 @@ export default function InstrumentPerformance({
 
               <div className="flex flex-wrap items-center gap-3">
                 {backSlot}
-                <Button
-                  variant="outlined"
-                  color="neutral"
-                  disabled={!canToggleFullscreen}
-                  onClick={() => {
-                    void handleFullscreenToggle();
-                  }}
-                  className="rounded-full border-zinc-600 px-5 font-mono uppercase tracking-[0.14em] text-zinc-200 hover:border-zinc-400 hover:bg-zinc-900"
-                >
-                  {isFullscreen ? (
-                    <Minimize2 className="h-4 w-4" />
-                  ) : (
-                    <Maximize2 className="h-4 w-4" />
-                  )}
-                  {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-                </Button>
+                {/* Only where there is browser chrome to escape. An installed
+                    app is already fullscreen and has no Fullscreen API, so the
+                    button leaves rather than sitting there greyed out. */}
+                {canToggleFullscreen ? (
+                  <Button
+                    variant="outlined"
+                    color="neutral"
+                    onClick={() => {
+                      void handleFullscreenToggle();
+                    }}
+                    className="rounded-full border-zinc-600 px-5 font-mono uppercase tracking-[0.14em] text-zinc-200 hover:border-zinc-400 hover:bg-zinc-900"
+                  >
+                    {isFullscreen ? (
+                      <Minimize2 className="h-4 w-4" />
+                    ) : (
+                      <Maximize2 className="h-4 w-4" />
+                    )}
+                    {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                  </Button>
+                ) : null}
                 <Button
                   color="neutral"
                   disabled={state.status !== "ready" || !state.engine}

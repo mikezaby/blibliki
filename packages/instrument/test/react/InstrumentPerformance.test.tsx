@@ -560,6 +560,27 @@ describe("InstrumentPerformance", () => {
     ).toEqual({ title: "RELOADED", tone: "success" });
   });
 
+  it("leaves the fullscreen button out where there is no Fullscreen API", async () => {
+    // An installed app — the iOS WebView, for one — is already fullscreen and
+    // exposes no Fullscreen API, so the button has nothing to do there.
+    Reflect.deleteProperty(document, "exitFullscreen");
+    Reflect.deleteProperty(HTMLElement.prototype, "requestFullscreen");
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    await screen.findByRole("button", { name: "Start" });
+
+    expect(screen.queryByRole("button", { name: "Fullscreen" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Exit Fullscreen" }),
+    ).toBeNull();
+  });
+
   it("renders its chrome in dark mode whatever the host theme is", async () => {
     // The console's own colours are fixed zinc; its stage and faceplate come
     // from @blibliki/ui tokens, which would otherwise follow the host and make
