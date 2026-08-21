@@ -1,4 +1,9 @@
-import { Engine, ModuleType, TransportState } from "@blibliki/engine";
+import {
+  Engine,
+  MidiEvent,
+  ModuleType,
+  TransportState,
+} from "@blibliki/engine";
 import {
   createInstrumentControllerSession,
   createInstrumentEnginePatch,
@@ -12,7 +17,13 @@ import { Instrument, type IInstrument } from "@blibliki/models";
 import { Button, Surface, Text } from "@blibliki/ui";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Maximize2, Minimize2, Play, Square } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type PointerEvent,
+} from "react";
 import { cn } from "@/lib/utils";
 
 type InstrumentPerformanceProps = {
@@ -51,6 +62,14 @@ type CellVisualValue = {
 };
 
 const EMPTY_SLOT_TEXT = "--";
+// Every encoder rendered in the bands is a relative (incDec) mapping, so a
+// gesture emits ticks around the pivot rather than an absolute position: 64
+// means "no change", above counts up, below counts down.
+const RELATIVE_PIVOT = 64;
+const MAX_TICKS_PER_EVENT = 63;
+// Drag distance that advances one tick. Small enough that a flick sweeps a
+// range, large enough that a shaky finger does not.
+const PIXELS_PER_TICK = 3;
 const ENCODER_CENTER = 32;
 const ENCODER_RADIUS = 24;
 const ENCODER_START_ANGLE = 135;
@@ -300,6 +319,10 @@ function parseCellVisualValue(slot: BandCell): CellVisualValue {
     showEncoder: false,
     empty: false,
   };
+}
+
+function getCellCc(slot: BandCell) {
+  return "cc" in slot ? slot.cc : undefined;
 }
 
 function getCellKey(slot: BandCell, bandKey: BandKey, index: number) {
@@ -557,11 +580,56 @@ function PerformanceBand({
   bandKey,
   sections,
   slots,
+  onEncoderTick,
 }: {
   bandKey: BandKey;
   sections: BandSection[];
   slots: readonly BandCell[];
+  onEncoderTick?: (cc: number, ticks: number) => void;
 }) {
+  // Keyed by pointerId so two fingers can work two encoders at once, the way
+  // two hands do on the hardware. Every cell shares these handlers and carries
+  // its own CC in a data attribute, so nothing reads the ref during render.
+  const dragsRef = useRef(new Map<number, { cc: number; lastY: number }>());
+
+  const endDrag = (event: PointerEvent<HTMLDivElement>) => {
+    dragsRef.current.delete(event.pointerId);
+  };
+
+  const encoderHandlers = {
+    onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
+      const cc = Number(event.currentTarget.dataset.cc);
+      if (!Number.isFinite(cc)) return;
+
+      event.currentTarget.setPointerCapture(event.pointerId);
+      dragsRef.current.set(event.pointerId, { cc, lastY: event.clientY });
+    },
+    onPointerMove: (event: PointerEvent<HTMLDivElement>) => {
+      const drag = dragsRef.current.get(event.pointerId);
+      if (!drag) return;
+
+      // Drag up to increase. Only whole ticks are sent; the leftover pixels
+      // stay on the origin so a slow drag accumulates instead of rounding to
+      // nothing every frame.
+      const ticks = Math.trunc((drag.lastY - event.clientY) / PIXELS_PER_TICK);
+      if (ticks === 0) return;
+
+      drag.lastY -= ticks * PIXELS_PER_TICK;
+      onEncoderTick?.(drag.cc, ticks);
+    },
+    onPointerUp: endDrag,
+    onPointerCancel: endDrag,
+    onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => {
+      const ticks =
+        event.key === "ArrowUp" ? 1 : event.key === "ArrowDown" ? -1 : 0;
+      const cc = Number(event.currentTarget.dataset.cc);
+      if (ticks === 0 || !Number.isFinite(cc)) return;
+
+      event.preventDefault();
+      onEncoderTick?.(cc, ticks);
+    },
+  };
+
   return (
     <section className="rounded-3xl bg-zinc-950/80 p-4 shadow-inner">
       <div className="flex items-center gap-4">
@@ -603,17 +671,35 @@ function PerformanceBand({
             const inactive = isInactiveCell(slot);
             const visual = parseCellVisualValue(slot);
             const slotKey = getCellKey(slot, bandKey, index);
+            const cc = getCellCc(slot);
+            // Inactive cells stay playable: the hardware sends their CC too,
+            // and the surface reducer is what decides to ignore it.
+            const playable = cc !== undefined && onEncoderTick !== undefined;
 
             return (
               <div
                 key={`${bandKey}-${index}-${renderCellLabel(slot)}`}
                 data-slot-key={slotKey}
                 data-slot-layout={visual.showEncoder ? "encoder" : "text"}
+                data-cc={cc}
+                {...(playable ? encoderHandlers : undefined)}
+                role={playable ? "slider" : undefined}
+                tabIndex={playable ? 0 : undefined}
+                aria-label={playable ? renderCellLabel(slot) : undefined}
+                aria-valuenow={
+                  playable ? (visual.visualNormalized ?? 0) : undefined
+                }
+                aria-valuemin={playable ? 0 : undefined}
+                aria-valuemax={playable ? 1 : undefined}
+                aria-valuetext={playable ? renderCellValue(slot) : undefined}
                 className={cn(
                   "rounded-2xl px-3 py-4 transition-colors",
                   inactive
                     ? "bg-zinc-950/30 text-zinc-600"
                     : "bg-zinc-900/35 text-zinc-50",
+                  // touch-none keeps a drag from scrolling the page on mobile.
+                  playable &&
+                    "cursor-ns-resize touch-none select-none focus-visible:ring-2",
                 )}
               >
                 <Text
@@ -898,6 +984,20 @@ export default function InstrumentPerformance({
     typeof HTMLElement !== "undefined" &&
     typeof document.documentElement.requestFullscreen === "function";
 
+  const sendEncoderTick = (cc: number, ticks: number) => {
+    const { controllerSession, engine } = state;
+    if (!controllerSession || !engine) {
+      return;
+    }
+
+    const ccValue =
+      RELATIVE_PIVOT + clamp(ticks, -MAX_TICKS_PER_EVENT, MAX_TICKS_PER_EVENT);
+
+    controllerSession.sendControlEvent(
+      MidiEvent.fromCC(cc, ccValue, engine.context.currentTime),
+    );
+  };
+
   const handleFullscreenToggle = async () => {
     if (!canToggleFullscreen) {
       return;
@@ -1095,16 +1195,19 @@ export default function InstrumentPerformance({
                             { label: "Global Controls", startIndex: 0 },
                           ]}
                           slots={displayState.globalBand.slots}
+                          onEncoderTick={sendEncoderTick}
                         />
                         <PerformanceBand
                           bandKey="upper"
                           sections={displayState.upperBand.sections}
                           slots={displayState.upperBand.slots}
+                          onEncoderTick={sendEncoderTick}
                         />
                         <PerformanceBand
                           bandKey="lower"
                           sections={displayState.lowerBand.sections}
                           slots={displayState.lowerBand.slots}
+                          onEncoderTick={sendEncoderTick}
                         />
                       </div>
                     ) : null}

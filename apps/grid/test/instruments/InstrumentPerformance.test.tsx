@@ -16,6 +16,7 @@ import { createDefaultInstrumentDocument } from "../../src/instruments/document"
 
 const {
   loadEngineMock,
+  sendControlEventMock,
   createInstrumentEnginePatchMock,
   createInstrumentControllerSessionMock,
   createSavedInstrumentDocumentMock,
@@ -23,6 +24,7 @@ const {
   instrumentSaveMock,
 } = vi.hoisted(() => ({
   loadEngineMock: vi.fn(),
+  sendControlEventMock: vi.fn(),
   createInstrumentEnginePatchMock: vi.fn(),
   createInstrumentControllerSessionMock: vi.fn(),
   createSavedInstrumentDocumentMock: vi.fn(),
@@ -165,6 +167,7 @@ describe("InstrumentPerformance", () => {
     dispose: vi.fn(),
     context: {
       close: vi.fn(),
+      currentTime: 0,
     },
     start: vi.fn(),
     stop: vi.fn(),
@@ -216,6 +219,7 @@ describe("InstrumentPerformance", () => {
     createInstrumentEnginePatchMock.mockReset();
     createInstrumentControllerSessionMock.mockReset();
     createSavedInstrumentDocumentMock.mockReset();
+    sendControlEventMock.mockReset();
     instrumentFindMock.mockReset();
     instrumentSaveMock.mockReset();
 
@@ -228,6 +232,7 @@ describe("InstrumentPerformance", () => {
       (_engine, _runtimePatch, options) => ({
         getDisplayState: () => displayState,
         getRuntimePatch: () => runtimePatch,
+        sendControlEvent: sendControlEventMock,
         dispose: vi.fn(),
         options,
       }),
@@ -552,6 +557,61 @@ describe("InstrumentPerformance", () => {
       ...instrument,
       document: remoteDocument,
     });
+  });
+
+  it("turns an encoder cell into relative ticks on the controller session", async () => {
+    // jsdom has no pointer capture; the drag only needs the call to not throw.
+    Object.defineProperty(HTMLElement.prototype, "setPointerCapture", {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
+    });
+
+    displayState.upperBand.slots = [
+      {
+        kind: "slot",
+        blockKey: "filter",
+        slotKey: "cutoff",
+        label: "Cutoff",
+        shortLabel: "CUT",
+        cc: 21,
+        valueText: "1000",
+        rawValue: 1000,
+        valueSpec: { kind: "number", min: 20, max: 20000 },
+      },
+    ] as unknown as typeof displayState.upperBand.slots;
+
+    render(<InstrumentPerformance instrument={instrument} />);
+
+    const encoder = await screen.findByRole("slider", { name: "CUT" });
+
+    fireEvent.pointerDown(encoder, { pointerId: 1, clientY: 100 });
+    // 9px up at 3px per tick => 3 ticks above the pivot.
+    fireEvent.pointerMove(encoder, { pointerId: 1, clientY: 91 });
+
+    expect(sendControlEventMock).toHaveBeenCalledTimes(1);
+    const [event] = sendControlEventMock.mock.calls[0] as [
+      { cc?: number; ccValue?: number },
+    ];
+    expect(event.cc).toBe(21);
+    expect(event.ccValue).toBe(67);
+
+    // Sub-tick movement accumulates instead of rounding away every frame.
+    fireEvent.pointerMove(encoder, { pointerId: 1, clientY: 89 });
+    expect(sendControlEventMock).toHaveBeenCalledTimes(1);
+    fireEvent.pointerMove(encoder, { pointerId: 1, clientY: 88 });
+    expect(sendControlEventMock).toHaveBeenCalledTimes(2);
+
+    fireEvent.pointerUp(encoder, { pointerId: 1 });
+    fireEvent.pointerMove(encoder, { pointerId: 1, clientY: 40 });
+    expect(sendControlEventMock).toHaveBeenCalledTimes(2);
+
+    // Keyboard reaches the same path for anyone without a pointer.
+    fireEvent.keyDown(encoder, { key: "ArrowDown" });
+    const [downEvent] = sendControlEventMock.mock.calls[2] as [
+      { cc?: number; ccValue?: number },
+    ];
+    expect(downEvent.ccValue).toBe(63);
   });
 });
 
