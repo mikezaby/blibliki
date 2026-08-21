@@ -2,6 +2,11 @@
  * @blibliki/ui/styles.css, which defines the --ui-color-* tokens used here. */
 
 .instrument-performance-stage {
+  /* The stage fills the viewport and the faceplate is scaled to fit inside it,
+   * so the insets are what keep a notch or home indicator off the console.
+   * They resolve to 0 everywhere that has no safe area. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
   background:
     radial-gradient(
       circle at top,

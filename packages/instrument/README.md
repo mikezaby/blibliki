@@ -291,6 +291,15 @@ import { InstrumentPerformance } from "@blibliki/instrument/react";
 />;
 ```
 
+The console is a faceplate, not a responsive page. It is laid out once at a
+fixed 1536px design width and then scaled as a whole to fit whatever stage it
+lands on — growing as well as shrinking — so an eight-encoder band stays an
+eight-encoder band on a phone instead of reflowing into four. Nothing inside
+uses viewport breakpoints. The stage fills the viewport and carries
+`env(safe-area-inset-*)` padding, so a notch never covers the console. On a
+phone in landscape the scale lands around 0.4, which fits but leaves small tap
+targets; a tablet is the size this is drawn for.
+
 The component owns the engine, the controller session and the display; the host
 owns storage and navigation. Encoder cells drag vertically and answer arrow
 keys, synthesizing the same relative CC events a Launch Control XL3 sends, so a

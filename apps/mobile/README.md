@@ -21,6 +21,12 @@ and an unreadable one falls back to the default rather than refusing to boot.
 A Launch Control XL3 is optional — encoder cells drag vertically and answer
 arrow keys, synthesizing the same relative CC events the hardware sends.
 
+The app is **landscape only** (`UISupportedInterfaceOrientations` in
+`ios/App/App/Info.plist`, both the phone and iPad arrays). The console is a wide
+faceplate — three bands of eight encoders — so it wants the long axis across.
+This is a native app setting rather than device detection in JS, which is why it
+is always right.
+
 Errors go to a `<pre id="errors">` element that lives outside the React root, so
 they still show when the app itself is what broke. There is no console on a
 device.

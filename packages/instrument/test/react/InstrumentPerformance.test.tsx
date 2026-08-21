@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
 import InstrumentPerformance, {
   createEncoderArcPath,
+  createFitScale,
 } from "@/react/InstrumentPerformance";
 
 const {
@@ -611,3 +612,24 @@ function createEncoderPoint(normalized: number) {
     y: (32 + 24 * Math.sin(angle)).toFixed(2),
   };
 }
+
+describe("createFitScale", () => {
+  const DESIGN_WIDTH = 1536;
+
+  it("shrinks to whichever axis runs out first", () => {
+    // A phone in landscape: height is the tight one.
+    expect(createFitScale(852, 393, 900)).toBeCloseTo(393 / 900);
+    // A short, very wide stage: width still has room, height does not.
+    expect(createFitScale(3840, 600, 900)).toBeCloseTo(600 / 900);
+  });
+
+  it("grows so the console fills a stage larger than the design", () => {
+    // Width is the tight axis here: 2x the design width against 2000/900.
+    expect(createFitScale(DESIGN_WIDTH * 2, 2000, 900)).toBe(2);
+  });
+
+  it("stays at 1 until something has been measured", () => {
+    expect(createFitScale(0, 0, 0)).toBe(1);
+    expect(createFitScale(1024, 768, 0)).toBe(1);
+  });
+});
