@@ -589,7 +589,10 @@ function StepButton({
       size="icon"
       aria-label={label}
       onClick={onPress}
-      className="h-7 w-7 rounded-full border-zinc-700 p-0 text-zinc-300"
+      // Full height of the row it sits in and wide enough for a thumb: the
+      // whole console is scaled down on a handheld, so a control sized for a
+      // mouse ends up around a third of its drawn size.
+      className="h-auto min-h-16 w-14 self-stretch rounded-2xl border-zinc-700 text-zinc-300"
     >
       {children}
     </Button>
@@ -609,9 +612,22 @@ function ConsoleStat({
   onPrevious?: () => void;
   onNext?: () => void;
 }) {
+  const navigable = onPrevious && onNext;
+
   return (
-    <div className="px-4 py-3 shadow-inner">
-      <div className="flex items-center justify-between gap-2">
+    <div className="flex items-stretch gap-3 px-4 py-3 shadow-inner">
+      {navigable ? (
+        <StepButton
+          label={`Previous ${label.toLowerCase()}`}
+          onPress={onPrevious}
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </StepButton>
+      ) : null}
+
+      {/* Centred so the readout sits balanced between the two buttons, and
+          centred vertically because they are taller than the text is. */}
+      <div className="flex min-w-0 flex-1 flex-col justify-center text-center">
         <Text
           asChild
           size="xs"
@@ -619,29 +635,22 @@ function ConsoleStat({
         >
           <span>{label}</span>
         </Text>
-        {onPrevious && onNext ? (
-          <div className="flex items-center gap-1">
-            <StepButton
-              label={`Previous ${label.toLowerCase()}`}
-              onPress={onPrevious}
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </StepButton>
-            <StepButton label={`Next ${label.toLowerCase()}`} onPress={onNext}>
-              <ChevronRight className="h-3.5 w-3.5" />
-            </StepButton>
-          </div>
-        ) : null}
+        <Text
+          asChild
+          className={cn(
+            "mt-2 block font-mono text-base font-semibold uppercase tracking-[0.12em] text-zinc-50",
+            valueClassName,
+          )}
+        >
+          <span>{value}</span>
+        </Text>
       </div>
-      <Text
-        asChild
-        className={cn(
-          "mt-2 block font-mono text-base font-semibold uppercase tracking-[0.12em] text-zinc-50",
-          valueClassName,
-        )}
-      >
-        <span>{value}</span>
-      </Text>
+
+      {navigable ? (
+        <StepButton label={`Next ${label.toLowerCase()}`} onPress={onNext}>
+          <ChevronRight className="h-6 w-6" />
+        </StepButton>
+      ) : null}
     </div>
   );
 }
@@ -1372,7 +1381,8 @@ export default function InstrumentPerformance({
                   onPrevious={pressButton(TRACK_PREV_CC)}
                   onNext={pressButton(TRACK_NEXT_CC)}
                 />
-                <ConsoleStat label="Track Volume" value={trackVolume} />
+                {/* Directly under Track: the two navigable stats belong
+                    together, so both sets of prev/next fall under the thumb. */}
                 <ConsoleStat
                   label="Page Bank"
                   value={pageBankLabel}
@@ -1380,6 +1390,7 @@ export default function InstrumentPerformance({
                   onPrevious={pressButton(PAGE_PREV_CC)}
                   onNext={pressButton(PAGE_NEXT_CC)}
                 />
+                <ConsoleStat label="Track Volume" value={trackVolume} />
                 <ConsoleStat
                   label="MIDI"
                   value={
