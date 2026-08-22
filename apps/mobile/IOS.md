@@ -84,6 +84,65 @@ pnpm --filter mobile exec cap run ios --target <identifier>
 Wired for the first install. After that, tick **Connect via Network** in Xcode's
 Window → Devices and Simulators and it works over Wi-Fi.
 
+## Installing on someone else's device
+
+The device's Apple ID is irrelevant — it never enters into it. A development
+install is gated by _your_ certificate and by the device being registered to
+_your_ provisioning profile, not by who is signed in on the device.
+
+With the free account that means the device has to come to the Mac:
+
+1. Plugged in over a cable — there is no over-the-air path on a free account.
+2. Developer Mode enabled, which is only offered _after_ the device has been
+   connected to a Mac running Xcode.
+3. Its owner trusts the certificate (Settings → General → VPN & Device
+   Management), which needs their passcode.
+4. Repeat every 7 days, or the app stops launching.
+
+Step 4 is the one that decides it. Fine for "try this while I'm visiting",
+useless for a device that lives somewhere else.
+
+### TestFlight
+
+Easier for the tester, more work per build for you. They install TestFlight,
+accept an emailed invite, and builds last 90 days — no cable, no Mac, no
+Developer Mode, no certificate trust. In exchange each release is bump
+`CURRENT_PROJECT_VERSION` → Product → Archive → upload → ~10 minutes of
+processing, rather than one `pnpm ios`.
+
+Setup, once: paid account, an App Store Connect record matching the bundle id,
+and export compliance (this app is HTTPS-only, so it is exempt — set
+`ITSAppUsesNonExemptEncryption = false` in `Info.plist` once and stop being
+asked). The 1024px icon in `Assets.xcassets` is still the stock Capacitor logo;
+replace it before anyone else sees it.
+
+**Internal** testers (100 max) skip Beta App Review and get builds in minutes,
+but each must be a user on the App Store Connect team. **External** testers
+(10,000, just an email address) need a review on the first build of a version —
+about a day. For one person, internal is less waiting.
+
+## What the paid account buys
+
+$99/yr, and it lifts real limits rather than just licensing you:
+
+- **Profiles valid a year instead of 7 days**, on every device. For most hobby
+  projects this alone is the reason to pay.
+- **100 devices per family per year**, against the free tier's 10 App IDs per
+  week and ~3 apps installed per device.
+- **TestFlight** and App Store distribution.
+- **AUv3 audio unit extensions** — how an iOS instrument loads _inside_ AUM,
+  GarageBand, Logic or Cubasis instead of being a standalone app. Distribution
+  goes through the App Store, so it needs the paid account. For this project
+  that is a larger unlock than TestFlight.
+- Entitlement-gated capabilities generally: push notifications, iCloud/CloudKit,
+  App Groups, Sign in with Apple. Free accounts cannot provision any of them.
+  Background audio is _not_ one of these — it is an `Info.plist` key and works
+  free.
+- Xcode Cloud (25 compute hours/month), 2 code-level support incidents a year,
+  App Store Connect analytics, Ad Hoc distribution.
+
+Not a reason to pay: beta iOS and Xcode releases, free to everyone since 2023.
+
 ## Gotchas
 
 - **A free account's build expires after 7 days.** Re-run `pnpm ios` to refresh
