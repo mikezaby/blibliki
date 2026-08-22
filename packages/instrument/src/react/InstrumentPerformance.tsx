@@ -128,6 +128,51 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
+type WebkitFullscreenDocument = Document & {
+  webkitFullscreenElement?: Element | null;
+  webkitExitFullscreen?: () => Promise<void> | void;
+};
+
+type WebkitFullscreenElement = HTMLElement & {
+  webkitRequestFullscreen?: () => Promise<void> | void;
+};
+
+// Safari only ever shipped the prefixed Fullscreen API, on the desktop and on
+// iPadOS alike, so checking the standard names alone hides the control on every
+// Safari there is. iPhone Safari has neither and nothing can be done about
+// that: element fullscreen does not exist on it.
+function getFullscreenApi() {
+  if (typeof document === "undefined") {
+    return undefined;
+  }
+
+  const owner = document as WebkitFullscreenDocument;
+  const root = document.documentElement as WebkitFullscreenElement;
+  const prefixed = typeof root.requestFullscreen !== "function";
+
+  const canRequest = prefixed
+    ? typeof root.webkitRequestFullscreen === "function"
+    : true;
+  const canExit = prefixed
+    ? typeof owner.webkitExitFullscreen === "function"
+    : typeof owner.exitFullscreen === "function";
+
+  if (!canRequest || !canExit) {
+    return undefined;
+  }
+
+  return {
+    // Called as methods rather than through extracted references, so `this`
+    // is whatever each implementation expects it to be.
+    request: () =>
+      prefixed ? root.webkitRequestFullscreen?.() : root.requestFullscreen(),
+    exit: () =>
+      prefixed ? owner.webkitExitFullscreen?.() : owner.exitFullscreen(),
+    isFullscreen: () =>
+      (owner.fullscreenElement ?? owner.webkitFullscreenElement) === root,
+  };
+}
+
 // Uniform scale that fits the faceplate inside the stage, growing as well as
 // shrinking so the console always fills what it is given, plus the offset that
 // centres the scaled result.
@@ -139,13 +184,49 @@ function clamp(value: number, min: number, max: number) {
 // its own max-content, so it is centred in 1536px of track rather than in the
 // stage, and drifts off screen as the stage shrinks. With `transform-origin: 0
 // 0` and an explicit translate there is nothing left to interpret.
+// A device you turn, rather than a window you resize: the primary pointer is a
+// finger and there is no hover. Rotating the console only makes sense somewhere
+// the performer can rotate the hardware back, so a narrow desktop window keeps
+// the orientation its display has and simply scales down.
+export function isHandheldDevice() {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(pointer: coarse) and (hover: none)").matches
+  );
+}
+
 export function createFaceplateFit(
   stageWidth: number,
   stageHeight: number,
   contentHeight: number,
+  canRotate = false,
 ) {
   if (stageWidth <= 0 || stageHeight <= 0 || contentHeight <= 0) {
-    return { scale: 1, x: 0, y: 0 };
+    return { scale: 1, x: 0, y: 0, rotated: false };
+  }
+
+  // No browser lets a page demand landscape — screen.orientation.lock needs
+  // fullscreen where it exists at all, and iOS has never had it — so on a
+  // handheld held upright the console turns a quarter turn instead and the
+  // performer turns the device to match. Held in landscape there is nothing to
+  // do.
+  const rotated = canRotate && stageHeight > stageWidth;
+  if (rotated) {
+    const scale = Math.min(
+      stageHeight / DESIGN_WIDTH,
+      stageWidth / contentHeight,
+    );
+
+    // Rotating by 90° puts the faceplate's own +y along screen -x, so its
+    // width lands on the stage's height and the leftover is split the other
+    // way about.
+    return {
+      scale,
+      x: (stageWidth + contentHeight * scale) / 2,
+      y: (stageHeight - DESIGN_WIDTH * scale) / 2,
+      rotated,
+    };
   }
 
   const scale = Math.min(
@@ -157,6 +238,7 @@ export function createFaceplateFit(
     scale,
     x: (stageWidth - DESIGN_WIDTH * scale) / 2,
     y: (stageHeight - contentHeight * scale) / 2,
+    rotated,
   };
 }
 
@@ -164,11 +246,14 @@ export function createFaceplateStyle(fit: {
   scale: number;
   x: number;
   y: number;
+  rotated: boolean;
 }) {
+  const rotate = fit.rotated ? " rotate(90deg)" : "";
+
   return {
     width: DESIGN_WIDTH,
     transformOrigin: "0 0",
-    transform: `translate(${String(fit.x)}px, ${String(fit.y)}px) scale(${String(fit.scale)})`,
+    transform: `translate(${String(fit.x)}px, ${String(fit.y)}px)${rotate} scale(${String(fit.scale)})`,
   };
 }
 
@@ -176,7 +261,7 @@ function useFitToScreen(
   stageRef: RefObject<HTMLDivElement | null>,
   faceplateRef: RefObject<HTMLDivElement | null>,
 ) {
-  const [fit, setFit] = useState({ scale: 1, x: 0, y: 0 });
+  const [fit, setFit] = useState({ scale: 1, x: 0, y: 0, rotated: false });
 
   // Layout effect, so the first paint is already at the right size rather than
   // flashing a 1536px-wide console on a phone.
@@ -197,6 +282,7 @@ function useFitToScreen(
           stage.clientWidth,
           stage.clientHeight,
           faceplate.offsetHeight,
+          isHandheldDevice(),
         ),
       );
     };
@@ -759,17 +845,25 @@ function PerformanceBand({
   bandKey,
   sections,
   slots,
+  rotated,
   onEncoderTick,
 }: {
   bandKey: BandKey;
   sections: BandSection[];
   slots: readonly BandCell[];
+  rotated: boolean;
   onEncoderTick?: (cc: number, ticks: number) => void;
 }) {
+  // Turning an encoder up means dragging up the faceplate, which is up the
+  // screen normally and to the right once the console is rotated a quarter
+  // turn. Negating x keeps "further along" meaning "more" either way.
+  const dragPosition = (event: PointerEvent<HTMLDivElement>) =>
+    rotated ? -event.clientX : event.clientY;
+
   // Keyed by pointerId so two fingers can work two encoders at once, the way
   // two hands do on the hardware. Every cell shares these handlers and carries
   // its own CC in a data attribute, so nothing reads the ref during render.
-  const dragsRef = useRef(new Map<number, { cc: number; lastY: number }>());
+  const dragsRef = useRef(new Map<number, { cc: number; last: number }>());
 
   const endDrag = (event: PointerEvent<HTMLDivElement>) => {
     dragsRef.current.delete(event.pointerId);
@@ -781,7 +875,7 @@ function PerformanceBand({
       if (!Number.isFinite(cc)) return;
 
       event.currentTarget.setPointerCapture(event.pointerId);
-      dragsRef.current.set(event.pointerId, { cc, lastY: event.clientY });
+      dragsRef.current.set(event.pointerId, { cc, last: dragPosition(event) });
     },
     onPointerMove: (event: PointerEvent<HTMLDivElement>) => {
       const drag = dragsRef.current.get(event.pointerId);
@@ -790,10 +884,12 @@ function PerformanceBand({
       // Drag up to increase. Only whole ticks are sent; the leftover pixels
       // stay on the origin so a slow drag accumulates instead of rounding to
       // nothing every frame.
-      const ticks = Math.trunc((drag.lastY - event.clientY) / PIXELS_PER_TICK);
+      const ticks = Math.trunc(
+        (drag.last - dragPosition(event)) / PIXELS_PER_TICK,
+      );
       if (ticks === 0) return;
 
-      drag.lastY -= ticks * PIXELS_PER_TICK;
+      drag.last -= ticks * PIXELS_PER_TICK;
       onEncoderTick?.(drag.cc, ticks);
     },
     onPointerUp: endDrag,
@@ -1106,15 +1202,26 @@ export default function InstrumentPerformance({
       return;
     }
 
+    const api = getFullscreenApi();
+    if (!api) {
+      return;
+    }
+
     const syncFullscreenState = () => {
-      setIsFullscreen(document.fullscreenElement === document.documentElement);
+      setIsFullscreen(api.isFullscreen());
     };
 
     syncFullscreenState();
+    // Safari reports the change under its own event name.
     document.addEventListener("fullscreenchange", syncFullscreenState);
+    document.addEventListener("webkitfullscreenchange", syncFullscreenState);
 
     return () => {
       document.removeEventListener("fullscreenchange", syncFullscreenState);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        syncFullscreenState,
+      );
     };
   }, []);
 
@@ -1144,12 +1251,7 @@ export default function InstrumentPerformance({
   const isTransportRunning =
     displayState?.header.transportState === TransportState.playing;
   const isSequencerEdit = displayState?.header.mode === "seqEdit";
-  const canToggleFullscreen =
-    allowFullscreen &&
-    typeof document !== "undefined" &&
-    typeof document.exitFullscreen === "function" &&
-    typeof HTMLElement !== "undefined" &&
-    typeof document.documentElement.requestFullscreen === "function";
+  const fullscreenApi = allowFullscreen ? getFullscreenApi() : undefined;
 
   const sendControlChange = (cc: number, ccValue: number) => {
     const { controllerSession, engine } = state;
@@ -1174,16 +1276,13 @@ export default function InstrumentPerformance({
   };
 
   const handleFullscreenToggle = async () => {
-    if (!canToggleFullscreen) {
+    if (!fullscreenApi) {
       return;
     }
 
-    if (document.fullscreenElement === document.documentElement) {
-      await document.exitFullscreen();
-      return;
-    }
-
-    await document.documentElement.requestFullscreen();
+    await (fullscreenApi.isFullscreen()
+      ? fullscreenApi.exit()
+      : fullscreenApi.request());
   };
 
   return (
@@ -1225,7 +1324,7 @@ export default function InstrumentPerformance({
                 {backSlot}
                 {/* Only where there is browser chrome to escape, and only
                     where the host asked for it. */}
-                {canToggleFullscreen ? (
+                {fullscreenApi ? (
                   <Button
                     variant="outlined"
                     color="neutral"
@@ -1374,18 +1473,21 @@ export default function InstrumentPerformance({
 
                       <PerformanceBand
                         bandKey="global"
+                        rotated={fit.rotated}
                         sections={[{ label: "Global Controls", startIndex: 0 }]}
                         slots={displayState.globalBand.slots}
                         onEncoderTick={sendEncoderTick}
                       />
                       <PerformanceBand
                         bandKey="upper"
+                        rotated={fit.rotated}
                         sections={displayState.upperBand.sections}
                         slots={displayState.upperBand.slots}
                         onEncoderTick={sendEncoderTick}
                       />
                       <PerformanceBand
                         bandKey="lower"
+                        rotated={fit.rotated}
                         sections={displayState.lowerBand.sections}
                         slots={displayState.lowerBand.slots}
                         onEncoderTick={sendEncoderTick}

@@ -298,7 +298,14 @@ The console is a faceplate, not a responsive page. It is laid out once at a
 fixed 1536px design width and then scaled as a whole to fit whatever stage it
 lands on — growing as well as shrinking — so an eight-encoder band stays an
 eight-encoder band on a phone instead of reflowing into four. Nothing inside
-uses viewport breakpoints. The scaled faceplate is centred by an explicit
+uses viewport breakpoints. On a handheld held upright the whole faceplate turns
+a quarter turn rather than squeezing: no browser lets a page demand landscape
+(`screen.orientation.lock` needs fullscreen where it exists at all, and iOS has
+never had it), so the console turns and the performer turns the device to
+match. That is gated on the device — a coarse primary pointer with no hover —
+not on the viewport shape, so a tall desktop window scales down and stays the
+way round the display is. Encoder drags follow the rotation, so "up" stays up
+relative to the faceplate. The scaled faceplate is centred by an explicit
 translate rather than by grid or flex alignment: its layout box stays 1536px
 wide however small the stage gets, and a grid item that wide lands in an
 implicit `auto` track sized to its own max-content, so it centres in 1536px of

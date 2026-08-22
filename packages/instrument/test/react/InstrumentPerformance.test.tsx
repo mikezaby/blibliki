@@ -589,11 +589,45 @@ describe("InstrumentPerformance", () => {
     ).toBeTruthy();
   });
 
+  it("finds the fullscreen API behind Safari's webkit prefix", async () => {
+    // Safari, desktop and iPadOS alike, only ever exposed the prefixed names.
+    Reflect.deleteProperty(document, "exitFullscreen");
+    Reflect.deleteProperty(HTMLElement.prototype, "requestFullscreen");
+    Object.defineProperty(document, "webkitExitFullscreen", {
+      configurable: true,
+      writable: true,
+      value: exitFullscreenMock,
+    });
+    Object.defineProperty(HTMLElement.prototype, "webkitRequestFullscreen", {
+      configurable: true,
+      writable: true,
+      value: requestFullscreenMock,
+    });
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "Fullscreen" }));
+
+    await waitFor(() => {
+      expect(requestFullscreenMock).toHaveBeenCalledTimes(1);
+    });
+
+    Reflect.deleteProperty(document, "webkitExitFullscreen");
+    Reflect.deleteProperty(HTMLElement.prototype, "webkitRequestFullscreen");
+  });
+
   it("leaves the fullscreen button out where there is no Fullscreen API", async () => {
     // An installed app — the iOS WebView, for one — is already fullscreen and
     // exposes no Fullscreen API, so the button has nothing to do there.
     Reflect.deleteProperty(document, "exitFullscreen");
     Reflect.deleteProperty(HTMLElement.prototype, "requestFullscreen");
+    Reflect.deleteProperty(document, "webkitExitFullscreen");
+    Reflect.deleteProperty(HTMLElement.prototype, "webkitRequestFullscreen");
 
     render(
       <InstrumentPerformance
@@ -705,6 +739,75 @@ describe("InstrumentPerformance", () => {
       [107, 127],
       [106, 127],
     ]);
+  });
+
+  it("follows the rotation when deciding which way is up on an encoder", async () => {
+    Object.defineProperty(HTMLElement.prototype, "setPointerCapture", {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
+    });
+    const observers: (() => void)[] = [];
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(callback: () => void) {
+          observers.push(callback);
+        }
+        observe() {
+          // Sizes come from the stubbed layout metrics below.
+        }
+        disconnect() {
+          // Nothing to release.
+        }
+      },
+    );
+    // A portrait stage on a handheld, so the console renders a quarter turn
+    // round. Both halves are required: the same shape on a desktop does not
+    // rotate.
+    vi.stubGlobal("matchMedia", () => ({ matches: true }));
+    stubLayout({ stageWidth: 393, stageHeight: 852, faceplateHeight: 900 });
+
+    displayState.upperBand.slots = [
+      {
+        kind: "slot",
+        blockKey: "filter",
+        slotKey: "cutoff",
+        label: "Cutoff",
+        shortLabel: "CUT",
+        cc: 21,
+        valueText: "1000",
+        rawValue: 1000,
+        valueSpec: { kind: "number", min: 20, max: 20000 },
+      },
+    ];
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    const encoder = await screen.findByRole("slider", { name: "CUT" });
+
+    // Rotated, the faceplate's "up" runs to the right of the screen, so a drag
+    // along x is what raises the value and one along y does nothing.
+    fireEvent.pointerDown(encoder, {
+      pointerId: 1,
+      clientX: 100,
+      clientY: 100,
+    });
+    fireEvent.pointerMove(encoder, { pointerId: 1, clientX: 100, clientY: 50 });
+
+    expect(sendControlEventMock).not.toHaveBeenCalled();
+
+    fireEvent.pointerMove(encoder, { pointerId: 1, clientX: 109, clientY: 50 });
+
+    const [event] = sendControlEventMock.mock.calls[0] as [
+      { cc?: number; ccValue?: number },
+    ];
+    expect(event.ccValue).toBe(67);
   });
 
   it("turns an encoder cell into relative ticks on the controller session", async () => {
@@ -832,6 +935,38 @@ describe("createFaceplateFit", () => {
     // Whatever the stage, the scaled box sits inside it on both axes.
     expect(fit.x + DESIGN_WIDTH * fit.scale).toBeLessThanOrEqual(stageWidth);
     expect(fit.y + 900 * fit.scale).toBeLessThanOrEqual(stageHeight);
+  });
+
+  it("turns a quarter turn on a handheld held upright, fitting the swapped axes", () => {
+    // A phone held upright: 393x852 against a 1536x900 faceplate.
+    const fit = createFaceplateFit(393, 852, 900, true);
+
+    expect(fit.rotated).toBe(true);
+    // Rotated, the faceplate's width is bounded by the stage's height and its
+    // height by the stage's width.
+    expect(fit.scale).toBeCloseTo(Math.min(852 / DESIGN_WIDTH, 393 / 900));
+    // Rotating about the origin sweeps the box into negative x, so the
+    // translate has to put it back: its right edge lands at x, its left at
+    // x - contentHeight * scale.
+    expect(fit.x - 900 * fit.scale).toBeGreaterThanOrEqual(0);
+    expect(fit.x).toBeLessThanOrEqual(393);
+    expect(fit.y).toBeGreaterThanOrEqual(0);
+    expect(fit.y + DESIGN_WIDTH * fit.scale).toBeLessThanOrEqual(852);
+  });
+
+  it("leaves a landscape stage unrotated", () => {
+    expect(createFaceplateFit(852, 393, 900, true).rotated).toBe(false);
+    // A square stage is not portrait, so it stays put.
+    expect(createFaceplateFit(600, 600, 900, true).rotated).toBe(false);
+  });
+
+  it("never rotates where there is no device to turn", () => {
+    // A tall, narrow desktop window is not a phone on its side: it scales down
+    // and stays the way round the display already is.
+    const fit = createFaceplateFit(393, 852, 900);
+
+    expect(fit.rotated).toBe(false);
+    expect(fit.scale).toBeCloseTo(393 / DESIGN_WIDTH);
   });
 
   it("stays at 1 until something has been measured", () => {
