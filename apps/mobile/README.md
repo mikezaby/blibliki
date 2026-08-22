@@ -14,6 +14,9 @@ pnpm ios   # build + sync + run on a simulator/device
 pnpm dev   # same app in a desktop browser — where Web MIDI actually works
 ```
 
+Running on a physical iPhone (signing, Developer Mode, trusting the
+certificate) is in [IOS.md](./IOS.md).
+
 ## Instruments
 
 `src/InstrumentPicker.tsx` lists the instruments from Firestore — the same ones
