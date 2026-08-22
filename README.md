@@ -9,70 +9,80 @@
 
 ## Overview
 
-Blibliki is a web audio project that provides a framework for building synthesizers and audio applications. This monorepo contains multiple packages that work together to create a complete audio development ecosystem.
+Blibliki is a web audio synthesis project: a modular engine built directly on the
+Web Audio API, plus everything around it needed to actually play music with it.
 
-## Key Packages
+It started as a patching framework — modules and cables, driven by data. That part
+is still here and still the foundation. But the project's focus has moved up a
+level, to **the instrument and its performance mode**.
 
-### [Engine](/packages/engine)
+## The Focus: Instrument & Performance Mode
 
-The core audio engine built directly on the Web Audio API. It provides a modular, data-driven approach to audio synthesis with support for:
+A patch is a graph. An _instrument_ is a product: tracks, blocks, pages, and
+controller slots that a musician owns, saves, and plays.
 
-- Oscillators, filters, envelopes, and other audio modules
-- MIDI device integration
-- Polyphonic synthesis
-- Node.js compatibility
+[`@blibliki/instrument`](/packages/instrument) turns a stored instrument document into
 
-[Learn more about the Engine](/packages/engine)
+- an engine patch (modules + routes),
+- navigation state for tracks, pages, and controller modes,
+- display state for a hardware screen,
+- MIDI controller behaviour for the Novation Launch Control XL3,
+- persistence-ready snapshots.
 
-### [Transport](/packages/transport)
+**Performance mode** is where you play it. `@blibliki/instrument/react` ships
+`InstrumentPerformance`, an on-screen performance console laid out as a fixed
+faceplate and scaled to whatever screen it lands on — desktop, tablet, phone,
+or a Pi's panel. Encoders drag and answer arrow keys, synthesizing the same
+relative CC events the hardware sends, so the console and a Launch Control XL3
+drive the same session.
 
-A musical transport and scheduler built on top of the Web Audio API. It provides precise timing and musical coordination for audio applications with support for:
+The same console runs in three places: `apps/grid` (in the browser, next to the
+patch editor), `apps/mobile` (iOS/Android via Capacitor), and headless on a
+Raspberry Pi with its own display.
 
-- Musical time signatures and BPM control
-- Event scheduling and generation
-- Swing and groove quantization
-- Transport controls (play/stop/reset)
-- Musical position tracking
+## Packages
 
-[Learn more about Transport](/packages/transport)
+| Package                                                    | What it is                                                                                                                                                           |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`@blibliki/engine`](/packages/engine)                     | Core modular audio engine on the Web Audio API — oscillators, filters, envelopes, effects, drum machine, step sequencer, polyphony, MIDI. Runs in browsers and Node. |
+| [`@blibliki/instrument`](/packages/instrument)             | The performance-instrument layer: document → tracks/blocks/pages → compiled engine patch → live session. Ships the React performance console under `/react`.         |
+| [`@blibliki/transport`](/packages/transport)               | Musical transport and scheduler: bars/beats/ticks, tempo, swing, sample-accurate lookahead scheduling.                                                               |
+| [`@blibliki/ui`](/packages/ui)                             | Shared UI primitives, theme tokens, and UI-governance ESLint rules used by the apps.                                                                                 |
+| [`@blibliki/models`](/packages/models)                     | Firestore-backed models: `Patch`, `Instrument`, `Device`.                                                                                                            |
+| [`@blibliki/display-protocol`](/packages/display-protocol) | OSC protocol and state types for the Pi hardware display.                                                                                                            |
+| [`@blibliki/pi`](/packages/pi)                             | Headless runtime + `blibliki-pi` CLI for Raspberry Pi and other Node environments.                                                                                   |
+| [`@blibliki/utils`](/packages/utils)                       | Shared utilities: audio `Context`, deterministic IDs, oscilloscope.                                                                                                  |
 
-### [Grid](/apps/grid)
+## Apps
 
-A visual interface for the Blibliki Engine that allows users to create and connect audio modules through an intuitive drag-and-drop interface. Features include:
-
-- Visual patching of audio modules
-- Real-time parameter control
-- MIDI device connectivity
-- Patch saving and loading
-- User authentication
-
-[Learn more about Grid](/apps/grid)
-
-### [Pi](/packages/pi)
-
-Run Blibliki as a headless engine on Raspberry Pi (and other Node.js environments) via the `@blibliki/pi` package.
-
-- Device-side `blibliki-pi` CLI
-- Token-based device registration with Grid
-- Remote patch deployment and startup auto-load
-
-[Learn more about Pi](/packages/pi)
+| App                            | What it is                                                                                                                               |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| [grid](/apps/grid)             | The main web app: visual patching, instrument editing, and performance mode. React + Redux + TanStack Router + Firebase, auth via Clerk. |
+| [mobile](/apps/mobile)         | The performance console on iOS and Android via Capacitor — pick an instrument, then play it.                                             |
+| [pi-display](/apps/pi-display) | Independent Slint process rendering the Pi dashboard from OSC state published by `@blibliki/pi`.                                         |
+| [storybook](/apps/storybook)   | Playground for `@blibliki/ui` components.                                                                                                |
 
 ## Project Structure
 
 ```
 blibliki/
-├── apps/                # Applications
-│   ├── demo/            # Simple demo application
-│   └── grid/            # Main visual interface
-├── packages/            # Libraries and utilities
-│   ├── engine/          # Core audio engine
-│   ├── pi/              # Headless runtime for Raspberry Pi / Node.js
-│   ├── transport/       # Musical transport and scheduler
-│   ├── utils/           # Shared utilities
-│   └── [other]/         # Additional packages
-├── pnpm-workspace.yaml  # Workspace configuration
-└── package.json         # Root package configuration
+├── apps/
+│   ├── grid/                # Web app: patching, instruments, performance
+│   ├── mobile/              # Capacitor iOS/Android performance app
+│   ├── pi-display/          # Slint display process for the Pi
+│   └── storybook/           # UI component playground
+├── packages/
+│   ├── engine/              # Core audio engine
+│   ├── instrument/          # Instrument + performance layer
+│   ├── transport/           # Musical transport and scheduler
+│   ├── ui/                  # Shared UI primitives and tokens
+│   ├── models/              # Firestore models
+│   ├── display-protocol/    # OSC display protocol
+│   ├── pi/                  # Headless Raspberry Pi / Node runtime
+│   └── utils/               # Shared utilities
+├── docs/plans/              # Design and implementation plans
+├── pnpm-workspace.yaml
+└── package.json
 ```
 
 ## Getting Started
@@ -90,13 +100,20 @@ pnpm dev
 pnpm build
 ```
 
+Dependency flow is `utils → transport → engine → instrument → apps`. If you
+change a package, rebuild it before testing downstream (`pnpm build:packages`
+rebuilds them all).
+
 ## Development
 
-Each package has its own README with specific development instructions. In general:
+Each package has its own README with specific instructions. Across the repo:
 
-- The engine package can be developed independently
-- The grid application depends on the engine package
-- Changes to shared packages require rebuilding dependent packages
+```bash
+pnpm tsc      # type check
+pnpm lint     # lint
+pnpm test     # tests
+pnpm format   # format
+```
 
 ## Contributing
 
