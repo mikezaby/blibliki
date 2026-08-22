@@ -1,6 +1,6 @@
 # mobile — Capacitor app
 
-Runs the Blibliki performance instrument on iOS, following the
+Runs the Blibliki performance instrument on iOS and Android, following the
 [Capacitor plan](../../docs/plans/2026-08-18-capacitor-mobile-plan.md).
 
 The app is two screens: pick an instrument, then play it. The second is the
@@ -10,8 +10,9 @@ the same one `apps/grid` renders. `src/App.tsx` supplies the two things the
 console does not own: the instrument document and where it is stored.
 
 ```bash
-pnpm ios   # build + sync + run on a simulator/device
-pnpm dev   # same app in a desktop browser — where Web MIDI actually works
+pnpm ios       # build + sync + run on a simulator/device
+pnpm android   # same, on an emulator/device
+pnpm dev       # same app in a desktop browser — where Web MIDI actually works
 ```
 
 Running on a physical iPhone (signing, Developer Mode, trusting the
@@ -129,38 +130,61 @@ Running on a **physical device** additionally needs a signing team: open
 account is enough for development; the App Store needs a paid Developer
 account).
 
-### Android — not installed yet
-
-Needed to add the Android target (where Web MIDI works for free in the Chromium
-WebView, per the plan):
-
-1. **Android Studio 2025.2.1 or newer** — `brew install --cask android-studio`,
-   then run it once and let the setup wizard install the SDK. It also brings its
-   own JDK; do not install a separate one (this machine has JDK 23 on `PATH`,
-   which Gradle should ignore in favour of Studio's bundled JBR — export
-   `JAVA_HOME` to Studio's JDK if a CLI build complains).
-2. **SDK components** (Studio → Settings → Languages & Frameworks → Android SDK):
-   - SDK Platform **API 36 (Android 16)** — anything ≥ API 24 works
-   - Android SDK Build-Tools, Platform-Tools, Command-line Tools
-   - Android Emulator + a system image (e.g. Pixel 8, API 36)
-3. **Shell environment** (`~/.zshrc`):
-   ```bash
-   export ANDROID_HOME="$HOME/Library/Android/sdk"
-   export PATH="$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$ANDROID_HOME/cmdline-tools/latest/bin"
-   ```
-4. **An AVD** — Studio's Device Manager, or `avdmanager create avd -n pixel -k "system-images;android-36;google_apis;arm64-v8a"`.
-5. Then add the platform:
-   ```bash
-   pnpm --filter mobile add @capacitor/android
-   pnpm --filter mobile exec cap add android
-   pnpm --filter mobile exec cap run android
-   ```
-
 If `xcodebuild` fails with _"The signature of Capacitor.xcframework cannot be
 verified"_, delete `ios/DerivedData` and run again.
 
-Audio caveat to expect on Android: the Chromium WebView's AudioTrack latency is
-worse than iOS's, and some devices need `latencyHint: "playback"` to avoid
-glitching.
+### Android — set up
 
-Not done yet: audio session config and Android. See the plan.
+| Tool           | Required | Installed here                               |
+| -------------- | -------- | -------------------------------------------- |
+| Android Studio | 2025.2+  | `/Applications/Android Studio.app`           |
+| SDK platform   | API 36   | `android-36` (37 also present)               |
+| System image   | arm64    | `android-36;google_apis_playstore;arm64-v8a` |
+| JDK            | ≤ 24     | 23.0.1, the system default                   |
+| AVD            | —        | `blibliki_tablet` — Pixel Tablet, landscape  |
+
+```bash
+pnpm android --target blibliki_tablet   # skip the target picker
+```
+
+Android needs **no native code**. The Chromium WebView has Web MIDI, so
+`main.tsx` falls through to the engine's `WebMidiAdapter` and the CoreMIDI
+plugin stays iOS-only — `MainActivity.java` is an empty `BridgeActivity`
+subclass and that is the whole native surface.
+
+The system image is the **Play Store** variant deliberately: Android System
+WebView updates through the Play Store, and which Chromium the WebView runs is
+the entire Android story.
+
+Two machine-specific traps, each worth an afternoon:
+
+**Do not set `JAVA_HOME`.** Studio bundles JBR 25 and Gradle 8.14.3 rejects it
+(`Unsupported class file major version 69`). The system JDK 23 that `gradlew`
+finds on its own is the one that works. The SDK path lives in
+`android/local.properties` (gitignored), so nothing needs exporting for a build;
+`ANDROID_HOME` and `PATH` matter only for calling `adb`/`emulator` by hand.
+
+**Native Instruments breaks adb.** `NTKDaemon` listens on `127.0.0.1:5563`,
+inside the 5554–5585 range adb scans for emulators, so adb invents a
+permanently offline `emulator-5562` and `cap run` deploys to _that_ instead of
+the AVD. Narrow the scan in `~/.zshrc`:
+
+```bash
+export ADB_LOCAL_TRANSPORT_MAX_PORT=5555
+```
+
+**Emulator audio is not a signal.** Measured on `blibliki_tablet`: the
+AudioContext and the HAL agree at 48 kHz, so nothing resamples and pitch is
+correct — but `baseLatency` is 90.8 ms against a real device's 10–20 ms, and
+AudioFlinger logs a throttled mixer. Distortion and late events there are the
+emulator, not the engine. Judge Android audio on hardware or not at all; the
+iOS Simulator is the opposite case, passing buffers to the host's real
+CoreAudio.
+
+Audio caveat to expect on real Android hardware: the Chromium WebView's
+AudioTrack latency is worse than iOS's, and some devices need
+`latencyHint: "playback"` to avoid glitching. Untested so far — the emulator
+cannot answer it.
+
+Not done yet: audio session config, and Android on a physical device. See the
+plan.
