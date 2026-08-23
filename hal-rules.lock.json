@@ -1,0 +1,10 @@
+{
+  "packs": {
+    "github:mikezaby/hal-rules": {
+      "source": "github:mikezaby/hal-rules",
+      "ref": "HEAD",
+      "sha": "f77e02074491e75ba4675d78ca516daff23edd8c",
+      "path": ".hal/packs"
+    }
+  }
+}

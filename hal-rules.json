@@ -1,6 +1,9 @@
 {
-  "extends": ["hal-rules/recommended.json"],
-  "rulesDir": ["rules"],
+  "extends": [
+    {
+      "registry": "github:mikezaby/hal-rules/registry"
+    }
+  ],
   "rules": {
     "workflow/before-finish": [
       "on",

@@ -39,3 +39,4 @@ dist-ssr
 # Local-only docs (large manuals, scratch)
 docs/untracked/
 .claude/rules/generated/
+.hal
