@@ -1,0 +1,24 @@
+{
+  "extends": ["hal-rules/recommended.json"],
+  "rulesDir": ["rules"],
+  "rules": {
+    "workflow/before-finish": [
+      "on",
+      {
+        "checks": ["pnpm tsc", "pnpm lint", "pnpm test", "pnpm format:check"]
+      }
+    ],
+    "workflow/out-of-scope-findings": [
+      "on",
+      {
+        "findingsFile": "docs/findings.md"
+      }
+    ],
+    "documentation/architecture-decisions": [
+      "on",
+      {
+        "adrDir": "docs/adr/"
+      }
+    ]
+  }
+}
