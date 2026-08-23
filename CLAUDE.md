@@ -149,9 +149,6 @@ pnpm test Scale.test   # Run specific test file
 
 ### Test Structure and Organization
 
-**IMPORTANT:** Maintain a simple, consistent test structure to avoid redundancy and confusion.
-
-**Test Directory Structure:**
 ```
 packages/engine/test/
 ├── core/              # Base class and infrastructure tests
@@ -165,46 +162,12 @@ packages/engine/test/
 └── utils/             # Utility function tests
 ```
 
-**Test Organization Rules:**
-
-1. **One test file per class/module**
-   - ✅ CORRECT: All Module base class tests in `test/core/Module.test.ts`
-   - ❌ WRONG: Creating separate files like `ModulePropsInheritance.test.ts`, `HookEffectiveness.test.ts`
-
-2. **Use describe blocks to organize related tests within a file**
-   ```typescript
-   describe("Module", () => {
-     describe("props setter", () => { /* ... */ });
-     describe("AudioWorklet parameter initialization", () => { /* ... */ });
-     describe("Hook effectiveness", () => { /* ... */ });
-   });
-   ```
-
-3. **Where to put different types of tests:**
-   - **Base class behavior** → `test/core/ClassName.test.ts`
-     - Props setters, hooks, lifecycle
-     - Inheritance patterns
-     - AudioWorklet initialization timing
-
-   - **Module-specific functionality** → `test/modules/ModuleName.test.ts`
-     - Module's audio processing behavior
-     - Module's specific props and parameters
-     - Integration with other modules
-
-   - **Infrastructure** → `test/core/subdirectory/`
-     - MIDI device matching, routing
-     - IO system connections
-
-4. **Avoid these anti-patterns:**
-   - ❌ Creating test files named after problems (e.g., `InitializationBug.test.ts`)
-   - ❌ Creating test files named after patterns (e.g., `EnvelopePattern.test.ts`)
-   - ❌ Duplicating tests across multiple files
-   - ❌ Creating "systemic check" or "comprehensive" test files separate from the main test
-
-5. **When adding tests for a bug fix:**
-   - Add tests to the EXISTING test file for that class/module
-   - Use descriptive test names that explain the scenario
-   - Add comments explaining why the test exists if it's subtle
+- **Base class behavior** (props setters, hooks, lifecycle, inheritance,
+  AudioWorklet initialization timing) → `test/core/ClassName.test.ts`
+- **Module-specific functionality** (audio processing, props and parameters,
+  integration with other modules) → `test/modules/ModuleName.test.ts`
+- **Infrastructure** (MIDI device matching and routing, IO connections) →
+  `test/core/subdirectory/`
 
 ### AudioWorklet Module Testing
 
@@ -386,17 +349,3 @@ section of the spec first, then implement to match it.
   has no real `AudioParam`, so audio-rate param modulation can't be delivered),
   make it fail safe and document the deviation with a `ponytail:` comment — do
   not silently diverge from the spec's observable behavior.
-
-## Scope Discipline
-
-- Only make changes directly related to the current user request.
-- Do not perform unrelated refactors, cleanups, or extra file changes unless explicitly requested.
-
-## Before Finish
-
-Always run this tasks to check if everything is ok
-
-- pnpm tsc
-- pnpm lint
-- pnpm test
-- pnpm format
