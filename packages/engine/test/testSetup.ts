@@ -19,23 +19,11 @@ declare module "vitest" {
   }
 }
 
-const createContext = () => {
-  try {
-    return new Context();
-  } catch (error) {
-    // In some CI/local environments, probing the default CoreAudio output fails.
-    // Falling back to a "none" sink keeps real-time processing without hardware output.
-    if (
-      error instanceof Error &&
-      (error.message.includes("querying device output config") ||
-        error.message.includes("default_output_config"))
-    ) {
-      return new Context(new AudioContext({ sinkId: "none" } as any));
-    }
-
-    throw error;
-  }
-};
+// Nothing here listens to the output, and a real device sink costs an open and
+// a close per test (~120ms), whose teardown occasionally hangs in afterEach.
+// The "none" sink still renders in real time, so audio-time waits are unaffected.
+const createContext = () =>
+  new Context(new AudioContext({ sinkId: "none" } as any));
 
 beforeEach(async (ctx) => {
   ctx.context = createContext();
