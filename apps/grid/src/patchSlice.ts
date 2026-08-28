@@ -15,6 +15,7 @@ import {
   setGridNodes,
 } from "@/components/Grid/gridNodesSlice";
 import { addNotification } from "@/notificationsSlice";
+import { DEFAULT_PATCH_ID, defaultPatch } from "@/patch/defaultPatch";
 import { assertPatchPayloadHasNoUndefined } from "@/patch/patchPayloadValidation";
 import type { PatchViewMode } from "@/patch/viewMode";
 import { AppDispatch, RootState } from "@/store";
@@ -54,6 +55,13 @@ export const patchSlice = createSlice({
   },
 });
 
+const findOrBuildPatch = async (id: string): Promise<Patch> => {
+  if (id === "new") return Patch.build();
+  if (id === DEFAULT_PATCH_ID) return Patch.build(defaultPatch);
+
+  return Patch.find(id);
+};
+
 export const loadById =
   (id: string, options: PatchLoadOptions = {}) =>
   async (dispatch: AppDispatch) => {
@@ -61,7 +69,7 @@ export const loadById =
       await dispatch(clearEngine());
       await dispatch(initializeEngine());
 
-      const patch = id === "new" ? Patch.build() : await Patch.find(id);
+      const patch = await findOrBuildPatch(id);
 
       dispatch(load(patch, options));
     } catch (error) {
