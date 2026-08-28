@@ -1,0 +1,864 @@
+{
+  "id": "",
+  "userId": "",
+  "name": "default",
+  "config": {
+    "bpm": 120,
+    "modules": [
+      {
+        "id": "fa4edb3d-5fd6-400a-bcd9-e930553a327d",
+        "name": "Keyboard",
+        "moduleType": "VirtualMidi",
+        "voiceNo": 0,
+        "inputs": [
+          {
+            "id": "9969a0cd-b4bd-497c-B0dc-64079ce81304",
+            "name": "midi in",
+            "ioType": "midiInput",
+            "moduleId": "fa4edb3d-5fd6-400a-bcd9-e930553a327d"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "b82d62d1-1eb6-472d-8422-0387397f3b61",
+            "name": "midi out",
+            "ioType": "midiOutput",
+            "moduleId": "fa4edb3d-5fd6-400a-bcd9-e930553a327d"
+          }
+        ],
+        "props": { "activeNotes": [] }
+      },
+      {
+        "id": "4070c260-ac6d-40db-910a-713b358566f4",
+        "name": "VoiceScheduler",
+        "moduleType": "VoiceScheduler",
+        "voices": 6,
+        "inputs": [
+          {
+            "id": "0fbfbb98-9f50-4d55-A46a-a80bf6106b2d",
+            "name": "midi in",
+            "ioType": "midiInput",
+            "moduleId": "4070c260-ac6d-40db-910a-713b358566f4"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "21db19b2-a545-4bc2-8a99-447591a8e432",
+            "name": "midi out",
+            "ioType": "midiOutput",
+            "moduleId": "4070c260-ac6d-40db-910a-713b358566f4"
+          }
+        ],
+        "props": {}
+      },
+      {
+        "id": "587a5bd6-c477-4409-82b1-491a48f44504",
+        "name": "MIDI Input",
+        "moduleType": "MidiInput",
+        "voiceNo": 0,
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "7808905a-d476-464c-B379-98ace960996f",
+            "name": "midi out",
+            "ioType": "midiOutput",
+            "moduleId": "587a5bd6-c477-4409-82b1-491a48f44504"
+          }
+        ],
+        "props": {
+          "selectedId": "computer_keyboard",
+          "selectedName": "Computer Keyboard",
+          "allIns": false,
+          "excludedIds": [],
+          "excludedNames": []
+        }
+      },
+      {
+        "id": "684effa2-2f15-49a6-b96f-4d8f80156b7b",
+        "name": "Wavetable",
+        "moduleType": "Wavetable",
+        "voices": 6,
+        "inputs": [
+          {
+            "id": "22085eb4-5904-4544-8650-e205143e7677",
+            "name": "midi in",
+            "ioType": "midiInput",
+            "moduleId": "684effa2-2f15-49a6-b96f-4d8f80156b7b"
+          },
+          {
+            "id": "ee75122e-cc5d-4308-805d-12645e5c143a",
+            "name": "detune",
+            "ioType": "polyAudioInput",
+            "moduleId": "684effa2-2f15-49a6-b96f-4d8f80156b7b"
+          },
+          {
+            "id": "d775ce8b-25a8-414b-A329-a699c134d86a",
+            "name": "position",
+            "ioType": "polyAudioInput",
+            "moduleId": "684effa2-2f15-49a6-b96f-4d8f80156b7b"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "6f64a4bb-7e2e-4c37-9155-0ad440c54543",
+            "name": "out",
+            "ioType": "polyAudioOutput",
+            "moduleId": "684effa2-2f15-49a6-b96f-4d8f80156b7b"
+          }
+        ],
+        "props": {
+          "presetId": "drawbar-organ",
+          "tables": [
+            {
+              "real": [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+              ],
+              "imag": [
+                0, 0.9, 0.45, 0.5, 0.2, 0, 0.25, 0, 0.15, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+              ]
+            },
+            {
+              "real": [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+              ],
+              "imag": [
+                0, 0.9, 0.4633333333333333, 0.4866666666666667,
+                0.21666666666666667, 0, 0.25, 0, 0.16666666666666666, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+              ]
+            },
+            {
+              "real": [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+              ],
+              "imag": [
+                0, 0.9, 0.4766666666666667, 0.47333333333333333,
+                0.23333333333333334, 0, 0.25, 0, 0.18333333333333332, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+              ]
+            },
+            {
+              "real": [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+              ],
+              "imag": [
+                0, 0.9, 0.49, 0.45999999999999996, 0.25, 0, 0.25, 0, 0.2, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+              ]
+            },
+            {
+              "real": [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+              ],
+              "imag": [
+                0, 0.9, 0.5033333333333333, 0.44666666666666666,
+                0.26666666666666666, 0, 0.25, 0, 0.21666666666666667, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+              ]
+            },
+            {
+              "real": [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+              ],
+              "imag": [
+                0, 0.9, 0.5166666666666667, 0.43333333333333335,
+                0.2833333333333333, 0, 0.25, 0, 0.23333333333333334, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+              ]
+            },
+            {
+              "real": [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+              ],
+              "imag": [
+                0, 0.9, 0.53, 0.42, 0.30000000000000004, 0, 0.25, 0, 0.25, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+              ]
+            },
+            {
+              "real": [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+              ],
+              "imag": [
+                0, 0.9, 0.5433333333333333, 0.4066666666666667,
+                0.31666666666666665, 0, 0.25, 0, 0.26666666666666666, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+              ]
+            },
+            {
+              "real": [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+              ],
+              "imag": [
+                0, 0.9, 0.5566666666666666, 0.3933333333333333,
+                0.33333333333333337, 0, 0.25, 0, 0.2833333333333333, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+              ]
+            },
+            {
+              "real": [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+              ],
+              "imag": [
+                0, 0.9, 0.5700000000000001, 0.38, 0.35, 0, 0.25, 0, 0.3, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+              ]
+            },
+            {
+              "real": [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+              ],
+              "imag": [
+                0, 0.9, 0.5833333333333334, 0.3666666666666667,
+                0.3666666666666667, 0, 0.25, 0, 0.31666666666666665, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+              ]
+            },
+            {
+              "real": [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+              ],
+              "imag": [
+                0, 0.9, 0.5966666666666667, 0.35333333333333333,
+                0.3833333333333333, 0, 0.25, 0, 0.3333333333333333, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+              ]
+            },
+            {
+              "real": [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+              ],
+              "imag": [
+                0, 0.9, 0.6100000000000001, 0.33999999999999997, 0.4, 0, 0.25,
+                0, 0.35, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+              ]
+            },
+            {
+              "real": [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+              ],
+              "imag": [
+                0, 0.9, 0.6233333333333333, 0.32666666666666666,
+                0.4166666666666667, 0, 0.25, 0, 0.3666666666666667, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+              ]
+            },
+            {
+              "real": [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+              ],
+              "imag": [
+                0, 0.9, 0.6366666666666667, 0.31333333333333335,
+                0.43333333333333335, 0, 0.25, 0, 0.3833333333333333, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+              ]
+            },
+            {
+              "real": [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0
+              ],
+              "imag": [
+                0, 0.9, 0.65, 0.3, 0.45, 0, 0.25, 0, 0.4, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+              ]
+            }
+          ],
+          "position": 0.5,
+          "frequency": 440,
+          "fine": 0,
+          "coarse": 0,
+          "octave": 1,
+          "lowGain": true,
+          "disableNormalization": false
+        }
+      },
+      {
+        "id": "84aa7505-d747-488d-8597-5be10c8f885e",
+        "name": "LFO",
+        "moduleType": "LFO",
+        "voices": 1,
+        "inputs": [
+          {
+            "id": "a4d6dfa4-7418-4c63-B9ce-fdbd3e2dd1a7",
+            "name": "midi in",
+            "ioType": "midiInput",
+            "moduleId": "84aa7505-d747-488d-8597-5be10c8f885e"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "560fad3e-dafe-489b-B5a8-5257b03625af",
+            "name": "out",
+            "ioType": "polyAudioOutput",
+            "moduleId": "84aa7505-d747-488d-8597-5be10c8f885e"
+          }
+        ],
+        "props": {
+          "sync": false,
+          "frequency": 0.08178042072408574,
+          "division": "1/4",
+          "waveform": "sine",
+          "offset": 0,
+          "amount": 1,
+          "phase": 0
+        }
+      },
+      {
+        "id": "888654bf-fd53-4be6-89c9-5bb23e3eb4f2",
+        "name": "Master",
+        "moduleType": "Master",
+        "voiceNo": 0,
+        "inputs": [
+          {
+            "id": "6f0a263a-8e76-4f4e-870f-110a41a31cee",
+            "name": "midi in",
+            "ioType": "midiInput",
+            "moduleId": "888654bf-fd53-4be6-89c9-5bb23e3eb4f2"
+          },
+          {
+            "id": "ae0e8d84-90aa-4fb7-9d64-578ddbc4b1e7",
+            "name": "in",
+            "ioType": "audioInput",
+            "moduleId": "888654bf-fd53-4be6-89c9-5bb23e3eb4f2"
+          }
+        ],
+        "outputs": [],
+        "props": {}
+      },
+      {
+        "id": "44d3170d-09ca-423a-b530-3fae6adf6971",
+        "name": "Envelope",
+        "moduleType": "Envelope",
+        "voices": 6,
+        "inputs": [
+          {
+            "id": "cba4bfd2-1e25-4d8f-B1a5-2ed0c0269b5e",
+            "name": "midi in",
+            "ioType": "midiInput",
+            "moduleId": "44d3170d-09ca-423a-b530-3fae6adf6971"
+          },
+          {
+            "id": "08954e78-3657-4a86-Af74-5bfe1b3f3d5b",
+            "name": "in",
+            "ioType": "polyAudioInput",
+            "moduleId": "44d3170d-09ca-423a-b530-3fae6adf6971"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "1096f5f1-a8f6-4dc6-Ae11-a5c5ef4e275b",
+            "name": "out",
+            "ioType": "polyAudioOutput",
+            "moduleId": "44d3170d-09ca-423a-b530-3fae6adf6971"
+          }
+        ],
+        "props": {
+          "attack": 0.02947303084983044,
+          "attackCurve": 0.5,
+          "decay": 0,
+          "sustain": 1,
+          "release": 3.707398431999999,
+          "retrigger": true
+        }
+      },
+      {
+        "id": "b7c5cc53-4e68-4ef9-859d-70d260de4d50",
+        "name": "Filter",
+        "moduleType": "Filter",
+        "voices": 6,
+        "inputs": [
+          {
+            "id": "2f4a0e1b-b5e4-48a8-9f1e-b35e79aed1cc",
+            "name": "midi in",
+            "ioType": "midiInput",
+            "moduleId": "b7c5cc53-4e68-4ef9-859d-70d260de4d50"
+          },
+          {
+            "id": "f5e9755a-6abb-48a2-Ae05-a75315b518bf",
+            "name": "cutoff",
+            "ioType": "polyAudioInput",
+            "moduleId": "b7c5cc53-4e68-4ef9-859d-70d260de4d50"
+          },
+          {
+            "id": "a5f4a0e6-b9df-4fa0-9780-57ca9c6316f8",
+            "name": "cutoffMod",
+            "ioType": "polyAudioInput",
+            "moduleId": "b7c5cc53-4e68-4ef9-859d-70d260de4d50"
+          },
+          {
+            "id": "d39c3ac4-6ac1-46dd-Bc94-f9596db846e3",
+            "name": "Q",
+            "ioType": "polyAudioInput",
+            "moduleId": "b7c5cc53-4e68-4ef9-859d-70d260de4d50"
+          },
+          {
+            "id": "6fc09df9-3c35-4075-9ca8-0486d4da45ec",
+            "name": "in",
+            "ioType": "polyAudioInput",
+            "moduleId": "b7c5cc53-4e68-4ef9-859d-70d260de4d50"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "dbdbc9e2-4b44-4f9d-9b0a-d8719d0d649d",
+            "name": "out",
+            "ioType": "polyAudioOutput",
+            "moduleId": "b7c5cc53-4e68-4ef9-859d-70d260de4d50"
+          }
+        ],
+        "props": {
+          "cutoff": 31.748521729002462,
+          "envelopeAmount": 0.55,
+          "keyTrack": 0,
+          "type": "lowpass",
+          "Q": 0.057693197087641895
+        }
+      },
+      {
+        "id": "dd0c748c-9269-4b50-83bc-508f4e3afd17",
+        "name": "Envelope",
+        "moduleType": "Envelope",
+        "voices": 6,
+        "inputs": [
+          {
+            "id": "2850e154-e28e-467d-93e4-1518ed99a562",
+            "name": "midi in",
+            "ioType": "midiInput",
+            "moduleId": "dd0c748c-9269-4b50-83bc-508f4e3afd17"
+          },
+          {
+            "id": "2a7ed2e1-6a94-42bc-9607-493a3a2ced3a",
+            "name": "in",
+            "ioType": "polyAudioInput",
+            "moduleId": "dd0c748c-9269-4b50-83bc-508f4e3afd17"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "64b87453-2e43-422d-B906-60d8a608c319",
+            "name": "out",
+            "ioType": "polyAudioOutput",
+            "moduleId": "dd0c748c-9269-4b50-83bc-508f4e3afd17"
+          }
+        ],
+        "props": {
+          "attack": 1.052848895812988,
+          "attackCurve": 0.5,
+          "decay": 0,
+          "sustain": 1,
+          "release": 4.385097572679682,
+          "retrigger": true
+        }
+      },
+      {
+        "id": "d580e277-d230-443e-9db6-9bfd08e332d9",
+        "name": "Constant",
+        "moduleType": "Constant",
+        "voiceNo": 0,
+        "inputs": [
+          {
+            "id": "d28e1eca-723d-4d1a-86e9-41d8f9621053",
+            "name": "midi in",
+            "ioType": "midiInput",
+            "moduleId": "d580e277-d230-443e-9db6-9bfd08e332d9"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "9125ae93-b55c-4a13-B94e-6529e2caa24f",
+            "name": "out",
+            "ioType": "audioOutput",
+            "moduleId": "d580e277-d230-443e-9db6-9bfd08e332d9"
+          }
+        ],
+        "props": { "value": 1 }
+      },
+      {
+        "id": "89e3bdd1-be27-47d8-ac6a-363f8098fa52",
+        "name": "Volume",
+        "moduleType": "Volume",
+        "voices": 1,
+        "inputs": [
+          {
+            "id": "1c401b30-f3df-430d-B317-da7b751f0245",
+            "name": "midi in",
+            "ioType": "midiInput",
+            "moduleId": "89e3bdd1-be27-47d8-ac6a-363f8098fa52"
+          },
+          {
+            "id": "2631922f-02e4-47f2-9284-21a7c76e52bf",
+            "name": "in",
+            "ioType": "polyAudioInput",
+            "moduleId": "89e3bdd1-be27-47d8-ac6a-363f8098fa52"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "0b5c5cff-5172-48ae-Afbf-2252647fa64e",
+            "name": "out",
+            "ioType": "polyAudioOutput",
+            "moduleId": "89e3bdd1-be27-47d8-ac6a-363f8098fa52"
+          }
+        ],
+        "props": { "volume": -6.014689343951531 }
+      },
+      {
+        "id": "016d9201-449b-4c31-b57c-df9f0e1b0ced",
+        "name": "Spectrum",
+        "moduleType": "Spectrum",
+        "voiceNo": 0,
+        "inputs": [
+          {
+            "id": "bf7018f2-1b5d-4d70-93fe-80b0caee0e9d",
+            "name": "midi in",
+            "ioType": "midiInput",
+            "moduleId": "016d9201-449b-4c31-b57c-df9f0e1b0ced"
+          },
+          {
+            "id": "2f677534-7237-4dbe-A6cc-48707c461caa",
+            "name": "in",
+            "ioType": "audioInput",
+            "moduleId": "016d9201-449b-4c31-b57c-df9f0e1b0ced"
+          }
+        ],
+        "outputs": [],
+        "props": {
+          "fftSize": 2048,
+          "minDecibels": -100,
+          "maxDecibels": -30,
+          "smoothing": 0.8
+        }
+      },
+      {
+        "id": "3349a582-159d-4ae1-b239-be4dc61bf45e",
+        "name": "VU Meter",
+        "moduleType": "VuMeter",
+        "voiceNo": 0,
+        "inputs": [
+          {
+            "id": "a4a86ed0-4939-46e9-9129-b427b026eb2d",
+            "name": "midi in",
+            "ioType": "midiInput",
+            "moduleId": "3349a582-159d-4ae1-b239-be4dc61bf45e"
+          },
+          {
+            "id": "c1bfcdb1-a402-4353-B964-2187e4b134bb",
+            "name": "in",
+            "ioType": "audioInput",
+            "moduleId": "3349a582-159d-4ae1-b239-be4dc61bf45e"
+          }
+        ],
+        "outputs": [],
+        "props": { "smoothing": 0.8 }
+      },
+      {
+        "id": "bf9cfeec-3bdd-41cc-97c0-43ca25bcdd7f",
+        "name": "Oscilloscope",
+        "moduleType": "Oscilloscope",
+        "voiceNo": 0,
+        "inputs": [
+          {
+            "id": "52dea9ae-c90d-42de-A88b-cef66fa20cc9",
+            "name": "midi in",
+            "ioType": "midiInput",
+            "moduleId": "bf9cfeec-3bdd-41cc-97c0-43ca25bcdd7f"
+          },
+          {
+            "id": "77f111f6-a90b-4c52-Bcf5-e399820bc677",
+            "name": "in",
+            "ioType": "audioInput",
+            "moduleId": "bf9cfeec-3bdd-41cc-97c0-43ca25bcdd7f"
+          }
+        ],
+        "outputs": [],
+        "props": { "fftSize": 1024 }
+      }
+    ],
+    "gridNodes": {
+      "nodes": [
+        {
+          "id": "fa4edb3d-5fd6-400a-bcd9-e930553a327d",
+          "type": "audioNode",
+          "position": { "x": 783.0909091234207, "y": 491.09375 },
+          "data": {},
+          "measured": { "width": 717, "height": 179 },
+          "selected": false,
+          "dragging": false
+        },
+        {
+          "id": "4070c260-ac6d-40db-910a-713b358566f4",
+          "type": "audioNode",
+          "position": { "x": 1581.0909091234207, "y": 565.09375 },
+          "data": {},
+          "measured": { "width": 333, "height": 51 },
+          "selected": false,
+          "dragging": false
+        },
+        {
+          "id": "587a5bd6-c477-4409-82b1-491a48f44504",
+          "type": "audioNode",
+          "position": { "x": 423.0909091234207, "y": 534.09375 },
+          "data": {},
+          "measured": { "width": 317, "height": 89 },
+          "selected": false
+        },
+        {
+          "id": "684effa2-2f15-49a6-b96f-4d8f80156b7b",
+          "type": "audioNode",
+          "position": { "x": 710.7242254044132, "y": 903.1485016385566 },
+          "data": {},
+          "measured": { "width": 890, "height": 579 },
+          "selected": false,
+          "dragging": false
+        },
+        {
+          "id": "84aa7505-d747-488d-8597-5be10c8f885e",
+          "type": "audioNode",
+          "position": { "x": 136.47191718548547, "y": 1117.4627602083 },
+          "data": {},
+          "measured": { "width": 467, "height": 334 },
+          "selected": false
+        },
+        {
+          "id": "888654bf-fd53-4be6-89c9-5bb23e3eb4f2",
+          "type": "audioNode",
+          "position": { "x": 3012.587433156058, "y": 1154.2756172350785 },
+          "data": {},
+          "measured": { "width": 200, "height": 82 }
+        },
+        {
+          "id": "44d3170d-09ca-423a-b530-3fae6adf6971",
+          "type": "audioNode",
+          "position": { "x": 1776.8618433531935, "y": 1100.9575080303864 },
+          "data": {},
+          "measured": { "width": 426, "height": 322 },
+          "selected": false
+        },
+        {
+          "id": "b7c5cc53-4e68-4ef9-859d-70d260de4d50",
+          "type": "audioNode",
+          "position": { "x": 1934.0476326852784, "y": 1598.970016106987 },
+          "data": {},
+          "measured": { "width": 659, "height": 213 },
+          "selected": false,
+          "dragging": false
+        },
+        {
+          "id": "dd0c748c-9269-4b50-83bc-508f4e3afd17",
+          "type": "audioNode",
+          "position": { "x": 1112.8883834429898, "y": 1683.0410821008406 },
+          "data": {},
+          "measured": { "width": 426, "height": 322 },
+          "selected": false,
+          "dragging": false
+        },
+        {
+          "id": "d580e277-d230-443e-9db6-9bfd08e332d9",
+          "type": "audioNode",
+          "position": { "x": 643.6545267331107, "y": 1786.6635587909386 },
+          "data": {},
+          "measured": { "width": 292, "height": 143 },
+          "selected": false,
+          "dragging": false
+        },
+        {
+          "id": "89e3bdd1-be27-47d8-ac6a-363f8098fa52",
+          "type": "audioNode",
+          "position": { "x": 2412.321186796289, "y": 1149.7612130709997 },
+          "data": {},
+          "measured": { "width": 284, "height": 213 },
+          "selected": false,
+          "dragging": false
+        },
+        {
+          "id": "016d9201-449b-4c31-b57c-df9f0e1b0ced",
+          "type": "audioNode",
+          "position": { "x": 2529.1967948204274, "y": -50.46973835536428 },
+          "data": {},
+          "measured": { "width": 536, "height": 389 },
+          "selected": false,
+          "dragging": false
+        },
+        {
+          "id": "3349a582-159d-4ae1-b239-be4dc61bf45e",
+          "type": "audioNode",
+          "position": { "x": 3157.1076023638975, "y": 455.81870556482124 },
+          "data": {},
+          "measured": { "width": 212, "height": 283 },
+          "selected": false,
+          "dragging": false
+        },
+        {
+          "id": "bf9cfeec-3bdd-41cc-97c0-43ca25bcdd7f",
+          "type": "audioNode",
+          "position": { "x": 2523.539940698414, "y": 404.9070184667021 },
+          "data": {},
+          "measured": { "width": 476, "height": 328 },
+          "selected": false,
+          "dragging": false
+        }
+      ],
+      "edges": [
+        {
+          "id": "b816cf5b-f304-41b0-916e-f4d79d737d7c",
+          "source": "587a5bd6-c477-4409-82b1-491a48f44504",
+          "sourceHandle": "midi out",
+          "target": "fa4edb3d-5fd6-400a-bcd9-e930553a327d",
+          "targetHandle": "midi in"
+        },
+        {
+          "id": "03983717-57fe-4aa7-b16d-68b2486f0414",
+          "source": "fa4edb3d-5fd6-400a-bcd9-e930553a327d",
+          "sourceHandle": "midi out",
+          "target": "4070c260-ac6d-40db-910a-713b358566f4",
+          "targetHandle": "midi in"
+        },
+        {
+          "id": "81b14747-de4c-451b-bf5d-9a6aa49ef0b7",
+          "source": "4070c260-ac6d-40db-910a-713b358566f4",
+          "sourceHandle": "midi out",
+          "target": "684effa2-2f15-49a6-b96f-4d8f80156b7b",
+          "targetHandle": "midi in"
+        },
+        {
+          "id": "ea41b519-d0e5-4381-abfd-b8db051dc0ce",
+          "source": "84aa7505-d747-488d-8597-5be10c8f885e",
+          "sourceHandle": "out",
+          "target": "684effa2-2f15-49a6-b96f-4d8f80156b7b",
+          "targetHandle": "position"
+        },
+        {
+          "id": "9c90330f-39ec-4bc3-a566-cfcb201decbd",
+          "source": "684effa2-2f15-49a6-b96f-4d8f80156b7b",
+          "sourceHandle": "out",
+          "target": "44d3170d-09ca-423a-b530-3fae6adf6971",
+          "targetHandle": "in"
+        },
+        {
+          "id": "26be69cb-6179-47f1-9f12-3e85befbdbbc",
+          "source": "d580e277-d230-443e-9db6-9bfd08e332d9",
+          "sourceHandle": "out",
+          "target": "dd0c748c-9269-4b50-83bc-508f4e3afd17",
+          "targetHandle": "in"
+        },
+        {
+          "id": "69e4f46b-4932-4e04-a711-cc6d23403a25",
+          "source": "44d3170d-09ca-423a-b530-3fae6adf6971",
+          "sourceHandle": "out",
+          "target": "b7c5cc53-4e68-4ef9-859d-70d260de4d50",
+          "targetHandle": "in"
+        },
+        {
+          "id": "15a25db9-76e6-4b73-bf09-af3923a1b083",
+          "source": "4070c260-ac6d-40db-910a-713b358566f4",
+          "sourceHandle": "midi out",
+          "target": "44d3170d-09ca-423a-b530-3fae6adf6971",
+          "targetHandle": "midi in"
+        },
+        {
+          "id": "17d9a108-748d-4bdc-a1a6-4f4d7edc2933",
+          "source": "4070c260-ac6d-40db-910a-713b358566f4",
+          "sourceHandle": "midi out",
+          "target": "dd0c748c-9269-4b50-83bc-508f4e3afd17",
+          "targetHandle": "midi in"
+        },
+        {
+          "id": "4c319f07-1909-47b5-901a-df1790b7a4a4",
+          "source": "dd0c748c-9269-4b50-83bc-508f4e3afd17",
+          "sourceHandle": "out",
+          "target": "b7c5cc53-4e68-4ef9-859d-70d260de4d50",
+          "targetHandle": "cutoffMod"
+        },
+        {
+          "id": "4403268c-db34-40e5-8314-79a385075203",
+          "source": "b7c5cc53-4e68-4ef9-859d-70d260de4d50",
+          "sourceHandle": "out",
+          "target": "89e3bdd1-be27-47d8-ac6a-363f8098fa52",
+          "targetHandle": "in"
+        },
+        {
+          "id": "4953ce02-a79e-43f1-b617-30f7861967a2",
+          "source": "89e3bdd1-be27-47d8-ac6a-363f8098fa52",
+          "sourceHandle": "out",
+          "target": "888654bf-fd53-4be6-89c9-5bb23e3eb4f2",
+          "targetHandle": "in"
+        },
+        {
+          "id": "287fefd8-f467-4743-8b87-ef3523aec2c6",
+          "source": "89e3bdd1-be27-47d8-ac6a-363f8098fa52",
+          "sourceHandle": "out",
+          "target": "016d9201-449b-4c31-b57c-df9f0e1b0ced",
+          "targetHandle": "in"
+        },
+        {
+          "id": "f5786021-45fa-4bbd-9703-66ea72c942af",
+          "source": "89e3bdd1-be27-47d8-ac6a-363f8098fa52",
+          "sourceHandle": "out",
+          "target": "bf9cfeec-3bdd-41cc-97c0-43ca25bcdd7f",
+          "targetHandle": "in"
+        },
+        {
+          "id": "41561f24-6c50-4371-8674-eb375acff1cb",
+          "source": "89e3bdd1-be27-47d8-ac6a-363f8098fa52",
+          "sourceHandle": "out",
+          "target": "3349a582-159d-4ae1-b239-be4dc61bf45e",
+          "targetHandle": "in"
+        }
+      ],
+      "viewport": {
+        "x": 306.82709531697736,
+        "y": -53.21182137328799,
+        "zoom": 0.48940167065991763
+      }
+    }
+  }
+}
