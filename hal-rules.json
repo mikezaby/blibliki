@@ -4,6 +4,7 @@
       "registry": "github:mikezaby/hal-rules/registry"
     }
   ],
+  "skills": { "research/manual-analyzer": "on" },
   "rules": {
     "workflow/before-finish": [
       "on",
