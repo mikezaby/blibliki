@@ -3,7 +3,7 @@
     "github:mikezaby/hal-rules": {
       "source": "github:mikezaby/hal-rules",
       "ref": "HEAD",
-      "sha": "6b5e2aaf7d832cabfbfaf593ca4df373b0ed670b",
+      "sha": "4700ace21a28e11c4f3d4b81448e561f4ec643b2",
       "path": ".hal/packs"
     }
   },
