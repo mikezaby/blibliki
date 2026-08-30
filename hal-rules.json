@@ -4,13 +4,31 @@
       "registry": "github:mikezaby/hal-rules/registry"
     }
   ],
-  "skills": { "research/manual-analyzer": "on" },
+  "skills": {
+    "research/manual-analyzer": "on",
+    "workflow/project-new-task": [
+      "on",
+      {
+        "tracker": "github"
+      }
+    ]
+  },
   "rules": {
-    "git/worktrees-by-default": ["on", { "worktreesDir": ".worktrees" }],
+    "git/worktrees-by-default": [
+      "on",
+      {
+        "worktreesDir": ".worktrees"
+      }
+    ],
     "workflow/before-finish": [
       "on",
       {
-        "checks": ["pnpm tsc", "pnpm lint", "pnpm test", "pnpm format:check"]
+        "checks": [
+          "pnpm tsc",
+          "pnpm lint",
+          "pnpm test",
+          "pnpm format:check"
+        ]
       }
     ],
     "workflow/out-of-scope-findings": [
