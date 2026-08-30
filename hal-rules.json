@@ -6,6 +6,7 @@
   ],
   "skills": { "research/manual-analyzer": "on" },
   "rules": {
+    "git/worktrees-by-default": ["on", { "worktreesDir": ".worktrees" }],
     "workflow/before-finish": [
       "on",
       {
