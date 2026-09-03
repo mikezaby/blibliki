@@ -9,3 +9,5 @@ export { buildPasses } from "./core/graph";
 export type { RenderPass } from "./core/graph";
 export { applyBindings, mapRange, spectrumToControls } from "./core/controls";
 export type { ControlValues, IBinding } from "./core/controls";
+export { VideoEngine } from "./VideoEngine";
+export type { IVideoPatch } from "./VideoEngine";
