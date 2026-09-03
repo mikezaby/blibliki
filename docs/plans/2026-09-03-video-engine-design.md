@@ -45,7 +45,9 @@ main thread, with its opener. That is acceptable only because nothing runs on
 it. The projector window must stay dumb: no React, no editor. The editor for
 video patches lives in the audio tab's UI.
 
-Placement: Chrome's Window Management API opens the window on a chosen screen
+Placement: the bootstrap ships click-to-fullscreen inside the projector
+window; you drag it to the projector once. Chrome's Window Management API
+can later open the window on a chosen screen
 and requests fullscreen there. Firefox and Safari lack it, so the fallback is
 dragging the window across and pressing the fullscreen shortcut once.
 
@@ -107,7 +109,9 @@ later change (recorded in `docs/findings.md`).
 
 - **Texture IO** carries an image. A frame is a chain of fragment shader
   passes ping-ponging between framebuffers.
-- **Control IO** carries one number per frame, the equivalent of CV.
+- **Control IO** carries one number per frame, the equivalent of CV. In the
+  bootstrap only the consumer side exists (bindings, below); no video module
+  produces a control yet.
 
 ### Bootstrap modules
 
@@ -134,7 +138,7 @@ input range and an output range. One bus, not a module type per binding.
 One discriminated message union exported from the package; the grid and any
 future host share the types.
 
-Host to worker: `init` (transferred canvas), `snapshot` (full video patch),
+Host to worker: `init` (transferred canvas), `load` (full video patch),
 graph commands (`addModule`, `updateProps`, `addRoute` and their removes),
 `controls` (mirrored audio props), `spectrum` (transferred `Float32Array`).
 
@@ -147,8 +151,8 @@ and forwards everything. The grid uses this class and nothing lower.
 
 ## Failure modes handled now
 
-- Spectrum buffers are transferred, so two buffers ping-pong between host
-  and worker.
+- Spectrum buffers are transferred, so one buffer is in flight at a time and
+  comes back to the host after each read.
 - A bound control with no value yet keeps the prop's last value; it never
   snaps to zero.
 - A lost WebGL context recompiles shaders and continues.
