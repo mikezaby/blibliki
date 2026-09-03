@@ -3,3 +3,7 @@ export type { ICreateVideoModule, IVideoModule } from "./core/Module";
 export type { ModulePropSchema, PropSchema } from "./core/schema";
 export { createModule, VideoModuleType } from "./modules";
 export type { VideoPropsMapping } from "./modules";
+export { Routes } from "./core/Routes";
+export type { IPlug, IRoute } from "./core/Routes";
+export { buildPasses } from "./core/graph";
+export type { RenderPass } from "./core/graph";
