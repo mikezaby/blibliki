@@ -2500,48 +2500,28 @@ patch editor."
 
 ---
 
-### Task 11: Docs and ADRs
+### Task 11: Docs
 
 **Files:**
-- Create: `docs/adr/0001-video-engine-runs-in-a-worker.md`
-- Create: `docs/adr/0002-audio-reaches-video-as-analyser-data.md`
-- Create: `docs/adr/0003-video-renderer-is-raw-webgl2.md`
 - Modify: `CLAUDE.md` (Repository Structure: add `video-engine/` under packages, one line; Package Dependencies: `utils → video-engine` alongside the existing chain)
-- Modify: `docs/plans/2026-09-03-video-engine-design.md` (Status line to "implemented, see ADRs")
+- Modify: `docs/plans/2026-09-03-video-engine-design.md` (Status line to "implemented")
 
-**Step 1: Write the three ADRs**
+The ADRs for this work already exist in `docs/adr/0001` to `0003`; they
+were written with the design. Do not add more unless implementation
+reverses a decision, in which case write a superseding ADR.
 
-Each is short: Status, Context, Decision, Consequences, Alternatives
-rejected. Lift the text from the matching Decisions subsection of the
-design doc; do not restate the code.
-
-`docs/adr/0001-video-engine-runs-in-a-worker.md` covers the worker plus the
-dumb projector window (and why the projector window must stay dumb: it
-shares the audio tab's main thread).
-
-`docs/adr/0002-audio-reaches-video-as-analyser-data.md` covers analyser
-bins over postMessage, BlackHole rejected, and the modulation gap that a
-future "video send" module closes.
-
-`docs/adr/0003-video-renderer-is-raw-webgl2.md` covers raw WebGL2, p5.js
-rejected, three.js deferred until 3D is wanted, and that the renderer sits
-behind the pure pass list so swapping it is contained.
-
-**Step 2: Update CLAUDE.md and the design doc status**
+**Step 1: Update CLAUDE.md and the design doc status**
 
 Two lines in CLAUDE.md as listed above; one line in the design doc.
 
-**Step 3: Run format check and commit**
+**Step 2: Run format check and commit**
 
 Run from the repo root: `pnpm format:check`
 Expected: clean.
 
 ```bash
-git add docs/adr CLAUDE.md docs/plans/2026-09-03-video-engine-design.md
-git commit -m "docs: ADRs for the video engine bootstrap
-
-Records why the engine lives in a worker, why audio arrives as analyser
-data, and why the renderer is raw WebGL2, with the alternatives rejected."
+git add CLAUDE.md docs/plans/2026-09-03-video-engine-design.md
+git commit -m "docs: list the video engine package in CLAUDE.md"
 ```
 
 ---
@@ -2551,6 +2531,7 @@ data, and why the renderer is raw WebGL2, with the alternatives rejected."
 - `pnpm tsc && pnpm lint && pnpm test && pnpm format:check` pass at the root.
 - The browser check in Task 10 step 4 passes.
 - Eleven commits on `feat/62-bootstrap-video-engine-package`, not pushed.
+- `docs/adr/0001` to `0003` still describe what was built.
 - `docs/findings.md` lists the two deferred items from Task 9.
 
 Out of scope, each its own ticket later: camera and video-file sources, a
