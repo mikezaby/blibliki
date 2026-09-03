@@ -7,3 +7,5 @@ export { Routes } from "./core/Routes";
 export type { IPlug, IRoute } from "./core/Routes";
 export { buildPasses } from "./core/graph";
 export type { RenderPass } from "./core/graph";
+export { applyBindings, mapRange, spectrumToControls } from "./core/controls";
+export type { ControlValues, IBinding } from "./core/controls";
