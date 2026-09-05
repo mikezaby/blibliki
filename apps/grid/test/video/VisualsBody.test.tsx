@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import VisualsBody from "../../src/components/VideoModule/VisualsBody";
 
 const { host, store } = vi.hoisted(() => ({
@@ -15,6 +15,9 @@ vi.mock("../../src/video/videoHost", () => ({
 vi.mock("../../src/store", () => ({ store }));
 
 describe("VisualsBody", () => {
+  beforeEach(() => {
+    store.dispatch.mockClear();
+  });
   afterEach(cleanup);
 
   it("attaches a preview view on mount and detaches on unmount", () => {
