@@ -14,6 +14,7 @@ This is a pnpm monorepo with the following structure:
   - **engine/** - Core audio engine built on Web Audio API with modular synthesis
   - **transport/** - Musical transport and scheduler for precise timing
   - **utils/** - Shared utilities (Context, deterministicId, oscilloscope)
+  - **video-engine/** - Module graph of WebGL2 shader passes, runs in a Web Worker and renders to a projector window
 
 - **apps/** - Applications consuming the packages
   - **grid/** - Main visual patching interface (React + Redux + TanStack Router + Firebase)
@@ -210,7 +211,7 @@ Tests use vitest with the following conventions:
 
 ## Package Dependencies
 
-**Dependency flow**: utils → transport → engine → apps
+**Dependency flow**: utils → transport → engine → apps, and utils → video-engine → apps
 
 When making changes:
 
