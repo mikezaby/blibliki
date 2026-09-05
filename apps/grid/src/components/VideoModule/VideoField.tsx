@@ -4,6 +4,7 @@ import {
   InputField,
   SelectField,
 } from "@/components/AudioModule/attributes/Field";
+import BindingControl from "@/components/VideoModule/BindingControl";
 import { useAppDispatch } from "@/hooks";
 import { updateVideoModuleProps } from "@/video/videoPatchSlice";
 
@@ -37,6 +38,7 @@ export default function VideoField({ moduleId, prop, schema, value }: Props) {
           schema={schema}
           onChange={onChange}
         />
+        <BindingControl moduleId={moduleId} prop={prop} schema={schema} />
       </Stack>
     );
   }
