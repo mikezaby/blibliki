@@ -37,6 +37,18 @@ describe("bindableControls", () => {
     expect(frequency?.min).toBeLessThan(frequency?.max ?? 0);
   });
 
+  it("carries the schema's exp so bindings follow the slider curve", () => {
+    const controls = bindableControls([
+      { id: "f1", name: "Filter", moduleType: ModuleType.Filter },
+    ]);
+    const cutoff = controls.find((c) => c.control === "patch:f1:cutoff");
+
+    expect(cutoff?.exp).toBe(5);
+    expect(
+      controls.find((c) => c.control === "spectrum:spec1:low"),
+    ).toBeUndefined();
+  });
+
   it("labels an unknown control by its raw name", () => {
     expect(controlLabel(bindableControls(modules), "patch:gone:x")).toBe(
       "patch:gone:x",

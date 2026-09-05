@@ -6,6 +6,7 @@ export type BindableControl = {
   group: "Spectrum" | "Audio";
   min: number;
   max: number;
+  exp?: number;
 };
 
 type ModuleInfo = { id: string; name: string; moduleType: ModuleType };
@@ -41,6 +42,7 @@ export function bindableControls(modules: ModuleInfo[]): BindableControl[] {
         group: "Audio",
         min: propSchema.min,
         max: propSchema.max,
+        exp: propSchema.exp,
       });
     }
   }
