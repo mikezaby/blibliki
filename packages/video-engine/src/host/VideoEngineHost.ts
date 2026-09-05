@@ -142,7 +142,6 @@ export class VideoEngineHost {
         });
         return;
       case "error":
-        this.views.clear();
         this.errorListeners.forEach((listener) => {
           listener(message.message);
         });
@@ -150,6 +149,9 @@ export class VideoEngineHost {
       case "spectrumBuffer":
         this.spare.set(message.moduleId, message.bins);
         this.inFlight.delete(message.moduleId);
+        return;
+      case "viewsDropped":
+        this.views.clear();
         return;
       case "ready":
         return;

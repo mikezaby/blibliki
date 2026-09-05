@@ -30,6 +30,7 @@ export type WorkerMessage =
   | { type: "ready" }
   | { type: "patch"; patch: IVideoPatch }
   | { type: "spectrumBuffer"; moduleId: string; bins: Float32Array }
+  | { type: "viewsDropped" }
   | { type: "error"; message: string };
 
 export type GraphMessage = Exclude<

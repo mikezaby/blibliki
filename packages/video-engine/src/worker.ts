@@ -52,6 +52,7 @@ function frame(now: number) {
   } catch (error) {
     fail(error);
     views.clear();
+    post({ type: "viewsDropped" });
     stop();
   }
 }

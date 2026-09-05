@@ -107,16 +107,24 @@ describe("VideoEngineHost spectrum tick", () => {
     expect(sent("spectrum")).toHaveLength(2);
   });
 
-  it("stops reading after the worker reports an error", () => {
+  it("stops reading only when the worker drops its views", () => {
     const bins = new Float32Array([-30, -40]);
     const { host, canvas, tick, sent, reply } = setup(() => [
       { id: "m1", bins },
     ]);
     host.attachView("preview", canvas, 15);
 
-    reply({ type: "error", message: "boom" });
+    reply({ type: "error", message: "bad graph command" });
     tick();
+    expect(sent("spectrum")).toHaveLength(1);
 
-    expect(sent("spectrum")).toEqual([]);
+    reply({
+      type: "spectrumBuffer",
+      moduleId: "m1",
+      bins: new Float32Array(2),
+    });
+    reply({ type: "viewsDropped" });
+    tick();
+    expect(sent("spectrum")).toHaveLength(1);
   });
 });
