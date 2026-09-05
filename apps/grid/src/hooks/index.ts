@@ -4,6 +4,7 @@ import {
   type ModuleTypeToStateMapping,
 } from "@blibliki/engine";
 import { IInstrument, IPatch, Instrument, Patch } from "@blibliki/models";
+import { inputsFor } from "@blibliki/video-engine";
 import { useAuth, useUser } from "@clerk/react";
 import type {
   Connection,
@@ -23,7 +24,7 @@ import type { ModuleProps } from "@/components/AudioModule/modulesSlice";
 import {
   onNodesChange as _onNodesChange,
   onEdgesChange as _onEdgesChange,
-  onConnect as _onConnect,
+  connect,
   addNode as _addNode,
 } from "@/components/Grid/gridNodesSlice";
 import type { RootState, AppDispatch } from "@/store";
@@ -236,6 +237,7 @@ export const useAudioModule = (id: string): AudioModuleData | undefined => {
 export function useGridNodes() {
   const dispatch = useAppDispatch();
   const { nodes, edges, viewport } = useAppSelector((state) => state.gridNodes);
+  const videoModules = useAppSelector((state) => state.videoPatch.modules);
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
@@ -245,12 +247,16 @@ export function useGridNodes() {
   );
 
   const onEdgesChange = useCallback(
-    (changes: EdgeChange[]) => dispatch(_onEdgesChange(changes)),
+    (changes: EdgeChange[]) => {
+      dispatch(_onEdgesChange(changes));
+    },
     [dispatch],
   );
 
   const onConnect = useCallback(
-    (connection: Connection) => dispatch(_onConnect(connection)),
+    (connection: Connection) => {
+      dispatch(connect(connection));
+    },
     [dispatch],
   );
 
@@ -264,12 +270,25 @@ export function useGridNodes() {
       const { source, sourceHandle, target, targetHandle } = connection;
       if (!source || !sourceHandle || !target || !targetHandle) return false;
 
+      const sourceIsVideo = videoModules.some((m) => m.id === source);
+      const targetIsVideo = videoModules.some((m) => m.id === target);
+      if (sourceIsVideo !== targetIsVideo) return false;
+      if (sourceIsVideo) {
+        const targetModule = videoModules.find((m) => m.id === target);
+        return (
+          source !== target &&
+          sourceHandle === "out" &&
+          targetModule !== undefined &&
+          inputsFor(targetModule.moduleType).includes(targetHandle)
+        );
+      }
+
       return Engine.current.validRoute({
         source: { moduleId: source, ioName: sourceHandle },
         destination: { moduleId: target, ioName: targetHandle },
       });
     },
-    [],
+    [videoModules],
   );
 
   return {

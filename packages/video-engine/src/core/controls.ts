@@ -7,6 +7,9 @@ export type IBinding = {
   inMax: number;
   outMin: number;
   outMax: number;
+  // Curve of the source control's slider (value = min + t^exp * range), so a
+  // bound prop follows slider position rather than the raw value.
+  exp?: number;
 };
 
 export type ControlValues = ReadonlyMap<string, number>;
@@ -17,9 +20,14 @@ export function mapRange(
   inMax: number,
   outMin: number,
   outMax: number,
+  exp = 1,
 ): number {
   if (inMax === inMin) return outMin;
-  const t = Math.min(1, Math.max(0, (value - inMin) / (inMax - inMin)));
+  const normalized = Math.min(
+    1,
+    Math.max(0, (value - inMin) / (inMax - inMin)),
+  );
+  const t = exp === 1 ? normalized : Math.pow(normalized, 1 / exp);
 
   return outMin + t * (outMax - outMin);
 }
@@ -42,6 +50,7 @@ export function applyBindings<P extends Record<string, unknown>>(
         binding.inMax,
         binding.outMin,
         binding.outMax,
+        binding.exp,
       ),
     };
   }
@@ -53,6 +62,7 @@ export function applyBindings<P extends Record<string, unknown>>(
 // patch needs a specific frequency range.
 export function spectrumToControls(
   bins: Float32Array,
+  prefix = "spectrum",
   minDb = -100,
   maxDb = -30,
 ): Record<string, number> {
@@ -64,9 +74,9 @@ export function spectrumToControls(
     values.length === 0 ? 0 : values.reduce((a, b) => a + b, 0) / values.length;
 
   return {
-    "spectrum:low": mean(normalized.slice(0, third)),
-    "spectrum:mid": mean(normalized.slice(third, third * 2)),
-    "spectrum:high": mean(normalized.slice(third * 2)),
-    "spectrum:level": mean(normalized),
+    [`${prefix}:low`]: mean(normalized.slice(0, third)),
+    [`${prefix}:mid`]: mean(normalized.slice(third, third * 2)),
+    [`${prefix}:high`]: mean(normalized.slice(third * 2)),
+    [`${prefix}:level`]: mean(normalized),
   };
 }

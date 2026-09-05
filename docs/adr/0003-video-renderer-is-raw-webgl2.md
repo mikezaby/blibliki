@@ -5,8 +5,7 @@ Date: 2026-09-03. Status: accepted. Context: GitHub #62,
 
 ## Context
 
-The video engine is a graph of texture passes (source, transform, merge,
-overlay, output) rendered in a worker on an `OffscreenCanvas`. The visuals
+The video engine is a graph of texture passes (source, transform, merge, output) rendered in a worker on an `OffscreenCanvas`. The visuals
 are 2D for now.
 
 ## Decision

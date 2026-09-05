@@ -44,6 +44,13 @@ describe("AudioNode selected visibility", () => {
       indicatorToneClass: "io-indicator--midi",
       labelToneClass: "io-label--midi",
     });
+
+    expect(getIOToneClasses("TextureInput")).toEqual({
+      tone: "texture",
+      handleToneClass: "io-handle--texture",
+      indicatorToneClass: "io-indicator--texture",
+      labelToneClass: "io-label--texture",
+    });
   });
 
   it("does not use gradient styling in AudioNode component", () => {
@@ -79,6 +86,9 @@ describe("AudioNode selected visibility", () => {
       ".io-handle--midi {\n  background: var(--ui-color-secondary-500);",
     );
     expect(styles).toContain("var(--ui-color-secondary-600)");
+    expect(styles).toContain(
+      ".io-handle--texture {\n  background: var(--ui-color-success-500);",
+    );
     expect(styles).not.toContain(
       ".io-handle--midi {\n  background: var(--ui-color-info-500);",
     );

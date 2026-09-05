@@ -13,8 +13,16 @@ export function handleMessage(
         engine.setControls(message.values);
         return [];
       case "spectrum":
-        engine.setControls(spectrumToControls(message.bins));
-        return [{ type: "spectrumBuffer", bins: message.bins }];
+        engine.setControls(
+          spectrumToControls(message.bins, `spectrum:${message.moduleId}`),
+        );
+        return [
+          {
+            type: "spectrumBuffer",
+            moduleId: message.moduleId,
+            bins: message.bins,
+          },
+        ];
       case "load":
         engine.load(message.patch);
         break;

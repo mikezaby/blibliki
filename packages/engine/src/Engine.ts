@@ -163,6 +163,7 @@ export class Engine {
       module.voices = params.changes.voices;
     }
 
+    module.triggerPropsUpdate();
     this.syncMidiControllerValues(module.id);
 
     return module.serialize();

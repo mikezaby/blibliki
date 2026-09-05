@@ -5,9 +5,16 @@ import { IRoute } from "./core/Routes";
 import { IBinding } from "./core/controls";
 
 export type HostMessage =
-  | { type: "init"; canvas: OffscreenCanvas; width: number; height: number }
-  | { type: "resize"; width: number; height: number }
-  | { type: "detach" }
+  | {
+      type: "attachView";
+      id: string;
+      canvas: OffscreenCanvas;
+      width: number;
+      height: number;
+      maxFps: number;
+    }
+  | { type: "resizeView"; id: string; width: number; height: number }
+  | { type: "detachView"; id: string }
   | { type: "load"; patch: IVideoPatch }
   | { type: "addModule"; module: ICreateVideoModule }
   | { type: "removeModule"; id: string }
@@ -17,15 +24,16 @@ export type HostMessage =
   | { type: "setBinding"; binding: IBinding }
   | { type: "removeBinding"; id: string }
   | { type: "controls"; values: Record<string, number> }
-  | { type: "spectrum"; bins: Float32Array };
+  | { type: "spectrum"; moduleId: string; bins: Float32Array };
 
 export type WorkerMessage =
   | { type: "ready" }
   | { type: "patch"; patch: IVideoPatch }
-  | { type: "spectrumBuffer"; bins: Float32Array }
+  | { type: "spectrumBuffer"; moduleId: string; bins: Float32Array }
+  | { type: "viewsDropped" }
   | { type: "error"; message: string };
 
 export type GraphMessage = Exclude<
   HostMessage,
-  { type: "init" } | { type: "resize" } | { type: "detach" }
+  { type: "attachView" } | { type: "resizeView" } | { type: "detachView" }
 >;

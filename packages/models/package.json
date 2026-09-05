@@ -38,6 +38,7 @@
     "@blibliki/engine": "workspace:^",
     "@blibliki/instrument": "workspace:^",
     "@blibliki/utils": "workspace:^",
+    "@blibliki/video-engine": "workspace:^",
     "es-toolkit": "catalog:utils",
     "firebase": "12.17.1"
   }

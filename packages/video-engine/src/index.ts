@@ -1,7 +1,12 @@
 export { VideoModule } from "./core/Module";
 export type { ICreateVideoModule, IVideoModule } from "./core/Module";
 export type { ModulePropSchema, PropSchema } from "./core/schema";
-export { createModule, VideoModuleType } from "./modules";
+export {
+  createModule,
+  inputsFor,
+  videoModuleSchemas,
+  VideoModuleType,
+} from "./modules";
 export type { VideoPropsMapping } from "./modules";
 export { Routes } from "./core/Routes";
 export type { IPlug, IRoute } from "./core/Routes";
@@ -14,6 +19,9 @@ export type { IVideoPatch } from "./VideoEngine";
 export type { GraphMessage, HostMessage, WorkerMessage } from "./protocol";
 export { handleMessage } from "./handleMessage";
 export { VideoEngineHost } from "./host/VideoEngineHost";
-export type { VideoEngineHostOptions } from "./host/VideoEngineHost";
+export type {
+  SpectrumSource,
+  VideoEngineHostOptions,
+} from "./host/VideoEngineHost";
 export type { PatchSource } from "./host/mirror";
 export { propsToControls } from "./host/mirror";

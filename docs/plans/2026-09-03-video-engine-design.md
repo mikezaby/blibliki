@@ -120,8 +120,8 @@ The minimum that proves the architecture:
 
 - Source: solid colour or gradient
 - Transform: one shader effect (hue rotate)
-- Merge: blend two textures by a mix amount
-- Overlay: composite one texture over another with alpha
+- Merge: combine two textures by a mode (crossfade, overlay, vertical,
+  horizontal or diagonal split) and an amount
 - Output: blits to the canvas
 
 Camera and video-file sources come later; they need main-thread capture and
@@ -139,9 +139,13 @@ input range and an output range. One bus, not a module type per binding.
 One discriminated message union exported from the package; the grid and any
 future host share the types.
 
-Host to worker: `init` (transferred canvas), `load` (full video patch),
-graph commands (`addModule`, `updateProps`, `addRoute` and their removes),
-`controls` (mirrored audio props), `spectrum` (transferred `Float32Array`).
+Host to worker: `attachView`, `resizeView`, `detachView` (a view is a
+transferred canvas with its own size and frame-rate cap; the worker renders
+into an internal canvas and copies frames to every view), `load` (full video
+patch), graph commands (`addModule`, `updateProps`, `addRoute` and their
+removes), `controls` (mirrored audio props), `spectrum` (a Spectrum module id
+and its transferred `Float32Array`; bands are named `spectrum:<moduleId>:low`
+and so on).
 
 Worker to host: `ready`, `patch` (state echoed after each command), `error`.
 
@@ -157,8 +161,8 @@ and forwards everything. The grid uses this class and nothing lower.
 - A bound control with no value yet keeps the prop's last value; it never
   snaps to zero.
 - A lost WebGL context recompiles shaders and continues.
-- A closed projector window pauses rendering; the graph stays alive until a
-  new canvas arrives, so the patch survives reopening.
+- Detaching the last view stops rendering; the graph stays alive, so the
+  patch survives reopening the projector.
 - Anything else the worker reports as `error` and the host surfaces it.
 
 ## Testing

@@ -185,7 +185,8 @@ vi.mock("@blibliki/engine", async (importOriginal) => {
   };
 });
 
-vi.mock("@blibliki/utils", () => ({
+vi.mock("@blibliki/utils", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@blibliki/utils")>()),
   Context: class {
     constructor(contextConf?: unknown) {
       contextConstructorMock(contextConf);

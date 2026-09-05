@@ -418,6 +418,9 @@ importers:
       '@blibliki/utils':
         specifier: workspace:^
         version: link:../utils
+      '@blibliki/video-engine':
+        specifier: workspace:^
+        version: link:../video-engine
       es-toolkit:
         specifier: catalog:utils
         version: 1.50.0
