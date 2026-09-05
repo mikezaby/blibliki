@@ -1,6 +1,7 @@
 import { Button, Stack } from "@blibliki/ui";
 import { Projector } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { addNotification } from "@/notificationsSlice";
 import { store } from "@/store";
 import { ensureVideoHost } from "@/video/videoHost";
 
@@ -38,7 +39,14 @@ export default function VisualsBody({ id }: { id: string }) {
         variant="contained"
         color="neutral"
         onClick={() => {
-          ensureVideoHost(store).open();
+          if (ensureVideoHost(store).open()) return;
+          store.dispatch(
+            addNotification({
+              type: "warning",
+              title: "Projector blocked",
+              message: "Allow popups for this site to open the projector.",
+            }),
+          );
         }}
       >
         <Projector className="h-4 w-4" />

@@ -1040,12 +1040,13 @@ In `apps/grid/src/hooks/index.ts`, `useGridNodes`:
 - `onEdgesChange` and `onConnect` dispatch the thunks:
   `dispatch(_onEdgesChange(changes))` stays (it now imports the thunk) and
   `onConnect` becomes `dispatch(connect(connection))`.
-- `isValidConnection` reads `nodes` and `videoModules` from the store
-  (add `const videoModules = useAppSelector((state) => state.videoPatch.modules);`):
+- `isValidConnection` reads `videoModules` from the store
+  (add `const videoModules = useAppSelector((state) => state.videoPatch.modules);`)
+  and lists only `[videoModules]` in its deps, since `nodes` changes identity
+  on every drag frame:
 ```ts
-      const video = videoNodeIds(nodes);
-      const sourceIsVideo = video.has(source);
-      const targetIsVideo = video.has(target);
+      const sourceIsVideo = videoModules.some((m) => m.id === source);
+      const targetIsVideo = videoModules.some((m) => m.id === target);
       if (sourceIsVideo !== targetIsVideo) return false;
       if (sourceIsVideo) {
         const targetModule = videoModules.find((m) => m.id === target);
