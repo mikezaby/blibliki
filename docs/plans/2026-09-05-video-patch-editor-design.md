@@ -1,6 +1,6 @@
 # Video patch editor in the grid: design
 
-Status: design agreed, not started. Follows
+Status: implemented. Follows
 `docs/plans/2026-09-03-video-engine-design.md` (issue #62). Decision recorded
 in `docs/adr/0004-video-patch-lives-in-the-audio-patch.md`.
 
