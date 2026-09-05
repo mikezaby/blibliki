@@ -10,6 +10,7 @@ import devicesReducer from "@/devicesSlice";
 import globalReducer from "@/globalSlice";
 import notificationsReducer from "@/notificationsSlice";
 import patchReducer from "@/patchSlice";
+import videoPatchReducer from "@/video/videoPatchSlice";
 
 export const store = configureStore({
   reducer: {
@@ -24,6 +25,7 @@ export const store = configureStore({
     patch: patchReducer,
     devices: devicesReducer,
     notifications: notificationsReducer,
+    videoPatch: videoPatchReducer,
   },
   devTools: false,
 });
