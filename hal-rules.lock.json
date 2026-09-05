@@ -11,6 +11,10 @@
     "manual-analyzer": {
       "source": "pack",
       "path": "research/manual-analyzer"
+    },
+    "project-new-task": {
+      "source": "pack",
+      "path": "workflow/project-new-task"
     }
   }
 }
