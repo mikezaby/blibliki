@@ -26,6 +26,12 @@ vi.mock("@blibliki/instrument/react", () => ({
   },
 }));
 
+// The Visuals button reads the engine id from the store; it has its own
+// worker and popup and is not what this test is about.
+vi.mock("../../src/components/Instruments/VisualsButton", () => ({
+  default: () => null,
+}));
+
 vi.mock("@tanstack/react-router", () => ({
   Link: ({
     children,
