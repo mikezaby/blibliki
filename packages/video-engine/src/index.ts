@@ -13,3 +13,7 @@ export { VideoEngine } from "./VideoEngine";
 export type { IVideoPatch } from "./VideoEngine";
 export type { GraphMessage, HostMessage, WorkerMessage } from "./protocol";
 export { handleMessage } from "./handleMessage";
+export { VideoEngineHost } from "./host/VideoEngineHost";
+export type { VideoEngineHostOptions } from "./host/VideoEngineHost";
+export type { PatchSource } from "./host/mirror";
+export { propsToControls } from "./host/mirror";
