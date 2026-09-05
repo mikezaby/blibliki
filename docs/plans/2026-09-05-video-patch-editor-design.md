@@ -36,7 +36,9 @@ Every numeric prop on a video node gets a link icon beside its control. It
 opens a picker with two groups: spectrum bands (low, mid, high, level) from
 each Spectrum module in the audio patch, listed by module name, and every
 numeric prop of every audio module, also by module name. Choosing one and
-setting an input and output range creates a binding. A bound prop shows its
+setting an input and output range creates a binding. An audio prop with an
+exponential slider is followed in slider space, so the video prop tracks the
+knob's travel rather than its raw value. A bound prop shows its
 control name under the slider. To make visuals react to sound: patch audio into
 a Spectrum module, then link a video prop to one of its bands. This replaces the
 bootstrap's "first Spectrum module in the patch" shortcut.

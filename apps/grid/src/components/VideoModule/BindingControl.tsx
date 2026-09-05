@@ -47,6 +47,7 @@ export default function BindingControl({ moduleId, prop, schema }: Props) {
   );
 
   const [control, setControl] = useState(binding?.control ?? "");
+  const [exp, setExp] = useState(binding?.exp);
   const [range, setRange] = useState({
     inMin: binding?.inMin ?? 0,
     inMax: binding?.inMax ?? 1,
@@ -59,12 +60,13 @@ export default function BindingControl({ moduleId, prop, schema }: Props) {
     setControl(next);
     if (chosen) {
       setRange((r) => ({ ...r, inMin: chosen.min, inMax: chosen.max }));
+      setExp(chosen.exp);
     }
   };
 
   const save = () => {
     if (!control) return;
-    dispatch(setVideoBinding({ id, moduleId, prop, control, ...range }));
+    dispatch(setVideoBinding({ id, moduleId, prop, control, exp, ...range }));
   };
 
   const unlink = () => {
