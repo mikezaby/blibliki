@@ -114,6 +114,9 @@ importers:
       '@blibliki/utils':
         specifier: workspace:^
         version: link:../../packages/utils
+      '@blibliki/video-engine':
+        specifier: workspace:^
+        version: link:../../packages/video-engine
       '@clerk/react':
         specifier: 6.14.2
         version: 6.14.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
