@@ -1,4 +1,3 @@
-import { IIOSerialize } from "@blibliki/engine";
 import {
   Dialog,
   DialogContent,
@@ -19,9 +18,11 @@ import { useAudioModule } from "@/hooks";
 import { cn } from "@/lib/utils";
 import Name from "../AudioModule/attributes/Name";
 import Voices from "../AudioModule/attributes/Voices";
+import VideoNode from "./VideoNode";
 
 export const NodeTypes = {
   audioNode: AudioNode,
+  videoNode: VideoNode,
 };
 
 export const getNodeContainerClassName = (selected: boolean) =>
@@ -144,7 +145,7 @@ export default function AudioNode(props: NodeProps) {
   );
 }
 
-export function IO({ io }: { io: Pick<IIOSerialize, "name" | "ioType"> }) {
+export function IO({ io }: { io: { name: string; ioType: string } }) {
   const handleProps = useMemo(() => {
     const isInput = io.ioType.includes("Input");
     const position = isInput ? Position.Left : Position.Right;

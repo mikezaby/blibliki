@@ -6,10 +6,12 @@ import {
   Surface,
   Text,
 } from "@blibliki/ui";
+import { VideoModuleType } from "@blibliki/video-engine";
 import { PanelLeftClose, PanelLeftOpen, Blocks } from "lucide-react";
 import { useState, DragEvent } from "react";
 import { AvailableModules } from "@/components/AudioModule/modulesSlice";
 import useDrag from "@/components/Grid/useDrag";
+import { VIDEO_MODULE_NAMES } from "@/video/videoPatchSlice";
 
 const SupportedModules = Object.values(AvailableModules)
   .map(({ moduleType }) => moduleType)
@@ -82,6 +84,34 @@ export default function AudioModules() {
                   <Stack direction="row" align="center" gap={2}>
                     <div className="h-2 w-2 rounded-full bg-linear-to-br from-brand to-brand-secondary transition-transform duration-200 group-hover:scale-110" />
                     <span>{moduleName}</span>
+                  </Stack>
+                </Button>
+              </li>
+            ))}
+          </ul>
+
+          <Divider className="my-2" />
+          <Stack direction="row" align="center" gap={2} className="px-4 py-2">
+            <Text asChild size="sm" weight="semibold">
+              <h2>Video</h2>
+            </Text>
+          </Stack>
+          <ul className="px-3 space-y-1">
+            {Object.values(VideoModuleType).map((type) => (
+              <li key={type}>
+                <Button
+                  color="neutral"
+                  variant="contained"
+                  size="md"
+                  className="w-full cursor-move justify-start"
+                  onDragStart={(event: DragEvent) => {
+                    onDragStart(event, `video:${type}`);
+                  }}
+                  draggable
+                >
+                  <Stack direction="row" align="center" gap={2}>
+                    <div className="io-indicator--texture h-2 w-2 rounded-full transition-transform duration-200 group-hover:scale-110" />
+                    <span>{VIDEO_MODULE_NAMES[type]}</span>
                   </Stack>
                 </Button>
               </li>

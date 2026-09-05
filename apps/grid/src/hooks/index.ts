@@ -26,7 +26,6 @@ import {
   onEdgesChange as _onEdgesChange,
   connect,
   addNode as _addNode,
-  videoNodeIds,
 } from "@/components/Grid/gridNodesSlice";
 import type { RootState, AppDispatch } from "@/store";
 
@@ -271,9 +270,8 @@ export function useGridNodes() {
       const { source, sourceHandle, target, targetHandle } = connection;
       if (!source || !sourceHandle || !target || !targetHandle) return false;
 
-      const video = videoNodeIds(nodes);
-      const sourceIsVideo = video.has(source);
-      const targetIsVideo = video.has(target);
+      const sourceIsVideo = videoModules.some((m) => m.id === source);
+      const targetIsVideo = videoModules.some((m) => m.id === target);
       if (sourceIsVideo !== targetIsVideo) return false;
       if (sourceIsVideo) {
         const targetModule = videoModules.find((m) => m.id === target);
@@ -290,7 +288,7 @@ export function useGridNodes() {
         destination: { moduleId: target, ioName: targetHandle },
       });
     },
-    [nodes, videoModules],
+    [videoModules],
   );
 
   return {
