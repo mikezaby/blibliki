@@ -120,8 +120,8 @@ The minimum that proves the architecture:
 
 - Source: solid colour or gradient
 - Transform: one shader effect (hue rotate)
-- Merge: blend two textures by a mix amount
-- Overlay: composite one texture over another with alpha
+- Merge: combine two textures by a mode (crossfade, overlay, vertical,
+  horizontal or diagonal split) and an amount
 - Output: blits to the canvas
 
 Camera and video-file sources come later; they need main-thread capture and

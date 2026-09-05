@@ -44,18 +44,26 @@ void main() {
 
   [VideoModuleType.Merge]: `${HEADER}
 uniform sampler2D u_a, u_b;
-uniform float u_mix;
+uniform float u_mode, u_amount;
 void main() {
-  outColor = mix(texture(u_a, v_uv), texture(u_b, v_uv), u_mix);
-}`,
-
-  [VideoModuleType.Overlay]: `${HEADER}
-uniform sampler2D u_base, u_layer;
-uniform float u_opacity;
-void main() {
-  vec4 base = texture(u_base, v_uv);
-  vec4 layer = texture(u_layer, v_uv);
-  outColor = vec4(mix(base.rgb, layer.rgb, layer.a * u_opacity), 1.0);
+  vec4 a = texture(u_a, v_uv);
+  vec4 b = texture(u_b, v_uv);
+  int mode = int(u_mode + 0.5);
+  if (mode == 1) {
+    outColor = vec4(mix(a.rgb, b.rgb, b.a * u_amount), 1.0);
+    return;
+  }
+  // Input a takes the left, top, or top-left side; uv.y runs bottom-up.
+  float down = 1.0 - v_uv.y;
+  float edge = mode == 2 ? v_uv.x
+    : mode == 3 ? down
+    : mode == 4 ? (v_uv.x + down) * 0.5
+    : -1.0;
+  if (edge >= 0.0) {
+    outColor = edge < u_amount ? a : b;
+    return;
+  }
+  outColor = mix(a, b, u_amount);
 }`,
 
   [VideoModuleType.Output]: `${HEADER}
