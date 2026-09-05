@@ -1,6 +1,6 @@
 # Video engine: design
 
-Status: design agreed, not started. GitHub issue #62. Decisions recorded in
+Status: implemented (bootstrap). GitHub issue #62. Decisions recorded in
 `docs/adr/0001` to `0003`.
 
 ## Goal
