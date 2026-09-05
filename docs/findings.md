@@ -39,3 +39,24 @@ canvas position.
 `_currentId`, so `Engine.current` resolves to the disposed instance until the
 next `load`. Harmless today, a trap for anything that mounts before `load`.
 Clear `_currentId` in `dispose` when it matches `this.id`.
+
+## Copy and paste skips video nodes
+
+`apps/grid/src/components/Grid/clipboard.ts` builds its snapshot from audio
+modules only, so selected video nodes are silently left out of a copy. Extend
+the snapshot with video modules, routes and bindings, and paste them through
+`videoPatchSlice`.
+
+## Bound video props do not show the live value
+
+`apps/grid/src/components/VideoModule/BindingControl.tsx` shows the stored
+prop value and the control label; the projector follows the control but the
+slider does not. Add a per-frame `values` message from the worker carrying
+effective props, and render bound fields from it.
+
+## Binding dialog keeps stale state when a binding is removed elsewhere
+
+`BindingControl.tsx` seeds its dialog state from the binding once on mount.
+Deleting the Spectrum module a prop is bound to clears the label but leaves
+the dialog's chosen control until the node remounts, and Save leaves the
+dialog open. Key the dialog body on the binding's control and close on Save.
