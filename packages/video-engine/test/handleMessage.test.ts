@@ -67,13 +67,53 @@ describe("handleMessage", () => {
     expect(engine.passes()[0]?.uniforms.amount).toBe(180);
   });
 
+  it("binds a prop to a named spectrum band", () => {
+    const engine = new VideoEngine();
+    engine.addModule({
+      id: "fx",
+      name: "fx",
+      moduleType: VideoModuleType.HueRotate,
+    });
+    engine.addModule({
+      id: "o",
+      name: "o",
+      moduleType: VideoModuleType.Output,
+    });
+    engine.addRoute({
+      source: { moduleId: "fx", ioName: "out" },
+      destination: { moduleId: "o", ioName: "in" },
+    });
+    engine.setBinding({
+      id: "b",
+      moduleId: "fx",
+      prop: "amount",
+      control: "spectrum:m1:low",
+      inMin: 0,
+      inMax: 1,
+      outMin: 0,
+      outMax: 360,
+    });
+
+    handleMessage(engine, {
+      type: "spectrum",
+      moduleId: "m1",
+      bins: new Float32Array([-30, -30, -30]),
+    });
+
+    expect(engine.passes()[0]?.uniforms.amount).toBe(360);
+  });
+
   it("turns spectrum bins into controls and hands the buffer back", () => {
     const engine = new VideoEngine();
     const bins = new Float32Array([-30, -30, -30]);
 
-    const out = handleMessage(engine, { type: "spectrum", bins });
+    const out = handleMessage(engine, {
+      type: "spectrum",
+      moduleId: "m1",
+      bins,
+    });
 
-    expect(out).toEqual([{ type: "spectrumBuffer", bins }]);
+    expect(out).toEqual([{ type: "spectrumBuffer", moduleId: "m1", bins }]);
   });
 
   it("reports a thrown error instead of crashing", () => {

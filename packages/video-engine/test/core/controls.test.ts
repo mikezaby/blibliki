@@ -60,6 +60,17 @@ describe("spectrumToControls", () => {
     });
   });
 
+  it("names the bands by the given prefix", () => {
+    const bins = new Float32Array([-30, -30, -100, -100, -65, -65]);
+
+    expect(spectrumToControls(bins, "spectrum:m1")).toEqual({
+      "spectrum:m1:low": 1,
+      "spectrum:m1:mid": 0,
+      "spectrum:m1:high": 0.5,
+      "spectrum:m1:level": 0.5,
+    });
+  });
+
   it("treats silence (-Infinity) as zero", () => {
     const bins = new Float32Array(6).fill(-Infinity);
 
