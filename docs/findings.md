@@ -24,3 +24,18 @@ lengths", "updates output on position changes without starting
 transport"), on `main` as well as on feature branches. Each test waits
 on a real-time context; the 10 s hook timeout is hit under load. Make
 those tests use an offline context or raise their timeout.
+
+## Palette drag buttons have no keyboard path
+
+The audio and video module buttons in
+`apps/grid/src/components/Grid/AudioModules.tsx` add a module only through
+HTML drag and drop, so keyboard users cannot add one. Give each button an
+`onClick` (or Enter handler) that dispatches the same add thunk at a default
+canvas position.
+
+## Engine.current keeps returning a disposed engine
+
+`Engine.dispose` in `packages/engine/src/Engine.ts` never clears
+`_currentId`, so `Engine.current` resolves to the disposed instance until the
+next `load`. Harmless today, a trap for anything that mounts before `load`.
+Clear `_currentId` in `dispose` when it matches `this.id`.

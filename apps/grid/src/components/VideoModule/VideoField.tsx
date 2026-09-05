@@ -1,4 +1,4 @@
-import type { PropSchema } from "@blibliki/engine";
+import type { EnumProp, PropSchema } from "@blibliki/engine";
 import { Stack } from "@blibliki/ui";
 import {
   InputField,
@@ -24,7 +24,7 @@ export default function VideoField({ moduleId, prop, schema, value }: Props) {
     return (
       <SelectField
         value={value as string}
-        schema={schema as never}
+        schema={schema as EnumProp<string>}
         onChange={onChange}
       />
     );

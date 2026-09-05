@@ -3,13 +3,16 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import VisualsBody from "../../src/components/VideoModule/VisualsBody";
 
-const { host } = vi.hoisted(() => ({
+const { host, store } = vi.hoisted(() => ({
   host: { attachView: vi.fn(), detachView: vi.fn(), open: vi.fn(() => true) },
+  store: { dispatch: vi.fn() },
 }));
 
 vi.mock("../../src/video/videoHost", () => ({
   ensureVideoHost: () => host,
 }));
+
+vi.mock("../../src/store", () => ({ store }));
 
 describe("VisualsBody", () => {
   afterEach(cleanup);
@@ -34,5 +37,20 @@ describe("VisualsBody", () => {
     fireEvent.click(screen.getByRole("button", { name: /open projector/i }));
 
     expect(host.open).toHaveBeenCalled();
+    expect(store.dispatch).not.toHaveBeenCalled();
+  });
+
+  it("warns when the browser blocks the projector popup", () => {
+    host.open.mockReturnValueOnce(false);
+    render(<VisualsBody id="out" />);
+
+    fireEvent.click(screen.getByRole("button", { name: /open projector/i }));
+
+    expect(store.dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "notifications/addNotification",
+        payload: expect.objectContaining({ title: "Projector blocked" }),
+      }),
+    );
   });
 });
