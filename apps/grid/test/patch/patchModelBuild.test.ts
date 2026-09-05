@@ -55,4 +55,12 @@ describe("Patch.build", () => {
     expect(patch.config.gridNodes.edges).toEqual([]);
     expect(patch.config.gridNodes.viewport).toEqual({ x: 42, y: 0, zoom: 1 });
   });
+
+  it("defaults to an empty video patch", () => {
+    expect(Patch.build().config.video).toEqual({
+      modules: [],
+      routes: [],
+      bindings: [],
+    });
+  });
 });

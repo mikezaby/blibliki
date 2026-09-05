@@ -5,6 +5,7 @@ import {
   IRoute,
 } from "@blibliki/engine";
 import { AnyObject, Optional, pick } from "@blibliki/utils";
+import type { IVideoPatch } from "@blibliki/video-engine";
 import { merge } from "es-toolkit";
 import {
   collection,
@@ -52,6 +53,7 @@ type Edge = {
   sourceHandle?: string | null;
   target: string;
   targetHandle?: string | null;
+  data?: AnyObject;
 };
 
 type IGridNodes = {
@@ -64,6 +66,7 @@ export type IConfig = {
   bpm: BPM;
   modules: IAnyModuleSerialize[];
   gridNodes: IGridNodes;
+  video?: IVideoPatch;
 };
 
 const DEFAULT_PATCH_NAME = "Init patch";
@@ -81,6 +84,7 @@ const DEFAULT_PATCH: IPatch = {
       edges: [],
       viewport: DEFAULT_VIEWPORT,
     },
+    video: { modules: [], routes: [], bindings: [] },
   },
 };
 
