@@ -33,13 +33,25 @@ export const getNodeContainerClassName = (selected: boolean) =>
       : "border-border-subtle hover:border-border-strong",
   );
 
-type IOTone = "audio" | "midi";
+type IOTone = "audio" | "midi" | "texture";
 
-const getIOTone = (ioType: string): IOTone =>
-  ioType.toLowerCase().includes("audio") ? "audio" : "midi";
+const getIOTone = (ioType: string): IOTone => {
+  const lower = ioType.toLowerCase();
+  if (lower.includes("texture")) return "texture";
+  return lower.includes("audio") ? "audio" : "midi";
+};
 
 export const getIOToneClasses = (ioType: string) => {
   const tone = getIOTone(ioType);
+
+  if (tone === "texture") {
+    return {
+      tone,
+      handleToneClass: "io-handle--texture",
+      indicatorToneClass: "io-indicator--texture",
+      labelToneClass: "io-label--texture",
+    };
+  }
 
   if (tone === "audio") {
     return {
@@ -71,7 +83,7 @@ export default function AudioNode(props: NodeProps) {
         {inputs.length > 0 && (
           <IOContainer type="input">
             {inputs.map((io) => (
-              <IO key={io.id} io={io} />
+              <IO key={io.name} io={io} />
             ))}
           </IOContainer>
         )}
@@ -100,7 +112,7 @@ export default function AudioNode(props: NodeProps) {
         {outputs.length > 0 && (
           <IOContainer type="output">
             {outputs.map((io) => (
-              <IO key={io.id} io={io} />
+              <IO key={io.name} io={io} />
             ))}
           </IOContainer>
         )}
@@ -132,7 +144,7 @@ export default function AudioNode(props: NodeProps) {
   );
 }
 
-function IO({ io }: { io: IIOSerialize }) {
+export function IO({ io }: { io: Pick<IIOSerialize, "name" | "ioType"> }) {
   const handleProps = useMemo(() => {
     const isInput = io.ioType.includes("Input");
     const position = isInput ? Position.Left : Position.Right;
@@ -177,7 +189,7 @@ function IO({ io }: { io: IIOSerialize }) {
   );
 }
 
-function IOContainer({
+export function IOContainer({
   children,
   type,
 }: {

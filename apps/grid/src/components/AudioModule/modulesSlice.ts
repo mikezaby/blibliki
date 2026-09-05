@@ -16,6 +16,7 @@ import {
 import type { XYPosition } from "@xyflow/react";
 import { addNode } from "@/components/Grid/gridNodesSlice";
 import { AppDispatch, RootState } from "@/store";
+import { removeBindingsForAudioModule } from "@/video/videoPatchSlice";
 import {
   addModuleProps,
   removeAllModuleProps,
@@ -339,6 +340,7 @@ export const removeModule =
     if (!moduleInfo) throw Error(`Audio module with id ${id} not exists`);
 
     Engine.current.removeModule(id);
+    dispatch(removeBindingsForAudioModule(id));
     dispatch(removeModuleInfo(id));
     dispatch(removeModuleProps(id));
     dispatch(removeModuleState(id));

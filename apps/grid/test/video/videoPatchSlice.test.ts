@@ -2,6 +2,7 @@
 import { VideoModuleType } from "@blibliki/video-engine";
 import { describe, expect, it } from "vitest";
 import reducer, {
+  addNewVideoModule,
   addVideoModule,
   addVideoRoute,
   EMPTY_VIDEO_PATCH,
@@ -52,6 +53,22 @@ function patch() {
   return reducer(state, setVideoBinding(binding));
 }
 
+function harness(videoPatch: typeof EMPTY_VIDEO_PATCH) {
+  const actions: { type: string; payload?: unknown }[] = [];
+  const getState = () => ({ videoPatch }) as never;
+  const dispatch = (action: unknown) => {
+    if (typeof action === "function") {
+      return (action as (d: typeof dispatch, g: typeof getState) => unknown)(
+        dispatch,
+        getState,
+      );
+    }
+    actions.push(action as { type: string; payload?: unknown });
+    return action;
+  };
+  return { actions, dispatch, getState };
+}
+
 describe("videoPatchSlice", () => {
   it("updates props by merging", () => {
     const state = reducer(
@@ -84,5 +101,42 @@ describe("videoPatchSlice", () => {
   it("drops bindings that read a removed audio module", () => {
     const state = reducer(patch(), removeBindingsForAudioModule("spec1"));
     expect(state.bindings).toEqual([]);
+  });
+
+  it("adds a video module and a videoNode grid node", () => {
+    const { actions, dispatch, getState } = harness(EMPTY_VIDEO_PATCH);
+
+    addNewVideoModule({
+      type: VideoModuleType.Output,
+      position: { x: 0, y: 0 },
+    })(dispatch as never, getState);
+
+    expect(actions.map((a) => a.type)).toEqual([
+      "videoPatch/addVideoModule",
+      "gridNodes/addNode",
+    ]);
+    expect(actions[1]?.payload).toMatchObject({ type: "videoNode" });
+  });
+
+  it("refuses a second Output module with a notification", () => {
+    const output = {
+      id: "out",
+      name: "Visuals",
+      moduleType: VideoModuleType.Output,
+      props: {},
+    };
+    const { actions, dispatch, getState } = harness({
+      ...EMPTY_VIDEO_PATCH,
+      modules: [output],
+    });
+
+    addNewVideoModule({
+      type: VideoModuleType.Output,
+      position: { x: 0, y: 0 },
+    })(dispatch as never, getState);
+
+    expect(actions.map((a) => a.type)).toEqual([
+      "notifications/addNotification",
+    ]);
   });
 });
