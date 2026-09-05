@@ -1,19 +1,41 @@
 import { ICreateVideoModule, VideoModule } from "@/core/Module";
-import { ModulePropSchema } from "@/core/schema";
+import { EnumProp, ModulePropSchema } from "@/core/schema";
 import { VideoModuleType } from ".";
 
-export type IMergeProps = { mix: number };
+// Order is the shader's u_mode index.
+export const MERGE_MODES = [
+  "crossfade",
+  "overlay",
+  "vertical",
+  "horizontal",
+  "diagonal",
+] as const;
 
-const DEFAULT_PROPS: IMergeProps = { mix: 0.5 };
+export type MergeMode = (typeof MERGE_MODES)[number];
 
-export const mergePropSchema: ModulePropSchema<IMergeProps> = {
-  mix: {
+// amount is the blend for crossfade, the layer opacity for overlay, and the
+// split position for the three splits.
+export type IMergeProps = { mode: MergeMode; amount: number };
+
+const DEFAULT_PROPS: IMergeProps = { mode: "crossfade", amount: 0.5 };
+
+export const mergePropSchema: ModulePropSchema<
+  IMergeProps,
+  { mode: EnumProp<MergeMode> }
+> = {
+  mode: {
+    kind: "enum",
+    options: [...MERGE_MODES],
+    label: "Mode",
+    shortLabel: "mode",
+  },
+  amount: {
     kind: "number",
     min: 0,
     max: 1,
     step: 0.01,
-    label: "Mix",
-    shortLabel: "mix",
+    label: "Amount",
+    shortLabel: "amt",
   },
 };
 

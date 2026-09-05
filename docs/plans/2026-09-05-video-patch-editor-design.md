@@ -17,8 +17,7 @@ bindings as cables.
 
 ## What you see on the canvas
 
-The module palette gets a Video section: Source, Hue Rotate, Merge, Overlay,
-Visuals. These are the five modules the video engine bootstrap ships.
+The module palette gets a Video section: Source, Hue Rotate, Merge, Visuals. These are the five modules the video engine bootstrap ships.
 
 Video nodes use the same node frame as audio nodes, with a third handle tone
 for texture connections (beside audio and MIDI) and a colored accent in the
@@ -93,8 +92,8 @@ and torn down with it, so the preview runs as soon as a Visuals node exists.
 
 - VideoNode, registered beside AudioNode in ReactFlow's node types. Same
   frame, texture-tone handles from the module's declared inputs and one
-  output, header accent, body by module type. Source, Hue Rotate, Merge and
-  Overlay bodies are sliders and one select built from the prop schema, so a
+  output, header accent, body by module type. Source, Hue Rotate and Merge
+  bodies are sliders and one select built from the prop schema, so a
   new module type with only number and enum props needs no new body.
   Visuals gets the preview canvas and the projector button.
 - BindingControl, the link icon next to each numeric prop: a popover with the
