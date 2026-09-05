@@ -24,6 +24,8 @@ export class Views {
   ) {
     const ctx = canvas.getContext("bitmaprenderer");
     if (!ctx) throw new Error("bitmaprenderer context is not available");
+    width = Math.max(1, width);
+    height = Math.max(1, height);
     canvas.width = width;
     canvas.height = height;
     this.views.set(id, {
@@ -40,6 +42,8 @@ export class Views {
   resize(id: string, width: number, height: number) {
     const view = this.views.get(id);
     if (!view) return;
+    width = Math.max(1, width);
+    height = Math.max(1, height);
     view.width = width;
     view.height = height;
     view.canvas.width = width;

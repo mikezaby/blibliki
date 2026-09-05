@@ -48,6 +48,15 @@ describe("Views", () => {
     expect(views.renderSize()).toEqual({ width: 320, height: 180 });
   });
 
+  it("clamps a 0x0 view to 1x1 so frame copies never reject", () => {
+    const views = new Views();
+    const a = fakeCanvas();
+    views.attach("preview", a.canvas, 0, 0, 15);
+
+    expect(a.canvas.width).toBe(1);
+    expect(views.due(0)[0]).toMatchObject({ width: 1, height: 1 });
+  });
+
   it("renderSize is 1x1 with no views", () => {
     expect(new Views().renderSize()).toEqual({ width: 1, height: 1 });
   });

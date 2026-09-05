@@ -19,6 +19,9 @@ export class VideoEngineHost {
   private worker: Worker;
   private projector: ProjectorWindow | null = null;
   private spare = new Map<string, Float32Array>();
+  // ponytail: an id stays in flight if the worker answers a spectrum message
+  // with error, and spare buffers of removed Spectrum modules are never
+  // dropped; a timeout or a module-removed message would fix both.
   private inFlight = new Set<string>();
   private views = new Set<string>();
   private frameHandle = 0;
@@ -48,12 +51,15 @@ export class VideoEngineHost {
       });
     });
 
-    this.frameHandle = requestAnimationFrame(this.tick);
+    if (options.readSpectrum) {
+      this.frameHandle = requestAnimationFrame(this.tick);
+    }
   }
 
   // The canvas is transferred; it must not have been drawn on and cannot be
   // attached twice. Callers create a fresh element per attach.
   attachView(id: string, canvas: HTMLCanvasElement, maxFps: number) {
+    if (this.disposed) return;
     const offscreen = canvas.transferControlToOffscreen();
     this.views.add(id);
     this.send(
@@ -136,6 +142,7 @@ export class VideoEngineHost {
         });
         return;
       case "error":
+        this.views.clear();
         this.errorListeners.forEach((listener) => {
           listener(message.message);
         });

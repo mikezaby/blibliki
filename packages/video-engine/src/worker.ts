@@ -42,9 +42,11 @@ function frame(now: number) {
       void createImageBitmap(renderer.canvas, {
         resizeWidth: view.width,
         resizeHeight: view.height,
-      }).then((bitmap) => {
-        view.ctx.transferFromImageBitmap(bitmap);
-      });
+      })
+        .then((bitmap) => {
+          view.ctx.transferFromImageBitmap(bitmap);
+        })
+        .catch(fail);
     }
     frameHandle = requestAnimationFrame(frame);
   } catch (error) {
@@ -66,7 +68,8 @@ self.onmessage = (event: MessageEvent<HostMessage>) => {
           message.height,
           message.maxFps,
         );
-        if (views.size === 1) frameHandle = requestAnimationFrame(frame);
+        cancelAnimationFrame(frameHandle);
+        frameHandle = requestAnimationFrame(frame);
         post({ type: "ready" });
         return;
       case "resizeView":
