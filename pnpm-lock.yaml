@@ -114,6 +114,9 @@ importers:
       '@blibliki/utils':
         specifier: workspace:^
         version: link:../../packages/utils
+      '@blibliki/video-engine':
+        specifier: workspace:^
+        version: link:../../packages/video-engine
       '@clerk/react':
         specifier: 6.14.2
         version: 6.14.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -537,6 +540,19 @@ importers:
       '@types/node':
         specifier: catalog:node
         version: 26.2.0
+      vitest:
+        specifier: catalog:test
+        version: 4.1.10(@types/node@26.2.0)(jsdom@30.0.1)(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.12))
+
+  packages/video-engine:
+    dependencies:
+      '@blibliki/utils':
+        specifier: workspace:^
+        version: link:../utils
+    devDependencies:
+      vite-tsconfig-paths:
+        specifier: catalog:vite
+        version: 6.1.1(typescript@6.0.3)(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.12))
       vitest:
         specifier: catalog:test
         version: 4.1.10(@types/node@26.2.0)(jsdom@30.0.1)(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.12))
@@ -2810,6 +2826,7 @@ packages:
   '@xmldom/xmldom@0.9.11':
     resolution: {integrity: sha512-tW8bcK3hsG0/uqSnNz6TK4BkcuZSezoU7DlnYssILmZDktPnSHHuDJJFM0AJv+13gz2r0iGdrj6qqKeUnxXEDg==}
     engines: {node: '>=14.6'}
+    deprecated: this version has critical issues, please update to the latest version
 
   '@xyflow/react@12.11.3':
     resolution: {integrity: sha512-G3jogHz2GWUtIOkhavUGno2YzY9u6fILIJBttfsBendb0/HWB90JG+sOTAvlIMEwyvq9zgy9V9ZQSwyQjR5QzQ==}
