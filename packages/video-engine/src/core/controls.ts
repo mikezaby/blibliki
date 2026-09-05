@@ -7,6 +7,9 @@ export type IBinding = {
   inMax: number;
   outMin: number;
   outMax: number;
+  // Curve of the source control's slider (value = min + t^exp * range), so a
+  // bound prop follows slider position rather than the raw value.
+  exp?: number;
 };
 
 export type ControlValues = ReadonlyMap<string, number>;
@@ -17,9 +20,14 @@ export function mapRange(
   inMax: number,
   outMin: number,
   outMax: number,
+  exp = 1,
 ): number {
   if (inMax === inMin) return outMin;
-  const t = Math.min(1, Math.max(0, (value - inMin) / (inMax - inMin)));
+  const normalized = Math.min(
+    1,
+    Math.max(0, (value - inMin) / (inMax - inMin)),
+  );
+  const t = exp === 1 ? normalized : Math.pow(normalized, 1 / exp);
 
   return outMin + t * (outMax - outMin);
 }
@@ -42,6 +50,7 @@ export function applyBindings<P extends Record<string, unknown>>(
         binding.inMax,
         binding.outMin,
         binding.outMax,
+        binding.exp,
       ),
     };
   }
