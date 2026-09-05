@@ -11,3 +11,5 @@ export { applyBindings, mapRange, spectrumToControls } from "./core/controls";
 export type { ControlValues, IBinding } from "./core/controls";
 export { VideoEngine } from "./VideoEngine";
 export type { IVideoPatch } from "./VideoEngine";
+export type { GraphMessage, HostMessage, WorkerMessage } from "./protocol";
+export { handleMessage } from "./handleMessage";
