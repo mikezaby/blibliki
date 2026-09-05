@@ -14,6 +14,13 @@ describe("mapRange", () => {
     expect(mapRange(0.5, 0, 1, 360, 0)).toBe(180);
   });
 
+  it("follows an exponential slider's position when exp is given", () => {
+    // With exp 2 over 0..100, a value of 25 sits at half the slider travel.
+    expect(mapRange(25, 0, 100, 0, 360, 2)).toBeCloseTo(180);
+    expect(mapRange(100, 0, 100, 0, 360, 2)).toBe(360);
+    expect(mapRange(0, 0, 100, 0, 360, 2)).toBe(0);
+  });
+
   it("returns outMin for a zero-width input range", () => {
     expect(mapRange(3, 2, 2, 10, 20)).toBe(10);
   });
@@ -39,6 +46,16 @@ describe("applyBindings", () => {
     );
 
     expect(props).toEqual({ hue: 180, spread: 1 });
+  });
+
+  it("applies the binding's exp", () => {
+    const props = applyBindings(
+      { hue: 10 },
+      [{ ...binding, inMax: 100, exp: 2 }],
+      new Map([["spectrum:low", 25]]),
+    );
+
+    expect(props.hue).toBeCloseTo(180);
   });
 
   it("keeps the stored prop when the control has no value yet", () => {
