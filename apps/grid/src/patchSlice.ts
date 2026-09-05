@@ -150,7 +150,7 @@ export const load =
     }
 
     dispatch(setBpm(bpm));
-    dispatch(setVideoPatch(config.video ?? EMPTY_VIDEO_PATCH));
+    dispatch(setVideoPatch({ ...EMPTY_VIDEO_PATCH, ...config.video }));
 
     dispatch(
       setAttributes({ patch: { id, name, userId }, status: "succeeded" }),
