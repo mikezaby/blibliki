@@ -17,12 +17,18 @@ import {
   useRef,
   type ReactNode,
 } from "react";
-import { useAppDispatch, useGridNodes, usePatch } from "@/hooks";
+import {
+  useAppDispatch,
+  useAppSelector,
+  useGridNodes,
+  usePatch,
+} from "@/hooks";
 import { store } from "@/store";
 import {
   GRID_CANVAS_BACKGROUND,
   GRID_CANVAS_PATTERN,
 } from "@/theme/gridCanvas";
+import { disposeVideoHost } from "@/video/videoHost";
 import AudioModules from "./AudioModules";
 import { NodeTypes } from "./AudioNode";
 import {
@@ -60,6 +66,7 @@ function GridCanvas({ children }: { children?: ReactNode }) {
   } = useGridNodes();
   const { onDrop, onDragOver } = useDrag();
   const dispatch = useAppDispatch();
+  const engineId = useAppSelector((state) => state.global.engineId);
   const lastPointerPositionRef = useRef<XYPosition | null>(null);
   const pasteIterationRef = useRef(0);
 
@@ -104,6 +111,13 @@ function GridCanvas({ children }: { children?: ReactNode }) {
   const handleCanvasMouseLeave = () => {
     lastPointerPositionRef.current = null;
   };
+
+  useEffect(
+    () => () => {
+      disposeVideoHost();
+    },
+    [engineId],
+  );
 
   useEffect(() => {
     window.addEventListener("copy", handleWindowCopy);

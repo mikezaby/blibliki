@@ -19,6 +19,11 @@ import { DEFAULT_PATCH_ID, defaultPatch } from "@/patch/defaultPatch";
 import { assertPatchPayloadHasNoUndefined } from "@/patch/patchPayloadValidation";
 import type { PatchViewMode } from "@/patch/viewMode";
 import { AppDispatch, RootState } from "@/store";
+import {
+  clearVideoPatch,
+  EMPTY_VIDEO_PATCH,
+  setVideoPatch,
+} from "@/video/videoPatchSlice";
 import { createEnginePropsUpdateQueue } from "./global/enginePropsUpdateQueue";
 import {
   bindTransportState,
@@ -145,6 +150,7 @@ export const load =
     }
 
     dispatch(setBpm(bpm));
+    dispatch(setVideoPatch({ ...EMPTY_VIDEO_PATCH, ...config.video }));
 
     dispatch(
       setAttributes({ patch: { id, name, userId }, status: "succeeded" }),
@@ -165,7 +171,7 @@ export const save =
     });
     const gridNodes = state.gridNodes;
     const bpm = state.global.bpm;
-    const config = { bpm, modules, gridNodes };
+    const config = { bpm, modules, gridNodes, video: state.videoPatch };
 
     try {
       const id = asNew ? undefined : originalPatch.id;
@@ -361,6 +367,7 @@ export const clearEngine = () => async (dispatch: AppDispatch) => {
   );
   dispatch(removeAllModules());
   dispatch(removeAllGridNodes());
+  dispatch(clearVideoPatch());
 };
 
 const disposeEngine = async (engine: Engine) => {

@@ -1,16 +1,15 @@
 import { assertNever } from "@blibliki/utils";
 import { ICreateVideoModule, VideoModule } from "@/core/Module";
-import HueRotate, { IHueRotateProps } from "./HueRotate";
-import Merge, { IMergeProps } from "./Merge";
-import Output, { IOutputProps } from "./Output";
-import Overlay, { IOverlayProps } from "./Overlay";
-import Source, { ISourceProps } from "./Source";
+import { PropSchema } from "@/core/schema";
+import HueRotate, { hueRotatePropSchema, IHueRotateProps } from "./HueRotate";
+import Merge, { IMergeProps, mergePropSchema } from "./Merge";
+import Output, { IOutputProps, outputPropSchema } from "./Output";
+import Source, { ISourceProps, sourcePropSchema } from "./Source";
 
 export enum VideoModuleType {
   Source = "Source",
   HueRotate = "HueRotate",
   Merge = "Merge",
-  Overlay = "Overlay",
   Output = "Output",
 }
 
@@ -18,7 +17,6 @@ export type VideoPropsMapping = {
   [VideoModuleType.Source]: ISourceProps;
   [VideoModuleType.HueRotate]: IHueRotateProps;
   [VideoModuleType.Merge]: IMergeProps;
-  [VideoModuleType.Overlay]: IOverlayProps;
   [VideoModuleType.Output]: IOutputProps;
 };
 
@@ -35,8 +33,6 @@ export function createModule<T extends VideoModuleType>(
       );
     case VideoModuleType.Merge:
       return new Merge(params as ICreateVideoModule<VideoModuleType.Merge>);
-    case VideoModuleType.Overlay:
-      return new Overlay(params as ICreateVideoModule<VideoModuleType.Overlay>);
     case VideoModuleType.Output:
       return new Output(params as ICreateVideoModule<VideoModuleType.Output>);
     default:
@@ -44,9 +40,29 @@ export function createModule<T extends VideoModuleType>(
   }
 }
 
-export { HueRotate, Merge, Output, Overlay, Source };
 export type { IHueRotateProps } from "./HueRotate";
-export type { IMergeProps } from "./Merge";
+export type { IMergeProps, MergeMode } from "./Merge";
+export { MERGE_MODES } from "./Merge";
 export type { IOutputProps } from "./Output";
-export type { IOverlayProps } from "./Overlay";
 export type { ISourceProps, SourceMode } from "./Source";
+
+export const videoModuleSchemas: Record<
+  VideoModuleType,
+  Record<string, PropSchema>
+> = {
+  [VideoModuleType.Source]: sourcePropSchema,
+  [VideoModuleType.HueRotate]: hueRotatePropSchema,
+  [VideoModuleType.Merge]: mergePropSchema,
+  [VideoModuleType.Output]: outputPropSchema,
+};
+
+const MODULE_INPUTS = Object.fromEntries(
+  Object.values(VideoModuleType).map((moduleType) => [
+    moduleType,
+    createModule({ name: moduleType, moduleType }).inputs,
+  ]),
+) as Record<VideoModuleType, readonly string[]>;
+
+export function inputsFor(moduleType: VideoModuleType): readonly string[] {
+  return MODULE_INPUTS[moduleType];
+}

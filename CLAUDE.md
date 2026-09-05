@@ -111,12 +111,13 @@ The grid app is a React application with:
 **Key Slices**:
 
 - `modulesSlice` - Tracks all audio modules and their parameters
-- `gridNodesSlice` - Manages visual node positions and connections (using @xyflow/react)
+- `gridNodesSlice` - Manages visual node positions and connections (using @xyflow/react); branches on node type for audio vs video nodes
+- `videoPatchSlice` - Video modules, routes and bindings; forwarded whole to the video engine worker on every change
 - `midiDevicesSlice` - MIDI device state
 - `patchSlice` - Current patch state
 - `modalSlice` - Modal dialogs
 
-**Visual Patching**: Uses @xyflow/react for node-based visual interface. Nodes represent audio modules, edges represent routes/connections.
+**Visual Patching**: Uses @xyflow/react for node-based visual interface. Nodes are audio modules (`audioNode`) or video modules (`videoNode`); edges represent routes/connections. The Visuals video node previews the output and opens the projector.
 
 **Firebase Integration**:
 
