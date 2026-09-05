@@ -10,7 +10,7 @@ export class Renderer {
   private targets = new Map<string, Target>();
   private black!: WebGLTexture;
 
-  constructor(private canvas: OffscreenCanvas) {
+  constructor(readonly canvas: OffscreenCanvas) {
     const gl = canvas.getContext("webgl2");
     if (!gl) throw new Error("WebGL2 is not available in this worker");
     this.gl = gl;

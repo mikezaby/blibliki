@@ -3,19 +3,24 @@ import { HostMessage, WorkerMessage } from "@/protocol";
 import { PatchSource, propsToControls } from "./mirror";
 import { openProjectorWindow, ProjectorWindow } from "./projectorWindow";
 
+export type SpectrumSource = { id: string; bins: Float32Array };
+
 export type VideoEngineHostOptions = {
   patchSource: PatchSource;
   createWorker: () => Worker;
-  // Returns the current frequency bins (dB) or undefined when no analyser is
-  // in the patch. The array is copied before transfer, so returning the
-  // analyser's own buffer is fine.
-  readSpectrum?: () => Float32Array | undefined;
+  // Current frequency bins (dB) per Spectrum module. Arrays are copied
+  // before transfer, so yielding the analyser's own buffer is fine.
+  readSpectrum?: () => Iterable<SpectrumSource>;
 };
+
+const PROJECTOR_VIEW = "projector";
 
 export class VideoEngineHost {
   private worker: Worker;
   private projector: ProjectorWindow | null = null;
-  private spare: Float32Array | null = null;
+  private spare = new Map<string, Float32Array>();
+  private inFlight = new Set<string>();
+  private views = new Set<string>();
   private frameHandle = 0;
   private disposed = false;
   private patchListeners = new Set<(patch: IVideoPatch) => void>();
@@ -42,6 +47,35 @@ export class VideoEngineHost {
         values: propsToControls(update.id, update.props),
       });
     });
+
+    this.frameHandle = requestAnimationFrame(this.tick);
+  }
+
+  // The canvas is transferred; it must not have been drawn on and cannot be
+  // attached twice. Callers create a fresh element per attach.
+  attachView(id: string, canvas: HTMLCanvasElement, maxFps: number) {
+    const offscreen = canvas.transferControlToOffscreen();
+    this.views.add(id);
+    this.send(
+      {
+        type: "attachView",
+        id,
+        canvas: offscreen,
+        width: canvas.width,
+        height: canvas.height,
+        maxFps,
+      },
+      [offscreen],
+    );
+  }
+
+  resizeView(id: string, width: number, height: number) {
+    this.send({ type: "resizeView", id, width, height });
+  }
+
+  detachView(id: string) {
+    this.views.delete(id);
+    this.send({ type: "detachView", id });
   }
 
   // Returns false when the browser blocked the popup (call from a gesture).
@@ -56,30 +90,17 @@ export class VideoEngineHost {
     this.projector = projector;
 
     const { window: win, canvas } = projector;
-    const offscreen = canvas.transferControlToOffscreen();
-    this.send(
-      {
-        type: "init",
-        canvas: offscreen,
-        width: win.innerWidth,
-        height: win.innerHeight,
-      },
-      [offscreen],
-    );
+    canvas.width = win.innerWidth;
+    canvas.height = win.innerHeight;
+    this.attachView(PROJECTOR_VIEW, canvas, 60);
 
     win.addEventListener("resize", () => {
-      this.send({
-        type: "resize",
-        width: win.innerWidth,
-        height: win.innerHeight,
-      });
+      this.resizeView(PROJECTOR_VIEW, win.innerWidth, win.innerHeight);
     });
     win.addEventListener("pagehide", () => {
-      this.send({ type: "detach" });
+      this.detachView(PROJECTOR_VIEW);
       this.projector = null;
     });
-
-    this.startSpectrum();
 
     return true;
   }
@@ -120,34 +141,35 @@ export class VideoEngineHost {
         });
         return;
       case "spectrumBuffer":
-        this.spare = message.bins;
+        this.spare.set(message.moduleId, message.bins);
+        this.inFlight.delete(message.moduleId);
         return;
       case "ready":
         return;
     }
   }
 
-  // One buffer in flight: copy the analyser's bins into it, transfer it, and
-  // get it back on spectrumBuffer. Frames while it is away are skipped.
-  private startSpectrum() {
-    cancelAnimationFrame(this.frameHandle);
+  // One buffer per Spectrum module in flight: copy the analyser's bins into
+  // it, transfer it, and get it back on spectrumBuffer. Frames while a
+  // buffer is away are skipped. Nothing is read while no view is attached.
+  private tick = () => {
+    if (this.disposed) return;
     const { readSpectrum } = this.options;
-    if (!readSpectrum) return;
-
-    const tick = () => {
-      if (this.disposed || !this.projector) return;
-      const bins = readSpectrum();
-      if (bins) {
-        if (this.spare?.length !== bins.length) {
-          this.spare = new Float32Array(bins.length);
+    if (readSpectrum && this.views.size > 0) {
+      for (const { id, bins } of readSpectrum()) {
+        if (this.inFlight.has(id)) continue;
+        let buffer = this.spare.get(id);
+        if (buffer?.length !== bins.length) {
+          buffer = new Float32Array(bins.length);
         }
-        const buffer = this.spare;
-        this.spare = null;
+        this.spare.delete(id);
+        this.inFlight.add(id);
         buffer.set(bins);
-        this.send({ type: "spectrum", bins: buffer }, [buffer.buffer]);
+        this.send({ type: "spectrum", moduleId: id, bins: buffer }, [
+          buffer.buffer,
+        ]);
       }
-      this.frameHandle = requestAnimationFrame(tick);
-    };
-    this.frameHandle = requestAnimationFrame(tick);
-  }
+    }
+    this.frameHandle = requestAnimationFrame(this.tick);
+  };
 }

@@ -53,6 +53,7 @@ export function applyBindings<P extends Record<string, unknown>>(
 // patch needs a specific frequency range.
 export function spectrumToControls(
   bins: Float32Array,
+  prefix = "spectrum",
   minDb = -100,
   maxDb = -30,
 ): Record<string, number> {
@@ -64,9 +65,9 @@ export function spectrumToControls(
     values.length === 0 ? 0 : values.reduce((a, b) => a + b, 0) / values.length;
 
   return {
-    "spectrum:low": mean(normalized.slice(0, third)),
-    "spectrum:mid": mean(normalized.slice(third, third * 2)),
-    "spectrum:high": mean(normalized.slice(third * 2)),
-    "spectrum:level": mean(normalized),
+    [`${prefix}:low`]: mean(normalized.slice(0, third)),
+    [`${prefix}:mid`]: mean(normalized.slice(third, third * 2)),
+    [`${prefix}:high`]: mean(normalized.slice(third * 2)),
+    [`${prefix}:level`]: mean(normalized),
   };
 }
