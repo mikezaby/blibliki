@@ -99,6 +99,45 @@ describe("VideoEngine", () => {
     expect(engine.passes()[1]?.uniforms.amount).toBe(360);
   });
 
+  it("resolves control routes into a control module's props before ticking it", () => {
+    const engine = chain();
+    engine.addModule({
+      id: "ap",
+      name: "ap",
+      moduleType: VideoModuleType.AudioProp,
+      props: { moduleId: "osc", prop: "frequency" },
+    });
+    engine.addModule({
+      id: "lfo",
+      name: "lfo",
+      moduleType: VideoModuleType.LFO,
+      props: { frequency: 1 },
+    });
+    engine.addRoute({
+      kind: "control",
+      source: { moduleId: "ap", ioName: "out" },
+      destination: { moduleId: "lfo", ioName: "frequency" },
+      inMin: 0,
+      inMax: 4,
+      outMin: 0,
+      outMax: 4,
+    });
+    engine.addRoute({
+      kind: "control",
+      source: { moduleId: "lfo", ioName: "out" },
+      destination: { moduleId: "fx", ioName: "amount" },
+      inMin: 0,
+      inMax: 1,
+      outMin: 0,
+      outMax: 360,
+    });
+    engine.setControls({ "patch:osc:frequency": 2 });
+    engine.tick({ now: 0.125, dt: 0.125 });
+
+    expect(engine.passes()[1]?.uniforms.amount).toBeCloseTo(360);
+    expect(engine.findModule("lfo").props).toMatchObject({ frequency: 1 });
+  });
+
   it("updates props", () => {
     const engine = chain();
     engine.updateProps("fx", { amount: 45 });

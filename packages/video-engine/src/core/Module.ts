@@ -51,11 +51,13 @@ export abstract class VideoModule<T extends VideoModuleType = VideoModuleType> {
     this.props = { ...this.props, ...props };
   }
 
-  // Control modules compute their outputs once per frame; texture modules
-  // return null and are never ticked.
+  // Control modules compute their outputs once per frame from `props`, which
+  // the engine has already run through the module's control routes; texture
+  // modules return null and are never ticked.
   tick(
     _values: ControlValues,
     _frame: FrameClock,
+    _props: VideoPropsMapping[T] = this.props,
   ): Record<string, number> | null {
     return null;
   }

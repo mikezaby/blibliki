@@ -86,7 +86,11 @@ export class VideoEngine {
   // lags one frame per hop; sort by control routes when it matters.
   tick(frame: FrameClock) {
     for (const module of this.modules.values()) {
-      const outputs = module.tick(this.controls, frame);
+      const outputs = module.tick(
+        this.controls,
+        frame,
+        this.resolveProps(module),
+      );
       if (!outputs) continue;
       for (const [name, value] of Object.entries(outputs)) {
         this.controls.set(controlName(module.id, name), value);
@@ -96,12 +100,16 @@ export class VideoEngine {
 
   passes(): RenderPass[] {
     return buildPasses(this.modules, this.routes, (module) =>
-      applyControlRoutes(
-        module.props as Record<string, unknown>,
-        this.routes.controlRoutesFor(module.id),
-        this.controls,
-        module.schema as Record<string, PropSchema>,
-      ),
+      this.resolveProps(module),
+    );
+  }
+
+  private resolveProps(module: VideoModule): Record<string, unknown> {
+    return applyControlRoutes(
+      module.props as Record<string, unknown>,
+      this.routes.controlRoutesFor(module.id),
+      this.controls,
+      module.schema as Record<string, PropSchema>,
     );
   }
 

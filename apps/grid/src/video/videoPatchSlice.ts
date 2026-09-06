@@ -29,6 +29,7 @@ export const VIDEO_MODULE_NAMES: Record<VideoModuleType, string> = {
   [VideoModuleType.Merge]: "Merge",
   [VideoModuleType.Output]: "Visuals",
   [VideoModuleType.AudioProp]: "Audio Prop",
+  [VideoModuleType.LFO]: "LFO",
 };
 
 const samePlug = (a: IRoute["destination"], b: IRoute["destination"]) =>

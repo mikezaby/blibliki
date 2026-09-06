@@ -279,7 +279,9 @@ it.
    frame loop change, the additive mixing rule and cables, since Audio Prop
    needs the first two, the third is three lines once routes accumulate,
    and the picker was the link feature this design retires.
-2. LFO.
+2. LFO. Done 2026-09-06. Its frequency is a control input, and the engine
+   resolves a control module's routes into its props before ticking it, so
+   an Audio Prop can drive an LFO's rate.
 3. Band, with the sample rate on the spectrum message and raw bins kept per
    Spectrum id. The fixed three bands go away with it.
 4. Editing a control route's range from its edge.

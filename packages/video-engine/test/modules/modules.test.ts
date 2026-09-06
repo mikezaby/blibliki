@@ -25,6 +25,11 @@ describe("bootstrap modules", () => {
     ],
     [VideoModuleType.Output, [tex("in")], {}],
     [VideoModuleType.AudioProp, [], { moduleId: "", prop: "" }],
+    [
+      VideoModuleType.LFO,
+      [ctl("frequency")],
+      { frequency: 1, waveform: "sine", phase: 0 },
+    ],
   ])(
     "%s declares its inputs and default props",
     (moduleType, inputs, props) => {

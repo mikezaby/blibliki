@@ -3,6 +3,7 @@ import { ICreateVideoModule, IOPort, VideoModule } from "@/core/Module";
 import { PropSchema } from "@/core/schema";
 import AudioProp, { audioPropPropSchema, IAudioPropProps } from "./AudioProp";
 import HueRotate, { hueRotatePropSchema, IHueRotateProps } from "./HueRotate";
+import LFO, { ILFOProps, lfoPropSchema } from "./LFO";
 import Merge, { IMergeProps, mergePropSchema } from "./Merge";
 import Output, { IOutputProps, outputPropSchema } from "./Output";
 import Source, { ISourceProps, sourcePropSchema } from "./Source";
@@ -13,6 +14,7 @@ export enum VideoModuleType {
   Merge = "Merge",
   Output = "Output",
   AudioProp = "AudioProp",
+  LFO = "LFO",
 }
 
 export type VideoPropsMapping = {
@@ -21,6 +23,7 @@ export type VideoPropsMapping = {
   [VideoModuleType.Merge]: IMergeProps;
   [VideoModuleType.Output]: IOutputProps;
   [VideoModuleType.AudioProp]: IAudioPropProps;
+  [VideoModuleType.LFO]: ILFOProps;
 };
 
 export function createModule<T extends VideoModuleType>(
@@ -42,6 +45,8 @@ export function createModule<T extends VideoModuleType>(
       return new AudioProp(
         params as ICreateVideoModule<VideoModuleType.AudioProp>,
       );
+    case VideoModuleType.LFO:
+      return new LFO(params as ICreateVideoModule<VideoModuleType.LFO>);
     default:
       return assertNever(type);
   }
@@ -49,6 +54,8 @@ export function createModule<T extends VideoModuleType>(
 
 export type { IAudioPropProps } from "./AudioProp";
 export type { IHueRotateProps } from "./HueRotate";
+export type { ILFOProps, LFOWaveform } from "./LFO";
+export { LFO_WAVEFORMS } from "./LFO";
 export type { IMergeProps, MergeMode } from "./Merge";
 export { MERGE_MODES } from "./Merge";
 export type { IOutputProps } from "./Output";
@@ -63,6 +70,7 @@ export const videoModuleSchemas: Record<
   [VideoModuleType.Merge]: mergePropSchema,
   [VideoModuleType.Output]: outputPropSchema,
   [VideoModuleType.AudioProp]: audioPropPropSchema,
+  [VideoModuleType.LFO]: lfoPropSchema,
 };
 
 const PROTOTYPES = Object.fromEntries(
