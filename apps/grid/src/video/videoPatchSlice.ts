@@ -83,6 +83,16 @@ export const videoPatchSlice = createSlice({
     removeVideoRoute: (state, action: PayloadAction<string>) => {
       state.routes = state.routes.filter((r) => r.id !== action.payload);
     },
+    updateVideoRoute: (
+      state,
+      action: PayloadAction<{
+        id: string;
+        changes: Pick<IRoute, "inMin" | "inMax" | "outMin" | "outMax" | "exp">;
+      }>,
+    ) => {
+      const route = state.routes.find((r) => r.id === action.payload.id);
+      if (route) Object.assign(route, action.payload.changes);
+    },
   },
 });
 
@@ -94,6 +104,7 @@ export const {
   updateVideoModuleProps,
   addVideoRoute,
   removeVideoRoute,
+  updateVideoRoute,
 } = videoPatchSlice.actions;
 
 export const addNewVideoModule =

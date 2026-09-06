@@ -35,7 +35,10 @@ describe("Band", () => {
   });
 
   it("defaults to a bass band with unity gain and no smoothing", () => {
-    const module = createModule({ name: "b", moduleType: VideoModuleType.Band });
+    const module = createModule({
+      name: "b",
+      moduleType: VideoModuleType.Band,
+    });
 
     expect(module.props).toEqual({
       spectrumId: "",

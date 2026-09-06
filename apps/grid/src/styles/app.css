@@ -57,6 +57,15 @@ g.selected path.react-flow__edge-path {
   stroke: var(--ui-color-info-500) !important;
 }
 
+path.control-edge {
+  stroke: var(--ui-color-warning-500);
+  stroke-dasharray: 6 4;
+}
+
+path.control-edge--selected {
+  stroke: var(--ui-color-info-500);
+}
+
 .io-handle--audio {
   background: var(--ui-color-primary-500);
   box-shadow: inset 0 0 0 1px

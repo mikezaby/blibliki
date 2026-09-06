@@ -14,6 +14,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   useEffect,
   useEffectEvent,
+  useMemo,
   useRef,
   type ReactNode,
 } from "react";
@@ -29,8 +30,10 @@ import {
   GRID_CANVAS_PATTERN,
 } from "@/theme/gridCanvas";
 import { disposeVideoHost } from "@/video/videoHost";
+import { CONTROL_EDGE, withEdgeTypes } from "@/video/videoRoutes";
 import AudioModules from "./AudioModules";
 import { NodeTypes } from "./AudioNode";
+import ControlEdge from "./ControlEdge";
 import {
   buildGridClipboardSnapshot,
   pasteGridClipboardSnapshot,
@@ -44,6 +47,8 @@ import useDrag from "./useDrag";
 const DEFAULT_REACT_FLOW_PROPS = {
   hideAttribution: true,
 };
+
+const EdgeTypes = { [CONTROL_EDGE]: ControlEdge };
 
 export default function Grid({ children }: { children?: ReactNode }) {
   return (
@@ -67,6 +72,11 @@ function GridCanvas({ children }: { children?: ReactNode }) {
   const { onDrop, onDragOver } = useDrag();
   const dispatch = useAppDispatch();
   const engineId = useAppSelector((state) => state.global.engineId);
+  const videoRoutes = useAppSelector((state) => state.videoPatch.routes);
+  const typedEdges = useMemo(
+    () => withEdgeTypes(edges, videoRoutes),
+    [edges, videoRoutes],
+  );
   const lastPointerPositionRef = useRef<XYPosition | null>(null);
   const pasteIterationRef = useRef(0);
 
@@ -140,11 +150,12 @@ function GridCanvas({ children }: { children?: ReactNode }) {
         <AudioModules />
         <ReactFlow
           nodes={nodes}
-          edges={edges}
+          edges={typedEdges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={NodeTypes}
+          edgeTypes={EdgeTypes}
           minZoom={0.1}
           onDrop={onDrop}
           onDragOver={onDragOver}

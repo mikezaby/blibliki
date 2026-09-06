@@ -208,8 +208,8 @@ the start and adds them. Two cables into one control input is the UI for it.
 - Cables: a control output into a control input creates a control route
   with the default range, the source's natural range into the target prop's
   schema range. The link picker goes away; the user drops a Band or Audio
-  Prop module and patches it. Editing a route's range is a later feature on
-  the edge.
+  Prop module and patches it. The route's range is edited from a button on
+  its edge.
 - The video patch slice's `bindings` state and its three reducers go away;
   control routes use the route reducers with `kind`. Removing a module drops
   routes of both kinds on either end, which `removeForModule` already does.
@@ -286,4 +286,7 @@ it.
    Spectrum id. The fixed three bands go away with it. Done 2026-09-06. The
    analysis stays in the audio Spectrum module: many Bands on one Spectrum
    read one buffer and cost one FFT.
-4. Editing a control route's range from its edge.
+4. Editing a control route's range from its edge. Done 2026-09-06. Control
+   routes render as a dashed control edge with a button at its middle that
+   opens the range editor; the edge type is derived from the route's kind,
+   so nothing about it is saved.

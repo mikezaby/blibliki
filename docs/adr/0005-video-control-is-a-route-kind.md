@@ -41,4 +41,4 @@ routes, with a bare string where a route has a plug.
 
 Bindings saved between 2026-09-05 and this change do not load; routes saved
 without a kind load as texture. A control route's range is set to a default
-when the cable is connected; editing it needs an edge editor.
+when the cable is connected and edited from a button on its edge.

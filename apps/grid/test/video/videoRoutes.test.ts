@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   validVideoConnection,
   videoRouteFromConnection,
+  withEdgeTypes,
 } from "../../src/video/videoRoutes";
 
 const osc = { id: "osc", name: "Osc", moduleType: ModuleType.Oscillator };
@@ -61,6 +62,36 @@ describe("validVideoConnection", () => {
     expect(
       validVideoConnection(connect("src", "out", "src", "mode"), modules),
     ).toBe(false);
+  });
+});
+
+describe("withEdgeTypes", () => {
+  it("tags edges of control routes so the canvas renders the control edge", () => {
+    const edges = [
+      { id: "t1", source: "src", target: "fx" },
+      { id: "c1", source: "ap", target: "fx" },
+      { id: "a1", source: "osc", target: "filter" },
+    ];
+    const routes = [
+      {
+        id: "t1",
+        kind: "texture" as const,
+        source: { moduleId: "src", ioName: "out" },
+        destination: { moduleId: "fx", ioName: "in" },
+      },
+      {
+        id: "c1",
+        kind: "control" as const,
+        source: { moduleId: "ap", ioName: "out" },
+        destination: { moduleId: "fx", ioName: "amount" },
+      },
+    ];
+
+    expect(withEdgeTypes(edges, routes).map((e) => e.type)).toEqual([
+      undefined,
+      "controlEdge",
+      undefined,
+    ]);
   });
 });
 

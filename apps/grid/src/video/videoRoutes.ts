@@ -77,6 +77,23 @@ function targetRange(module: IVideoModule, prop: string): Range {
   return schema?.kind === "number" ? schema : UNIT;
 }
 
+export const CONTROL_EDGE = "controlEdge";
+
+// Edges of control routes render as the control edge, which carries the
+// range editor. Texture and audio edges keep the default edge.
+export function withEdgeTypes<E extends { id: string; type?: string }>(
+  edges: E[],
+  routes: Pick<IRoute, "id" | "kind">[],
+): E[] {
+  const control = new Set(
+    routes.filter((r) => r.kind === "control").map((r) => r.id),
+  );
+
+  return edges.map((edge) =>
+    control.has(edge.id) ? { ...edge, type: CONTROL_EDGE } : edge,
+  );
+}
+
 // Builds the route a cable stands for. A control cable gets the default
 // range: the source's natural range into the target prop's schema range.
 export function videoRouteFromConnection(

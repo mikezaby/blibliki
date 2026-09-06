@@ -6,6 +6,7 @@ import reducer, {
   EMPTY_VIDEO_PATCH,
   removeVideoModule,
   setVideoPatch,
+  updateVideoRoute,
 } from "../../src/video/videoPatchSlice";
 
 const audioProp = {
@@ -70,6 +71,21 @@ describe("videoPatchSlice", () => {
     );
 
     expect(state.routes).toEqual([control, second]);
+  });
+
+  it("updates a control route's range in place", () => {
+    const state = reducer(
+      { modules: [], routes: [texture, control] },
+      updateVideoRoute({
+        id: "c1",
+        changes: { outMin: 90, outMax: 180, exp: 2 },
+      }),
+    );
+
+    expect(state.routes).toEqual([
+      texture,
+      { ...control, outMin: 90, outMax: 180, exp: 2 },
+    ]);
   });
 
   it("loads a saved patch without its bindings and with route kinds", () => {
