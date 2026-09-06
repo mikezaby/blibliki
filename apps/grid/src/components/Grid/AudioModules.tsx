@@ -18,9 +18,9 @@ const SupportedModules = Object.values(AvailableModules)
   .sort();
 
 const PANEL_BASE_CLASS =
-  "absolute top-12 left-0 z-10 flex h-[calc(100vh-3rem)] w-47.25 flex-col border-r border-b transition-transform duration-300 ease-in-out";
+  "absolute top-12 left-0 z-10 flex h-[calc(100vh-3rem)] w-56 flex-col border-r border-b transition-transform duration-300 ease-in-out";
 const PANEL_VISIBLE_CLASS = "translate-x-0";
-const PANEL_HIDDEN_CLASS = "-translate-x-[189px]";
+const PANEL_HIDDEN_CLASS = "-translate-x-56";
 
 export default function AudioModules() {
   const [visible, setVisible] = useState<boolean>(true);
@@ -63,7 +63,7 @@ export default function AudioModules() {
           }
           variant="contained"
           color="neutral"
-          className="absolute left-47.25 top-0 h-13 w-13 rounded-none rounded-br-md"
+          className="absolute left-56 top-0 h-13 w-13 rounded-none rounded-br-md"
           onClick={onClick}
         />
 
@@ -82,7 +82,7 @@ export default function AudioModules() {
                   draggable
                 >
                   <Stack direction="row" align="center" gap={2}>
-                    <div className="h-2 w-2 rounded-full bg-linear-to-br from-brand to-brand-secondary transition-transform duration-200 group-hover:scale-110" />
+                    <div className="h-2 w-2 shrink-0 rounded-full bg-linear-to-br from-brand to-brand-secondary transition-transform duration-200 group-hover:scale-110" />
                     <span>{moduleName}</span>
                   </Stack>
                 </Button>
@@ -110,7 +110,7 @@ export default function AudioModules() {
                   draggable
                 >
                   <Stack direction="row" align="center" gap={2}>
-                    <div className="io-indicator--texture h-2 w-2 rounded-full transition-transform duration-200 group-hover:scale-110" />
+                    <div className="io-indicator--texture h-2 w-2 shrink-0 rounded-full transition-transform duration-200 group-hover:scale-110" />
                     <span>{VIDEO_MODULE_NAMES[type]}</span>
                   </Stack>
                 </Button>
