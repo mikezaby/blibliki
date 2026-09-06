@@ -34,11 +34,12 @@ export const getNodeContainerClassName = (selected: boolean) =>
       : "border-border-subtle hover:border-border-strong",
   );
 
-type IOTone = "audio" | "midi" | "texture";
+type IOTone = "audio" | "midi" | "texture" | "control";
 
 const getIOTone = (ioType: string): IOTone => {
   const lower = ioType.toLowerCase();
   if (lower.includes("texture")) return "texture";
+  if (lower.includes("control")) return "control";
   return lower.includes("audio") ? "audio" : "midi";
 };
 
@@ -51,6 +52,15 @@ export const getIOToneClasses = (ioType: string) => {
       handleToneClass: "io-handle--texture",
       indicatorToneClass: "io-indicator--texture",
       labelToneClass: "io-label--texture",
+    };
+  }
+
+  if (tone === "control") {
+    return {
+      tone,
+      handleToneClass: "io-handle--control",
+      indicatorToneClass: "io-indicator--control",
+      labelToneClass: "io-label--control",
     };
   }
 

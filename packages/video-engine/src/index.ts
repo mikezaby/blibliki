@@ -3,7 +3,7 @@ export type {
   ControlValues,
   FrameClock,
   ICreateVideoModule,
-  IOutput,
+  IOPort,
   IVideoModule,
 } from "./core/Module";
 export type {

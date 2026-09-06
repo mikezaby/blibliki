@@ -66,11 +66,13 @@ For a control route the destination `ioName` is the prop name. Texture
 routes keep the rule that a new route into an occupied input replaces the old
 one. Control routes accumulate, which is where the mixing rule lands.
 
-A module declares `outputs` beside `inputs`, each with a kind. Texture modules
-have one texture output, control modules one control output, Output has
-none. Control inputs are the numeric props, derived from the schema, so
-nothing is declared twice. Route validation checks kind against kind, the
-same way the grid refuses an audio-to-texture cable today.
+A module declares its `inputs` and `outputs` as ports with a kind, the way
+an audio module registers audio and MIDI IO. Texture modules have one
+texture output, control modules one control output, Output has none. A
+control input is named after the prop it drives, and a module lists only
+the props it wants driven, so an enum or a module reference never gets a
+handle. Route validation checks kind against kind, the same way the grid
+refuses an audio-to-texture cable.
 
 The audio engine's IO machinery (the Base class with plug and unPlug, live
 connection lists, deterministic IO ids, the IO collection) is not copied. It
@@ -129,9 +131,9 @@ comment; topological sort by control routes when it matters.
 Props: `moduleId` (an audio module), `prop` (one of its numeric props).
 Output `out` is the prop's raw value. The worker has no audio schemas (the
 package deliberately does not depend on the engine), so normalizing to 0 to 1
-happens on the control route: the picker fills the route's in range and
-`exp` from the audio prop's schema, which is what the old binding did, so a
-bound prop follows the knob's travel.
+happens on the control route: connecting a cable fills the route's in range
+and `exp` from the audio prop's schema, which is what the old binding did, so
+a bound prop follows the knob's travel.
 
 The worker keeps the last pushed value per `<audioModuleId>:<prop>` in an
 internal map, exactly what the `controls` message delivers today. An Audio
@@ -186,8 +188,7 @@ additive, which is what an LFO on top of a band should do. Multiply and
 average are a later mode on the route if someone needs them.
 
 Route ids are uuids, so the engine holds several control routes per prop from
-the start and adds them. The picker stays one-per-prop in the first cut and
-grows a list with add and remove when the second source is wanted.
+the start and adds them. Two cables into one control input is the UI for it.
 
 ## Main thread and grid
 
@@ -195,18 +196,20 @@ grows a list with add and remove when the second source is wanted.
   Nothing else on the host changes; the `controls` message keeps its shape
   and now feeds the worker's audio prop map instead of the patch vocabulary.
 - Registry: `inputsFor` already instantiates each module type once to learn
-  its texture inputs. `outputsFor` is built the same way, and the grid draws
-  handles from both. Control modules get no texture handles. The palette's
-  Video section lists Audio Prop, Band and LFO.
+  its ports. `outputsFor` is built the same way, and the grid draws a handle
+  per port in a tone per kind, so a new module's IO appears on the canvas
+  with no grid change. The palette's Video section lists Audio Prop, Band and
+  LFO.
 - Two props reference audio modules: Audio Prop's `moduleId` and Band's
   `spectrumId`. One new prop kind, `audioModule` with an optional module type
   filter, covers both; VideoField renders it as a select of matching audio
   modules. Audio Prop's `prop` is an enum whose options depend on the chosen
   module, filled by the field from the engine's schemas.
-- Picker: the link icon on a numeric prop lists control outputs of the video
-  patch's control modules, excluding the module being bound so a module
-  cannot feed itself. The Spectrum and Audio groups go away; the user drops
-  a Band or Audio Prop module instead. Range and curve fields stay.
+- Cables: a control output into a control input creates a control route
+  with the default range, the source's natural range into the target prop's
+  schema range. The link picker goes away; the user drops a Band or Audio
+  Prop module and patches it. Editing a route's range is a later feature on
+  the edge.
 - The video patch slice's `bindings` state and its three reducers go away;
   control routes use the route reducers with `kind`. Removing a module drops
   routes of both kinds on either end, which `removeForModule` already does.
@@ -231,13 +234,12 @@ and keeps one rule: props are the knobs and are saved; control routes are
 modulation and are never written into props. `applyBindings` already keeps
 that separation, and it survives as the control route evaluator.
 
-## Wires (out of scope, direction only)
+## Wires
 
-Control routes are routes, so drawing them is a handle question only. Control
-modules get one output handle per output in a control tone, and a numeric
-prop gets a control input handle (or one per module with the prop chosen on
-the edge). Audio nodes stay untouched because Audio Prop is the source; no
-audio node grows a handle per numeric prop.
+Control routes are routes, so drawing them is a handle question only: one
+handle per declared port, in a control tone. Audio nodes stay untouched
+because Audio Prop is the source; no audio node grows a handle per numeric
+prop.
 
 ## Alternatives rejected
 
@@ -263,9 +265,10 @@ a control route reads it in the same frame; texture modules are not ticked;
 a texture route into a control input is refused; two control routes into one
 prop add.
 
-Grid: removing a control module drops routes on either end; the picker lists
-control outputs and excludes self; a `video` field with a `bindings` key
-loads without it.
+Grid: removing a control module drops routes on either end; a cable between
+matching kinds is valid and a mixed or self cable is not; a control cable
+gets the default range; a `video` field with a `bindings` key loads without
+it.
 
 ## Order of work
 
@@ -273,9 +276,10 @@ loads without it.
    removed from engine, protocol and slice, `applyBindings` reading routes.
    Audio Prop as the first control module, since it restores what bindings
    did and needs no new host message. Done 2026-09-06, with `tick`, the
-   frame loop change and the additive mixing rule, since Audio Prop needs
-   the first two and the third is three lines once routes accumulate.
+   frame loop change, the additive mixing rule and cables, since Audio Prop
+   needs the first two, the third is three lines once routes accumulate,
+   and the picker was the link feature this design retires.
 2. LFO.
 3. Band, with the sample rate on the spectrum message and raw bins kept per
    Spectrum id. The fixed three bands go away with it.
-4. Multi-route picker.
+4. Editing a control route's range from its edge.

@@ -22,7 +22,7 @@ describe("VideoModule", () => {
       moduleType: VideoModuleType.Source,
       props: source.props,
     });
-    expect(source.inputs).toEqual([]);
+    expect(source.inputs.map((input) => input.kind)).not.toContain("texture");
   });
 
   it("keeps a given id", () => {

@@ -20,6 +20,9 @@ routes, with a bare string where a route has a plug.
   texture IO and a `tick` the worker runs once per frame, writing outputs
   into a worker-internal values map. Audio Prop mirrors one audio prop; Band
   and LFO follow.
+- Modules declare their inputs and outputs as ports with a kind, and the grid
+  draws a handle per port. Control routes are patched with cables like
+  texture routes; the per-prop link picker is gone.
 - Modulation never writes props. Props are the saved knobs; control routes
   are applied when passes are built.
 - The main thread pushes raw inputs only, as ADR 2 chose. No evaluation
@@ -37,5 +40,5 @@ routes, with a bare string where a route has a plug.
 ## Consequences
 
 Bindings saved between 2026-09-05 and this change do not load; routes saved
-without a kind load as texture. Drawing control routes as cables is a handle
-question only.
+without a kind load as texture. A control route's range is set to a default
+when the cable is connected; editing it needs an edge editor.

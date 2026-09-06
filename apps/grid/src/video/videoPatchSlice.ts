@@ -123,16 +123,4 @@ export const addNewVideoModule =
 export const selectVideoModule = (state: RootState, id: string) =>
   state.videoPatch.modules.find((m) => m.id === id);
 
-export const selectControlRoute = (
-  state: RootState,
-  moduleId: string,
-  prop: string,
-) =>
-  state.videoPatch.routes.find(
-    (r) =>
-      r.kind === "control" &&
-      r.destination.moduleId === moduleId &&
-      r.destination.ioName === prop,
-  );
-
 export default videoPatchSlice.reducer;

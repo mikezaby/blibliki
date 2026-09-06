@@ -1,7 +1,7 @@
 import {
   ControlValues,
   ICreateVideoModule,
-  IOutput,
+  IOPort,
   VideoModule,
 } from "@/core/Module";
 import { AudioModuleProp, ModulePropSchema } from "@/core/schema";
@@ -28,11 +28,11 @@ export const audioPropPropSchema: ModulePropSchema<
 };
 
 // Mirrors one numeric prop of an audio module as a control output. The value
-// is raw; the control route's range normalizes it, as the picker fills the
-// range from the audio prop's schema.
+// is raw; the control route's range normalizes it, filled from the audio
+// prop's schema when the cable is connected.
 export default class AudioProp extends VideoModule<VideoModuleType.AudioProp> {
   readonly inputs = [] as const;
-  readonly outputs: readonly IOutput[] = [{ name: "out", kind: "control" }];
+  readonly outputs: readonly IOPort[] = [{ name: "out", kind: "control" }];
   readonly schema = audioPropPropSchema;
 
   constructor(params: ICreateVideoModule<VideoModuleType.AudioProp>) {

@@ -1,5 +1,5 @@
 import { assertNever } from "@blibliki/utils";
-import { ICreateVideoModule, IOutput, VideoModule } from "@/core/Module";
+import { ICreateVideoModule, IOPort, VideoModule } from "@/core/Module";
 import { PropSchema } from "@/core/schema";
 import AudioProp, { audioPropPropSchema, IAudioPropProps } from "./AudioProp";
 import HueRotate, { hueRotatePropSchema, IHueRotateProps } from "./HueRotate";
@@ -72,10 +72,10 @@ const PROTOTYPES = Object.fromEntries(
   ]),
 ) as Record<VideoModuleType, VideoModule>;
 
-export function inputsFor(moduleType: VideoModuleType): readonly string[] {
+export function inputsFor(moduleType: VideoModuleType): readonly IOPort[] {
   return PROTOTYPES[moduleType].inputs;
 }
 
-export function outputsFor(moduleType: VideoModuleType): readonly IOutput[] {
+export function outputsFor(moduleType: VideoModuleType): readonly IOPort[] {
   return PROTOTYPES[moduleType].outputs;
 }

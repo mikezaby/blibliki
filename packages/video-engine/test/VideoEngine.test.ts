@@ -174,7 +174,7 @@ describe("VideoEngine", () => {
     ).toThrow(/control/);
   });
 
-  it("rejects a control route into a prop that is not a number", () => {
+  it("rejects a control route into a prop the module does not declare", () => {
     const engine = withAudioProp(chain());
 
     expect(() =>

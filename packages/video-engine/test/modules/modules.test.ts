@@ -7,23 +7,33 @@ import {
   VideoModuleType,
 } from "@/modules";
 
+const tex = (name: string) => ({ name, kind: "texture" }) as const;
+const ctl = (name: string) => ({ name, kind: "control" }) as const;
+
 describe("bootstrap modules", () => {
   it.each([
     [
       VideoModuleType.Source,
-      [],
+      [ctl("hue"), ctl("saturation"), ctl("lightness"), ctl("spread")],
       { mode: "solid", hue: 0, saturation: 1, lightness: 0.5, spread: 180 },
     ],
-    [VideoModuleType.HueRotate, ["in"], { amount: 0 }],
-    [VideoModuleType.Merge, ["a", "b"], { mode: "crossfade", amount: 0.5 }],
-    [VideoModuleType.Output, ["in"], {}],
+    [VideoModuleType.HueRotate, [tex("in"), ctl("amount")], { amount: 0 }],
+    [
+      VideoModuleType.Merge,
+      [tex("a"), tex("b"), ctl("amount")],
+      { mode: "crossfade", amount: 0.5 },
+    ],
+    [VideoModuleType.Output, [tex("in")], {}],
     [VideoModuleType.AudioProp, [], { moduleId: "", prop: "" }],
-  ])("%s has its inputs and default props", (moduleType, inputs, props) => {
-    const module = createModule({ name: "m", moduleType });
+  ])(
+    "%s declares its inputs and default props",
+    (moduleType, inputs, props) => {
+      const module = createModule({ name: "m", moduleType });
 
-    expect(module.inputs).toEqual(inputs);
-    expect(module.props).toEqual(props);
-  });
+      expect(module.inputs).toEqual(inputs);
+      expect(module.props).toEqual(props);
+    },
+  );
 
   it("texture modules are not ticked", () => {
     const module = createModule({
@@ -35,14 +45,14 @@ describe("bootstrap modules", () => {
   });
 
   it("exposes inputs, outputs and schemas by type", () => {
-    expect(inputsFor(VideoModuleType.Merge)).toEqual(["a", "b"]);
-    expect(outputsFor(VideoModuleType.Merge)).toEqual([
-      { name: "out", kind: "texture" },
+    expect(inputsFor(VideoModuleType.Merge)).toEqual([
+      tex("a"),
+      tex("b"),
+      ctl("amount"),
     ]);
+    expect(outputsFor(VideoModuleType.Merge)).toEqual([tex("out")]);
     expect(outputsFor(VideoModuleType.Output)).toEqual([]);
-    expect(outputsFor(VideoModuleType.AudioProp)).toEqual([
-      { name: "out", kind: "control" },
-    ]);
+    expect(outputsFor(VideoModuleType.AudioProp)).toEqual([ctl("out")]);
     expect(Object.keys(videoModuleSchemas[VideoModuleType.HueRotate])).toEqual([
       "amount",
     ]);

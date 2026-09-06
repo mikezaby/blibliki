@@ -8,7 +8,7 @@ export type IOutputProps = EmptyObject;
 export const outputPropSchema: ModulePropSchema<IOutputProps> = {};
 
 export default class Output extends VideoModule<VideoModuleType.Output> {
-  readonly inputs = ["in"] as const;
+  readonly inputs = [{ name: "in", kind: "texture" }] as const;
   readonly outputs = [] as const;
   readonly schema = outputPropSchema;
 

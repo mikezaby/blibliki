@@ -18,7 +18,10 @@ export const hueRotatePropSchema: ModulePropSchema<IHueRotateProps> = {
 };
 
 export default class HueRotate extends VideoModule<VideoModuleType.HueRotate> {
-  readonly inputs = ["in"] as const;
+  readonly inputs = [
+    { name: "in", kind: "texture" },
+    { name: "amount", kind: "control" },
+  ] as const;
   readonly schema = hueRotatePropSchema;
 
   constructor(params: ICreateVideoModule<VideoModuleType.HueRotate>) {

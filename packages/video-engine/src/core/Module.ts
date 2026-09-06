@@ -16,13 +16,13 @@ export type ICreateVideoModule<T extends VideoModuleType = VideoModuleType> =
     props?: Partial<VideoPropsMapping[T]>;
   };
 
-export type IOutput = { name: string; kind: IOKind };
+export type IOPort = { name: string; kind: IOKind };
 
 export type FrameClock = { now: number; dt: number };
 
 export type ControlValues = ReadonlyMap<string, number>;
 
-const TEXTURE_OUT: readonly IOutput[] = [{ name: "out", kind: "texture" }];
+const TEXTURE_OUT: readonly IOPort[] = [{ name: "out", kind: "texture" }];
 
 export abstract class VideoModule<T extends VideoModuleType = VideoModuleType> {
   readonly id: string;
@@ -30,9 +30,10 @@ export abstract class VideoModule<T extends VideoModuleType = VideoModuleType> {
   readonly moduleType: T;
   props: VideoPropsMapping[T];
 
-  // Texture inputs, in the order the shader's u_<name> samplers expect.
-  abstract readonly inputs: readonly string[];
-  readonly outputs: readonly IOutput[] = TEXTURE_OUT;
+  // Texture inputs in the order the shader's u_<name> samplers expect, and
+  // control inputs named after the prop they drive.
+  abstract readonly inputs: readonly IOPort[];
+  readonly outputs: readonly IOPort[] = TEXTURE_OUT;
   abstract readonly schema: Record<keyof VideoPropsMapping[T], PropSchema>;
 
   constructor(

@@ -4,7 +4,6 @@ import {
   type ModuleTypeToStateMapping,
 } from "@blibliki/engine";
 import { IInstrument, IPatch, Instrument, Patch } from "@blibliki/models";
-import { inputsFor } from "@blibliki/video-engine";
 import { useAuth, useUser } from "@clerk/react";
 import type {
   Connection,
@@ -28,6 +27,7 @@ import {
   addNode as _addNode,
 } from "@/components/Grid/gridNodesSlice";
 import type { RootState, AppDispatch } from "@/store";
+import { validVideoConnection } from "@/video/videoRoutes";
 
 // Use throughout your app instead of plain `useDispatch` and `useSelector`
 export const useAppDispatch: () => AppDispatch = useDispatch;
@@ -273,15 +273,7 @@ export function useGridNodes() {
       const sourceIsVideo = videoModules.some((m) => m.id === source);
       const targetIsVideo = videoModules.some((m) => m.id === target);
       if (sourceIsVideo !== targetIsVideo) return false;
-      if (sourceIsVideo) {
-        const targetModule = videoModules.find((m) => m.id === target);
-        return (
-          source !== target &&
-          sourceHandle === "out" &&
-          targetModule !== undefined &&
-          inputsFor(targetModule.moduleType).includes(targetHandle)
-        );
-      }
+      if (sourceIsVideo) return validVideoConnection(connection, videoModules);
 
       return Engine.current.validRoute({
         source: { moduleId: source, ioName: sourceHandle },

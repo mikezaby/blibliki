@@ -1,6 +1,7 @@
 import { Stack, Text } from "@blibliki/ui";
 import {
   inputsFor,
+  type IOPort,
   outputsFor,
   videoModuleSchemas,
   VideoModuleType,
@@ -13,16 +14,17 @@ import { useAppSelector } from "@/hooks";
 import { selectVideoModule } from "@/video/videoPatchSlice";
 import { getNodeContainerClassName, IO, IOContainer } from "./AudioNode";
 
+// Handle tone follows the port kind, as audio nodes do with AudioInput and
+// MidiInput.
+const ioType = (port: IOPort, side: "Input" | "Output") =>
+  `${port.kind === "texture" ? "Texture" : "Control"}${side}`;
+
 export default function VideoNode({ id, selected }: NodeProps) {
   const module = useAppSelector((state) => selectVideoModule(state, id));
   if (!module) return null;
 
   const inputs = inputsFor(module.moduleType);
-  // ponytail: control outputs get no handle until control routes are drawn
-  // as cables; the picker on each prop creates them.
-  const textureOutputs = outputsFor(module.moduleType).filter(
-    (output) => output.kind === "texture",
-  );
+  const outputs = outputsFor(module.moduleType);
   const schema = videoModuleSchemas[module.moduleType];
   const props = module.props as Record<string, unknown>;
 
@@ -59,8 +61,11 @@ export default function VideoNode({ id, selected }: NodeProps) {
     <div className={getNodeContainerClassName(selected)}>
       {inputs.length > 0 && (
         <IOContainer type="input">
-          {inputs.map((name) => (
-            <IO key={name} io={{ name, ioType: "TextureInput" }} />
+          {inputs.map((port) => (
+            <IO
+              key={port.name}
+              io={{ name: port.name, ioType: ioType(port, "Input") }}
+            />
           ))}
         </IOContainer>
       )}
@@ -75,12 +80,12 @@ export default function VideoNode({ id, selected }: NodeProps) {
         {body()}
       </Stack>
 
-      {textureOutputs.length > 0 && (
+      {outputs.length > 0 && (
         <IOContainer type="output">
-          {textureOutputs.map((output) => (
+          {outputs.map((port) => (
             <IO
-              key={output.name}
-              io={{ name: output.name, ioType: "TextureOutput" }}
+              key={port.name}
+              io={{ name: port.name, ioType: ioType(port, "Output") }}
             />
           ))}
         </IOContainer>

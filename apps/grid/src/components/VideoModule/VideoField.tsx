@@ -1,11 +1,9 @@
 import type { EnumProp } from "@blibliki/engine";
-import { Stack } from "@blibliki/ui";
 import type { PropSchema } from "@blibliki/video-engine";
 import {
   InputField,
   SelectField,
 } from "@/components/AudioModule/attributes/Field";
-import BindingControl from "@/components/VideoModule/BindingControl";
 import { useAppDispatch } from "@/hooks";
 import { updateVideoModuleProps } from "@/video/videoPatchSlice";
 
@@ -33,14 +31,7 @@ export default function VideoField({ moduleId, prop, schema, value }: Props) {
   }
   if (schema.kind === "number") {
     return (
-      <Stack gap={1}>
-        <InputField
-          value={value as number}
-          schema={schema}
-          onChange={onChange}
-        />
-        <BindingControl moduleId={moduleId} prop={prop} schema={schema} />
-      </Stack>
+      <InputField value={value as number} schema={schema} onChange={onChange} />
     );
   }
 

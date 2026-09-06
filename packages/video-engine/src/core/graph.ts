@@ -52,7 +52,9 @@ export function buildPasses(
 
     visiting.add(id);
     const inputs: Record<string, string | null> = {};
-    for (const ioName of module.inputs) {
+    for (const input of module.inputs) {
+      if (input.kind !== "texture") continue;
+      const ioName = input.name;
       const sourceId = routes.sourceFor(id, ioName);
       inputs[ioName] = sourceId;
       if (sourceId !== null) visit(sourceId);

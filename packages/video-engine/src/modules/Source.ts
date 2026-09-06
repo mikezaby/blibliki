@@ -65,7 +65,12 @@ export const sourcePropSchema: ModulePropSchema<
 };
 
 export default class Source extends VideoModule<VideoModuleType.Source> {
-  readonly inputs = [] as const;
+  readonly inputs = [
+    { name: "hue", kind: "control" },
+    { name: "saturation", kind: "control" },
+    { name: "lightness", kind: "control" },
+    { name: "spread", kind: "control" },
+  ] as const;
   readonly schema = sourcePropSchema;
 
   constructor(params: ICreateVideoModule<VideoModuleType.Source>) {

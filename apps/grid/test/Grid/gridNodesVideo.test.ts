@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { Engine } from "@blibliki/engine";
+import { VideoModuleType } from "@blibliki/video-engine";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   connect,
@@ -16,11 +17,18 @@ const nodes = [
   { id: "fx", type: "videoNode", position: { x: 0, y: 0 }, data: {} },
 ];
 
+const videoModules = [
+  { id: "src", name: "src", moduleType: VideoModuleType.Source, props: {} },
+  { id: "fx", name: "fx", moduleType: VideoModuleType.HueRotate, props: {} },
+];
+
 function harness(edges: { id: string; source: string; target: string }[] = []) {
   const actions: Action[] = [];
   const getState = () =>
     ({
       gridNodes: { nodes, edges, viewport: { x: 0, y: 0, zoom: 1 } },
+      videoPatch: { modules: videoModules, routes: [] },
+      modules: { ids: [], entities: {} },
     }) as never;
   const dispatch = (action: unknown) => {
     if (typeof action === "function") {

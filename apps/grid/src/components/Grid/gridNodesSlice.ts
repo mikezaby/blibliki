@@ -9,13 +9,17 @@ import type {
   NodeChange,
   Viewport,
 } from "@xyflow/react";
-import { removeModule } from "@/components/AudioModule/modulesSlice";
+import {
+  modulesSelector,
+  removeModule,
+} from "@/components/AudioModule/modulesSlice";
 import { AppDispatch, RootState } from "@/store";
 import {
   addVideoRoute,
   removeVideoModule,
   removeVideoRoute,
 } from "@/video/videoPatchSlice";
+import { videoRouteFromConnection } from "@/video/videoRoutes";
 
 export type IGridNodes = {
   nodes: Node[];
@@ -136,16 +140,20 @@ export const onEdgesChange =
 export const connect =
   (connection: Connection) =>
   (dispatch: AppDispatch, getState: () => RootState) => {
-    const video = videoNodeIds(getState().gridNodes.nodes);
+    const state = getState();
+    const video = videoNodeIds(state.gridNodes.nodes);
     const { source, target } = connection;
     if (source && target && video.has(source) && video.has(target)) {
       const id = uuidv4();
       dispatch(
-        addVideoRoute({
-          id,
-          kind: "texture",
-          ...connectionToRoute(connection),
-        }),
+        addVideoRoute(
+          videoRouteFromConnection(
+            id,
+            connection,
+            state.videoPatch.modules,
+            modulesSelector.selectAll(state),
+          ),
+        ),
       );
       dispatch(addEdge({ id, ...connection }));
       return;

@@ -62,11 +62,9 @@ export class VideoEngine {
       );
     }
     const target = route.destination.ioName;
-    const accepts =
-      kind === "texture"
-        ? destination.inputs.includes(target)
-        : (destination.schema as Record<string, { kind: string }>)[target]
-            ?.kind === "number";
+    const accepts = destination.inputs.some(
+      (input) => input.name === target && input.kind === kind,
+    );
     if (!accepts) {
       throw new Error(`${destination.name} has no ${kind} input ${target}`);
     }

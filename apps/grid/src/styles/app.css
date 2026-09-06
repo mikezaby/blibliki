@@ -75,6 +75,12 @@ g.selected path.react-flow__edge-path {
     color-mix(in oklab, var(--ui-color-success-600), transparent 35%);
 }
 
+.io-handle--control {
+  background: var(--ui-color-warning-500);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklab, var(--ui-color-warning-600), transparent 35%);
+}
+
 .io-indicator--audio {
   background: var(--ui-color-primary-600);
   border-radius: 9999px;
@@ -87,6 +93,11 @@ g.selected path.react-flow__edge-path {
 
 .io-indicator--texture {
   background: var(--ui-color-success-600);
+  border-radius: 2px;
+}
+
+.io-indicator--control {
+  background: var(--ui-color-warning-600);
   border-radius: 2px;
 }
 
@@ -111,5 +122,13 @@ g.selected path.react-flow__edge-path {
     in oklab,
     var(--ui-color-text-primary),
     var(--ui-color-success-500) 42%
+  );
+}
+
+.io-label--control {
+  color: color-mix(
+    in oklab,
+    var(--ui-color-text-primary),
+    var(--ui-color-warning-500) 42%
   );
 }

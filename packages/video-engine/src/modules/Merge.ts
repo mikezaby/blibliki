@@ -40,7 +40,11 @@ export const mergePropSchema: ModulePropSchema<
 };
 
 export default class Merge extends VideoModule<VideoModuleType.Merge> {
-  readonly inputs = ["a", "b"] as const;
+  readonly inputs = [
+    { name: "a", kind: "texture" },
+    { name: "b", kind: "texture" },
+    { name: "amount", kind: "control" },
+  ] as const;
   readonly schema = mergePropSchema;
 
   constructor(params: ICreateVideoModule<VideoModuleType.Merge>) {
