@@ -127,9 +127,11 @@ comment; topological sort by control routes when it matters.
 ### Audio Prop
 
 Props: `moduleId` (an audio module), `prop` (one of its numeric props).
-Output `out` in 0 to 1: the prop's value normalized over its schema range, in
-slider space when the schema has `exp`, so the video side follows the knob's
-travel as the old binding did.
+Output `out` is the prop's raw value. The worker has no audio schemas (the
+package deliberately does not depend on the engine), so normalizing to 0 to 1
+happens on the control route: the picker fills the route's in range and
+`exp` from the audio prop's schema, which is what the old binding did, so a
+bound prop follows the knob's travel.
 
 The worker keeps the last pushed value per `<audioModuleId>:<prop>` in an
 internal map, exactly what the `controls` message delivers today. An Audio
@@ -184,8 +186,8 @@ additive, which is what an LFO on top of a band should do. Multiply and
 average are a later mode on the route if someone needs them.
 
 Route ids are uuids, so the engine holds several control routes per prop from
-the start. The picker can stay one-per-prop in the first cut and grow a list
-with add and remove when the second source is wanted.
+the start and adds them. The picker stays one-per-prop in the first cut and
+grows a list with add and remove when the second source is wanted.
 
 ## Main thread and grid
 
@@ -270,8 +272,10 @@ loads without it.
 1. Control routes: `kind` on `IRoute`, `outputs` on modules, `bindings`
    removed from engine, protocol and slice, `applyBindings` reading routes.
    Audio Prop as the first control module, since it restores what bindings
-   did and needs no new host message.
-2. Control module `tick` and the frame loop change. LFO.
+   did and needs no new host message. Done 2026-09-06, with `tick`, the
+   frame loop change and the additive mixing rule, since Audio Prop needs
+   the first two and the third is three lines once routes accumulate.
+2. LFO.
 3. Band, with the sample rate on the spectrum message and raw bins kept per
    Spectrum id. The fixed three bands go away with it.
 4. Multi-route picker.

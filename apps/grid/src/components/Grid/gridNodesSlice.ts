@@ -140,7 +140,13 @@ export const connect =
     const { source, target } = connection;
     if (source && target && video.has(source) && video.has(target)) {
       const id = uuidv4();
-      dispatch(addVideoRoute({ id, ...connectionToRoute(connection) }));
+      dispatch(
+        addVideoRoute({
+          id,
+          kind: "texture",
+          ...connectionToRoute(connection),
+        }),
+      );
       dispatch(addEdge({ id, ...connection }));
       return;
     }

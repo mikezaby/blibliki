@@ -1,57 +1,50 @@
-// @vitest-environment node
+// @vitest-environment jsdom
 import { ModuleType } from "@blibliki/engine";
+import { VideoModuleType } from "@blibliki/video-engine";
 import { describe, expect, it } from "vitest";
-import {
-  bindableControls,
-  controlLabel,
-} from "../../src/video/bindableControls";
+import { bindableControls } from "../../src/video/bindableControls";
 
-const modules = [
-  { id: "spec1", name: "Spectrum", moduleType: ModuleType.Spectrum },
-  { id: "osc1", name: "Osc", moduleType: ModuleType.Oscillator },
-];
+const osc = { id: "osc", name: "Osc", moduleType: ModuleType.Oscillator };
+const audioProp = {
+  id: "ap",
+  name: "Freq",
+  moduleType: VideoModuleType.AudioProp,
+  props: { moduleId: "osc", prop: "frequency" },
+};
+const fx = {
+  id: "fx",
+  name: "Hue Rotate",
+  moduleType: VideoModuleType.HueRotate,
+  props: { amount: 0 },
+};
 
 describe("bindableControls", () => {
-  it("lists four bands per Spectrum module with a 0..1 range", () => {
-    const controls = bindableControls(modules);
-    const low = controls.find((c) => c.control === "spectrum:spec1:low");
+  it("lists control outputs of control modules, not texture modules", () => {
+    const controls = bindableControls([audioProp, fx], [osc], "other");
 
-    expect(low).toEqual({
-      control: "spectrum:spec1:low",
-      label: "Spectrum · low",
-      group: "Spectrum",
-      min: 0,
-      max: 1,
-    });
-    expect(controls.filter((c) => c.group === "Spectrum")).toHaveLength(4);
-  });
-
-  it("lists bounded numeric props of audio modules with their schema range", () => {
-    const controls = bindableControls(modules);
-    const frequency = controls.find(
-      (c) => c.control === "patch:osc1:frequency",
-    );
-
-    expect(frequency?.group).toBe("Audio");
-    expect(frequency?.label).toBe("Osc · Frequency");
-    expect(frequency?.min).toBeLessThan(frequency?.max ?? 0);
-  });
-
-  it("carries the schema's exp so bindings follow the slider curve", () => {
-    const controls = bindableControls([
-      { id: "f1", name: "Filter", moduleType: ModuleType.Filter },
+    expect(controls.map((c) => c.source)).toEqual([
+      { moduleId: "ap", ioName: "out" },
     ]);
-    const cutoff = controls.find((c) => c.control === "patch:f1:cutoff");
-
-    expect(cutoff?.exp).toBe(5);
-    expect(
-      controls.find((c) => c.control === "spectrum:spec1:low"),
-    ).toBeUndefined();
+    expect(controls[0]?.label).toBe("Freq · out");
   });
 
-  it("labels an unknown control by its raw name", () => {
-    expect(controlLabel(bindableControls(modules), "patch:gone:x")).toBe(
-      "patch:gone:x",
-    );
+  it("takes the range of an Audio Prop from the audio prop's schema", () => {
+    const [control] = bindableControls([audioProp], [osc], "other");
+
+    expect(control?.min).toBe(0);
+    expect(control?.max).toBe(25000);
+  });
+
+  it("falls back to 0..1 when the Audio Prop points nowhere", () => {
+    const bare = { ...audioProp, props: { moduleId: "", prop: "" } };
+    const [control] = bindableControls([bare], [], "other");
+
+    expect(control?.min).toBe(0);
+    expect(control?.max).toBe(1);
+    expect(control?.exp).toBeUndefined();
+  });
+
+  it("excludes the module being bound", () => {
+    expect(bindableControls([audioProp], [osc], "ap")).toEqual([]);
   });
 });

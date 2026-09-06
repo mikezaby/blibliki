@@ -1,8 +1,6 @@
-import { Optional } from "@blibliki/utils";
 import { IVideoPatch } from "./VideoEngine";
 import { ICreateVideoModule } from "./core/Module";
-import { IRoute } from "./core/Routes";
-import { IBinding } from "./core/controls";
+import { ICreateRoute } from "./core/Routes";
 
 export type HostMessage =
   | {
@@ -19,10 +17,8 @@ export type HostMessage =
   | { type: "addModule"; module: ICreateVideoModule }
   | { type: "removeModule"; id: string }
   | { type: "updateProps"; id: string; props: Record<string, unknown> }
-  | { type: "addRoute"; route: Optional<IRoute, "id"> }
+  | { type: "addRoute"; route: ICreateRoute }
   | { type: "removeRoute"; id: string }
-  | { type: "setBinding"; binding: IBinding }
-  | { type: "removeBinding"; id: string }
   | { type: "controls"; values: Record<string, number> }
   | { type: "spectrum"; moduleId: string; bins: Float32Array };
 

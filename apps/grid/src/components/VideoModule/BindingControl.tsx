@@ -12,52 +12,61 @@ import {
   Label,
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
   Stack,
   Text,
 } from "@blibliki/ui";
+import { uuidv4 } from "@blibliki/utils";
 import { Link2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { modulesSelector } from "@/components/AudioModule/modulesSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { bindableControls, controlLabel } from "@/video/bindableControls";
-import { removeVideoBinding, setVideoBinding } from "@/video/videoPatchSlice";
+import {
+  bindableControls,
+  controlLabel,
+  plugKey,
+} from "@/video/bindableControls";
+import {
+  addVideoRoute,
+  removeVideoRoute,
+  selectControlRoute,
+} from "@/video/videoPatchSlice";
 
 type Props = { moduleId: string; prop: string; schema: NumberProp };
 
 const RANGE_KEYS = ["inMin", "inMax", "outMin", "outMax"] as const;
-const GROUPS = ["Spectrum", "Audio"] as const;
 
+// ponytail: one control route per prop here; the engine already adds several,
+// a list with add and remove when a second source is wanted.
 // ponytail: slider shows the stored value; a per-frame values message from
 // the worker if following the live value matters
 export default function BindingControl({ moduleId, prop, schema }: Props) {
   const dispatch = useAppDispatch();
   const id = `${moduleId}:${prop}`;
-  const binding = useAppSelector((state) =>
-    state.videoPatch.bindings.find((b) => b.id === id),
+  const route = useAppSelector((state) =>
+    selectControlRoute(state, moduleId, prop),
   );
   const audioModules = useAppSelector(modulesSelector.selectAll);
+  const videoModules = useAppSelector((state) => state.videoPatch.modules);
   const controls = useMemo(
-    () => bindableControls(audioModules),
-    [audioModules],
+    () => bindableControls(videoModules, audioModules, moduleId),
+    [videoModules, audioModules, moduleId],
   );
 
-  const [control, setControl] = useState(binding?.control ?? "");
-  const [exp, setExp] = useState(binding?.exp);
+  const [source, setSource] = useState(route ? plugKey(route.source) : "");
+  const [exp, setExp] = useState(route?.exp);
   const [range, setRange] = useState({
-    inMin: binding?.inMin ?? 0,
-    inMax: binding?.inMax ?? 1,
-    outMin: binding?.outMin ?? schema.min,
-    outMax: binding?.outMax ?? schema.max,
+    inMin: route?.inMin ?? 0,
+    inMax: route?.inMax ?? 1,
+    outMin: route?.outMin ?? schema.min,
+    outMax: route?.outMax ?? schema.max,
   });
 
   const choose = (next: string) => {
-    const chosen = controls.find((c) => c.control === next);
-    setControl(next);
+    const chosen = controls.find((c) => plugKey(c.source) === next);
+    setSource(next);
     if (chosen) {
       setRange((r) => ({ ...r, inMin: chosen.min, inMax: chosen.max }));
       setExp(chosen.exp);
@@ -65,20 +74,30 @@ export default function BindingControl({ moduleId, prop, schema }: Props) {
   };
 
   const save = () => {
-    if (!control) return;
-    dispatch(setVideoBinding({ id, moduleId, prop, control, exp, ...range }));
+    const chosen = controls.find((c) => plugKey(c.source) === source);
+    if (!chosen) return;
+    dispatch(
+      addVideoRoute({
+        id: route?.id ?? uuidv4(),
+        kind: "control",
+        source: chosen.source,
+        destination: { moduleId, ioName: prop },
+        exp,
+        ...range,
+      }),
+    );
   };
 
   const unlink = () => {
-    dispatch(removeVideoBinding(id));
-    setControl("");
+    if (route) dispatch(removeVideoRoute(route.id));
+    setSource("");
   };
 
   return (
     <Stack direction="row" align="center" gap={1}>
-      {binding && (
+      {route && (
         <Text size="xs" tone="muted" className="truncate">
-          {controlLabel(controls, binding.control)}
+          {controlLabel(controls, route.source)}
         </Text>
       )}
       <Dialog>
@@ -87,7 +106,7 @@ export default function BindingControl({ moduleId, prop, schema }: Props) {
             aria-label={`Bind ${schema.label}`}
             size="xs"
             variant="text"
-            color={binding ? "primary" : "neutral"}
+            color={route ? "primary" : "neutral"}
             icon={<Link2 className="h-3 w-3" />}
           />
         </DialogTrigger>
@@ -95,26 +114,19 @@ export default function BindingControl({ moduleId, prop, schema }: Props) {
           <DialogHeader>
             <DialogTitle>Bind {schema.label}</DialogTitle>
             <DialogDescription>
-              Follow a spectrum band or an audio module prop.
+              Follow the output of a control module, such as an Audio Prop.
             </DialogDescription>
           </DialogHeader>
           <Stack gap={3}>
-            <Select value={control} onValueChange={choose}>
+            <Select value={source} onValueChange={choose}>
               <SelectTrigger aria-label="Control">
                 <SelectValue placeholder="Choose a control" />
               </SelectTrigger>
               <SelectContent>
-                {GROUPS.map((group) => (
-                  <SelectGroup key={group}>
-                    <SelectLabel>{group}</SelectLabel>
-                    {controls
-                      .filter((c) => c.group === group)
-                      .map((c) => (
-                        <SelectItem key={c.control} value={c.control}>
-                          {c.label}
-                        </SelectItem>
-                      ))}
-                  </SelectGroup>
+                {controls.map((c) => (
+                  <SelectItem key={plugKey(c.source)} value={plugKey(c.source)}>
+                    {c.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -137,10 +149,10 @@ export default function BindingControl({ moduleId, prop, schema }: Props) {
               ))}
             </Stack>
             <Stack direction="row" gap={2}>
-              <Button color="primary" onClick={save} disabled={!control}>
+              <Button color="primary" onClick={save} disabled={!source}>
                 Save
               </Button>
-              {binding && (
+              {route && (
                 <Button variant="text" color="neutral" onClick={unlink}>
                   Unlink
                 </Button>

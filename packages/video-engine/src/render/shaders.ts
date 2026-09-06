@@ -20,7 +20,8 @@ vec3 hsl2rgb(vec3 c) {
   return c.z + c.y * (rgb - 0.5) * (1.0 - abs(2.0 * c.z - 1.0));
 }`;
 
-export const FRAGMENT: Record<VideoModuleType, string> = {
+// Control modules have no shader; they never become a pass.
+export const FRAGMENT: Partial<Record<VideoModuleType, string>> = {
   [VideoModuleType.Source]: `${HEADER}
 uniform float u_mode, u_hue, u_saturation, u_lightness, u_spread;
 ${HSL}

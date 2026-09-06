@@ -1,6 +1,5 @@
 import {
   createModule,
-  type IBinding,
   type IRoute,
   type IVideoModule,
   type IVideoPatch,
@@ -15,7 +14,13 @@ import type { AppDispatch, RootState } from "@/store";
 export const EMPTY_VIDEO_PATCH: IVideoPatch = {
   modules: [],
   routes: [],
-  bindings: [],
+};
+
+// Patches saved before route kinds have routes without `kind` and a
+// `bindings` list, which is dropped.
+export type SavedVideoPatch = {
+  modules?: IVideoModule[];
+  routes?: (Omit<IRoute, "kind"> & { kind?: IRoute["kind"] })[];
 };
 
 export const VIDEO_MODULE_NAMES: Record<VideoModuleType, string> = {
@@ -23,6 +28,7 @@ export const VIDEO_MODULE_NAMES: Record<VideoModuleType, string> = {
   [VideoModuleType.HueRotate]: "Hue Rotate",
   [VideoModuleType.Merge]: "Merge",
   [VideoModuleType.Output]: "Visuals",
+  [VideoModuleType.AudioProp]: "Audio Prop",
 };
 
 const samePlug = (a: IRoute["destination"], b: IRoute["destination"]) =>
@@ -32,7 +38,13 @@ export const videoPatchSlice = createSlice({
   name: "videoPatch",
   initialState: EMPTY_VIDEO_PATCH,
   reducers: {
-    setVideoPatch: (_, action: PayloadAction<IVideoPatch>) => action.payload,
+    setVideoPatch: (_, action: PayloadAction<SavedVideoPatch>) => ({
+      modules: action.payload.modules ?? [],
+      routes: (action.payload.routes ?? []).map((route) => ({
+        ...route,
+        kind: route.kind ?? "texture",
+      })),
+    }),
     clearVideoPatch: () => EMPTY_VIDEO_PATCH,
     addVideoModule: (state, action: PayloadAction<IVideoModule>) => {
       state.modules.push(action.payload);
@@ -43,7 +55,6 @@ export const videoPatchSlice = createSlice({
       state.routes = state.routes.filter(
         (r) => r.source.moduleId !== id && r.destination.moduleId !== id,
       );
-      state.bindings = state.bindings.filter((b) => b.moduleId !== id);
     },
     updateVideoModuleProps: (
       state,
@@ -52,30 +63,23 @@ export const videoPatchSlice = createSlice({
       const module = state.modules.find((m) => m.id === action.payload.id);
       if (module) Object.assign(module.props, action.payload.props);
     },
+    // A texture route replaces the one into the same input; control routes
+    // into one prop accumulate. Re-adding an id replaces that route.
     addVideoRoute: (state, action: PayloadAction<IRoute>) => {
+      const route = action.payload;
       state.routes = state.routes.filter(
-        (r) => !samePlug(r.destination, action.payload.destination),
+        (r) =>
+          r.id !== route.id &&
+          !(
+            route.kind === "texture" &&
+            r.kind === "texture" &&
+            samePlug(r.destination, route.destination)
+          ),
       );
-      state.routes.push(action.payload);
+      state.routes.push(route);
     },
     removeVideoRoute: (state, action: PayloadAction<string>) => {
       state.routes = state.routes.filter((r) => r.id !== action.payload);
-    },
-    setVideoBinding: (state, action: PayloadAction<IBinding>) => {
-      state.bindings = state.bindings.filter((b) => b.id !== action.payload.id);
-      state.bindings.push(action.payload);
-    },
-    removeVideoBinding: (state, action: PayloadAction<string>) => {
-      state.bindings = state.bindings.filter((b) => b.id !== action.payload);
-    },
-    removeBindingsForAudioModule: (state, action: PayloadAction<string>) => {
-      const prefixes = [
-        `patch:${action.payload}:`,
-        `spectrum:${action.payload}:`,
-      ];
-      state.bindings = state.bindings.filter(
-        (b) => !prefixes.some((p) => b.control.startsWith(p)),
-      );
     },
   },
 });
@@ -88,9 +92,6 @@ export const {
   updateVideoModuleProps,
   addVideoRoute,
   removeVideoRoute,
-  setVideoBinding,
-  removeVideoBinding,
-  removeBindingsForAudioModule,
 } = videoPatchSlice.actions;
 
 export const addNewVideoModule =
@@ -121,5 +122,17 @@ export const addNewVideoModule =
 
 export const selectVideoModule = (state: RootState, id: string) =>
   state.videoPatch.modules.find((m) => m.id === id);
+
+export const selectControlRoute = (
+  state: RootState,
+  moduleId: string,
+  prop: string,
+) =>
+  state.videoPatch.routes.find(
+    (r) =>
+      r.kind === "control" &&
+      r.destination.moduleId === moduleId &&
+      r.destination.ioName === prop,
+  );
 
 export default videoPatchSlice.reducer;

@@ -1,48 +1,57 @@
 import { moduleSchemas, ModuleType, type PropSchema } from "@blibliki/engine";
+import {
+  type IPlug,
+  type IVideoModule,
+  outputsFor,
+  VideoModuleType,
+} from "@blibliki/video-engine";
 
 export type BindableControl = {
-  control: string;
+  source: IPlug;
   label: string;
-  group: "Spectrum" | "Audio";
   min: number;
   max: number;
   exp?: number;
 };
 
-type ModuleInfo = { id: string; name: string; moduleType: ModuleType };
+type AudioModuleInfo = { id: string; name: string; moduleType: ModuleType };
 
-const BANDS = ["low", "mid", "high", "level"] as const;
+const UNIT = { min: 0, max: 1 };
 
-export function bindableControls(modules: ModuleInfo[]): BindableControl[] {
+// An Audio Prop outputs the raw prop value, so its range is the audio prop's
+// schema range; every other control output is 0..1.
+function rangeOf(
+  module: IVideoModule,
+  audioModules: AudioModuleInfo[],
+): Pick<BindableControl, "min" | "max" | "exp"> {
+  if (module.moduleType !== VideoModuleType.AudioProp) return UNIT;
+
+  const { moduleId, prop } = module.props as { moduleId: string; prop: string };
+  const audio = audioModules.find((m) => m.id === moduleId);
+  if (!audio) return UNIT;
+  const schema = (
+    moduleSchemas[audio.moduleType] as Record<string, PropSchema>
+  )[prop];
+  if (schema?.kind !== "number") return UNIT;
+
+  return { min: schema.min, max: schema.max, exp: schema.exp };
+}
+
+export function bindableControls(
+  videoModules: IVideoModule[],
+  audioModules: AudioModuleInfo[],
+  excludeId: string,
+): BindableControl[] {
   const controls: BindableControl[] = [];
 
-  for (const module of modules) {
-    if (module.moduleType === ModuleType.Spectrum) {
-      for (const band of BANDS) {
-        controls.push({
-          control: `spectrum:${module.id}:${band}`,
-          label: `${module.name} · ${band}`,
-          group: "Spectrum",
-          min: 0,
-          max: 1,
-        });
-      }
-    }
-
-    const schema = moduleSchemas[module.moduleType] as
-      Record<string, PropSchema> | undefined;
-    if (!schema) continue;
-    for (const [prop, propSchema] of Object.entries(schema)) {
-      if (propSchema.kind !== "number") continue;
-      if (!Number.isFinite(propSchema.min) || !Number.isFinite(propSchema.max))
-        continue;
+  for (const module of videoModules) {
+    if (module.id === excludeId) continue;
+    for (const output of outputsFor(module.moduleType)) {
+      if (output.kind !== "control") continue;
       controls.push({
-        control: `patch:${module.id}:${prop}`,
-        label: `${module.name} · ${propSchema.label}`,
-        group: "Audio",
-        min: propSchema.min,
-        max: propSchema.max,
-        exp: propSchema.exp,
+        source: { moduleId: module.id, ioName: output.name },
+        label: `${module.name} · ${output.name}`,
+        ...rangeOf(module, audioModules),
       });
     }
   }
@@ -50,9 +59,14 @@ export function bindableControls(modules: ModuleInfo[]): BindableControl[] {
   return controls;
 }
 
+export const plugKey = (plug: IPlug) => `${plug.moduleId}:${plug.ioName}`;
+
 export function controlLabel(
   controls: BindableControl[],
-  control: string,
+  source: IPlug,
 ): string {
-  return controls.find((c) => c.control === control)?.label ?? control;
+  return (
+    controls.find((c) => plugKey(c.source) === plugKey(source))?.label ??
+    plugKey(source)
+  );
 }

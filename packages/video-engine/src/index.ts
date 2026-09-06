@@ -1,19 +1,34 @@
 export { VideoModule } from "./core/Module";
-export type { ICreateVideoModule, IVideoModule } from "./core/Module";
-export type { ModulePropSchema, PropSchema } from "./core/schema";
+export type {
+  ControlValues,
+  FrameClock,
+  ICreateVideoModule,
+  IOutput,
+  IVideoModule,
+} from "./core/Module";
+export type {
+  AudioModuleProp,
+  ModulePropSchema,
+  PropSchema,
+} from "./core/schema";
 export {
   createModule,
   inputsFor,
+  outputsFor,
   videoModuleSchemas,
   VideoModuleType,
 } from "./modules";
 export type { VideoPropsMapping } from "./modules";
 export { Routes } from "./core/Routes";
-export type { IPlug, IRoute } from "./core/Routes";
+export type { ICreateRoute, IOKind, IPlug, IRoute } from "./core/Routes";
 export { buildPasses } from "./core/graph";
 export type { RenderPass } from "./core/graph";
-export { applyBindings, mapRange, spectrumToControls } from "./core/controls";
-export type { ControlValues, IBinding } from "./core/controls";
+export {
+  applyControlRoutes,
+  controlName,
+  mapRange,
+  spectrumToControls,
+} from "./core/controls";
 export { VideoEngine } from "./VideoEngine";
 export type { IVideoPatch } from "./VideoEngine";
 export type { GraphMessage, HostMessage, WorkerMessage } from "./protocol";

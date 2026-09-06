@@ -57,10 +57,6 @@ describe("Patch.build", () => {
   });
 
   it("defaults to an empty video patch", () => {
-    expect(Patch.build().config.video).toEqual({
-      modules: [],
-      routes: [],
-      bindings: [],
-    });
+    expect(Patch.build().config.video).toEqual({ modules: [], routes: [] });
   });
 });

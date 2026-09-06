@@ -84,7 +84,7 @@ const DEFAULT_PATCH: IPatch = {
       edges: [],
       viewport: DEFAULT_VIEWPORT,
     },
-    video: { modules: [], routes: [], bindings: [] },
+    video: { modules: [], routes: [] },
   },
 };
 

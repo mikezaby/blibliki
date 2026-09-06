@@ -1,20 +1,25 @@
-import { Optional } from "@blibliki/utils";
-import { ICreateVideoModule, IVideoModule, VideoModule } from "./core/Module";
-import { IRoute, Routes } from "./core/Routes";
-import { applyBindings, IBinding } from "./core/controls";
+import {
+  FrameClock,
+  ICreateVideoModule,
+  IVideoModule,
+  VideoModule,
+} from "./core/Module";
+import { ICreateRoute, IRoute, Routes } from "./core/Routes";
+import { applyControlRoutes, controlName } from "./core/controls";
 import { buildPasses, RenderPass } from "./core/graph";
+import { PropSchema } from "./core/schema";
 import { createModule, VideoModuleType, VideoPropsMapping } from "./modules";
 
 export type IVideoPatch = {
   modules: IVideoModule[];
   routes: IRoute[];
-  bindings: IBinding[];
 };
 
 export class VideoEngine {
   readonly modules = new Map<string, VideoModule>();
   readonly routes = new Routes();
-  readonly bindings = new Map<string, IBinding>();
+  // Control values by "<moduleId>:<output>": audio prop mirrors and spectrum
+  // bands pushed by the host, and control module outputs written by tick.
   private controls = new Map<string, number>();
 
   addModule<T extends VideoModuleType>(
@@ -29,9 +34,6 @@ export class VideoEngine {
   removeModule(id: string) {
     this.modules.delete(id);
     this.routes.removeForModule(id);
-    for (const [bindingId, binding] of this.bindings) {
-      if (binding.moduleId === id) this.bindings.delete(bindingId);
-    }
   }
 
   findModule(id: string): VideoModule {
@@ -48,9 +50,26 @@ export class VideoEngine {
     (this.findModule(id) as VideoModule<T>).updateProps(props);
   }
 
-  addRoute(route: Optional<IRoute, "id">): IRoute {
-    this.findModule(route.source.moduleId);
-    this.findModule(route.destination.moduleId);
+  addRoute(route: ICreateRoute): IRoute {
+    const kind = route.kind ?? "texture";
+    const source = this.findModule(route.source.moduleId);
+    const destination = this.findModule(route.destination.moduleId);
+
+    const output = source.outputs.find((o) => o.name === route.source.ioName);
+    if (output?.kind !== kind) {
+      throw new Error(
+        `${source.name} has no ${kind} output ${route.source.ioName}`,
+      );
+    }
+    const target = route.destination.ioName;
+    const accepts =
+      kind === "texture"
+        ? destination.inputs.includes(target)
+        : (destination.schema as Record<string, { kind: string }>)[target]
+            ?.kind === "number";
+    if (!accepts) {
+      throw new Error(`${destination.name} has no ${kind} input ${target}`);
+    }
 
     return this.routes.addRoute(route);
   }
@@ -59,29 +78,31 @@ export class VideoEngine {
     this.routes.removeRoute(id);
   }
 
-  setBinding(binding: IBinding) {
-    this.findModule(binding.moduleId);
-    this.bindings.set(binding.id, binding);
-  }
-
-  removeBinding(id: string) {
-    this.bindings.delete(id);
-  }
-
   setControls(values: Record<string, number>) {
     for (const [name, value] of Object.entries(values)) {
       this.controls.set(name, value);
     }
   }
 
-  passes(): RenderPass[] {
-    const bindings = Array.from(this.bindings.values());
+  // ponytail: modules tick in insertion order, so a chain of control modules
+  // lags one frame per hop; sort by control routes when it matters.
+  tick(frame: FrameClock) {
+    for (const module of this.modules.values()) {
+      const outputs = module.tick(this.controls, frame);
+      if (!outputs) continue;
+      for (const [name, value] of Object.entries(outputs)) {
+        this.controls.set(controlName(module.id, name), value);
+      }
+    }
+  }
 
+  passes(): RenderPass[] {
     return buildPasses(this.modules, this.routes, (module) =>
-      applyBindings(
+      applyControlRoutes(
         module.props as Record<string, unknown>,
-        bindings.filter((b) => b.moduleId === module.id),
+        this.routes.controlRoutesFor(module.id),
         this.controls,
+        module.schema as Record<string, PropSchema>,
       ),
     );
   }
@@ -90,18 +111,15 @@ export class VideoEngine {
     return {
       modules: Array.from(this.modules.values()).map((m) => m.serialize()),
       routes: this.routes.serialize(),
-      bindings: Array.from(this.bindings.values()),
     };
   }
 
+  // Patches saved before route kinds carry routes without `kind` (texture)
+  // and a `bindings` list, which is ignored.
   load(patch: IVideoPatch) {
     this.modules.clear();
     this.routes.clear();
-    this.bindings.clear();
     patch.modules.forEach((m) => this.addModule(m));
     patch.routes.forEach((r) => this.addRoute(r));
-    patch.bindings.forEach((b) => {
-      this.setBinding(b);
-    });
   }
 }

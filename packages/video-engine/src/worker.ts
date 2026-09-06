@@ -8,6 +8,7 @@ const engine = new VideoEngine();
 const views = new Views();
 let renderer: Renderer | null = null;
 let frameHandle = 0;
+let lastFrame = 0;
 
 function post(message: WorkerMessage) {
   const transfer =
@@ -37,6 +38,9 @@ function frame(now: number) {
     renderer ??= new Renderer(new OffscreenCanvas(1, 1));
     const { width, height } = views.renderSize();
     renderer.resize(width, height);
+    const seconds = now / 1000;
+    engine.tick({ now: seconds, dt: lastFrame ? seconds - lastFrame : 0 });
+    lastFrame = seconds;
     renderer.render(engine.passes());
     for (const view of views.due(now)) {
       void createImageBitmap(renderer.canvas, {

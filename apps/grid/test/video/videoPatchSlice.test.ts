@@ -1,142 +1,89 @@
-// @vitest-environment node
-import { VideoModuleType } from "@blibliki/video-engine";
+// @vitest-environment jsdom
+import { VideoModuleType, type IRoute } from "@blibliki/video-engine";
 import { describe, expect, it } from "vitest";
 import reducer, {
-  addNewVideoModule,
-  addVideoModule,
   addVideoRoute,
   EMPTY_VIDEO_PATCH,
-  removeBindingsForAudioModule,
   removeVideoModule,
-  setVideoBinding,
-  updateVideoModuleProps,
+  setVideoPatch,
 } from "../../src/video/videoPatchSlice";
 
-const src = {
-  id: "src",
-  name: "Source",
-  moduleType: VideoModuleType.Source,
-  props: {
-    mode: "solid" as const,
-    hue: 0,
-    saturation: 1,
-    lightness: 0.5,
-    spread: 180,
-  },
+const audioProp = {
+  id: "ap",
+  name: "Audio Prop",
+  moduleType: VideoModuleType.AudioProp,
+  props: { moduleId: "osc", prop: "frequency" },
 };
 const fx = {
   id: "fx",
-  name: "Hue",
+  name: "Hue Rotate",
   moduleType: VideoModuleType.HueRotate,
   props: { amount: 0 },
 };
-const route = {
-  id: "r1",
+const control: IRoute = {
+  id: "c1",
+  kind: "control",
+  source: { moduleId: "ap", ioName: "out" },
+  destination: { moduleId: "fx", ioName: "amount" },
+};
+const texture: IRoute = {
+  id: "t1",
+  kind: "texture",
   source: { moduleId: "src", ioName: "out" },
   destination: { moduleId: "fx", ioName: "in" },
 };
-const binding = {
-  id: "fx:amount",
-  moduleId: "fx",
-  prop: "amount",
-  control: "spectrum:spec1:low",
-  inMin: 0,
-  inMax: 1,
-  outMin: 0,
-  outMax: 360,
-};
-
-function patch() {
-  let state = reducer(EMPTY_VIDEO_PATCH, addVideoModule(src));
-  state = reducer(state, addVideoModule(fx));
-  state = reducer(state, addVideoRoute(route));
-  return reducer(state, setVideoBinding(binding));
-}
-
-function harness(videoPatch: typeof EMPTY_VIDEO_PATCH) {
-  const actions: { type: string; payload?: unknown }[] = [];
-  const getState = () => ({ videoPatch }) as never;
-  const dispatch = (action: unknown) => {
-    if (typeof action === "function") {
-      return (action as (d: typeof dispatch, g: typeof getState) => unknown)(
-        dispatch,
-        getState,
-      );
-    }
-    actions.push(action as { type: string; payload?: unknown });
-    return action;
-  };
-  return { actions, dispatch, getState };
-}
 
 describe("videoPatchSlice", () => {
-  it("updates props by merging", () => {
-    const state = reducer(
-      patch(),
-      updateVideoModuleProps({ id: "fx", props: { amount: 90 } }),
-    );
-    expect(state.modules[1]?.props).toEqual({ amount: 90 });
-  });
-
-  it("replaces a route into an occupied input", () => {
-    const state = reducer(patch(), addVideoRoute({ ...route, id: "r2" }));
-    expect(state.routes.map((r) => r.id)).toEqual(["r2"]);
-  });
-
-  it("removing a module drops its routes and bindings", () => {
-    const state = reducer(patch(), removeVideoModule("fx"));
-    expect(state.modules.map((m) => m.id)).toEqual(["src"]);
-    expect(state.routes).toEqual([]);
-    expect(state.bindings).toEqual([]);
-  });
-
-  it("setting a binding replaces one with the same id", () => {
-    const state = reducer(
-      patch(),
-      setVideoBinding({ ...binding, outMax: 180 }),
-    );
-    expect(state.bindings).toEqual([{ ...binding, outMax: 180 }]);
-  });
-
-  it("drops bindings that read a removed audio module", () => {
-    const state = reducer(patch(), removeBindingsForAudioModule("spec1"));
-    expect(state.bindings).toEqual([]);
-  });
-
-  it("adds a video module and a videoNode grid node", () => {
-    const { actions, dispatch, getState } = harness(EMPTY_VIDEO_PATCH);
-
-    addNewVideoModule({
-      type: VideoModuleType.Output,
-      position: { x: 0, y: 0 },
-    })(dispatch as never, getState);
-
-    expect(actions.map((a) => a.type)).toEqual([
-      "videoPatch/addVideoModule",
-      "gridNodes/addNode",
-    ]);
-    expect(actions[1]?.payload).toMatchObject({ type: "videoNode" });
-  });
-
-  it("refuses a second Output module with a notification", () => {
-    const output = {
-      id: "out",
-      name: "Visuals",
-      moduleType: VideoModuleType.Output,
-      props: {},
+  it("removing a module drops routes on either end", () => {
+    const state = {
+      modules: [audioProp, fx],
+      routes: [control, texture],
     };
-    const { actions, dispatch, getState } = harness({
-      ...EMPTY_VIDEO_PATCH,
-      modules: [output],
+
+    expect(reducer(state, removeVideoModule("ap")).routes).toEqual([texture]);
+    expect(reducer(state, removeVideoModule("fx")).routes).toEqual([]);
+  });
+
+  it("keeps several control routes into one prop", () => {
+    const second = {
+      ...control,
+      id: "c2",
+      source: { moduleId: "lfo", ioName: "out" },
+    };
+    const state = reducer(
+      { modules: [], routes: [control] },
+      addVideoRoute(second),
+    );
+
+    expect(state.routes).toEqual([control, second]);
+  });
+
+  it("replaces a texture route into an occupied input", () => {
+    const second = {
+      ...texture,
+      id: "t2",
+      source: { moduleId: "other", ioName: "out" },
+    };
+    const state = reducer(
+      { modules: [], routes: [texture, control] },
+      addVideoRoute(second),
+    );
+
+    expect(state.routes).toEqual([control, second]);
+  });
+
+  it("loads a saved patch without its bindings and with route kinds", () => {
+    const saved = {
+      modules: [fx],
+      routes: [
+        { id: "t1", source: texture.source, destination: texture.destination },
+      ],
+      bindings: [{ id: "b" }],
+    };
+
+    expect(reducer(EMPTY_VIDEO_PATCH, setVideoPatch(saved))).toEqual({
+      modules: [fx],
+      routes: [texture],
     });
-
-    addNewVideoModule({
-      type: VideoModuleType.Output,
-      position: { x: 0, y: 0 },
-    })(dispatch as never, getState);
-
-    expect(actions.map((a) => a.type)).toEqual([
-      "notifications/addNotification",
-    ]);
   });
 });

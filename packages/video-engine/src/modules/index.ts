@@ -1,6 +1,7 @@
 import { assertNever } from "@blibliki/utils";
-import { ICreateVideoModule, VideoModule } from "@/core/Module";
+import { ICreateVideoModule, IOutput, VideoModule } from "@/core/Module";
 import { PropSchema } from "@/core/schema";
+import AudioProp, { audioPropPropSchema, IAudioPropProps } from "./AudioProp";
 import HueRotate, { hueRotatePropSchema, IHueRotateProps } from "./HueRotate";
 import Merge, { IMergeProps, mergePropSchema } from "./Merge";
 import Output, { IOutputProps, outputPropSchema } from "./Output";
@@ -11,6 +12,7 @@ export enum VideoModuleType {
   HueRotate = "HueRotate",
   Merge = "Merge",
   Output = "Output",
+  AudioProp = "AudioProp",
 }
 
 export type VideoPropsMapping = {
@@ -18,6 +20,7 @@ export type VideoPropsMapping = {
   [VideoModuleType.HueRotate]: IHueRotateProps;
   [VideoModuleType.Merge]: IMergeProps;
   [VideoModuleType.Output]: IOutputProps;
+  [VideoModuleType.AudioProp]: IAudioPropProps;
 };
 
 export function createModule<T extends VideoModuleType>(
@@ -35,11 +38,16 @@ export function createModule<T extends VideoModuleType>(
       return new Merge(params as ICreateVideoModule<VideoModuleType.Merge>);
     case VideoModuleType.Output:
       return new Output(params as ICreateVideoModule<VideoModuleType.Output>);
+    case VideoModuleType.AudioProp:
+      return new AudioProp(
+        params as ICreateVideoModule<VideoModuleType.AudioProp>,
+      );
     default:
       return assertNever(type);
   }
 }
 
+export type { IAudioPropProps } from "./AudioProp";
 export type { IHueRotateProps } from "./HueRotate";
 export type { IMergeProps, MergeMode } from "./Merge";
 export { MERGE_MODES } from "./Merge";
@@ -54,15 +62,20 @@ export const videoModuleSchemas: Record<
   [VideoModuleType.HueRotate]: hueRotatePropSchema,
   [VideoModuleType.Merge]: mergePropSchema,
   [VideoModuleType.Output]: outputPropSchema,
+  [VideoModuleType.AudioProp]: audioPropPropSchema,
 };
 
-const MODULE_INPUTS = Object.fromEntries(
+const PROTOTYPES = Object.fromEntries(
   Object.values(VideoModuleType).map((moduleType) => [
     moduleType,
-    createModule({ name: moduleType, moduleType }).inputs,
+    createModule({ name: moduleType, moduleType }),
   ]),
-) as Record<VideoModuleType, readonly string[]>;
+) as Record<VideoModuleType, VideoModule>;
 
 export function inputsFor(moduleType: VideoModuleType): readonly string[] {
-  return MODULE_INPUTS[moduleType];
+  return PROTOTYPES[moduleType].inputs;
+}
+
+export function outputsFor(moduleType: VideoModuleType): readonly IOutput[] {
+  return PROTOTYPES[moduleType].outputs;
 }

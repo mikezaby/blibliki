@@ -9,6 +9,7 @@ export const outputPropSchema: ModulePropSchema<IOutputProps> = {};
 
 export default class Output extends VideoModule<VideoModuleType.Output> {
   readonly inputs = ["in"] as const;
+  readonly outputs = [] as const;
   readonly schema = outputPropSchema;
 
   constructor(params: ICreateVideoModule<VideoModuleType.Output>) {

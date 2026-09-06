@@ -1,10 +1,12 @@
 import { Stack, Text } from "@blibliki/ui";
 import {
   inputsFor,
+  outputsFor,
   videoModuleSchemas,
   VideoModuleType,
 } from "@blibliki/video-engine";
 import type { NodeProps } from "@xyflow/react";
+import AudioPropBody from "@/components/VideoModule/AudioPropBody";
 import VideoField from "@/components/VideoModule/VideoField";
 import VisualsBody from "@/components/VideoModule/VisualsBody";
 import { useAppSelector } from "@/hooks";
@@ -16,9 +18,42 @@ export default function VideoNode({ id, selected }: NodeProps) {
   if (!module) return null;
 
   const inputs = inputsFor(module.moduleType);
-  const isOutput = module.moduleType === VideoModuleType.Output;
+  // ponytail: control outputs get no handle until control routes are drawn
+  // as cables; the picker on each prop creates them.
+  const textureOutputs = outputsFor(module.moduleType).filter(
+    (output) => output.kind === "texture",
+  );
   const schema = videoModuleSchemas[module.moduleType];
   const props = module.props as Record<string, unknown>;
+
+  const body = () => {
+    switch (module.moduleType) {
+      case VideoModuleType.Output:
+        return <VisualsBody id={module.id} />;
+      case VideoModuleType.AudioProp:
+        return (
+          <AudioPropBody
+            id={module.id}
+            moduleId={props.moduleId as string}
+            prop={props.prop as string}
+          />
+        );
+      default:
+        return (
+          <Stack direction="row" gap={2} className="flex-wrap">
+            {Object.entries(schema).map(([prop, propSchema]) => (
+              <VideoField
+                key={prop}
+                moduleId={module.id}
+                prop={prop}
+                schema={propSchema}
+                value={props[prop]}
+              />
+            ))}
+          </Stack>
+        );
+    }
+  };
 
   return (
     <div className={getNodeContainerClassName(selected)}>
@@ -37,26 +72,17 @@ export default function VideoNode({ id, selected }: NodeProps) {
             <span>{module.name}</span>
           </Text>
         </Stack>
-        {isOutput ? (
-          <VisualsBody id={module.id} />
-        ) : (
-          <Stack direction="row" gap={2} className="flex-wrap">
-            {Object.entries(schema).map(([prop, propSchema]) => (
-              <VideoField
-                key={prop}
-                moduleId={module.id}
-                prop={prop}
-                schema={propSchema}
-                value={props[prop]}
-              />
-            ))}
-          </Stack>
-        )}
+        {body()}
       </Stack>
 
-      {!isOutput && (
+      {textureOutputs.length > 0 && (
         <IOContainer type="output">
-          <IO io={{ name: "out", ioType: "TextureOutput" }} />
+          {textureOutputs.map((output) => (
+            <IO
+              key={output.name}
+              io={{ name: output.name, ioType: "TextureOutput" }}
+            />
+          ))}
         </IOContainer>
       )}
     </div>

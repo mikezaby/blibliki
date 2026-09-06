@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { IRoute } from "@/core/Routes";
 import {
-  applyBindings,
-  IBinding,
+  applyControlRoutes,
   mapRange,
   spectrumToControls,
 } from "@/core/controls";
@@ -26,42 +26,78 @@ describe("mapRange", () => {
   });
 });
 
-describe("applyBindings", () => {
-  const binding: IBinding = {
-    id: "b1",
-    moduleId: "m",
-    prop: "hue",
-    control: "spectrum:low",
+describe("applyControlRoutes", () => {
+  const route: IRoute = {
+    id: "r1",
+    kind: "control",
+    source: { moduleId: "lfo", ioName: "out" },
+    destination: { moduleId: "m", ioName: "hue" },
     inMin: 0,
     inMax: 1,
     outMin: 0,
     outMax: 360,
   };
 
-  it("overrides a prop from a control value", () => {
-    const props = applyBindings(
+  it("overrides a prop from the source's value", () => {
+    const props = applyControlRoutes(
       { hue: 10, spread: 1 },
-      [binding],
-      new Map([["spectrum:low", 0.5]]),
+      [route],
+      new Map([["lfo:out", 0.5]]),
     );
 
     expect(props).toEqual({ hue: 180, spread: 1 });
   });
 
-  it("applies the binding's exp", () => {
-    const props = applyBindings(
+  it("applies the route's exp", () => {
+    const props = applyControlRoutes(
       { hue: 10 },
-      [{ ...binding, inMax: 100, exp: 2 }],
-      new Map([["spectrum:low", 25]]),
+      [{ ...route, inMax: 100, exp: 2 }],
+      new Map([["lfo:out", 25]]),
     );
 
     expect(props.hue).toBeCloseTo(180);
   });
 
-  it("keeps the stored prop when the control has no value yet", () => {
-    const props = applyBindings({ hue: 10 }, [binding], new Map());
+  it("keeps the stored prop when the source has no value yet", () => {
+    const props = applyControlRoutes({ hue: 10 }, [route], new Map());
 
     expect(props).toEqual({ hue: 10 });
+  });
+
+  it("adds the swings of several routes into one prop", () => {
+    const second: IRoute = {
+      ...route,
+      id: "r2",
+      source: { moduleId: "band", ioName: "out" },
+      outMin: 0,
+      outMax: 100,
+    };
+    const props = applyControlRoutes(
+      { hue: 10 },
+      [route, second],
+      new Map([
+        ["lfo:out", 0.5],
+        ["band:out", 0.5],
+      ]),
+    );
+
+    expect(props.hue).toBe(230);
+  });
+
+  it("uses the route's full range when the mapping fields are missing", () => {
+    const bare: IRoute = {
+      id: "r",
+      kind: "control",
+      source: { moduleId: "lfo", ioName: "out" },
+      destination: { moduleId: "m", ioName: "hue" },
+    };
+    const props = applyControlRoutes(
+      { hue: 10 },
+      [bare],
+      new Map([["lfo:out", 0.25]]),
+    );
+
+    expect(props.hue).toBe(0.25);
   });
 });
 

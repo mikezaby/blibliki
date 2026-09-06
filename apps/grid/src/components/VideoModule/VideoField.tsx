@@ -1,5 +1,6 @@
-import type { EnumProp, PropSchema } from "@blibliki/engine";
+import type { EnumProp } from "@blibliki/engine";
 import { Stack } from "@blibliki/ui";
+import type { PropSchema } from "@blibliki/video-engine";
 import {
   InputField,
   SelectField,

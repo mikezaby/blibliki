@@ -41,12 +41,6 @@ export function handleMessage(
       case "removeRoute":
         engine.removeRoute(message.id);
         break;
-      case "setBinding":
-        engine.setBinding(message.binding);
-        break;
-      case "removeBinding":
-        engine.removeBinding(message.id);
-        break;
       default:
         return assertNever(message);
     }

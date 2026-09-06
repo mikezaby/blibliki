@@ -43,6 +43,45 @@ describe("Routes", () => {
     expect(routes.serialize()).toEqual([kept]);
   });
 
+  it("defaults a route without a kind to texture", () => {
+    const routes = new Routes();
+    const route = routes.addRoute({
+      source: { moduleId: "a", ioName: "out" },
+      destination: { moduleId: "b", ioName: "in" },
+    });
+
+    expect(route.kind).toBe("texture");
+  });
+
+  it("keeps several control routes into one prop", () => {
+    const routes = new Routes();
+    const first = routes.addRoute({
+      kind: "control",
+      source: { moduleId: "lfo", ioName: "out" },
+      destination: { moduleId: "b", ioName: "hue" },
+    });
+    const second = routes.addRoute({
+      kind: "control",
+      source: { moduleId: "band", ioName: "out" },
+      destination: { moduleId: "b", ioName: "hue" },
+    });
+
+    expect(routes.serialize()).toEqual([first, second]);
+    expect(routes.controlRoutesFor("b")).toEqual([first, second]);
+    expect(routes.controlRoutesFor("lfo")).toEqual([]);
+  });
+
+  it("ignores control routes when finding a texture source", () => {
+    const routes = new Routes();
+    routes.addRoute({
+      kind: "control",
+      source: { moduleId: "lfo", ioName: "out" },
+      destination: { moduleId: "b", ioName: "in" },
+    });
+
+    expect(routes.sourceFor("b", "in")).toBeNull();
+  });
+
   it("finds the source plugged into an input", () => {
     const routes = new Routes();
     routes.addRoute({

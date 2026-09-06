@@ -1,18 +1,8 @@
-export type IBinding = {
-  id: string;
-  moduleId: string;
-  prop: string;
-  control: string;
-  inMin: number;
-  inMax: number;
-  outMin: number;
-  outMax: number;
-  // Curve of the source control's slider (value = min + t^exp * range), so a
-  // bound prop follows slider position rather than the raw value.
-  exp?: number;
-};
+import type { ControlValues } from "./Module";
+import type { IRoute } from "./Routes";
+import type { PropSchema } from "./schema";
 
-export type ControlValues = ReadonlyMap<string, number>;
+export type { ControlValues } from "./Module";
 
 export function mapRange(
   value: number,
@@ -32,30 +22,50 @@ export function mapRange(
   return outMin + t * (outMax - outMin);
 }
 
-export function applyBindings<P extends Record<string, unknown>>(
-  props: P,
-  bindings: readonly IBinding[],
-  controls: ControlValues,
-): P {
-  let result = props;
+export function controlName(moduleId: string, output: string): string {
+  return `${moduleId}:${output}`;
+}
 
-  for (const binding of bindings) {
-    const value = controls.get(binding.control);
+// Several routes into one prop add: the first route's outMin plus every
+// route's swing, clamped to the prop's schema range when one is given, so a
+// single route is a plain range mapping.
+export function applyControlRoutes<P extends Record<string, unknown>>(
+  props: P,
+  routes: readonly IRoute[],
+  values: ControlValues,
+  schema: Record<string, PropSchema> = {},
+): P {
+  const sums = new Map<string, number>();
+
+  for (const route of routes) {
+    const value = values.get(
+      controlName(route.source.moduleId, route.source.ioName),
+    );
     if (value === undefined) continue;
-    result = {
-      ...result,
-      [binding.prop]: mapRange(
-        value,
-        binding.inMin,
-        binding.inMax,
-        binding.outMin,
-        binding.outMax,
-        binding.exp,
-      ),
-    };
+    const outMin = route.outMin ?? 0;
+    const mapped = mapRange(
+      value,
+      route.inMin ?? 0,
+      route.inMax ?? 1,
+      outMin,
+      route.outMax ?? 1,
+      route.exp,
+    );
+    const prop = route.destination.ioName;
+    const current = sums.get(prop);
+    sums.set(prop, current === undefined ? mapped : current + mapped - outMin);
   }
 
-  return result;
+  if (sums.size === 0) return props;
+
+  for (const [prop, value] of sums) {
+    const range = schema[prop];
+    if (range?.kind === "number") {
+      sums.set(prop, Math.min(range.max, Math.max(range.min, value)));
+    }
+  }
+
+  return { ...props, ...Object.fromEntries(sums) };
 }
 
 // ponytail: three fixed bands by bin index; a configurable band table when a

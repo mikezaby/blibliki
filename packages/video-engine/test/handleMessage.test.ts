@@ -3,6 +3,26 @@ import { VideoEngine } from "@/VideoEngine";
 import { handleMessage } from "@/handleMessage";
 import { VideoModuleType } from "@/modules";
 
+function fxToOutput() {
+  const engine = new VideoEngine();
+  engine.addModule({
+    id: "fx",
+    name: "fx",
+    moduleType: VideoModuleType.HueRotate,
+  });
+  engine.addModule({
+    id: "o",
+    name: "o",
+    moduleType: VideoModuleType.Output,
+  });
+  engine.addRoute({
+    source: { moduleId: "fx", ioName: "out" },
+    destination: { moduleId: "o", ioName: "in" },
+  });
+
+  return engine;
+}
+
 describe("handleMessage", () => {
   it("applies a graph command and echoes the patch", () => {
     const engine = new VideoEngine();
@@ -23,7 +43,6 @@ describe("handleMessage", () => {
         { id: "o", name: "o", moduleType: VideoModuleType.Output, props: {} },
       ],
       routes: [],
-      bindings: [],
     };
 
     handleMessage(engine, { type: "load", patch });
@@ -32,26 +51,17 @@ describe("handleMessage", () => {
   });
 
   it("stores controls without echoing", () => {
-    const engine = new VideoEngine();
+    const engine = fxToOutput();
     engine.addModule({
-      id: "fx",
-      name: "fx",
-      moduleType: VideoModuleType.HueRotate,
-    });
-    engine.addModule({
-      id: "o",
-      name: "o",
-      moduleType: VideoModuleType.Output,
+      id: "ap",
+      name: "ap",
+      moduleType: VideoModuleType.AudioProp,
+      props: { moduleId: "osc", prop: "frequency" },
     });
     engine.addRoute({
-      source: { moduleId: "fx", ioName: "out" },
-      destination: { moduleId: "o", ioName: "in" },
-    });
-    engine.setBinding({
-      id: "b",
-      moduleId: "fx",
-      prop: "amount",
-      control: "patch:osc:frequency",
+      kind: "control",
+      source: { moduleId: "ap", ioName: "out" },
+      destination: { moduleId: "fx", ioName: "amount" },
       inMin: 0,
       inMax: 1000,
       outMin: 0,
@@ -62,45 +72,10 @@ describe("handleMessage", () => {
       type: "controls",
       values: { "patch:osc:frequency": 500 },
     });
+    engine.tick({ now: 0, dt: 0 });
 
     expect(out).toEqual([]);
     expect(engine.passes()[0]?.uniforms.amount).toBe(180);
-  });
-
-  it("binds a prop to a named spectrum band", () => {
-    const engine = new VideoEngine();
-    engine.addModule({
-      id: "fx",
-      name: "fx",
-      moduleType: VideoModuleType.HueRotate,
-    });
-    engine.addModule({
-      id: "o",
-      name: "o",
-      moduleType: VideoModuleType.Output,
-    });
-    engine.addRoute({
-      source: { moduleId: "fx", ioName: "out" },
-      destination: { moduleId: "o", ioName: "in" },
-    });
-    engine.setBinding({
-      id: "b",
-      moduleId: "fx",
-      prop: "amount",
-      control: "spectrum:m1:low",
-      inMin: 0,
-      inMax: 1,
-      outMin: 0,
-      outMax: 360,
-    });
-
-    handleMessage(engine, {
-      type: "spectrum",
-      moduleId: "m1",
-      bins: new Float32Array([-30, -30, -30]),
-    });
-
-    expect(engine.passes()[0]?.uniforms.amount).toBe(360);
   });
 
   it("turns spectrum bins into controls and hands the buffer back", () => {

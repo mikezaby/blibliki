@@ -32,13 +32,20 @@ export type ArrayProp = BasePropType & {
   kind: "array";
 };
 
+// The id of an audio module in the host patch, optionally of one type.
+export type AudioModuleProp = BasePropType & {
+  kind: "audioModule";
+  moduleType?: string;
+};
+
 export type PropSchema =
   | NumberProp
   | EnumProp<string>
   | EnumProp<number>
   | StringProp
   | BooleanProp
-  | ArrayProp;
+  | ArrayProp
+  | AudioModuleProp;
 
 type PrimarySchemaForType<T> = T extends boolean
   ? BooleanProp
