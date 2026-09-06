@@ -111,6 +111,14 @@ keeps pushing the same raw inputs (audio prop values on change, analyser bins
 per frame) and the worker keeps them in internal maps that those two modules
 read in `tick`.
 
+The analyser is the host's, not the user's. A Band names an audio module,
+and the grid's video host keeps one hidden Spectrum tap per referenced
+module, connected to its first audio output, created when the first Band
+names it and removed when the last one stops. Ten Bands on one module share
+one FFT, and the video patch never depends on a Spectrum module being on the
+audio side. Taps live only in the engine; the patch is saved from the store,
+so they are never persisted.
+
 ### Patch document
 
 `IVideoPatch` loses `bindings`; `routes` carries both kinds. Bindings saved
@@ -141,19 +149,19 @@ Prop whose module or prop is gone outputs 0.
 
 ### Band
 
-Props: `spectrumId` (the audio Spectrum module it reads), `lowHz`, `highHz`,
-`gain`, `smoothing`. Output `out` in 0 to 1.
+Props: `moduleId` (any audio module), `lowHz`, `highHz`, `gain`,
+`smoothing`. Output `out` in 0 to 1.
 
-Per tick: take the raw bins kept for that Spectrum id, select the bins whose
-center frequency falls in the range, average the dB, normalize with the
-Spectrum's own min and max decibels, apply gain, clamp. The decibel range
-arrives with the other audio prop values, so Band follows the audio module's
-settings without a second copy. Bin to Hz needs the sample rate, which the
-host adds to the spectrum message.
+Per tick: take the raw bins the host's tap for that module last sent, select
+the bins whose center frequency falls in the range, average the dB,
+normalize over the analyser's default -100 to -30 dB, apply gain, clamp.
+Gain covers a quiet or loud source; a per-Band decibel range can come later
+if gain proves too coarse. Bin to Hz needs the sample rate, which the host
+adds to the spectrum message.
 
 Smoothing is a one-pole filter on the output, on top of the analyser's own
 smoothing, whose constant is tuned for display rather than for driving a
-parameter. A Band whose Spectrum was deleted outputs 0.
+parameter. A Band whose module was deleted outputs 0.
 
 ### LFO
 
@@ -192,16 +200,18 @@ the start and adds them. Two cables into one control input is the UI for it.
 
 ## Main thread and grid
 
-- Host: the spectrum message carries the audio context's sample rate.
-  Nothing else on the host changes; the `controls` message keeps its shape
-  and now feeds the worker's audio prop map instead of the patch vocabulary.
+- Host: the spectrum message carries the audio context's sample rate, and
+  the grid's video host owns the analyser taps, syncing them from the Band
+  modules in the video patch on every change. The `controls` message keeps
+  its shape and now feeds the worker's audio prop map instead of the patch
+  vocabulary.
 - Registry: `inputsFor` already instantiates each module type once to learn
   its ports. `outputsFor` is built the same way, and the grid draws a handle
   per port in a tone per kind, so a new module's IO appears on the canvas
   with no grid change. The palette's Video section lists Audio Prop, Band and
   LFO.
 - Two props reference audio modules: Audio Prop's `moduleId` and Band's
-  `spectrumId`. One new prop kind, `audioModule` with an optional module type
+  `moduleId`. One new prop kind, `audioModule` with an optional module type
   filter, covers both; VideoField renders it as a select of matching audio
   modules. Audio Prop's `prop` is an enum whose options depend on the chosen
   module, filled by the field from the engine's schemas.
@@ -283,9 +293,10 @@ it.
    resolves a control module's routes into its props before ticking it, so
    an Audio Prop can drive an LFO's rate.
 3. Band, with the sample rate on the spectrum message and raw bins kept per
-   Spectrum id. The fixed three bands go away with it. Done 2026-09-06. The
-   analysis stays in the audio Spectrum module: many Bands on one Spectrum
-   read one buffer and cost one FFT.
+   audio module. The fixed three bands go away with it. Done 2026-09-06.
+   First cut read a user-placed Spectrum module; revised the same day so
+   Band names any audio module and the host owns one shared analyser tap per
+   referenced module.
 4. Editing a control route's range from its edge. Done 2026-09-06. Control
    routes render as a dashed control edge with a button at its middle that
    opens the range editor; the edge type is derived from the route's kind,

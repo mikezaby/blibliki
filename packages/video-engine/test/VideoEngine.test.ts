@@ -144,7 +144,7 @@ describe("VideoEngine", () => {
       id: "band",
       name: "band",
       moduleType: VideoModuleType.Band,
-      props: { spectrumId: "sp", lowHz: 0, highHz: 1000 },
+      props: { moduleId: "sp", lowHz: 0, highHz: 1000 },
     });
     engine.addRoute({
       kind: "control",

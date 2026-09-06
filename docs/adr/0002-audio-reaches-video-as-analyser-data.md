@@ -21,9 +21,11 @@ Two feeds, both over `postMessage` to the worker:
   mirror; there is no fake audio engine.
 - The audio tab reads an `AnalyserNode`'s frequency bins once per frame (a
   native call, no JS DSP) and transfers the buffer to the worker, which keeps
-  a copy per Spectrum module for Band control modules to read (ADR 5; it
-  reduced them to three fixed bands before that). One buffer is in flight at
-  a time and comes back after each read, so steady state allocates nothing.
+  a copy per tapped audio module for Band control modules to read (ADR 5; it
+  reduced them to three fixed bands before that). The analysers are hidden
+  taps the video host creates on the audio modules Bands name, one per
+  module however many Bands share it. One buffer is in flight at a time and
+  comes back after each read, so steady state allocates nothing.
 
 ## Alternatives rejected
 
