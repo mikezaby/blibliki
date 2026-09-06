@@ -47,16 +47,25 @@ modules only, so selected video nodes are silently left out of a copy. Extend
 the snapshot with video modules, routes and bindings, and paste them through
 `videoPatchSlice`.
 
-## Bound video props do not show the live value
+## Bound video prop fields show the stored value, not the driven one
 
-`apps/grid/src/components/VideoModule/BindingControl.tsx` shows the stored
-prop value and the control label; the projector follows the control but the
-slider does not. Add a per-frame `values` message from the worker carrying
-effective props, and render bound fields from it.
+`apps/grid/src/components/VideoModule/VideoField.tsx` renders the stored
+prop; the projector follows the control route but the slider does not. Add
+a per-frame `values` message from the worker carrying effective props, and
+render driven fields from it.
 
-## Binding dialog keeps stale state when a binding is removed elsewhere
+## Control range dialog seeds its draft once and stays open on Save
 
-`BindingControl.tsx` seeds its dialog state from the binding once on mount.
-Deleting the Spectrum module a prop is bound to clears the label but leaves
-the dialog's chosen control until the node remounts, and Save leaves the
-dialog open. Key the dialog body on the binding's control and close on Save.
+`apps/grid/src/components/Grid/ControlEdge.tsx` copies the route's range
+into local state on mount. A range changed elsewhere (a reloaded patch, a
+future second editor) is not reflected until the edge remounts, and Save
+leaves the dialog open. Key the dialog body on the route's range and close
+on Save.
+
+## Handle indicator dot sits over the handle and starts a node drag
+
+`apps/grid/src/components/Grid/AudioNode.tsx` draws a small indicator div
+over each handle's center. It is not `nodrag`, so a press exactly on it
+grabs the node instead of starting a cable; on audio and video nodes alike,
+at small zoom levels the dot covers most of the handle. Add
+`pointer-events-none` to the indicator.

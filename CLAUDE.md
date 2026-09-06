@@ -112,7 +112,7 @@ The grid app is a React application with:
 
 - `modulesSlice` - Tracks all audio modules and their parameters
 - `gridNodesSlice` - Manages visual node positions and connections (using @xyflow/react); branches on node type for audio vs video nodes
-- `videoPatchSlice` - Video modules, routes and bindings; forwarded whole to the video engine worker on every change
+- `videoPatchSlice` - Video modules and routes (texture and control); forwarded whole to the video engine worker on every change
 - `midiDevicesSlice` - MIDI device state
 - `patchSlice` - Current patch state
 - `modalSlice` - Modal dialogs
