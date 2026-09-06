@@ -138,6 +138,31 @@ describe("VideoEngine", () => {
     expect(engine.findModule("lfo").props).toMatchObject({ frequency: 1 });
   });
 
+  it("keeps its own copy of spectrum bins and feeds them to a Band", () => {
+    const engine = chain();
+    engine.addModule({
+      id: "band",
+      name: "band",
+      moduleType: VideoModuleType.Band,
+      props: { spectrumId: "sp", lowHz: 0, highHz: 1000 },
+    });
+    engine.addRoute({
+      kind: "control",
+      source: { moduleId: "band", ioName: "out" },
+      destination: { moduleId: "fx", ioName: "amount" },
+      inMin: 0,
+      inMax: 1,
+      outMin: 0,
+      outMax: 360,
+    });
+    const bins = new Float32Array([-30, -100, -65, -100]);
+    engine.setSpectrum("sp", bins, 8000);
+    bins.fill(-100);
+    engine.tick({ now: 0, dt: 0 });
+
+    expect(engine.passes()[1]?.uniforms.amount).toBeCloseTo(180);
+  });
+
   it("updates props", () => {
     const engine = chain();
     engine.updateProps("fx", { amount: 45 });

@@ -1,7 +1,8 @@
 import {
-  FrameClock,
+  Frame,
   ICreateVideoModule,
   IVideoModule,
+  SpectrumFrame,
   VideoModule,
 } from "./core/Module";
 import { ICreateRoute, IRoute, Routes } from "./core/Routes";
@@ -18,9 +19,12 @@ export type IVideoPatch = {
 export class VideoEngine {
   readonly modules = new Map<string, VideoModule>();
   readonly routes = new Routes();
-  // Control values by "<moduleId>:<output>": audio prop mirrors and spectrum
-  // bands pushed by the host, and control module outputs written by tick.
+  // Control values by "<moduleId>:<output>": audio prop mirrors pushed by
+  // the host, and control module outputs written by tick.
   private controls = new Map<string, number>();
+  // Raw bins per audio Spectrum module, copied because the host's buffer
+  // goes back to it after every message. Band modules read these.
+  readonly spectra = new Map<string, SpectrumFrame>();
 
   addModule<T extends VideoModuleType>(
     params: ICreateVideoModule<T>,
@@ -76,6 +80,16 @@ export class VideoEngine {
     this.routes.removeRoute(id);
   }
 
+  setSpectrum(moduleId: string, bins: Float32Array, sampleRate: number) {
+    let frame = this.spectra.get(moduleId);
+    if (frame?.bins.length !== bins.length) {
+      frame = { bins: new Float32Array(bins.length), sampleRate };
+      this.spectra.set(moduleId, frame);
+    }
+    frame.bins.set(bins);
+    frame.sampleRate = sampleRate;
+  }
+
   setControls(values: Record<string, number>) {
     for (const [name, value] of Object.entries(values)) {
       this.controls.set(name, value);
@@ -84,7 +98,8 @@ export class VideoEngine {
 
   // ponytail: modules tick in insertion order, so a chain of control modules
   // lags one frame per hop; sort by control routes when it matters.
-  tick(frame: FrameClock) {
+  tick(clock: Pick<Frame, "now" | "dt">) {
+    const frame: Frame = { ...clock, spectra: this.spectra };
     for (const module of this.modules.values()) {
       const outputs = module.tick(
         this.controls,

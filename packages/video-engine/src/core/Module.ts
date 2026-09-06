@@ -18,7 +18,14 @@ export type ICreateVideoModule<T extends VideoModuleType = VideoModuleType> =
 
 export type IOPort = { name: string; kind: IOKind };
 
-export type FrameClock = { now: number; dt: number };
+// One Spectrum module's bins (dB per bin) as the host last read them.
+export type SpectrumFrame = { bins: Float32Array; sampleRate: number };
+
+export type Frame = {
+  now: number;
+  dt: number;
+  spectra?: ReadonlyMap<string, SpectrumFrame>;
+};
 
 export type ControlValues = ReadonlyMap<string, number>;
 
@@ -56,7 +63,7 @@ export abstract class VideoModule<T extends VideoModuleType = VideoModuleType> {
   // modules return null and are never ticked.
   tick(
     _values: ControlValues,
-    _frame: FrameClock,
+    _frame: Frame,
     _props: VideoPropsMapping[T] = this.props,
   ): Record<string, number> | null {
     return null;

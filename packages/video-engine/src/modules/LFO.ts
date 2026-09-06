@@ -1,6 +1,6 @@
 import {
   ControlValues,
-  FrameClock,
+  Frame,
   ICreateVideoModule,
   IOPort,
   VideoModule,
@@ -84,7 +84,7 @@ export default class LFO extends VideoModule<VideoModuleType.LFO> {
     super(VideoModuleType.LFO, DEFAULT_PROPS, params);
   }
 
-  tick(_values: ControlValues, frame: FrameClock, props = this.props) {
+  tick(_values: ControlValues, frame: Frame, props = this.props) {
     const next = this.phase + frame.dt * props.frequency;
     if (next >= 1) this.held = Math.random();
     this.phase = next % 1;

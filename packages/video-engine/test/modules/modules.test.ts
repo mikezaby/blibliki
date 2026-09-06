@@ -30,6 +30,11 @@ describe("bootstrap modules", () => {
       [ctl("frequency")],
       { frequency: 1, waveform: "sine", phase: 0 },
     ],
+    [
+      VideoModuleType.Band,
+      [ctl("lowHz"), ctl("highHz"), ctl("gain")],
+      { spectrumId: "", lowHz: 20, highHz: 200, gain: 1, smoothing: 0 },
+    ],
   ])(
     "%s declares its inputs and default props",
     (moduleType, inputs, props) => {

@@ -1,10 +1,11 @@
 export { VideoModule } from "./core/Module";
 export type {
   ControlValues,
-  FrameClock,
+  Frame,
   ICreateVideoModule,
   IOPort,
   IVideoModule,
+  SpectrumFrame,
 } from "./core/Module";
 export type {
   AudioModuleProp,
@@ -23,12 +24,7 @@ export { Routes } from "./core/Routes";
 export type { ICreateRoute, IOKind, IPlug, IRoute } from "./core/Routes";
 export { buildPasses } from "./core/graph";
 export type { RenderPass } from "./core/graph";
-export {
-  applyControlRoutes,
-  controlName,
-  mapRange,
-  spectrumToControls,
-} from "./core/controls";
+export { applyControlRoutes, controlName, mapRange } from "./core/controls";
 export { VideoEngine } from "./VideoEngine";
 export type { IVideoPatch } from "./VideoEngine";
 export type { GraphMessage, HostMessage, WorkerMessage } from "./protocol";

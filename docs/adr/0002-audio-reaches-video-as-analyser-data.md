@@ -20,9 +20,10 @@ Two feeds, both over `postMessage` to the worker:
   named controls (`patch:<moduleId>:<prop>`). The worker keeps a read-only
   mirror; there is no fake audio engine.
 - The audio tab reads an `AnalyserNode`'s frequency bins once per frame (a
-  native call, no JS DSP) and transfers the buffer to the worker, which
-  reduces it to a few band controls. One buffer is in flight at a time and
-  comes back after each read, so steady state allocates nothing.
+  native call, no JS DSP) and transfers the buffer to the worker, which keeps
+  a copy per Spectrum module for Band control modules to read (ADR 5; it
+  reduced them to three fixed bands before that). One buffer is in flight at
+  a time and comes back after each read, so steady state allocates nothing.
 
 ## Alternatives rejected
 

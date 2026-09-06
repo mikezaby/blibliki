@@ -18,7 +18,11 @@ function readSpectra(engine: Engine) {
   return function* (): Iterable<SpectrumSource> {
     for (const module of engine.modules.values()) {
       if (module.moduleType === ModuleType.Spectrum) {
-        yield { id: module.id, bins: module.getFrequencies() };
+        yield {
+          id: module.id,
+          bins: module.getFrequencies(),
+          sampleRate: module.audioNode.context.sampleRate,
+        };
       }
     }
   };

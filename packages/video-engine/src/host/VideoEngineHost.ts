@@ -3,7 +3,11 @@ import { HostMessage, WorkerMessage } from "@/protocol";
 import { PatchSource, propsToControls } from "./mirror";
 import { openProjectorWindow, ProjectorWindow } from "./projectorWindow";
 
-export type SpectrumSource = { id: string; bins: Float32Array };
+export type SpectrumSource = {
+  id: string;
+  bins: Float32Array;
+  sampleRate: number;
+};
 
 export type VideoEngineHostOptions = {
   patchSource: PatchSource;
@@ -165,7 +169,7 @@ export class VideoEngineHost {
     if (this.disposed) return;
     const { readSpectrum } = this.options;
     if (readSpectrum && this.views.size > 0) {
-      for (const { id, bins } of readSpectrum()) {
+      for (const { id, bins, sampleRate } of readSpectrum()) {
         if (this.inFlight.has(id)) continue;
         let buffer = this.spare.get(id);
         if (buffer?.length !== bins.length) {
@@ -174,9 +178,10 @@ export class VideoEngineHost {
         this.spare.delete(id);
         this.inFlight.add(id);
         buffer.set(bins);
-        this.send({ type: "spectrum", moduleId: id, bins: buffer }, [
-          buffer.buffer,
-        ]);
+        this.send(
+          { type: "spectrum", moduleId: id, bins: buffer, sampleRate },
+          [buffer.buffer],
+        );
       }
     }
     this.frameHandle = requestAnimationFrame(this.tick);

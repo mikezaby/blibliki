@@ -1,6 +1,6 @@
 import {
   ControlValues,
-  FrameClock,
+  Frame,
   ICreateVideoModule,
   IOPort,
   VideoModule,
@@ -40,7 +40,7 @@ export default class AudioProp extends VideoModule<VideoModuleType.AudioProp> {
     super(VideoModuleType.AudioProp, DEFAULT_PROPS, params);
   }
 
-  tick(values: ControlValues, _frame: FrameClock, props = this.props) {
+  tick(values: ControlValues, _frame: Frame, props = this.props) {
     const { moduleId, prop } = props;
 
     return { out: values.get(`patch:${moduleId}:${prop}`) ?? 0 };

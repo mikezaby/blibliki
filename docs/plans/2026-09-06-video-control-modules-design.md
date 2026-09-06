@@ -283,5 +283,7 @@ it.
    resolves a control module's routes into its props before ticking it, so
    an Audio Prop can drive an LFO's rate.
 3. Band, with the sample rate on the spectrum message and raw bins kept per
-   Spectrum id. The fixed three bands go away with it.
+   Spectrum id. The fixed three bands go away with it. Done 2026-09-06. The
+   analysis stays in the audio Spectrum module: many Bands on one Spectrum
+   read one buffer and cost one FFT.
 4. Editing a control route's range from its edge.

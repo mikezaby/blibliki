@@ -2,6 +2,7 @@ import { assertNever } from "@blibliki/utils";
 import { ICreateVideoModule, IOPort, VideoModule } from "@/core/Module";
 import { PropSchema } from "@/core/schema";
 import AudioProp, { audioPropPropSchema, IAudioPropProps } from "./AudioProp";
+import Band, { bandPropSchema, IBandProps } from "./Band";
 import HueRotate, { hueRotatePropSchema, IHueRotateProps } from "./HueRotate";
 import LFO, { ILFOProps, lfoPropSchema } from "./LFO";
 import Merge, { IMergeProps, mergePropSchema } from "./Merge";
@@ -15,6 +16,7 @@ export enum VideoModuleType {
   Output = "Output",
   AudioProp = "AudioProp",
   LFO = "LFO",
+  Band = "Band",
 }
 
 export type VideoPropsMapping = {
@@ -24,6 +26,7 @@ export type VideoPropsMapping = {
   [VideoModuleType.Output]: IOutputProps;
   [VideoModuleType.AudioProp]: IAudioPropProps;
   [VideoModuleType.LFO]: ILFOProps;
+  [VideoModuleType.Band]: IBandProps;
 };
 
 export function createModule<T extends VideoModuleType>(
@@ -47,12 +50,15 @@ export function createModule<T extends VideoModuleType>(
       );
     case VideoModuleType.LFO:
       return new LFO(params as ICreateVideoModule<VideoModuleType.LFO>);
+    case VideoModuleType.Band:
+      return new Band(params as ICreateVideoModule<VideoModuleType.Band>);
     default:
       return assertNever(type);
   }
 }
 
 export type { IAudioPropProps } from "./AudioProp";
+export type { IBandProps } from "./Band";
 export type { IHueRotateProps } from "./HueRotate";
 export type { ILFOProps, LFOWaveform } from "./LFO";
 export { LFO_WAVEFORMS } from "./LFO";
@@ -71,6 +77,7 @@ export const videoModuleSchemas: Record<
   [VideoModuleType.Output]: outputPropSchema,
   [VideoModuleType.AudioProp]: audioPropPropSchema,
   [VideoModuleType.LFO]: lfoPropSchema,
+  [VideoModuleType.Band]: bandPropSchema,
 };
 
 const PROTOTYPES = Object.fromEntries(

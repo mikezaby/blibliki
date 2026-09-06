@@ -1,6 +1,5 @@
 import { assertNever } from "@blibliki/utils";
 import { VideoEngine } from "./VideoEngine";
-import { spectrumToControls } from "./core/controls";
 import { GraphMessage, WorkerMessage } from "./protocol";
 
 export function handleMessage(
@@ -13,9 +12,7 @@ export function handleMessage(
         engine.setControls(message.values);
         return [];
       case "spectrum":
-        engine.setControls(
-          spectrumToControls(message.bins, `spectrum:${message.moduleId}`),
-        );
+        engine.setSpectrum(message.moduleId, message.bins, message.sampleRate);
         return [
           {
             type: "spectrumBuffer",

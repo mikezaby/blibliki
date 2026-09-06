@@ -20,7 +20,12 @@ export type HostMessage =
   | { type: "addRoute"; route: ICreateRoute }
   | { type: "removeRoute"; id: string }
   | { type: "controls"; values: Record<string, number> }
-  | { type: "spectrum"; moduleId: string; bins: Float32Array };
+  | {
+      type: "spectrum";
+      moduleId: string;
+      bins: Float32Array;
+      sampleRate: number;
+    };
 
 export type WorkerMessage =
   | { type: "ready" }

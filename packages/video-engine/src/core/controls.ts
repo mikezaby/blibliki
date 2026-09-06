@@ -67,26 +67,3 @@ export function applyControlRoutes<P extends Record<string, unknown>>(
 
   return { ...props, ...Object.fromEntries(sums) };
 }
-
-// ponytail: three fixed bands by bin index; a configurable band table when a
-// patch needs a specific frequency range.
-export function spectrumToControls(
-  bins: Float32Array,
-  prefix = "spectrum",
-  minDb = -100,
-  maxDb = -30,
-): Record<string, number> {
-  const normalized = Array.from(bins, (db) =>
-    Math.min(1, Math.max(0, (db - minDb) / (maxDb - minDb))),
-  );
-  const third = Math.max(1, Math.floor(normalized.length / 3));
-  const mean = (values: number[]) =>
-    values.length === 0 ? 0 : values.reduce((a, b) => a + b, 0) / values.length;
-
-  return {
-    [`${prefix}:low`]: mean(normalized.slice(0, third)),
-    [`${prefix}:mid`]: mean(normalized.slice(third, third * 2)),
-    [`${prefix}:high`]: mean(normalized.slice(third * 2)),
-    [`${prefix}:level`]: mean(normalized),
-  };
-}

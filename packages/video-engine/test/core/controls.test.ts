@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { IRoute } from "@/core/Routes";
-import {
-  applyControlRoutes,
-  mapRange,
-  spectrumToControls,
-} from "@/core/controls";
+import { applyControlRoutes, mapRange } from "@/core/controls";
 
 describe("mapRange", () => {
   it("maps and clamps", () => {
@@ -98,35 +94,5 @@ describe("applyControlRoutes", () => {
     );
 
     expect(props.hue).toBe(0.25);
-  });
-});
-
-describe("spectrumToControls", () => {
-  it("splits bins into three bands and a level, normalized 0..1", () => {
-    const bins = new Float32Array([-30, -30, -100, -100, -65, -65]);
-
-    expect(spectrumToControls(bins)).toEqual({
-      "spectrum:low": 1,
-      "spectrum:mid": 0,
-      "spectrum:high": 0.5,
-      "spectrum:level": 0.5,
-    });
-  });
-
-  it("names the bands by the given prefix", () => {
-    const bins = new Float32Array([-30, -30, -100, -100, -65, -65]);
-
-    expect(spectrumToControls(bins, "spectrum:m1")).toEqual({
-      "spectrum:m1:low": 1,
-      "spectrum:m1:mid": 0,
-      "spectrum:m1:high": 0.5,
-      "spectrum:m1:level": 0.5,
-    });
-  });
-
-  it("treats silence (-Infinity) as zero", () => {
-    const bins = new Float32Array(6).fill(-Infinity);
-
-    expect(spectrumToControls(bins)["spectrum:level"]).toBe(0);
   });
 });

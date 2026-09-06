@@ -78,7 +78,7 @@ describe("handleMessage", () => {
     expect(engine.passes()[0]?.uniforms.amount).toBe(180);
   });
 
-  it("turns spectrum bins into controls and hands the buffer back", () => {
+  it("stores spectrum bins and hands the buffer back", () => {
     const engine = new VideoEngine();
     const bins = new Float32Array([-30, -30, -30]);
 
@@ -86,9 +86,14 @@ describe("handleMessage", () => {
       type: "spectrum",
       moduleId: "m1",
       bins,
+      sampleRate: 48000,
     });
 
     expect(out).toEqual([{ type: "spectrumBuffer", moduleId: "m1", bins }]);
+    expect(engine.spectra.get("m1")).toEqual({
+      bins: new Float32Array([-30, -30, -30]),
+      sampleRate: 48000,
+    });
   });
 
   it("reports a thrown error instead of crashing", () => {
