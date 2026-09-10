@@ -144,7 +144,7 @@ export class VideoEngine {
     );
   }
 
-  // A module's own `instances` prop is resolved with mono routes only, so a
+  // A module's own `instances` prop is resolved from single sources only, so a
   // instanced control cannot drive the instance count.
   private resolveInstances() {
     return resolveInstances(this.modules, this.routes, (module) =>

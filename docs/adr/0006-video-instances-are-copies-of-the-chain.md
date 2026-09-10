@@ -13,7 +13,8 @@ Placing 81 modules by hand and a merge with 81 inputs is not patchable.
 
 The video engine calls such a copy an instance, the term of GPU
 instancing, TouchDesigner, Blender and Jitter. It is what the audio
-engine calls a voice.
+engine calls a voice. A module with one instance is single, where
+audio would say mono.
 
 ## Decision
 
@@ -21,7 +22,7 @@ Instances duplicate the chain and nothing else. A texture module opts in
 by spreading the shared `instances` prop into its props and schema. The
 pass builder renders that module once per instance, and every module
 after it once per instance as well, each instance reading the matching
-instance of its inputs. A mono input to an instanced module feeds every
+instance of its inputs. A single input to an instanced module feeds every
 instance; a narrower instanced input wraps around. Instances are
 identical until something outside the module gives them different
 values, as audio voices are identical until notes arrive.

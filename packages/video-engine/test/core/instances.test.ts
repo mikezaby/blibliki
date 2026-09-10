@@ -103,7 +103,7 @@ describe("resolveInstances", () => {
     });
   });
 
-  it("counts a control feedback loop as mono where it closes", () => {
+  it("counts a control feedback loop as single where it closes", () => {
     const lfo = make("lfo", VideoModuleType.LFO);
     const routes = new Routes();
     control(routes, "lfo", "lfo", "frequency");

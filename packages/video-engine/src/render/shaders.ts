@@ -36,7 +36,7 @@ void main() {
 }`;
 
 // Control modules have no shader; they never become a pass. Layout has one
-// for a mono input; with instances its pass composes instead.
+// for a single input; with instances its pass composes instead.
 export const FRAGMENT: Partial<Record<VideoModuleType, string>> = {
   [VideoModuleType.Source]: `${HEADER}
 uniform float u_mode, u_hue, u_saturation, u_lightness, u_spread;

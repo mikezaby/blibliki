@@ -75,7 +75,7 @@ describe("applyControlRoutes", () => {
     expect(at(3)).toBe(180);
   });
 
-  it("feeds every instance from a mono source", () => {
+  it("feeds every instance from a single source", () => {
     const values = new Map([["lfo:out", 0.25]]);
 
     expect(

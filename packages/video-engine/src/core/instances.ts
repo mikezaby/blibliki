@@ -51,7 +51,7 @@ export function instanceRect(
 // Instance count of every module. Each module gets the widths of its texture
 // inputs and of the control sources routed into it, so instances flow down
 // routes of either kind.
-// ponytail: a control feedback loop counts as mono where it closes.
+// ponytail: a control feedback loop counts as single where it closes.
 export function resolveInstances(
   modules: ReadonlyMap<string, VideoModule>,
   routes: Routes,

@@ -14,29 +14,29 @@ carried one number per frame per output, with no notion of instances.
 
 Control modules have instances too. A control module opts in by
 spreading the shared `instances` prop, and a module of either kind
-follows the widest of its inputs across both route kinds, so a mono
+follows the widest of its inputs across both route kinds, so a single
 Source whose hue is driven by a four-instance Envelope renders four
 instances. The engine ticks a control module once per instance, with
 that instance's resolved props, and stores each instance's outputs under
-`<module>:<output>:<instance>`; a mono module keeps the old
+`<module>:<output>:<instance>`; a single module keeps the old
 `<module>:<output>` name. A control route feeds instance v of its
 consumer from instance v of an instanced source, wrapping around a
-narrower one, and from the one value of a mono source.
+narrower one, and from the one value of a single source.
 
 Modules that keep state between frames keep it per instance: the LFO's
 phase, Band's smoothing, and the new Envelope's stage and level.
 Envelope is the first per-instance shaper: an ADSR driven by a `gate`
 prop, which a control route opens and closes per instance.
 
-A module's own `instances` prop is resolved with mono routes only, so an
+A module's own `instances` prop is resolved from single sources only, so an
 instanced control cannot drive the instance count.
 
 ## Alternatives rejected
 
 - Arrays as control values. Every consumer, the host mirror and the
   saved patch would learn a second value shape; names keep the map flat
-  and the host's mono pushes untouched.
-- Summing an instanced control into a mono consumer, as a Web Audio mono
+  and the host's pushes untouched.
+- Summing an instanced control into a single consumer, as a Web Audio mono
   input sums poly outputs. Summing hue offsets or seek positions has no
   useful meaning; following the source's instances does.
 

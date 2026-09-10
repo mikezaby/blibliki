@@ -121,7 +121,7 @@ describe("buildPasses", () => {
     expect(passes[4]?.compose).toBeUndefined();
   });
 
-  it("renders a mono source once per instance of the instanced control driving it", () => {
+  it("renders a single source once per instance of the instanced control driving it", () => {
     const src = make("src", VideoModuleType.Source);
     const env = make("env", VideoModuleType.Envelope);
     env.updateProps({ instances: 2 });
@@ -165,13 +165,13 @@ describe("buildPasses", () => {
     expect(passes[2]?.compose).toEqual({ instances: 2, layout: "grid" });
   });
 
-  it("feeds a mono input to every instance and wraps a narrower instanced input", () => {
+  it("feeds a single input to every instance and wraps a narrower instanced input", () => {
     const a = make("a", VideoModuleType.Source);
     a.updateProps({ instances: 4 });
     const b = make("b", VideoModuleType.Source);
     b.updateProps({ instances: 2 });
     const c = make("c", VideoModuleType.HueRotate);
-    const mono = make("mono", VideoModuleType.Source);
+    const single = make("single", VideoModuleType.Source);
     const merge = make("merge", VideoModuleType.Merge);
     const fx = make("fx", VideoModuleType.Merge);
     const out = make("out", VideoModuleType.Output);
@@ -180,11 +180,11 @@ describe("buildPasses", () => {
     wire(routes, "b", "c");
     wire(routes, "c", "merge", "b");
     wire(routes, "merge", "fx", "a");
-    wire(routes, "mono", "fx", "b");
+    wire(routes, "single", "fx", "b");
     wire(routes, "fx", "out");
 
     const passes = buildPasses(
-      graph([a, b, c, mono, merge, fx, out]),
+      graph([a, b, c, single, merge, fx, out]),
       routes,
       stored,
     );
@@ -200,10 +200,10 @@ describe("buildPasses", () => {
     expect(
       passes.filter((p) => p.moduleId === "fx").map((p) => p.inputs),
     ).toEqual([
-      { a: "merge:0", b: "mono" },
-      { a: "merge:1", b: "mono" },
-      { a: "merge:2", b: "mono" },
-      { a: "merge:3", b: "mono" },
+      { a: "merge:0", b: "single" },
+      { a: "merge:1", b: "single" },
+      { a: "merge:2", b: "single" },
+      { a: "merge:3", b: "single" },
     ]);
     expect(passes.filter((p) => p.compose)).toHaveLength(1);
   });

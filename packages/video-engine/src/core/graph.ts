@@ -72,7 +72,7 @@ export function uniformsFor(
 // Instances flow down routes as in the audio engine (see resolveInstances). A
 // module with instances renders once per instance, and so does every module after
 // it, each instance reading the matching instance of its inputs and its own
-// resolved props. A mono input to an instanced module feeds every instance; a
+// resolved props. A single input to an instanced module feeds every instance; a
 // narrower instanced input wraps. A module that resolves to one instance with a
 // instanced input (Output, Layout) composes the instances into one texture.
 export function buildPasses(
