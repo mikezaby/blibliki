@@ -29,11 +29,14 @@ export type Frame = {
 
 export type ControlValues = ReadonlyMap<string, number>;
 
-// A note from an audio module's MIDI output, as the host forwards it.
+// A note the host bridged from an audio module's MIDI output. `instance`
+// is the voice the audio Voice Scheduler chose, when one sits before the
+// cable.
 export type MidiNoteEvent = {
   type: "noteOn" | "noteOff";
   note: number;
   velocity: number;
+  instance?: number;
 };
 
 const TEXTURE_OUT: readonly IOPort[] = [{ name: "out", kind: "texture" }];
@@ -77,9 +80,9 @@ export abstract class VideoModule<T extends VideoModuleType = VideoModuleType> {
     return null;
   }
 
-  onMidi(_sourceId: string, _event: MidiNoteEvent) {
-    // Note events the host tapped from audio module `sourceId`. MidiNotes
-    // allocates them; every other module ignores them.
+  receiveMidi(_ioName: string, _event: MidiNoteEvent) {
+    // A note arriving on MIDI input `ioName`. Modules with a MIDI input
+    // react per instance; the rest ignore it.
   }
 
   serialize(): IVideoModule<T> {

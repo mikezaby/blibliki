@@ -75,7 +75,8 @@ at small zoom levels the dot covers most of the handle. Add
 `packages/engine/test/modules/Wavetable.test.ts` (the file took about 11 s)
 and `packages/engine/test/modules/LFO.test.ts` ("updates the phase parameter
 when props change", "initializes the phase parameter immediately from
-props") each failed once during a repo-wide `pnpm test`, then
-passed alone and on the next full run. They are timing-sensitive under
+props") and `packages/engine/test/core/Module.test.ts` ("should still
+have correct param value immediately when relying on hooks") each failed
+once during a `pnpm test` run, then passed alone and on the next run. They are timing-sensitive under
 load. Find the waits on real time and either raise their timeouts or drive
 them from a fake clock.

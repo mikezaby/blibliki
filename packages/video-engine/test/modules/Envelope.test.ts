@@ -69,4 +69,28 @@ describe("Envelope", () => {
     expect(tick(env, { gate: 0 })).toBeCloseTo(0.75);
     expect(tick(env, { gate: 1, attack: 1 })).toBeCloseTo(0.85);
   });
+
+  it("opens and closes an instance from its MIDI note, untagged notes on instance 0", () => {
+    const env = envelope({ instances: 2, attack: 0, decay: 0, sustain: 1 });
+    env.receiveMidi("in", {
+      type: "noteOn",
+      note: 60,
+      velocity: 1,
+      instance: 1,
+    });
+
+    expect(tick(env, {}, 0)).toBe(0);
+    expect(tick(env, {}, 1)).toBe(1);
+
+    env.receiveMidi("in", {
+      type: "noteOff",
+      note: 60,
+      velocity: 0,
+      instance: 1,
+    });
+    env.receiveMidi("in", { type: "noteOn", note: 62, velocity: 1 });
+
+    expect(tick(env, {}, 1)).toBe(0);
+    expect(tick(env, {}, 0)).toBe(1);
+  });
 });

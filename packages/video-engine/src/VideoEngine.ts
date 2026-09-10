@@ -61,23 +61,29 @@ export class VideoEngine {
     (this.findModule(id) as VideoModule<T>).updateProps(props);
   }
 
+  // A MIDI route may start at an audio module the host bridges (ADR 10);
+  // its source is not checked here.
   addRoute(route: ICreateRoute): IRoute {
     const kind = route.kind ?? "texture";
-    const source = this.findModule(route.source.moduleId);
     const destination = this.findModule(route.destination.moduleId);
-
-    const output = source.outputs.find((o) => o.name === route.source.ioName);
-    if (output?.kind !== kind) {
-      throw new Error(
-        `${source.name} has no ${kind} output ${route.source.ioName}`,
-      );
-    }
     const target = route.destination.ioName;
     const accepts = destination.inputs.some(
       (input) => input.name === target && input.kind === kind,
     );
     if (!accepts) {
       throw new Error(`${destination.name} has no ${kind} input ${target}`);
+    }
+
+    const source = this.modules.get(route.source.moduleId);
+    if (!source && kind === "midi") return this.routes.addRoute(route);
+    if (!source) {
+      throw new Error(`Video module not found: ${route.source.moduleId}`);
+    }
+    const output = source.outputs.find((o) => o.name === route.source.ioName);
+    if (output?.kind !== kind) {
+      throw new Error(
+        `${source.name} has no ${kind} output ${route.source.ioName}`,
+      );
     }
 
     return this.routes.addRoute(route);
@@ -97,8 +103,10 @@ export class VideoEngine {
     frame.sampleRate = sampleRate;
   }
 
-  midi(sourceId: string, event: MidiNoteEvent) {
-    for (const module of this.modules.values()) module.onMidi(sourceId, event);
+  // A note the host bridged from an audio MIDI output into `moduleId`'s
+  // MIDI input. A module removed while a note is in flight is skipped.
+  midi(moduleId: string, ioName: string, event: MidiNoteEvent) {
+    this.modules.get(moduleId)?.receiveMidi(ioName, event);
   }
 
   setControls(values: Record<string, number>) {

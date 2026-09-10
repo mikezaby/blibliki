@@ -1,6 +1,6 @@
 import { Optional, uuidv4 } from "@blibliki/utils";
 
-export type IOKind = "texture" | "control";
+export type IOKind = "texture" | "control" | "midi";
 
 export type IPlug = {
   moduleId: string;
@@ -29,7 +29,8 @@ export class Routes {
   private routes = new Map<string, IRoute>();
 
   // One texture per input: a new texture route into an occupied input
-  // replaces it. Control routes into one prop accumulate.
+  // replaces it. Control routes into one prop and MIDI routes into one
+  // input accumulate.
   addRoute(props: ICreateRoute): IRoute {
     const route: IRoute = {
       ...props,

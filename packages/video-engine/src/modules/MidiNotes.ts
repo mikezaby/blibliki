@@ -9,98 +9,56 @@ import {
 import {
   DEFAULT_INSTANCES_PROPS,
   IInstancesProps,
+  instancesProp,
   instancesPropSchema,
 } from "@/core/instances";
-import { AudioModuleProp, ModulePropSchema } from "@/core/schema";
+import { ModulePropSchema } from "@/core/schema";
 import { VideoModuleType } from ".";
 
-export type IMidiNotesProps = IInstancesProps & { moduleId: string };
+export type IMidiNotesProps = IInstancesProps;
 
-const DEFAULT_PROPS: IMidiNotesProps = {
-  moduleId: "",
-  ...DEFAULT_INSTANCES_PROPS,
-};
+const DEFAULT_PROPS: IMidiNotesProps = { ...DEFAULT_INSTANCES_PROPS };
 
-export const midiNotesPropSchema: ModulePropSchema<
-  IMidiNotesProps,
-  { moduleId: AudioModuleProp }
-> = {
+export const midiNotesPropSchema: ModulePropSchema<IMidiNotesProps> = {
   ...instancesPropSchema,
-  moduleId: {
-    kind: "audioModule",
-    label: "MIDI from",
-    shortLabel: "midi",
-  },
 };
 
-type Instance = {
-  note: number;
-  velocity: number;
-  gate: number;
-  startedAt: number;
-};
+type Slot = { gate: number; note: number; velocity: number };
 
-const silent = (): Instance => ({
-  note: 0,
-  velocity: 0,
-  gate: 0,
-  startedAt: -1,
-});
+const silent = (): Slot => ({ gate: 0, note: 0, velocity: 0 });
 
-// Allocates the notes of one audio module's MIDI output to instances the way
-// the audio engine's VoiceScheduler does: a note already held retriggers
-// its instance, else the lowest free instance, else the instance that started
-// earliest. Per instance: gate 0/1, note 0..127, velocity 0..1. A released
-// instance keeps its note and velocity through the release.
-// ponytail: a stolen instance keeps its gate up, so an Envelope on it does
-// not retrigger; a trigger output that pulses for a frame would fix that.
+// Turns the notes reaching each instance into control values: gate 0/1,
+// note 0..127, velocity 0..1. An untagged note (no Voice Scheduler before
+// the cable) lands on instance 0, as an untagged audio event goes to voice
+// 0.
+// A released instance keeps its note and velocity through the release.
+// ponytail: a note for an instance this module does not have is dropped,
+// where the audio engine throws.
 export default class MidiNotes extends VideoModule<VideoModuleType.MidiNotes> {
-  readonly inputs = [] as const;
+  readonly inputs = [{ name: "in", kind: "midi" }] as const;
   readonly outputs: readonly IOPort[] = [
     { name: "gate", kind: "control" },
     { name: "note", kind: "control" },
     { name: "velocity", kind: "control" },
   ];
   readonly schema = midiNotesPropSchema;
-  private instances: Instance[] = [];
-  private events = 0;
+  private slots: Slot[] = [];
 
   constructor(params: ICreateVideoModule<VideoModuleType.MidiNotes>) {
     super(VideoModuleType.MidiNotes, DEFAULT_PROPS, params);
   }
 
-  onMidi(sourceId: string, event: MidiNoteEvent) {
-    if (sourceId !== this.props.moduleId) return;
-    const count = Math.max(1, Math.round(this.props.instances));
-    while (this.instances.length < count) this.instances.push(silent());
-    this.instances.length = count;
-    this.events += 1;
-
-    const holding = this.instances.findIndex(
-      (v) => v.gate === 1 && v.note === event.note,
-    );
-    if (event.type === "noteOff") {
-      const instance = this.instances[holding];
-      if (instance) instance.gate = 0;
-      return;
+  receiveMidi(_ioName: string, event: MidiNoteEvent) {
+    const instance = event.instance ?? 0;
+    if (instance >= instancesProp(this.props)) return;
+    const slot = (this.slots[instance] ??= silent());
+    if (event.type === "noteOn") {
+      slot.gate = 1;
+      slot.note = event.note;
+      slot.velocity = event.velocity;
+    } else if (slot.note === event.note) {
+      slot.gate = 0;
     }
-
-    let index = holding;
-    if (index < 0) index = this.instances.findIndex((v) => v.gate === 0);
-    if (index < 0) {
-      index = 0;
-      this.instances.forEach((v, i) => {
-        if (v.startedAt < (this.instances[index]?.startedAt ?? Infinity)) {
-          index = i;
-        }
-      });
-    }
-    this.instances[index] = {
-      note: event.note,
-      velocity: event.velocity,
-      gate: 1,
-      startedAt: this.events,
-    };
   }
 
   tick(
@@ -109,7 +67,7 @@ export default class MidiNotes extends VideoModule<VideoModuleType.MidiNotes> {
     _props = this.props,
     instance = 0,
   ) {
-    const { gate, note, velocity } = this.instances[instance] ?? silent();
+    const { gate, note, velocity } = this.slots[instance] ?? silent();
 
     return { gate, note, velocity };
   }

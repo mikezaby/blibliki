@@ -203,13 +203,15 @@ describe("VideoEngine", () => {
     expect(fx[0]?.uniforms.amount).toBe(180);
   });
 
-  it("gives each instance its own note through MIDI Notes and an Envelope", () => {
+  it("gives each instance its own note through bridged MIDI, MIDI Notes and Envelope", () => {
     const engine = chain();
+    engine.updateProps("src", { instances: 2 });
+    engine.updateProps("fx", { instances: 2 });
     engine.addModule({
-      id: "mv",
-      name: "mv",
+      id: "notes",
+      name: "notes",
       moduleType: VideoModuleType.MidiNotes,
-      props: { moduleId: "kb", instances: 2 },
+      props: { instances: 2 },
     });
     engine.addModule({
       id: "env",
@@ -217,13 +219,14 @@ describe("VideoEngine", () => {
       moduleType: VideoModuleType.Envelope,
       props: { instances: 2, attack: 0, decay: 0, sustain: 1 },
     });
-    engine.updateProps("src", { instances: 2 });
-    engine.updateProps("fx", { instances: 2 });
-    engine.addRoute({
-      kind: "control",
-      source: { moduleId: "mv", ioName: "gate" },
-      destination: { moduleId: "env", ioName: "gate" },
-    });
+    const bridged = (to: string) =>
+      engine.addRoute({
+        kind: "midi",
+        source: { moduleId: "sched", ioName: "midi out" },
+        destination: { moduleId: to, ioName: "in" },
+      });
+    bridged("notes");
+    bridged("env");
     engine.addRoute({
       kind: "control",
       source: { moduleId: "env", ioName: "out" },
@@ -235,14 +238,22 @@ describe("VideoEngine", () => {
     });
     engine.addRoute({
       kind: "control",
-      source: { moduleId: "mv", ioName: "note" },
+      source: { moduleId: "notes", ioName: "note" },
       destination: { moduleId: "src", ioName: "hue" },
       inMin: 0,
       inMax: 127,
       outMin: 0,
       outMax: 127,
     });
-    engine.midi("kb", { type: "noteOn", note: 60, velocity: 1 });
+    const note = {
+      type: "noteOn",
+      note: 60,
+      velocity: 1,
+      instance: 0,
+    } as const;
+    engine.midi("notes", "in", note);
+    engine.midi("env", "in", note);
+    engine.midi("notes", "in", { ...note, note: 64, instance: 1 });
     engine.tick({ now: 0, dt: 0.1 });
     engine.tick({ now: 0.1, dt: 0.1 });
 
@@ -262,8 +273,54 @@ describe("VideoEngine", () => {
         .map((p) => [p.instance, p.uniforms.hue]),
     ).toEqual([
       [0, 60],
-      [1, 0],
+      [1, 64],
     ]);
+    expect(
+      engine.serialize().routes.filter((r) => r.kind === "midi"),
+    ).toHaveLength(2);
+  });
+
+  it("accepts a MIDI route from a module it does not know, but not into a port that is not MIDI", () => {
+    const engine = new VideoEngine();
+    engine.addModule({
+      id: "src",
+      name: "src",
+      moduleType: VideoModuleType.Source,
+    });
+    engine.addModule({
+      id: "fx",
+      name: "fx",
+      moduleType: VideoModuleType.HueRotate,
+    });
+    engine.addModule({
+      id: "env",
+      name: "env",
+      moduleType: VideoModuleType.Envelope,
+    });
+
+    expect(() =>
+      engine.addRoute({
+        kind: "midi",
+        source: { moduleId: "keys", ioName: "midi out" },
+        destination: { moduleId: "env", ioName: "in" },
+      }),
+    ).not.toThrow();
+    expect(() =>
+      engine.addRoute({
+        kind: "midi",
+        source: { moduleId: "keys", ioName: "midi out" },
+        destination: { moduleId: "src", ioName: "in" },
+      }),
+    ).toThrow(/no midi input/);
+    expect(() =>
+      engine.addRoute({
+        source: { moduleId: "keys", ioName: "out" },
+        destination: { moduleId: "fx", ioName: "in" },
+      }),
+    ).toThrow(/not found/);
+    expect(() => {
+      engine.midi("gone", "in", { type: "noteOn", note: 60, velocity: 1 });
+    }).not.toThrow();
   });
 
   it("keeps its own copy of spectrum bins and feeds them to a Band", () => {

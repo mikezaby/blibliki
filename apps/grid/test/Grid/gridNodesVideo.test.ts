@@ -22,13 +22,39 @@ const videoModules = [
   { id: "fx", name: "fx", moduleType: VideoModuleType.HueRotate, props: {} },
 ];
 
+const keys = {
+  id: "keys",
+  name: "keys",
+  moduleType: "MidiInput",
+  outputs: [{ name: "midi out", ioType: "midiOutput" }],
+};
+
 function harness(edges: { id: string; source: string; target: string }[] = []) {
   const actions: Action[] = [];
   const getState = () =>
     ({
-      gridNodes: { nodes, edges, viewport: { x: 0, y: 0, zoom: 1 } },
-      videoPatch: { modules: videoModules, routes: [] },
-      modules: { ids: [], entities: {} },
+      gridNodes: {
+        nodes: [
+          ...nodes,
+          { id: "keys", type: "audioNode", position: { x: 0, y: 0 }, data: {} },
+          { id: "env", type: "videoNode", position: { x: 0, y: 0 }, data: {} },
+        ],
+        edges,
+        viewport: { x: 0, y: 0, zoom: 1 },
+      },
+      videoPatch: {
+        modules: [
+          ...videoModules,
+          {
+            id: "env",
+            name: "env",
+            moduleType: VideoModuleType.Envelope,
+            props: {},
+          },
+        ],
+        routes: [],
+      },
+      modules: { ids: ["keys"], entities: { keys } },
     }) as never;
   const dispatch = (action: unknown) => {
     if (typeof action === "function") {
@@ -66,6 +92,50 @@ describe("gridNodes video branching", () => {
     expect(actions.map((a) => a.type)).toEqual([
       "videoPatch/addVideoRoute",
       "gridNodes/addEdge",
+    ]);
+  });
+
+  it("connect from an audio MIDI output into a video MIDI input adds a bridged video route", () => {
+    const addRoute = vi.fn();
+    vi.spyOn(Engine, "current", "get").mockReturnValue({
+      addRoute,
+    } as unknown as Engine);
+    const { actions, dispatch, getState } = harness();
+
+    connect({
+      source: "keys",
+      sourceHandle: "midi out",
+      target: "env",
+      targetHandle: "in",
+    })(dispatch as never, getState);
+
+    expect(addRoute).not.toHaveBeenCalled();
+    expect(actions.map((a) => a.type)).toEqual([
+      "videoPatch/addVideoRoute",
+      "gridNodes/addEdge",
+    ]);
+    expect(actions[0]?.payload).toMatchObject({
+      kind: "midi",
+      source: { moduleId: "keys", ioName: "midi out" },
+      destination: { moduleId: "env", ioName: "in" },
+    });
+  });
+
+  it("removing a bridged edge removes the video route, not an engine route", () => {
+    const removeRoute = vi.fn();
+    vi.spyOn(Engine, "current", "get").mockReturnValue({
+      removeRoute,
+    } as unknown as Engine);
+    const { actions, dispatch, getState } = harness([
+      { id: "b1", source: "keys", target: "env" },
+    ]);
+
+    onEdgesChange([{ type: "remove", id: "b1" }])(dispatch as never, getState);
+
+    expect(removeRoute).not.toHaveBeenCalled();
+    expect(actions.map((a) => a.type)).toEqual([
+      "videoPatch/removeVideoRoute",
+      "gridNodes/applyEdgeChanges",
     ]);
   });
 

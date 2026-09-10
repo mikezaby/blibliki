@@ -16,8 +16,10 @@ import { getNodeContainerClassName, IO, IOContainer } from "./AudioNode";
 
 // Handle tone follows the port kind, as audio nodes do with AudioInput and
 // MidiInput.
+const TONES = { texture: "Texture", control: "Control", midi: "Midi" } as const;
+
 const ioType = (port: IOPort, side: "Input" | "Output") =>
-  `${port.kind === "texture" ? "Texture" : "Control"}${side}`;
+  `${TONES[port.kind]}${side}`;
 
 export default function VideoNode({ id, selected }: NodeProps) {
   const module = useAppSelector((state) => selectVideoModule(state, id));

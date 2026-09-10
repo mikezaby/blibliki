@@ -6,21 +6,23 @@ const values = new Map<string, number>();
 
 function midiNotes(instances = 2) {
   return createModule({
-    name: "mv",
+    name: "notes",
     moduleType: VideoModuleType.MidiNotes,
-    props: { moduleId: "kb", instances },
+    props: { instances },
   });
 }
 
-const on = (note: number, velocity = 1): MidiNoteEvent => ({
+const on = (note: number, instance?: number, velocity = 1): MidiNoteEvent => ({
   type: "noteOn",
   note,
   velocity,
+  instance,
 });
-const off = (note: number): MidiNoteEvent => ({
+const off = (note: number, instance?: number): MidiNoteEvent => ({
   type: "noteOff",
   note,
   velocity: 0,
+  instance,
 });
 
 function state(module: ReturnType<typeof midiNotes>, instances = 2) {
@@ -30,68 +32,40 @@ function state(module: ReturnType<typeof midiNotes>, instances = 2) {
 }
 
 describe("MidiNotes", () => {
-  it("fills free instances in order and releases the instance holding the note", () => {
-    const mv = midiNotes();
-    mv.onMidi("kb", on(60, 0.5));
-    mv.onMidi("kb", on(62));
+  it("turns each instance's tagged notes into gate, note and velocity", () => {
+    const notes = midiNotes();
+    notes.receiveMidi("in", on(60, 0, 0.5));
+    notes.receiveMidi("in", on(62, 1));
 
-    expect(state(mv)).toEqual([
+    expect(state(notes)).toEqual([
       { gate: 1, note: 60, velocity: 0.5 },
       { gate: 1, note: 62, velocity: 1 },
     ]);
 
-    mv.onMidi("kb", off(60));
+    notes.receiveMidi("in", off(60, 0));
 
-    expect(state(mv)).toEqual([
+    expect(state(notes)).toEqual([
       { gate: 0, note: 60, velocity: 0.5 },
       { gate: 1, note: 62, velocity: 1 },
     ]);
   });
 
-  it("reuses a released instance before stealing, then steals the earliest", () => {
-    const mv = midiNotes();
-    mv.onMidi("kb", on(60));
-    mv.onMidi("kb", on(62));
-    mv.onMidi("kb", off(60));
-    mv.onMidi("kb", on(64));
+  it("puts an untagged note on instance 0 and drops one for an instance it lacks", () => {
+    const notes = midiNotes();
+    notes.receiveMidi("in", on(60));
+    notes.receiveMidi("in", on(62, 5));
 
-    expect(state(mv).map((v) => v?.note)).toEqual([64, 62]);
-
-    mv.onMidi("kb", on(65));
-
-    expect(state(mv).map((v) => v?.note)).toEqual([64, 65]);
-  });
-
-  it("retriggers the instance already holding the note", () => {
-    const mv = midiNotes();
-    mv.onMidi("kb", on(60, 0.2));
-    mv.onMidi("kb", on(60, 0.9));
-
-    expect(state(mv)).toEqual([
-      { gate: 1, note: 60, velocity: 0.9 },
+    expect(state(notes)).toEqual([
+      { gate: 1, note: 60, velocity: 1 },
       { gate: 0, note: 0, velocity: 0 },
     ]);
   });
 
-  it("ignores notes from other audio modules and note offs it never held", () => {
-    const mv = midiNotes();
-    mv.onMidi("other", on(60));
-    mv.onMidi("kb", off(60));
+  it("ignores a note off for a note the instance is not holding", () => {
+    const notes = midiNotes();
+    notes.receiveMidi("in", on(60, 0));
+    notes.receiveMidi("in", off(62, 0));
 
-    expect(state(mv)).toEqual([
-      { gate: 0, note: 0, velocity: 0 },
-      { gate: 0, note: 0, velocity: 0 },
-    ]);
-  });
-
-  it("allocates within the current instance count", () => {
-    const mv = midiNotes(3);
-    mv.onMidi("kb", on(60));
-    mv.onMidi("kb", on(62));
-    mv.onMidi("kb", on(64));
-    mv.updateProps({ instances: 2 });
-    mv.onMidi("kb", on(65));
-
-    expect(state(mv, 3).map((v) => v?.note)).toEqual([65, 62, 0]);
+    expect(state(notes)[0]).toEqual({ gate: 1, note: 60, velocity: 1 });
   });
 });

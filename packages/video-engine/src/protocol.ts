@@ -20,7 +20,7 @@ export type HostMessage =
   | { type: "addRoute"; route: ICreateRoute }
   | { type: "removeRoute"; id: string }
   | { type: "controls"; values: Record<string, number> }
-  | { type: "midi"; moduleId: string; event: MidiNoteEvent }
+  | { type: "midi"; moduleId: string; ioName: string; event: MidiNoteEvent }
   | {
       type: "spectrum";
       moduleId: string;

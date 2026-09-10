@@ -3,18 +3,18 @@ import { VideoEngineHost } from "@blibliki/video-engine";
 import type { IVideoPatch } from "@blibliki/video-engine";
 import VideoWorker from "@blibliki/video-engine/worker?worker";
 import { addNotification } from "@/notificationsSlice";
-import { MidiTaps, referencedMidiModules } from "./midiTaps";
+import { bridgedMidiRoutes, MidiBridge } from "./midiBridge";
 import { referencedAudioModules, SpectrumTaps } from "./spectrumTaps";
 
 type HostStore = {
-  getState: () => { videoPatch: IVideoPatch };
+  getState: () => { videoPatch: IVideoPatch; modules: unknown };
   subscribe: (listener: () => void) => () => void;
   dispatch: (action: ReturnType<typeof addNotification>) => unknown;
 };
 
 let host: VideoEngineHost | null = null;
 let taps: SpectrumTaps | null = null;
-let midiTaps: MidiTaps | null = null;
+let bridge: MidiBridge | null = null;
 let hostEngineId = "";
 let unsubscribe: (() => void) | null = null;
 
@@ -31,8 +31,8 @@ export function ensureVideoHost(store: HostStore): VideoEngineHost {
     createWorker: () => new VideoWorker(),
     readSpectrum: () => spectrumTaps.read(),
   });
-  const midi = new MidiTaps(engine, (moduleId, event) => {
-    created.send({ type: "midi", moduleId, event });
+  const midi = new MidiBridge(engine, (moduleId, ioName, event) => {
+    created.send({ type: "midi", moduleId, ioName, event });
   });
   created.onError((message) => {
     store.dispatch(
@@ -45,19 +45,27 @@ export function ensureVideoHost(store: HostStore): VideoEngineHost {
   let last = store.getState().videoPatch;
   created.send({ type: "load", patch: last });
   spectrumTaps.sync(referencedAudioModules(last.modules));
-  midi.sync(referencedMidiModules(last.modules));
+  midi.sync(bridgedMidiRoutes(last.routes, last.modules));
+  // Audio modules can arrive after the cables into them, so the bridge is
+  // re-synced when the audio patch changes as well.
+  let lastAudio = store.getState().modules;
   unsubscribe = store.subscribe(() => {
-    const next = store.getState().videoPatch;
+    const state = store.getState();
+    const next = state.videoPatch;
+    if (state.modules !== lastAudio) {
+      lastAudio = state.modules;
+      midi.sync(bridgedMidiRoutes(next.routes, next.modules));
+    }
     if (next === last) return;
     last = next;
     created.send({ type: "load", patch: next });
     spectrumTaps.sync(referencedAudioModules(next.modules));
-    midi.sync(referencedMidiModules(next.modules));
+    midi.sync(bridgedMidiRoutes(next.routes, next.modules));
   });
 
   host = created;
   taps = spectrumTaps;
-  midiTaps = midi;
+  bridge = midi;
   hostEngineId = engine.id;
   return created;
 }
@@ -70,11 +78,11 @@ export function disposeVideoHost() {
   // The engine may already be disposed with its modules; taps go with it.
   try {
     taps?.dispose();
-    midiTaps?.dispose();
+    bridge?.dispose();
   } catch {
     // ignore
   }
   taps = null;
-  midiTaps = null;
+  bridge = null;
   hostEngineId = "";
 }

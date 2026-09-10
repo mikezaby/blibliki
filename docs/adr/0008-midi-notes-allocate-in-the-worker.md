@@ -1,6 +1,6 @@
 # 8. MIDI reaches video instances through a host tap and a worker-side allocator
 
-Date: 2026-09-10. Status: accepted. Extends ADR 7.
+Date: 2026-09-10. Status: superseded by ADR 10. Extends ADR 7.
 
 ## Context
 

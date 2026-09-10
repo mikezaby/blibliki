@@ -16,7 +16,12 @@ type VideoConnection = {
   targetHandle?: string | null;
 };
 
-type AudioModuleInfo = { id: string; name: string; moduleType: ModuleType };
+type AudioModuleInfo = {
+  id: string;
+  name: string;
+  moduleType: ModuleType;
+  outputs?: { name: string; ioType: string }[];
+};
 
 type Range = { min: number; max: number; exp?: number };
 
@@ -84,6 +89,31 @@ function targetRange(module: IVideoModule, prop: string): Range {
   return schema?.kind === "number" ? schema : UNIT;
 }
 
+// A cable from an audio module's MIDI output into a video module's MIDI
+// input. The route lives in the video patch and the host bridges its
+// events (ADR 10). Null when the cable is not that.
+export function midiBridgeRoute(
+  id: string,
+  connection: VideoConnection,
+  modules: IVideoModule[],
+  audioModules: AudioModuleInfo[],
+): IRoute | null {
+  const { source, sourceHandle, target, targetHandle } = connection;
+  if (!source || !sourceHandle || !target || !targetHandle) return null;
+  const output = audioModules
+    .find((m) => m.id === source)
+    ?.outputs?.find((io) => io.name === sourceHandle);
+  if (output?.ioType !== "midiOutput") return null;
+  if (portKind(modules, target, targetHandle, "input") !== "midi") return null;
+
+  return {
+    id,
+    kind: "midi",
+    source: { moduleId: source, ioName: sourceHandle },
+    destination: { moduleId: target, ioName: targetHandle },
+  };
+}
+
 export const CONTROL_EDGE = "controlEdge";
 
 // Edges of control routes render as the control edge, which carries the
@@ -103,6 +133,7 @@ export function withEdgeTypes<E extends { id: string; type?: string }>(
 
 // Builds the route a cable stands for. A control cable gets the default
 // range: the source's natural range into the target prop's schema range.
+// Texture and MIDI cables carry no range.
 export function videoRouteFromConnection(
   id: string,
   connection: VideoConnection,
@@ -120,7 +151,7 @@ export function videoRouteFromConnection(
     source: { moduleId: source, ioName: sourceHandle },
     destination: { moduleId: target, ioName: targetHandle },
   };
-  if (route.kind === "texture") return route;
+  if (route.kind !== "control") return route;
 
   const from = modules.find((m) => m.id === source);
   const to = modules.find((m) => m.id === target);

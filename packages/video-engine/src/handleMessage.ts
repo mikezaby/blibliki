@@ -12,7 +12,7 @@ export function handleMessage(
         engine.setControls(message.values);
         return [];
       case "midi":
-        engine.midi(message.moduleId, message.event);
+        engine.midi(message.moduleId, message.ioName, message.event);
         return [];
       case "spectrum":
         engine.setSpectrum(message.moduleId, message.bins, message.sampleRate);

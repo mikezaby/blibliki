@@ -9,6 +9,7 @@ import {
 
 const tex = (name: string) => ({ name, kind: "texture" }) as const;
 const ctl = (name: string) => ({ name, kind: "control" }) as const;
+const midi = (name: string) => ({ name, kind: "midi" }) as const;
 
 describe("bootstrap modules", () => {
   it.each([
@@ -44,7 +45,7 @@ describe("bootstrap modules", () => {
     ],
     [
       VideoModuleType.Envelope,
-      [ctl("gate")],
+      [midi("in"), ctl("gate")],
       {
         gate: 0,
         attack: 0.1,
@@ -54,7 +55,7 @@ describe("bootstrap modules", () => {
         instances: 1,
       },
     ],
-    [VideoModuleType.MidiNotes, [], { moduleId: "", instances: 1 }],
+    [VideoModuleType.MidiNotes, [midi("in")], { instances: 1 }],
     [
       VideoModuleType.Band,
       [ctl("lowHz"), ctl("highHz"), ctl("gain")],
