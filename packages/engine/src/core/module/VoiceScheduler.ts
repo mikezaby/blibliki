@@ -1,16 +1,28 @@
 import { ContextTime } from "@blibliki/transport";
-import { EmptyObject } from "@blibliki/utils";
 import { ICreateModule, ModuleType } from "@/modules";
 import { MidiOutput } from "../IO";
 import MidiEvent, { MidiEventType } from "../midi/MidiEvent";
-import { ModulePropSchema } from "../schema";
+import { EnumProp, ModulePropSchema } from "../schema";
 import { IModuleConstructor, Module } from "./Module";
 import { IPolyModuleConstructor, PolyModule } from "./PolyModule";
 
-export type IVoiceSchedulerProps = EmptyObject;
-export const voiceSchedulerPropSchema: ModulePropSchema<IVoiceSchedulerProps> =
-  {};
-const DEFAULT_PROPS = {};
+export const VOICE_ALLOCATIONS = ["lowest", "random"] as const;
+export type VoiceAllocation = (typeof VOICE_ALLOCATIONS)[number];
+
+// Which free voice a new note takes: the lowest, or any at random.
+export type IVoiceSchedulerProps = { allocation: VoiceAllocation };
+export const voiceSchedulerPropSchema: ModulePropSchema<
+  IVoiceSchedulerProps,
+  { allocation: EnumProp<VoiceAllocation> }
+> = {
+  allocation: {
+    kind: "enum",
+    options: [...VOICE_ALLOCATIONS],
+    label: "Allocation",
+    shortLabel: "alloc",
+  },
+};
+const DEFAULT_PROPS: IVoiceSchedulerProps = { allocation: "lowest" };
 
 interface OccupationRange {
   noteName: string;
@@ -161,12 +173,20 @@ export default class VoiceScheduler extends PolyModule<ModuleType.VoiceScheduler
     this.midiOutput.onMidiEvent(midiEvent);
   };
 
+  // A note already sounding keeps its voice. Otherwise a free voice, the
+  // lowest or any at random, and only then a stolen one.
   private findFreeVoice(targetTime: ContextTime, noteName: string): Voice {
-    let voice: Voice | undefined;
+    let voice = this.audioModules.find((v) =>
+      v.isOccupiedAt(targetTime, noteName),
+    );
 
-    voice =
-      this.audioModules.find((v) => v.isOccupiedAt(targetTime, noteName)) ??
-      this.audioModules.find((v) => !v.isOccupiedAt(targetTime));
+    if (!voice) {
+      const free = this.audioModules.filter((v) => !v.isOccupiedAt(targetTime));
+      voice =
+        this.props.allocation === "random"
+          ? free[Math.floor(Math.random() * free.length)]
+          : free[0];
+    }
 
     if (voice) return voice;
 
