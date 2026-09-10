@@ -1,6 +1,7 @@
 import { uuidv4 } from "@blibliki/utils";
 import type { VideoModuleType, VideoPropsMapping } from "@/modules";
 import type { IOKind } from "./Routes";
+import { voicesProp } from "./poly";
 import type { PropSchema } from "./schema";
 
 export type IVideoModule<T extends VideoModuleType = VideoModuleType> = {
@@ -56,6 +57,17 @@ export abstract class VideoModule<T extends VideoModuleType = VideoModuleType> {
 
   updateProps(props: Partial<VideoPropsMapping[T]>) {
     this.props = { ...this.props, ...props };
+  }
+
+  // Voices this module renders: its own `voices` prop when above one, else
+  // the widest texture input. A sink has no texture output and composes
+  // its input instead, as Layout does by overriding this.
+  voiceCount(props: Record<string, unknown>, inputVoices: number[]): number {
+    const own = voicesProp(props);
+    if (own > 1) return own;
+    const hasTextureOut = this.outputs.some((o) => o.kind === "texture");
+
+    return hasTextureOut ? Math.max(1, ...inputVoices) : 1;
   }
 
   // Control modules compute their outputs once per frame from `props`, which

@@ -5,6 +5,7 @@ import AudioProp, { audioPropPropSchema, IAudioPropProps } from "./AudioProp";
 import Band, { bandPropSchema, IBandProps } from "./Band";
 import HueRotate, { hueRotatePropSchema, IHueRotateProps } from "./HueRotate";
 import LFO, { ILFOProps, lfoPropSchema } from "./LFO";
+import Layout, { ILayoutProps, layoutPropSchema } from "./Layout";
 import Merge, { IMergeProps, mergePropSchema } from "./Merge";
 import Output, { IOutputProps, outputPropSchema } from "./Output";
 import Source, { ISourceProps, sourcePropSchema } from "./Source";
@@ -13,6 +14,7 @@ export enum VideoModuleType {
   Source = "Source",
   HueRotate = "HueRotate",
   Merge = "Merge",
+  Layout = "Layout",
   Output = "Output",
   AudioProp = "AudioProp",
   LFO = "LFO",
@@ -23,6 +25,7 @@ export type VideoPropsMapping = {
   [VideoModuleType.Source]: ISourceProps;
   [VideoModuleType.HueRotate]: IHueRotateProps;
   [VideoModuleType.Merge]: IMergeProps;
+  [VideoModuleType.Layout]: ILayoutProps;
   [VideoModuleType.Output]: IOutputProps;
   [VideoModuleType.AudioProp]: IAudioPropProps;
   [VideoModuleType.LFO]: ILFOProps;
@@ -42,6 +45,8 @@ export function createModule<T extends VideoModuleType>(
       );
     case VideoModuleType.Merge:
       return new Merge(params as ICreateVideoModule<VideoModuleType.Merge>);
+    case VideoModuleType.Layout:
+      return new Layout(params as ICreateVideoModule<VideoModuleType.Layout>);
     case VideoModuleType.Output:
       return new Output(params as ICreateVideoModule<VideoModuleType.Output>);
     case VideoModuleType.AudioProp:
@@ -60,6 +65,7 @@ export function createModule<T extends VideoModuleType>(
 export type { IAudioPropProps } from "./AudioProp";
 export type { IBandProps } from "./Band";
 export type { IHueRotateProps } from "./HueRotate";
+export type { ILayoutProps } from "./Layout";
 export type { ILFOProps, LFOWaveform } from "./LFO";
 export { LFO_WAVEFORMS } from "./LFO";
 export type { IMergeProps, MergeMode } from "./Merge";
@@ -74,6 +80,7 @@ export const videoModuleSchemas: Record<
   [VideoModuleType.Source]: sourcePropSchema,
   [VideoModuleType.HueRotate]: hueRotatePropSchema,
   [VideoModuleType.Merge]: mergePropSchema,
+  [VideoModuleType.Layout]: layoutPropSchema,
   [VideoModuleType.Output]: outputPropSchema,
   [VideoModuleType.AudioProp]: audioPropPropSchema,
   [VideoModuleType.LFO]: lfoPropSchema,

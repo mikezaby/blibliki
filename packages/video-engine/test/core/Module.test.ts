@@ -15,6 +15,7 @@ describe("VideoModule", () => {
       saturation: 1,
       lightness: 0.5,
       spread: 180,
+      voices: 1,
     });
     expect(source.serialize()).toEqual({
       id: source.id,

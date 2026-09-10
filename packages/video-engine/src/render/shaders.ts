@@ -20,7 +20,23 @@ vec3 hsl2rgb(vec3 c) {
   return c.z + c.y * (rgb - 0.5) * (1.0 - abs(2.0 * c.z - 1.0));
 }`;
 
-// Control modules have no shader; they never become a pass.
+const BLIT = `${HEADER}
+uniform sampler2D u_in;
+void main() {
+  outColor = texture(u_in, v_uv);
+}`;
+
+// Draws one voice into its cell: the viewport is the cell and u_rect is the
+// same cell in the voice's frame.
+export const COMPOSE = `${HEADER}
+uniform sampler2D u_in;
+uniform vec4 u_rect;
+void main() {
+  outColor = texture(u_in, u_rect.xy + v_uv * u_rect.zw);
+}`;
+
+// Control modules have no shader; they never become a pass. Layout has one
+// for a mono input; with voices its pass composes instead.
 export const FRAGMENT: Partial<Record<VideoModuleType, string>> = {
   [VideoModuleType.Source]: `${HEADER}
 uniform float u_mode, u_hue, u_saturation, u_lightness, u_spread;
@@ -67,9 +83,7 @@ void main() {
   outColor = mix(a, b, u_amount);
 }`,
 
-  [VideoModuleType.Output]: `${HEADER}
-uniform sampler2D u_in;
-void main() {
-  outColor = texture(u_in, v_uv);
-}`,
+  [VideoModuleType.Layout]: BLIT,
+
+  [VideoModuleType.Output]: BLIT,
 };

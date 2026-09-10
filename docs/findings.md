@@ -69,3 +69,11 @@ over each handle's center. It is not `nodrag`, so a press exactly on it
 grabs the node instead of starting a cable; on audio and video nodes alike,
 at small zoom levels the dot covers most of the handle. Add
 `pointer-events-none` to the indicator.
+
+## A Wavetable test times out under the full parallel test run
+
+`packages/engine/test/modules/Wavetable.test.ts` failed once during a
+repo-wide `pnpm test` (the file took about 11 s), then passed alone and on
+the next full run. It is timing-sensitive under load. Find the test that
+waits on real time and either raise its timeout or drive it from a fake
+clock.

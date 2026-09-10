@@ -22,6 +22,8 @@ export {
 export type { VideoPropsMapping } from "./modules";
 export { Routes } from "./core/Routes";
 export type { ICreateRoute, IOKind, IPlug, IRoute } from "./core/Routes";
+export { polyPropSchema, VOICE_LAYOUTS, voiceRect } from "./core/poly";
+export type { IPolyProps, VoiceLayout } from "./core/poly";
 export { buildPasses } from "./core/graph";
 export type { RenderPass } from "./core/graph";
 export { applyControlRoutes, controlName, mapRange } from "./core/controls";

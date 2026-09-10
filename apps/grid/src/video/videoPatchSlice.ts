@@ -27,6 +27,7 @@ export const VIDEO_MODULE_NAMES: Record<VideoModuleType, string> = {
   [VideoModuleType.Source]: "Source",
   [VideoModuleType.HueRotate]: "Hue Rotate",
   [VideoModuleType.Merge]: "Merge",
+  [VideoModuleType.Layout]: "Layout",
   [VideoModuleType.Output]: "Visuals",
   [VideoModuleType.AudioProp]: "Audio Prop",
   [VideoModuleType.LFO]: "LFO",

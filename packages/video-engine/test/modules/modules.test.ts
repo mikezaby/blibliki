@@ -15,7 +15,14 @@ describe("bootstrap modules", () => {
     [
       VideoModuleType.Source,
       [ctl("hue"), ctl("saturation"), ctl("lightness"), ctl("spread")],
-      { mode: "solid", hue: 0, saturation: 1, lightness: 0.5, spread: 180 },
+      {
+        mode: "solid",
+        hue: 0,
+        saturation: 1,
+        lightness: 0.5,
+        spread: 180,
+        voices: 1,
+      },
     ],
     [VideoModuleType.HueRotate, [tex("in"), ctl("amount")], { amount: 0 }],
     [
@@ -23,6 +30,7 @@ describe("bootstrap modules", () => {
       [tex("a"), tex("b"), ctl("amount")],
       { mode: "crossfade", amount: 0.5 },
     ],
+    [VideoModuleType.Layout, [tex("in")], { layout: "grid" }],
     [VideoModuleType.Output, [tex("in")], {}],
     [VideoModuleType.AudioProp, [], { moduleId: "", prop: "" }],
     [
