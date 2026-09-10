@@ -138,6 +138,39 @@ describe("VideoEngine", () => {
     expect(engine.findModule("lfo").props).toMatchObject({ frequency: 1 });
   });
 
+  it("ticks a poly control module once per voice and renders its consumers per voice", () => {
+    const engine = chain();
+    engine.addModule({
+      id: "env",
+      name: "env",
+      moduleType: VideoModuleType.Envelope,
+      props: { voices: 2, gate: 1, attack: 0, decay: 0, sustain: 0.5 },
+    });
+    engine.addRoute({
+      kind: "control",
+      source: { moduleId: "env", ioName: "out" },
+      destination: { moduleId: "fx", ioName: "amount" },
+      inMin: 0,
+      inMax: 1,
+      outMin: 0,
+      outMax: 360,
+    });
+    engine.tick({ now: 0, dt: 0.1 });
+    engine.tick({ now: 0.1, dt: 0.1 });
+
+    const passes = engine.passes();
+
+    expect(
+      passes
+        .filter((p) => p.moduleId === "fx")
+        .map((p) => [p.voice, p.uniforms.amount]),
+    ).toEqual([
+      [0, 180],
+      [1, 180],
+    ]);
+    expect(passes.at(-1)?.compose).toEqual({ voices: 2, layout: "grid" });
+  });
+
   it("keeps its own copy of spectrum bins and feeds them to a Band", () => {
     const engine = chain();
     engine.addModule({

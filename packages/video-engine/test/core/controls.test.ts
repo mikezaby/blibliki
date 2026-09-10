@@ -54,6 +54,28 @@ describe("applyControlRoutes", () => {
     expect(props.hue).toBeCloseTo(180);
   });
 
+  it("feeds voice v from the matching voice of a poly source, wrapping a narrower one", () => {
+    const values = new Map([
+      ["lfo:out:0", 0],
+      ["lfo:out:1", 0.5],
+    ]);
+    const voicings = new Map([["lfo", 2]]);
+    const at = (voice: number) =>
+      applyControlRoutes({ hue: 10 }, [route], values, {}, voice, voicings).hue;
+
+    expect(at(0)).toBe(0);
+    expect(at(1)).toBe(180);
+    expect(at(3)).toBe(180);
+  });
+
+  it("feeds every voice from a mono source", () => {
+    const values = new Map([["lfo:out", 0.25]]);
+
+    expect(
+      applyControlRoutes({ hue: 10 }, [route], values, {}, 5, new Map()).hue,
+    ).toBe(90);
+  });
+
   it("keeps the stored prop when the source has no value yet", () => {
     const props = applyControlRoutes({ hue: 10 }, [route], new Map());
 

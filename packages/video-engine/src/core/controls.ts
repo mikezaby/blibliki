@@ -26,20 +26,38 @@ export function controlName(moduleId: string, output: string): string {
   return `${moduleId}:${output}`;
 }
 
+export function voiceControlName(
+  moduleId: string,
+  output: string,
+  voice: number,
+): string {
+  return `${moduleId}:${output}:${voice}`;
+}
+
+const NO_VOICES: ReadonlyMap<string, number> = new Map();
+
 // Several routes into one prop add: the first route's outMin plus every
 // route's swing, clamped to the prop's schema range when one is given, so a
-// single route is a plain range mapping.
+// single route is a plain range mapping. `voice` reads the matching voice
+// of a poly source (by `voicings`), wrapping around a narrower one; a mono
+// source feeds every voice.
 export function applyControlRoutes<P extends Record<string, unknown>>(
   props: P,
   routes: readonly IRoute[],
   values: ControlValues,
   schema: Record<string, PropSchema> = {},
+  voice = 0,
+  voicings: ReadonlyMap<string, number> = NO_VOICES,
 ): P {
   const sums = new Map<string, number>();
 
   for (const route of routes) {
+    const { moduleId, ioName } = route.source;
+    const width = voicings.get(moduleId) ?? 1;
     const value = values.get(
-      controlName(route.source.moduleId, route.source.ioName),
+      width > 1
+        ? voiceControlName(moduleId, ioName, voice % width)
+        : controlName(moduleId, ioName),
     );
     if (value === undefined) continue;
     const outMin = route.outMin ?? 0;

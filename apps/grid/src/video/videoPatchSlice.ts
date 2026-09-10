@@ -31,6 +31,7 @@ export const VIDEO_MODULE_NAMES: Record<VideoModuleType, string> = {
   [VideoModuleType.Output]: "Visuals",
   [VideoModuleType.AudioProp]: "Audio Prop",
   [VideoModuleType.LFO]: "LFO",
+  [VideoModuleType.Envelope]: "Envelope",
   [VideoModuleType.Band]: "Band",
 };
 

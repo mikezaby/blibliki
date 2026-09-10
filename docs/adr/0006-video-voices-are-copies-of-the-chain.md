@@ -56,6 +56,4 @@ Rendering cost is voices times passes at full resolution: fine for 9 to
 18 voices with short chains, heavy at 81, where rendering voices at cell
 resolution would be the next lever.
 
-Per-voice values are the next increment: control modules gain voices, a
-control route feeds voice v with value v, and a MIDI voice allocator and
-an envelope give each voice its own values. Until then voices are copies.
+Per-voice values arrive as control voices; ADR 7 records how.

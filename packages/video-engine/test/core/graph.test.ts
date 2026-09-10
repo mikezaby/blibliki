@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { VideoModule } from "@/core/Module";
 import { Routes } from "@/core/Routes";
+import { applyControlRoutes } from "@/core/controls";
 import { buildPasses, readsOf, targetKey } from "@/core/graph";
+import { resolveVoices } from "@/core/poly";
 import { createModule, VideoModuleType } from "@/modules";
 
 function make(id: string, moduleType: VideoModuleType) {
@@ -117,6 +119,48 @@ describe("buildPasses", () => {
     expect(passes[3]).toMatchObject({ inputs: { in: "layout" } });
     expect(passes[3]?.compose).toBeUndefined();
     expect(passes[4]?.compose).toBeUndefined();
+  });
+
+  it("renders a mono source once per voice of the poly control driving it", () => {
+    const src = make("src", VideoModuleType.Source);
+    const env = make("env", VideoModuleType.Envelope);
+    env.updateProps({ voices: 2 });
+    const out = make("out", VideoModuleType.Output);
+    const routes = new Routes();
+    wire(routes, "src", "out");
+    routes.addRoute({
+      kind: "control",
+      source: { moduleId: "env", ioName: "out" },
+      destination: { moduleId: "src", ioName: "hue" },
+      inMin: 0,
+      inMax: 1,
+      outMin: 0,
+      outMax: 360,
+    });
+    const modules = graph([src, env, out]);
+    const values = new Map([
+      ["env:out:0", 0.25],
+      ["env:out:1", 0.5],
+    ]);
+    const voicings = resolveVoices(modules, routes, stored);
+    const resolve = (m: VideoModule, voice: number) =>
+      applyControlRoutes(
+        stored(m),
+        routes.controlRoutesFor(m.id),
+        values,
+        m.schema,
+        voice,
+        voicings,
+      );
+
+    const passes = buildPasses(modules, routes, resolve, voicings);
+
+    expect(passes.map((p) => [p.moduleId, p.voice, p.uniforms.hue])).toEqual([
+      ["src", 0, 90],
+      ["src", 1, 180],
+      ["out", undefined, undefined],
+    ]);
+    expect(passes[2]?.compose).toEqual({ voices: 2, layout: "grid" });
   });
 
   it("feeds a mono input to every voice and wraps a narrower poly input", () => {

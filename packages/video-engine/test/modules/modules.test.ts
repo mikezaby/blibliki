@@ -39,6 +39,11 @@ describe("bootstrap modules", () => {
       { frequency: 1, waveform: "sine", phase: 0 },
     ],
     [
+      VideoModuleType.Envelope,
+      [ctl("gate")],
+      { gate: 0, attack: 0.1, decay: 0.1, sustain: 1, release: 0.1, voices: 1 },
+    ],
+    [
       VideoModuleType.Band,
       [ctl("lowHz"), ctl("highHz"), ctl("gain")],
       { moduleId: "", lowHz: 20, highHz: 200, gain: 1, smoothing: 0 },

@@ -59,24 +59,24 @@ export abstract class VideoModule<T extends VideoModuleType = VideoModuleType> {
     this.props = { ...this.props, ...props };
   }
 
-  // Voices this module renders: its own `voices` prop when above one, else
-  // the widest texture input. A sink has no texture output and composes
-  // its input instead, as Layout does by overriding this.
+  // Voices this module runs: its own `voices` prop when above one, else the
+  // widest of its inputs, texture or control. A sink has no output and
+  // composes its input instead, as Layout does by overriding this.
   voiceCount(props: Record<string, unknown>, inputVoices: number[]): number {
     const own = voicesProp(props);
     if (own > 1) return own;
-    const hasTextureOut = this.outputs.some((o) => o.kind === "texture");
 
-    return hasTextureOut ? Math.max(1, ...inputVoices) : 1;
+    return this.outputs.length > 0 ? Math.max(1, ...inputVoices) : 1;
   }
 
-  // Control modules compute their outputs once per frame from `props`, which
-  // the engine has already run through the module's control routes; texture
-  // modules return null and are never ticked.
+  // Control modules compute their outputs once per frame and voice from
+  // `props`, which the engine has already run through the module's control
+  // routes for that voice; texture modules return null and are never ticked.
   tick(
     _values: ControlValues,
     _frame: Frame,
     _props: VideoPropsMapping[T] = this.props,
+    _voice = 0,
   ): Record<string, number> | null {
     return null;
   }

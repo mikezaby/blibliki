@@ -3,6 +3,7 @@ import { ICreateVideoModule, IOPort, VideoModule } from "@/core/Module";
 import { PropSchema } from "@/core/schema";
 import AudioProp, { audioPropPropSchema, IAudioPropProps } from "./AudioProp";
 import Band, { bandPropSchema, IBandProps } from "./Band";
+import Envelope, { envelopePropSchema, IEnvelopeProps } from "./Envelope";
 import HueRotate, { hueRotatePropSchema, IHueRotateProps } from "./HueRotate";
 import LFO, { ILFOProps, lfoPropSchema } from "./LFO";
 import Layout, { ILayoutProps, layoutPropSchema } from "./Layout";
@@ -18,6 +19,7 @@ export enum VideoModuleType {
   Output = "Output",
   AudioProp = "AudioProp",
   LFO = "LFO",
+  Envelope = "Envelope",
   Band = "Band",
 }
 
@@ -29,6 +31,7 @@ export type VideoPropsMapping = {
   [VideoModuleType.Output]: IOutputProps;
   [VideoModuleType.AudioProp]: IAudioPropProps;
   [VideoModuleType.LFO]: ILFOProps;
+  [VideoModuleType.Envelope]: IEnvelopeProps;
   [VideoModuleType.Band]: IBandProps;
 };
 
@@ -55,6 +58,10 @@ export function createModule<T extends VideoModuleType>(
       );
     case VideoModuleType.LFO:
       return new LFO(params as ICreateVideoModule<VideoModuleType.LFO>);
+    case VideoModuleType.Envelope:
+      return new Envelope(
+        params as ICreateVideoModule<VideoModuleType.Envelope>,
+      );
     case VideoModuleType.Band:
       return new Band(params as ICreateVideoModule<VideoModuleType.Band>);
     default:
@@ -64,6 +71,7 @@ export function createModule<T extends VideoModuleType>(
 
 export type { IAudioPropProps } from "./AudioProp";
 export type { IBandProps } from "./Band";
+export type { IEnvelopeProps } from "./Envelope";
 export type { IHueRotateProps } from "./HueRotate";
 export type { ILayoutProps } from "./Layout";
 export type { ILFOProps, LFOWaveform } from "./LFO";
@@ -84,6 +92,7 @@ export const videoModuleSchemas: Record<
   [VideoModuleType.Output]: outputPropSchema,
   [VideoModuleType.AudioProp]: audioPropPropSchema,
   [VideoModuleType.LFO]: lfoPropSchema,
+  [VideoModuleType.Envelope]: envelopePropSchema,
   [VideoModuleType.Band]: bandPropSchema,
 };
 
