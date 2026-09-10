@@ -87,7 +87,7 @@ describe("VideoEngine", () => {
     engine.tick({ now: 0, dt: 0 });
 
     expect(engine.passes()[1]?.uniforms.amount).toBe(90);
-    expect(engine.findModule("fx").props).toEqual({ amount: 0 });
+    expect(engine.findModule("fx").props).toEqual({ amount: 0, instances: 1 });
   });
 
   it("clamps the sum of several control routes to the prop's schema range", () => {
@@ -146,6 +146,7 @@ describe("VideoEngine", () => {
       moduleType: VideoModuleType.Envelope,
       props: { instances: 2, gate: 1, attack: 0, decay: 0, sustain: 0.5 },
     });
+    engine.updateProps("fx", { instances: 2 });
     engine.addRoute({
       kind: "control",
       source: { moduleId: "env", ioName: "out" },
@@ -162,13 +163,44 @@ describe("VideoEngine", () => {
 
     expect(
       passes
-        .filter((p) => p.moduleId === "fx")
+        .filter((p) => p.moduleId === "fx" && !p.compose)
         .map((p) => [p.instance, p.uniforms.amount]),
     ).toEqual([
       [0, 180],
       [1, 180],
     ]);
-    expect(passes.at(-1)?.compose).toEqual({ instances: 2, layout: "grid" });
+    expect(passes.at(-2)?.compose).toEqual({ instances: 2, layout: "grid" });
+    expect(passes.at(-1)).toMatchObject({
+      moduleId: "out",
+      inputs: { in: "fx:mix" },
+    });
+  });
+
+  it("keeps a single module single when an instanced control drives it", () => {
+    const engine = chain();
+    engine.addModule({
+      id: "env",
+      name: "env",
+      moduleType: VideoModuleType.Envelope,
+      props: { instances: 3, gate: 1, attack: 0, decay: 0, sustain: 0.5 },
+    });
+    engine.addRoute({
+      kind: "control",
+      source: { moduleId: "env", ioName: "out" },
+      destination: { moduleId: "fx", ioName: "amount" },
+      inMin: 0,
+      inMax: 1,
+      outMin: 0,
+      outMax: 360,
+    });
+    engine.tick({ now: 0, dt: 0.1 });
+    engine.tick({ now: 0.1, dt: 0.1 });
+
+    const fx = engine.passes().filter((p) => p.moduleId === "fx" && !p.compose);
+
+    expect(fx).toHaveLength(1);
+    expect(fx[0]?.instance).toBeUndefined();
+    expect(fx[0]?.uniforms.amount).toBe(180);
   });
 
   it("gives each instance its own note through MIDI Notes and an Envelope", () => {
@@ -183,8 +215,10 @@ describe("VideoEngine", () => {
       id: "env",
       name: "env",
       moduleType: VideoModuleType.Envelope,
-      props: { attack: 0, decay: 0, sustain: 1 },
+      props: { instances: 2, attack: 0, decay: 0, sustain: 1 },
     });
+    engine.updateProps("src", { instances: 2 });
+    engine.updateProps("fx", { instances: 2 });
     engine.addRoute({
       kind: "control",
       source: { moduleId: "mv", ioName: "gate" },
@@ -216,7 +250,7 @@ describe("VideoEngine", () => {
 
     expect(
       passes
-        .filter((p) => p.moduleId === "fx")
+        .filter((p) => p.moduleId === "fx" && !p.compose)
         .map((p) => [p.instance, p.uniforms.amount]),
     ).toEqual([
       [0, 360],
@@ -224,7 +258,7 @@ describe("VideoEngine", () => {
     ]);
     expect(
       passes
-        .filter((p) => p.moduleId === "src")
+        .filter((p) => p.moduleId === "src" && !p.compose)
         .map((p) => [p.instance, p.uniforms.hue]),
     ).toEqual([
       [0, 60],
@@ -261,7 +295,7 @@ describe("VideoEngine", () => {
     const engine = chain();
     engine.updateProps("fx", { amount: 45 });
 
-    expect(engine.findModule("fx").props).toEqual({ amount: 45 });
+    expect(engine.findModule("fx").props).toEqual({ amount: 45, instances: 1 });
   });
 
   it("removing a module drops routes on either end", () => {

@@ -1,7 +1,6 @@
 import { uuidv4 } from "@blibliki/utils";
 import type { VideoModuleType, VideoPropsMapping } from "@/modules";
 import type { IOKind } from "./Routes";
-import { instancesProp } from "./instances";
 import type { PropSchema } from "./schema";
 
 export type IVideoModule<T extends VideoModuleType = VideoModuleType> = {
@@ -64,19 +63,6 @@ export abstract class VideoModule<T extends VideoModuleType = VideoModuleType> {
 
   updateProps(props: Partial<VideoPropsMapping[T]>) {
     this.props = { ...this.props, ...props };
-  }
-
-  // Instances this module runs: its own `instances` prop when above one, else the
-  // widest of its inputs, texture or control. A sink has no output and
-  // composes its input instead, as Layout does by overriding this.
-  instanceCount(
-    props: Record<string, unknown>,
-    inputInstances: number[],
-  ): number {
-    const own = instancesProp(props);
-    if (own > 1) return own;
-
-    return this.outputs.length > 0 ? Math.max(1, ...inputInstances) : 1;
   }
 
   // Control modules compute their outputs once per frame and instance from

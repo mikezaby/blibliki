@@ -1,12 +1,21 @@
 import { ICreateVideoModule, VideoModule } from "@/core/Module";
+import {
+  DEFAULT_INSTANCES_PROPS,
+  IInstancesProps,
+  instancesPropSchema,
+} from "@/core/instances";
 import { ModulePropSchema } from "@/core/schema";
 import { VideoModuleType } from ".";
 
-export type IHueRotateProps = { amount: number };
+export type IHueRotateProps = IInstancesProps & { amount: number };
 
-const DEFAULT_PROPS: IHueRotateProps = { amount: 0 };
+const DEFAULT_PROPS: IHueRotateProps = {
+  amount: 0,
+  ...DEFAULT_INSTANCES_PROPS,
+};
 
 export const hueRotatePropSchema: ModulePropSchema<IHueRotateProps> = {
+  ...instancesPropSchema,
   amount: {
     kind: "number",
     min: 0,

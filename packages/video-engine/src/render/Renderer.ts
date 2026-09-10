@@ -1,4 +1,4 @@
-import { readsOf, RenderPass, targetKey } from "@/core/graph";
+import { readsOf, RenderPass } from "@/core/graph";
 import { instanceRect } from "@/core/instances";
 import { VideoModuleType } from "@/modules";
 import { COMPOSE, FRAGMENT, VERTEX } from "./shaders";
@@ -55,7 +55,7 @@ export class Renderer {
       const isOutput = pass.moduleType === VideoModuleType.Output;
       gl.bindFramebuffer(
         gl.FRAMEBUFFER,
-        isOutput ? null : this.acquire(targetKey(pass)).framebuffer,
+        isOutput ? null : this.acquire(pass.target).framebuffer,
       );
 
       if (pass.compose) {

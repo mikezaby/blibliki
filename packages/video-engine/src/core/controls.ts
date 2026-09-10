@@ -38,9 +38,10 @@ const NO_INSTANCES: ReadonlyMap<string, number> = new Map();
 
 // Several routes into one prop add: the first route's outMin plus every
 // route's swing, clamped to the prop's schema range when one is given, so a
-// single route is a plain range mapping. `instance` reads the matching instance
-// of an instanced source (by `instanceCounts`), wrapping around a narrower one; a single
-// source feeds every instance.
+// single route is a plain range mapping. `instance` reads the matching
+// instance of an instanced source (by `instanceCounts`), wrapping around a
+// narrower one; a single source feeds every instance, and a single consumer
+// reads instance 0.
 export function applyControlRoutes<P extends Record<string, unknown>>(
   props: P,
   routes: readonly IRoute[],

@@ -1,21 +1,23 @@
 import { VideoModuleType } from "@/modules";
 import { VideoModule } from "./Module";
 import { Routes } from "./Routes";
-import { resolveInstances, InstanceLayout } from "./instances";
+import { InstanceLayout, resolveInstances } from "./instances";
 import { PropSchema } from "./schema";
 
 export type RenderPass = {
   moduleId: string;
   moduleType: VideoModuleType;
+  // Target the pass writes: the module id, `<id>:<instance>` for one
+  // instance of an instanced module, or `<id>:mix` for the grid an
+  // instanced module is composed into for its single consumers.
+  target: string;
   // Texture input name to the target feeding it, or null when unplugged.
   inputs: Record<string, string | null>;
   // Numeric uniforms, one per prop the shader can use. Prefixed u_ by the renderer.
   uniforms: Record<string, number>;
-  // Set on the per-instance passes of a module carrying instances; each renders
-  // to its own target.
   instance?: number;
-  // Tiles the instances of the `in` input into this module's target instead of
-  // running its shader.
+  // Tiles the instances of the `in` input into the target instead of
+  // running a shader.
   compose?: { instances: number; layout: InstanceLayout };
 };
 
@@ -23,11 +25,6 @@ export type ResolveProps = (
   module: VideoModule,
   instance: number,
 ) => Record<string, unknown>;
-
-export const targetKey = (pass: RenderPass) =>
-  pass.instance === undefined
-    ? pass.moduleId
-    : `${pass.moduleId}:${pass.instance}`;
 
 // Targets a pass samples, so the renderer can recycle each after its last
 // reader.
@@ -69,28 +66,47 @@ export function uniformsFor(
   return uniforms;
 }
 
-// Instances flow down routes as in the audio engine (see resolveInstances). A
-// module with instances renders once per instance, and so does every module after
-// it, each instance reading the matching instance of its inputs and its own
-// resolved props. A single input to an instanced module feeds every instance; a
-// narrower instanced input wraps. A module that resolves to one instance with a
-// instanced input (Output, Layout) composes the instances into one texture.
+// Every module runs as many times as its own `instances` prop says, as an
+// audio module plays as many voices as its own setting. Instance i of a
+// module reads instance i of an instanced input, wrapping around a narrower
+// one; a single input feeds every instance. An instanced input to a single
+// module is composed into a grid first, the texture analog of an audio
+// mono input summing poly voices; Layout composes with its own layout
+// instead.
 export function buildPasses(
   modules: Map<string, VideoModule>,
   routes: Routes,
   resolveProps: ResolveProps,
   instanceCounts: ReadonlyMap<string, number> = resolveInstances(
     modules,
-    routes,
     (module) => resolveProps(module, 0),
   ),
 ): RenderPass[] {
   const passes: RenderPass[] = [];
   const done = new Set<string>();
   const visiting = new Set<string>();
+  const mixed = new Set<string>();
 
-  const widthOf = (sourceId: string | null) =>
+  const countOf = (sourceId: string | null) =>
     sourceId === null ? 1 : (instanceCounts.get(sourceId) ?? 1);
+
+  const mix = (sourceId: string): string => {
+    const target = `${sourceId}:mix`;
+    const source = modules.get(sourceId);
+    if (source && !mixed.has(sourceId)) {
+      mixed.add(sourceId);
+      passes.push({
+        moduleId: sourceId,
+        moduleType: source.moduleType,
+        target,
+        inputs: { in: sourceId },
+        uniforms: {},
+        compose: { instances: countOf(sourceId), layout: "grid" },
+      });
+    }
+
+    return target;
+  };
 
   const visit = (id: string) => {
     if (done.has(id)) return;
@@ -109,46 +125,62 @@ export function buildPasses(
     visiting.delete(id);
     done.add(id);
 
-    const instances = instanceCounts.get(id) ?? 1;
+    const instances = countOf(id);
     const { moduleType } = module;
 
     if (instances > 1) {
       for (let instance = 0; instance < instances; instance += 1) {
         const inputs: Record<string, string | null> = {};
         for (const [ioName, sourceId] of Object.entries(sources)) {
-          const width = widthOf(sourceId);
+          const width = countOf(sourceId);
           inputs[ioName] =
             sourceId !== null && width > 1
               ? `${sourceId}:${instance % width}`
               : sourceId;
         }
-        const uniforms = uniformsFor(
-          resolveProps(module, instance),
-          module.schema,
-        );
-        passes.push({ moduleId: id, moduleType, inputs, uniforms, instance });
+        passes.push({
+          moduleId: id,
+          moduleType,
+          target: `${id}:${instance}`,
+          inputs,
+          uniforms: uniformsFor(resolveProps(module, instance), module.schema),
+          instance,
+        });
       }
       return;
     }
 
     const props = resolveProps(module, 0);
-    const composed = widthOf(sources.in ?? null);
-    if (composed > 1) {
-      const layout = (props.layout as InstanceLayout | undefined) ?? "grid";
+    const source = sources.in ?? null;
+    if (
+      moduleType === VideoModuleType.Layout &&
+      source !== null &&
+      countOf(source) > 1
+    ) {
       passes.push({
         moduleId: id,
         moduleType,
+        target: id,
         inputs: sources,
         uniforms: {},
-        compose: { instances: composed, layout },
+        compose: {
+          instances: countOf(source),
+          layout: props.layout as InstanceLayout,
+        },
       });
       return;
     }
 
+    const inputs: Record<string, string | null> = {};
+    for (const [ioName, sourceId] of Object.entries(sources)) {
+      inputs[ioName] =
+        sourceId !== null && countOf(sourceId) > 1 ? mix(sourceId) : sourceId;
+    }
     passes.push({
       moduleId: id,
       moduleType,
-      inputs: sources,
+      target: id,
+      inputs,
       uniforms: uniformsFor(props, module.schema),
     });
   };

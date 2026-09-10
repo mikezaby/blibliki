@@ -30,8 +30,4 @@ export default class Layout extends VideoModule<VideoModuleType.Layout> {
   constructor(params: ICreateVideoModule<VideoModuleType.Layout>) {
     super(VideoModuleType.Layout, DEFAULT_PROPS, params);
   }
-
-  instanceCount(): number {
-    return 1;
-  }
 }

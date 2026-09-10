@@ -41,6 +41,7 @@ describe("LFO", () => {
       frequency: 1,
       waveform: "sine",
       phase: 0,
+      instances: 1,
     });
   });
 

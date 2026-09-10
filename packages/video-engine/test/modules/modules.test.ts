@@ -24,11 +24,15 @@ describe("bootstrap modules", () => {
         instances: 1,
       },
     ],
-    [VideoModuleType.HueRotate, [tex("in"), ctl("amount")], { amount: 0 }],
+    [
+      VideoModuleType.HueRotate,
+      [tex("in"), ctl("amount")],
+      { amount: 0, instances: 1 },
+    ],
     [
       VideoModuleType.Merge,
       [tex("a"), tex("b"), ctl("amount")],
-      { mode: "crossfade", amount: 0.5 },
+      { mode: "crossfade", amount: 0.5, instances: 1 },
     ],
     [VideoModuleType.Layout, [tex("in")], { layout: "grid" }],
     [VideoModuleType.Output, [tex("in")], {}],
@@ -36,7 +40,7 @@ describe("bootstrap modules", () => {
     [
       VideoModuleType.LFO,
       [ctl("frequency")],
-      { frequency: 1, waveform: "sine", phase: 0 },
+      { frequency: 1, waveform: "sine", phase: 0, instances: 1 },
     ],
     [
       VideoModuleType.Envelope,
@@ -90,6 +94,7 @@ describe("bootstrap modules", () => {
       ctl("velocity"),
     ]);
     expect(Object.keys(videoModuleSchemas[VideoModuleType.HueRotate])).toEqual([
+      "instances",
       "amount",
     ]);
   });

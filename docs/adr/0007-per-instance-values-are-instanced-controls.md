@@ -1,6 +1,7 @@
 # 7. Per-instance values reach video instances as instanced controls
 
-Date: 2026-09-10. Status: accepted. Extends ADR 6.
+Date: 2026-09-10. Status: accepted. Extends ADR 6; ADR 9 supersedes the
+rule that a module follows its inputs' instance count.
 
 ## Context
 

@@ -5,6 +5,11 @@ import {
   IOPort,
   VideoModule,
 } from "@/core/Module";
+import {
+  DEFAULT_INSTANCES_PROPS,
+  IInstancesProps,
+  instancesPropSchema,
+} from "@/core/instances";
 import { EnumProp, ModulePropSchema } from "@/core/schema";
 import { VideoModuleType } from ".";
 
@@ -18,18 +23,24 @@ export const LFO_WAVEFORMS = [
 
 export type LFOWaveform = (typeof LFO_WAVEFORMS)[number];
 
-export type ILFOProps = {
+export type ILFOProps = IInstancesProps & {
   frequency: number;
   waveform: LFOWaveform;
   phase: number;
 };
 
-const DEFAULT_PROPS: ILFOProps = { frequency: 1, waveform: "sine", phase: 0 };
+const DEFAULT_PROPS: ILFOProps = {
+  frequency: 1,
+  waveform: "sine",
+  phase: 0,
+  ...DEFAULT_INSTANCES_PROPS,
+};
 
 export const lfoPropSchema: ModulePropSchema<
   ILFOProps,
   { waveform: EnumProp<LFOWaveform> }
 > = {
+  ...instancesPropSchema,
   frequency: {
     kind: "number",
     min: 0.01,

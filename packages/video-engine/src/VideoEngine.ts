@@ -144,10 +144,10 @@ export class VideoEngine {
     );
   }
 
-  // A module's own `instances` prop is resolved from single sources only, so a
-  // instanced control cannot drive the instance count.
+  // The `instances` prop is resolved at instance 0, so an instanced control
+  // drives the count with its first instance.
   private resolveInstances() {
-    return resolveInstances(this.modules, this.routes, (module) =>
+    return resolveInstances(this.modules, (module) =>
       applyControlRoutes(
         module.props as Record<string, unknown>,
         this.routes.controlRoutesFor(module.id),

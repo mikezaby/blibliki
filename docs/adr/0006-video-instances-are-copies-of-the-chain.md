@@ -1,6 +1,7 @@
 # 6. Video instances are copies of the chain, composed by a Layout module
 
-Date: 2026-09-10. Status: accepted.
+Date: 2026-09-10. Status: accepted; ADR 9 supersedes the rule that a
+module follows its inputs' instance count.
 
 ## Context
 

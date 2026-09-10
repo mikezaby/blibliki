@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { Routes } from "@/core/Routes";
 import {
   resolveInstances,
   instanceRect,
@@ -51,69 +50,40 @@ describe("instancesProp", () => {
 });
 
 describe("resolveInstances", () => {
-  const make = (
-    id: string,
-    moduleType: VideoModuleType,
-    props: Record<string, unknown> = {},
-  ) => createModule({ id, name: id, moduleType, props });
-  const texture = (routes: Routes, from: string, to: string) =>
-    routes.addRoute({
-      source: { moduleId: from, ioName: "out" },
-      destination: { moduleId: to, ioName: "in" },
-    });
-  const control = (routes: Routes, from: string, to: string, prop: string) =>
-    routes.addRoute({
-      kind: "control",
-      source: { moduleId: from, ioName: "out" },
-      destination: { moduleId: to, ioName: prop },
-    });
-
-  it("follows texture and control routes and collapses at Layout and Output", () => {
-    const modules = [
-      make("src", VideoModuleType.Source, { instances: 3 }),
-      make("fx", VideoModuleType.HueRotate),
-      make("layout", VideoModuleType.Layout),
-      make("post", VideoModuleType.HueRotate),
-      make("out", VideoModuleType.Output),
-      make("env", VideoModuleType.Envelope, { instances: 2 }),
-      make("lfo", VideoModuleType.LFO),
-    ];
-    const routes = new Routes();
-    texture(routes, "src", "fx");
-    texture(routes, "fx", "layout");
-    texture(routes, "layout", "post");
-    texture(routes, "post", "out");
-    control(routes, "env", "lfo", "frequency");
-    control(routes, "lfo", "post", "amount");
-
-    const instanceCounts = resolveInstances(
-      new Map(modules.map((m) => [m.id, m])),
-      routes,
-      (m) => m.props,
+  it("reads each module's own instances prop, and single for modules without one", () => {
+    const modules = new Map(
+      [
+        createModule({
+          id: "src",
+          name: "src",
+          moduleType: VideoModuleType.Source,
+          props: { instances: 3 },
+        }),
+        createModule({
+          id: "fx",
+          name: "fx",
+          moduleType: VideoModuleType.HueRotate,
+        }),
+        createModule({
+          id: "layout",
+          name: "layout",
+          moduleType: VideoModuleType.Layout,
+        }),
+        createModule({
+          id: "out",
+          name: "out",
+          moduleType: VideoModuleType.Output,
+        }),
+      ].map((m) => [m.id, m]),
     );
 
-    expect(Object.fromEntries(instanceCounts)).toEqual({
+    const counts = resolveInstances(modules, (m) => m.props);
+
+    expect(Object.fromEntries(counts)).toEqual({
       src: 3,
-      fx: 3,
+      fx: 1,
       layout: 1,
-      post: 2,
       out: 1,
-      env: 2,
-      lfo: 2,
     });
-  });
-
-  it("counts a control feedback loop as single where it closes", () => {
-    const lfo = make("lfo", VideoModuleType.LFO);
-    const routes = new Routes();
-    control(routes, "lfo", "lfo", "frequency");
-
-    const instanceCounts = resolveInstances(
-      new Map([["lfo", lfo]]),
-      routes,
-      (m) => m.props,
-    );
-
-    expect(instanceCounts.get("lfo")).toBe(1);
   });
 });
