@@ -133,12 +133,12 @@ describe("videoRouteFromConnection", () => {
     });
   });
 
-  it("uses the MIDI note range for a MIDI Voices note output", () => {
+  it("uses the MIDI note range for a MIDI Notes note output", () => {
     const mv = {
       id: "mv",
-      name: "MIDI Voices",
-      moduleType: VideoModuleType.MidiVoices,
-      props: { moduleId: "kb", voices: 4 },
+      name: "MIDI Notes",
+      moduleType: VideoModuleType.MidiNotes,
+      props: { moduleId: "kb", instances: 4 },
     };
     const route = videoRouteFromConnection(
       "r",

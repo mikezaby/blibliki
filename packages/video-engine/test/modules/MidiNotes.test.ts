@@ -4,11 +4,11 @@ import { createModule, VideoModuleType } from "@/modules";
 
 const values = new Map<string, number>();
 
-function midiVoices(voices = 2) {
+function midiNotes(instances = 2) {
   return createModule({
     name: "mv",
-    moduleType: VideoModuleType.MidiVoices,
-    props: { moduleId: "kb", voices },
+    moduleType: VideoModuleType.MidiNotes,
+    props: { moduleId: "kb", instances },
   });
 }
 
@@ -23,15 +23,15 @@ const off = (note: number): MidiNoteEvent => ({
   velocity: 0,
 });
 
-function state(module: ReturnType<typeof midiVoices>, voices = 2) {
-  return Array.from({ length: voices }, (_, voice) =>
-    module.tick(values, { now: 0, dt: 0 }, undefined, voice),
+function state(module: ReturnType<typeof midiNotes>, instances = 2) {
+  return Array.from({ length: instances }, (_, instance) =>
+    module.tick(values, { now: 0, dt: 0 }, undefined, instance),
   );
 }
 
-describe("MidiVoices", () => {
-  it("fills free voices in order and releases the voice holding the note", () => {
-    const mv = midiVoices();
+describe("MidiNotes", () => {
+  it("fills free instances in order and releases the instance holding the note", () => {
+    const mv = midiNotes();
     mv.onMidi("kb", on(60, 0.5));
     mv.onMidi("kb", on(62));
 
@@ -48,8 +48,8 @@ describe("MidiVoices", () => {
     ]);
   });
 
-  it("reuses a released voice before stealing, then steals the earliest", () => {
-    const mv = midiVoices();
+  it("reuses a released instance before stealing, then steals the earliest", () => {
+    const mv = midiNotes();
     mv.onMidi("kb", on(60));
     mv.onMidi("kb", on(62));
     mv.onMidi("kb", off(60));
@@ -62,8 +62,8 @@ describe("MidiVoices", () => {
     expect(state(mv).map((v) => v?.note)).toEqual([64, 65]);
   });
 
-  it("retriggers the voice already holding the note", () => {
-    const mv = midiVoices();
+  it("retriggers the instance already holding the note", () => {
+    const mv = midiNotes();
     mv.onMidi("kb", on(60, 0.2));
     mv.onMidi("kb", on(60, 0.9));
 
@@ -74,7 +74,7 @@ describe("MidiVoices", () => {
   });
 
   it("ignores notes from other audio modules and note offs it never held", () => {
-    const mv = midiVoices();
+    const mv = midiNotes();
     mv.onMidi("other", on(60));
     mv.onMidi("kb", off(60));
 
@@ -84,12 +84,12 @@ describe("MidiVoices", () => {
     ]);
   });
 
-  it("allocates within the current voice count", () => {
-    const mv = midiVoices(3);
+  it("allocates within the current instance count", () => {
+    const mv = midiNotes(3);
     mv.onMidi("kb", on(60));
     mv.onMidi("kb", on(62));
     mv.onMidi("kb", on(64));
-    mv.updateProps({ voices: 2 });
+    mv.updateProps({ instances: 2 });
     mv.onMidi("kb", on(65));
 
     expect(state(mv, 3).map((v) => v?.note)).toEqual([65, 62, 0]);

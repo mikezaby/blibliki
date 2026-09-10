@@ -98,7 +98,7 @@ describe("LFO", () => {
     ).toBeCloseTo(1);
   });
 
-  it("advances a phase per voice", () => {
+  it("advances a phase per instance", () => {
     const module = lfo({ waveform: "sawtooth" });
     module.tick(values, { now: 0.25, dt: 0.25 }, undefined, 0);
 

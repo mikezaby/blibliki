@@ -29,7 +29,7 @@ function fakeEngine() {
     removeModule: vi.fn((id: string) => taps.delete(id)),
     findModule: (id: string) => {
       if (taps.has(id)) return taps.get(id);
-      if (id === "osc" || id === "poly") {
+      if (id === "osc" || id === "instanced") {
         return {
           outputs: {
             collection: [
@@ -102,12 +102,12 @@ describe("SpectrumTaps", () => {
     const engine = fakeEngine();
     const taps = new SpectrumTaps(engine as never);
 
-    taps.sync(new Set(["osc", "poly"]));
-    taps.sync(new Set(["poly"]));
+    taps.sync(new Set(["osc", "instanced"]));
+    taps.sync(new Set(["instanced"]));
 
     expect(engine.removeRoute).toHaveBeenCalledWith("r1");
     expect(engine.removeModule).toHaveBeenCalledWith("tap1");
-    expect([...taps.read()].map((s) => s.id)).toEqual(["poly"]);
+    expect([...taps.read()].map((s) => s.id)).toEqual(["instanced"]);
   });
 
   it("skips modules the engine does not have", () => {
@@ -124,7 +124,7 @@ describe("SpectrumTaps", () => {
     const engine = fakeEngine();
     const taps = new SpectrumTaps(engine as never);
 
-    taps.sync(new Set(["osc", "poly"]));
+    taps.sync(new Set(["osc", "instanced"]));
     taps.dispose();
 
     expect(engine.removeModule).toHaveBeenCalledTimes(2);

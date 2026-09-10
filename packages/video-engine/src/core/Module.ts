@@ -1,7 +1,7 @@
 import { uuidv4 } from "@blibliki/utils";
 import type { VideoModuleType, VideoPropsMapping } from "@/modules";
 import type { IOKind } from "./Routes";
-import { voicesProp } from "./poly";
+import { instancesProp } from "./instances";
 import type { PropSchema } from "./schema";
 
 export type IVideoModule<T extends VideoModuleType = VideoModuleType> = {
@@ -66,30 +66,33 @@ export abstract class VideoModule<T extends VideoModuleType = VideoModuleType> {
     this.props = { ...this.props, ...props };
   }
 
-  // Voices this module runs: its own `voices` prop when above one, else the
+  // Instances this module runs: its own `instances` prop when above one, else the
   // widest of its inputs, texture or control. A sink has no output and
   // composes its input instead, as Layout does by overriding this.
-  voiceCount(props: Record<string, unknown>, inputVoices: number[]): number {
-    const own = voicesProp(props);
+  instanceCount(
+    props: Record<string, unknown>,
+    inputInstances: number[],
+  ): number {
+    const own = instancesProp(props);
     if (own > 1) return own;
 
-    return this.outputs.length > 0 ? Math.max(1, ...inputVoices) : 1;
+    return this.outputs.length > 0 ? Math.max(1, ...inputInstances) : 1;
   }
 
-  // Control modules compute their outputs once per frame and voice from
+  // Control modules compute their outputs once per frame and instance from
   // `props`, which the engine has already run through the module's control
-  // routes for that voice; texture modules return null and are never ticked.
+  // routes for that instance; texture modules return null and are never ticked.
   tick(
     _values: ControlValues,
     _frame: Frame,
     _props: VideoPropsMapping[T] = this.props,
-    _voice = 0,
+    _instance = 0,
   ): Record<string, number> | null {
     return null;
   }
 
   onMidi(_sourceId: string, _event: MidiNoteEvent) {
-    // Note events the host tapped from audio module `sourceId`. MidiVoices
+    // Note events the host tapped from audio module `sourceId`. MidiNotes
     // allocates them; every other module ignores them.
   }
 

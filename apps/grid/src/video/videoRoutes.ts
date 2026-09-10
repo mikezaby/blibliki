@@ -55,14 +55,14 @@ export function validVideoConnection(
 const MIDI_NOTE: Range = { min: 0, max: 127 };
 
 // An Audio Prop outputs the raw prop value, so its range is the audio prop's
-// schema range, and MIDI Voices' note is a MIDI note number; every other
+// schema range, and MIDI Notes' note is a MIDI note number; every other
 // control output is 0..1.
 function sourceRange(
   module: IVideoModule,
   ioName: string,
   audioModules: AudioModuleInfo[],
 ): Range {
-  if (module.moduleType === VideoModuleType.MidiVoices) {
+  if (module.moduleType === VideoModuleType.MidiNotes) {
     return ioName === "note" ? MIDI_NOTE : UNIT;
   }
   if (module.moduleType !== VideoModuleType.AudioProp) return UNIT;

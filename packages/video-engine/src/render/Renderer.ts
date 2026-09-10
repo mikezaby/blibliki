@@ -1,5 +1,5 @@
 import { readsOf, RenderPass, targetKey } from "@/core/graph";
-import { voiceRect } from "@/core/poly";
+import { instanceRect } from "@/core/instances";
 import { VideoModuleType } from "@/modules";
 import { COMPOSE, FRAGMENT, VERTEX } from "./shaders";
 
@@ -11,8 +11,8 @@ export class Renderer {
   private compose!: WebGLProgram;
   // Canvas-sized targets: `bound` holds the ones written this frame by key,
   // `pool` the free ones. A target goes back to the pool after its last
-  // reader, so peak use is about the widest voice count plus one, not one
-  // per module and voice.
+  // reader, so peak use is about the widest instance count plus one, not one
+  // per module and instance.
   // ponytail: nothing survives a frame; a feedback pass will need a target
   // that does.
   private bound = new Map<string, Target>();
@@ -59,7 +59,7 @@ export class Renderer {
       );
 
       if (pass.compose) {
-        this.composeVoices(pass.inputs.in ?? null, pass.compose);
+        this.composeInstances(pass.inputs.in ?? null, pass.compose);
       } else {
         this.draw(pass);
       }
@@ -103,11 +103,11 @@ export class Renderer {
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 
-  // One draw per voice with the viewport set to its cell, sampling the same
-  // cell of that voice's frame.
-  private composeVoices(
+  // One draw per instance with the viewport set to its cell, sampling the same
+  // cell of that instance's frame.
+  private composeInstances(
     source: string | null,
-    { voices, layout }: NonNullable<RenderPass["compose"]>,
+    { instances, layout }: NonNullable<RenderPass["compose"]>,
   ) {
     const { gl } = this;
     const { width, height } = this.canvas;
@@ -118,8 +118,8 @@ export class Renderer {
     gl.uniform1i(gl.getUniformLocation(this.compose, "u_in"), 0);
     const rect = gl.getUniformLocation(this.compose, "u_rect");
 
-    for (let voice = 0; voice < voices; voice += 1) {
-      const cell = voiceRect(voice, voices, layout);
+    for (let instance = 0; instance < instances; instance += 1) {
+      const cell = instanceRect(instance, instances, layout);
       gl.viewport(
         Math.round(cell.x * width),
         Math.round(cell.y * height),
@@ -128,7 +128,7 @@ export class Renderer {
       );
       gl.bindTexture(
         gl.TEXTURE_2D,
-        this.texture(source === null ? null : `${source}:${voice}`),
+        this.texture(source === null ? null : `${source}:${instance}`),
       );
       gl.uniform4f(rect, cell.x, cell.y, cell.width, cell.height);
       gl.drawArrays(gl.TRIANGLES, 0, 3);

@@ -10,10 +10,10 @@ import { ICreateRoute, IRoute, Routes } from "./core/Routes";
 import {
   applyControlRoutes,
   controlName,
-  voiceControlName,
+  instanceControlName,
 } from "./core/controls";
 import { buildPasses, RenderPass } from "./core/graph";
-import { resolveVoices } from "./core/poly";
+import { resolveInstances } from "./core/instances";
 import { PropSchema } from "./core/schema";
 import { createModule, VideoModuleType, VideoPropsMapping } from "./modules";
 
@@ -31,7 +31,7 @@ export class VideoEngine {
   // Raw bins per audio Spectrum module, copied because the host's buffer
   // goes back to it after every message. Band modules read these.
   readonly spectra = new Map<string, SpectrumFrame>();
-  private voicings: ReadonlyMap<string, number> = new Map();
+  private instanceCounts: ReadonlyMap<string, number> = new Map();
 
   addModule<T extends VideoModuleType>(
     params: ICreateVideoModule<T>,
@@ -111,21 +111,21 @@ export class VideoEngine {
   // lags one frame per hop; sort by control routes when it matters.
   tick(clock: Pick<Frame, "now" | "dt">) {
     const frame: Frame = { ...clock, spectra: this.spectra };
-    this.voicings = this.resolveVoices();
+    this.instanceCounts = this.resolveInstances();
     for (const module of this.modules.values()) {
-      const voices = this.voicings.get(module.id) ?? 1;
-      for (let voice = 0; voice < voices; voice += 1) {
+      const instances = this.instanceCounts.get(module.id) ?? 1;
+      for (let instance = 0; instance < instances; instance += 1) {
         const outputs = module.tick(
           this.controls,
           frame,
-          this.resolveProps(module, voice),
-          voice,
+          this.resolveProps(module, instance),
+          instance,
         );
         if (!outputs) break;
         for (const [name, value] of Object.entries(outputs)) {
           const key =
-            voices > 1
-              ? voiceControlName(module.id, name, voice)
+            instances > 1
+              ? instanceControlName(module.id, name, instance)
               : controlName(module.id, name);
           this.controls.set(key, value);
         }
@@ -134,20 +134,20 @@ export class VideoEngine {
   }
 
   passes(): RenderPass[] {
-    this.voicings = this.resolveVoices();
+    this.instanceCounts = this.resolveInstances();
 
     return buildPasses(
       this.modules,
       this.routes,
-      (module, voice) => this.resolveProps(module, voice),
-      this.voicings,
+      (module, instance) => this.resolveProps(module, instance),
+      this.instanceCounts,
     );
   }
 
-  // A module's own `voices` prop is resolved with mono routes only, so a
-  // poly control cannot drive the voice count.
-  private resolveVoices() {
-    return resolveVoices(this.modules, this.routes, (module) =>
+  // A module's own `instances` prop is resolved with mono routes only, so a
+  // instanced control cannot drive the instance count.
+  private resolveInstances() {
+    return resolveInstances(this.modules, this.routes, (module) =>
       applyControlRoutes(
         module.props as Record<string, unknown>,
         this.routes.controlRoutesFor(module.id),
@@ -159,15 +159,15 @@ export class VideoEngine {
 
   private resolveProps(
     module: VideoModule,
-    voice: number,
+    instance: number,
   ): Record<string, unknown> {
     return applyControlRoutes(
       module.props as Record<string, unknown>,
       this.routes.controlRoutesFor(module.id),
       this.controls,
       module.schema as Record<string, PropSchema>,
-      voice,
-      this.voicings,
+      instance,
+      this.instanceCounts,
     );
   }
 

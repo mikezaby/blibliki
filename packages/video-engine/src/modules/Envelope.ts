@@ -5,11 +5,15 @@ import {
   IOPort,
   VideoModule,
 } from "@/core/Module";
-import { DEFAULT_POLY_PROPS, IPolyProps, polyPropSchema } from "@/core/poly";
+import {
+  DEFAULT_INSTANCES_PROPS,
+  IInstancesProps,
+  instancesPropSchema,
+} from "@/core/instances";
 import { ModulePropSchema } from "@/core/schema";
 import { VideoModuleType } from ".";
 
-export type IEnvelopeProps = IPolyProps & {
+export type IEnvelopeProps = IInstancesProps & {
   gate: number;
   attack: number;
   decay: number;
@@ -23,11 +27,11 @@ const DEFAULT_PROPS: IEnvelopeProps = {
   decay: 0.1,
   sustain: 1,
   release: 0.1,
-  ...DEFAULT_POLY_PROPS,
+  ...DEFAULT_INSTANCES_PROPS,
 };
 
 export const envelopePropSchema: ModulePropSchema<IEnvelopeProps> = {
-  ...polyPropSchema,
+  ...instancesPropSchema,
   gate: {
     kind: "number",
     min: 0,
@@ -74,10 +78,10 @@ export const envelopePropSchema: ModulePropSchema<IEnvelopeProps> = {
 };
 
 type Stage = "idle" | "attack" | "decay" | "sustain" | "release";
-type VoiceState = { stage: Stage; level: number };
+type InstanceState = { stage: Stage; level: number };
 
-// ADSR at frame rate, 0..1, one per voice. The gate is a prop so a control
-// route (a MIDI voice's gate, later) opens and closes it per voice; above
+// ADSR at frame rate, 0..1, one per instance. The gate is a prop so a control
+// route (a MIDI Notes gate) opens and closes it per instance; above
 // 0.5 is on. A segment runs at the rate of its full swing, so a retrigger
 // during the release climbs from the current level.
 // ponytail: linear segments, one per tick; curves and same-tick fall-through
@@ -86,14 +90,14 @@ export default class Envelope extends VideoModule<VideoModuleType.Envelope> {
   readonly inputs = [{ name: "gate", kind: "control" }] as const;
   readonly outputs: readonly IOPort[] = [{ name: "out", kind: "control" }];
   readonly schema = envelopePropSchema;
-  private states: VoiceState[] = [];
+  private states: InstanceState[] = [];
 
   constructor(params: ICreateVideoModule<VideoModuleType.Envelope>) {
     super(VideoModuleType.Envelope, DEFAULT_PROPS, params);
   }
 
-  tick(_values: ControlValues, frame: Frame, props = this.props, voice = 0) {
-    const state = (this.states[voice] ??= { stage: "idle", level: 0 });
+  tick(_values: ControlValues, frame: Frame, props = this.props, instance = 0) {
+    const state = (this.states[instance] ??= { stage: "idle", level: 0 });
     const on = props.gate > 0.5;
     if (on && (state.stage === "idle" || state.stage === "release")) {
       state.stage = "attack";

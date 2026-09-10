@@ -3,7 +3,7 @@ import { VideoModule } from "@/core/Module";
 import { Routes } from "@/core/Routes";
 import { applyControlRoutes } from "@/core/controls";
 import { buildPasses, readsOf, targetKey } from "@/core/graph";
-import { resolveVoices } from "@/core/poly";
+import { resolveInstances } from "@/core/instances";
 import { createModule, VideoModuleType } from "@/modules";
 
 function make(id: string, moduleType: VideoModuleType) {
@@ -42,35 +42,35 @@ describe("buildPasses", () => {
       saturation: 1,
       lightness: 0.5,
       spread: 180,
-      voices: 1,
+      instances: 1,
     });
   });
 
-  it("renders one pass per voice, and the output composes them as a grid", () => {
+  it("renders one pass per instance, and the output composes them as a grid", () => {
     const src = make("src", VideoModuleType.Source);
-    src.updateProps({ voices: 3 });
+    src.updateProps({ instances: 3 });
     const out = make("out", VideoModuleType.Output);
     const routes = new Routes();
     wire(routes, "src", "out");
 
     const passes = buildPasses(graph([src, out]), routes, stored);
 
-    expect(passes.map((p) => [p.moduleId, p.voice])).toEqual([
+    expect(passes.map((p) => [p.moduleId, p.instance])).toEqual([
       ["src", 0],
       ["src", 1],
       ["src", 2],
       ["out", undefined],
     ]);
-    expect(passes[0]?.uniforms.voices).toBe(3);
+    expect(passes[0]?.uniforms.instances).toBe(3);
     expect(passes[3]).toMatchObject({
       inputs: { in: "src" },
-      compose: { voices: 3, layout: "grid" },
+      compose: { instances: 3, layout: "grid" },
     });
   });
 
-  it("carries voices through an effect so it runs once per voice", () => {
+  it("carries instances through an effect so it runs once per instance", () => {
     const src = make("src", VideoModuleType.Source);
-    src.updateProps({ voices: 2 });
+    src.updateProps({ instances: 2 });
     const fx = make("fx", VideoModuleType.HueRotate);
     const out = make("out", VideoModuleType.Output);
     const routes = new Routes();
@@ -79,7 +79,7 @@ describe("buildPasses", () => {
 
     const passes = buildPasses(graph([src, fx, out]), routes, stored);
 
-    expect(passes.map((p) => [p.moduleId, p.voice])).toEqual([
+    expect(passes.map((p) => [p.moduleId, p.instance])).toEqual([
       ["src", 0],
       ["src", 1],
       ["fx", 0],
@@ -88,12 +88,12 @@ describe("buildPasses", () => {
     ]);
     expect(passes[2]?.inputs).toEqual({ in: "src:0" });
     expect(passes[3]?.inputs).toEqual({ in: "src:1" });
-    expect(passes[4]?.compose).toEqual({ voices: 2, layout: "grid" });
+    expect(passes[4]?.compose).toEqual({ instances: 2, layout: "grid" });
   });
 
   it("composes at a Layout with its layout, and the rest runs once", () => {
     const src = make("src", VideoModuleType.Source);
-    src.updateProps({ voices: 2 });
+    src.updateProps({ instances: 2 });
     const layout = make("layout", VideoModuleType.Layout);
     layout.updateProps({ layout: "strips" });
     const fx = make("fx", VideoModuleType.HueRotate);
@@ -105,7 +105,7 @@ describe("buildPasses", () => {
 
     const passes = buildPasses(graph([src, layout, fx, out]), routes, stored);
 
-    expect(passes.map((p) => [p.moduleId, p.voice])).toEqual([
+    expect(passes.map((p) => [p.moduleId, p.instance])).toEqual([
       ["src", 0],
       ["src", 1],
       ["layout", undefined],
@@ -114,17 +114,17 @@ describe("buildPasses", () => {
     ]);
     expect(passes[2]).toMatchObject({
       inputs: { in: "src" },
-      compose: { voices: 2, layout: "strips" },
+      compose: { instances: 2, layout: "strips" },
     });
     expect(passes[3]).toMatchObject({ inputs: { in: "layout" } });
     expect(passes[3]?.compose).toBeUndefined();
     expect(passes[4]?.compose).toBeUndefined();
   });
 
-  it("renders a mono source once per voice of the poly control driving it", () => {
+  it("renders a mono source once per instance of the instanced control driving it", () => {
     const src = make("src", VideoModuleType.Source);
     const env = make("env", VideoModuleType.Envelope);
-    env.updateProps({ voices: 2 });
+    env.updateProps({ instances: 2 });
     const out = make("out", VideoModuleType.Output);
     const routes = new Routes();
     wire(routes, "src", "out");
@@ -142,32 +142,34 @@ describe("buildPasses", () => {
       ["env:out:0", 0.25],
       ["env:out:1", 0.5],
     ]);
-    const voicings = resolveVoices(modules, routes, stored);
-    const resolve = (m: VideoModule, voice: number) =>
+    const instanceCounts = resolveInstances(modules, routes, stored);
+    const resolve = (m: VideoModule, instance: number) =>
       applyControlRoutes(
         stored(m),
         routes.controlRoutesFor(m.id),
         values,
         m.schema,
-        voice,
-        voicings,
+        instance,
+        instanceCounts,
       );
 
-    const passes = buildPasses(modules, routes, resolve, voicings);
+    const passes = buildPasses(modules, routes, resolve, instanceCounts);
 
-    expect(passes.map((p) => [p.moduleId, p.voice, p.uniforms.hue])).toEqual([
-      ["src", 0, 90],
-      ["src", 1, 180],
-      ["out", undefined, undefined],
-    ]);
-    expect(passes[2]?.compose).toEqual({ voices: 2, layout: "grid" });
+    expect(passes.map((p) => [p.moduleId, p.instance, p.uniforms.hue])).toEqual(
+      [
+        ["src", 0, 90],
+        ["src", 1, 180],
+        ["out", undefined, undefined],
+      ],
+    );
+    expect(passes[2]?.compose).toEqual({ instances: 2, layout: "grid" });
   });
 
-  it("feeds a mono input to every voice and wraps a narrower poly input", () => {
+  it("feeds a mono input to every instance and wraps a narrower instanced input", () => {
     const a = make("a", VideoModuleType.Source);
-    a.updateProps({ voices: 4 });
+    a.updateProps({ instances: 4 });
     const b = make("b", VideoModuleType.Source);
-    b.updateProps({ voices: 2 });
+    b.updateProps({ instances: 2 });
     const c = make("c", VideoModuleType.HueRotate);
     const mono = make("mono", VideoModuleType.Source);
     const merge = make("merge", VideoModuleType.Merge);
@@ -270,11 +272,11 @@ describe("buildPasses", () => {
 describe("readsOf and targetKey", () => {
   const base = { moduleType: VideoModuleType.HueRotate, uniforms: {} };
 
-  it("names a voice pass target by module and voice", () => {
+  it("names a instance pass target by module and instance", () => {
     expect(targetKey({ ...base, moduleId: "fx", inputs: {} })).toBe("fx");
-    expect(targetKey({ ...base, moduleId: "fx", inputs: {}, voice: 2 })).toBe(
-      "fx:2",
-    );
+    expect(
+      targetKey({ ...base, moduleId: "fx", inputs: {}, instance: 2 }),
+    ).toBe("fx:2");
   });
 
   it("lists the plugged inputs of a shader pass", () => {
@@ -283,13 +285,13 @@ describe("readsOf and targetKey", () => {
     ).toEqual(["src:1"]);
   });
 
-  it("lists every voice a compose pass tiles", () => {
+  it("lists every instance a compose pass tiles", () => {
     expect(
       readsOf({
         ...base,
         moduleId: "out",
         inputs: { in: "fx" },
-        compose: { voices: 2, layout: "grid" },
+        compose: { instances: 2, layout: "grid" },
       }),
     ).toEqual(["fx:0", "fx:1"]);
   });

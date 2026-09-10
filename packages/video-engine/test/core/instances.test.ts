@@ -1,17 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { Routes } from "@/core/Routes";
-import { resolveVoices, voiceRect, voicesProp } from "@/core/poly";
+import {
+  resolveInstances,
+  instanceRect,
+  instancesProp,
+} from "@/core/instances";
 import { createModule, VideoModuleType } from "@/modules";
 
-describe("voiceRect", () => {
+describe("instanceRect", () => {
   it("fills a grid row-major from the top left", () => {
-    expect(voiceRect(0, 4, "grid")).toEqual({
+    expect(instanceRect(0, 4, "grid")).toEqual({
       x: 0,
       y: 0.5,
       width: 0.5,
       height: 0.5,
     });
-    expect(voiceRect(3, 4, "grid")).toEqual({
+    expect(instanceRect(3, 4, "grid")).toEqual({
       x: 0.5,
       y: 0,
       width: 0.5,
@@ -20,7 +24,7 @@ describe("voiceRect", () => {
   });
 
   it("picks the squarest grid and leaves the tail of the last row empty", () => {
-    expect(voiceRect(4, 5, "grid")).toEqual({
+    expect(instanceRect(4, 5, "grid")).toEqual({
       x: 1 / 3,
       y: 0,
       width: 1 / 3,
@@ -29,7 +33,7 @@ describe("voiceRect", () => {
   });
 
   it("stacks strips top to bottom", () => {
-    expect(voiceRect(0, 3, "strips")).toEqual({
+    expect(instanceRect(0, 3, "strips")).toEqual({
       x: 0,
       y: 1 - 1 / 3,
       width: 1,
@@ -38,15 +42,15 @@ describe("voiceRect", () => {
   });
 });
 
-describe("voicesProp", () => {
+describe("instancesProp", () => {
   it("defaults to one and rounds a modulated count", () => {
-    expect(voicesProp({})).toBe(1);
-    expect(voicesProp({ voices: 0.2 })).toBe(1);
-    expect(voicesProp({ voices: 8.6 })).toBe(9);
+    expect(instancesProp({})).toBe(1);
+    expect(instancesProp({ instances: 0.2 })).toBe(1);
+    expect(instancesProp({ instances: 8.6 })).toBe(9);
   });
 });
 
-describe("resolveVoices", () => {
+describe("resolveInstances", () => {
   const make = (
     id: string,
     moduleType: VideoModuleType,
@@ -66,12 +70,12 @@ describe("resolveVoices", () => {
 
   it("follows texture and control routes and collapses at Layout and Output", () => {
     const modules = [
-      make("src", VideoModuleType.Source, { voices: 3 }),
+      make("src", VideoModuleType.Source, { instances: 3 }),
       make("fx", VideoModuleType.HueRotate),
       make("layout", VideoModuleType.Layout),
       make("post", VideoModuleType.HueRotate),
       make("out", VideoModuleType.Output),
-      make("env", VideoModuleType.Envelope, { voices: 2 }),
+      make("env", VideoModuleType.Envelope, { instances: 2 }),
       make("lfo", VideoModuleType.LFO),
     ];
     const routes = new Routes();
@@ -82,13 +86,13 @@ describe("resolveVoices", () => {
     control(routes, "env", "lfo", "frequency");
     control(routes, "lfo", "post", "amount");
 
-    const voicings = resolveVoices(
+    const instanceCounts = resolveInstances(
       new Map(modules.map((m) => [m.id, m])),
       routes,
       (m) => m.props,
     );
 
-    expect(Object.fromEntries(voicings)).toEqual({
+    expect(Object.fromEntries(instanceCounts)).toEqual({
       src: 3,
       fx: 3,
       layout: 1,
@@ -104,12 +108,12 @@ describe("resolveVoices", () => {
     const routes = new Routes();
     control(routes, "lfo", "lfo", "frequency");
 
-    const voicings = resolveVoices(
+    const instanceCounts = resolveInstances(
       new Map([["lfo", lfo]]),
       routes,
       (m) => m.props,
     );
 
-    expect(voicings.get("lfo")).toBe(1);
+    expect(instanceCounts.get("lfo")).toBe(1);
   });
 });

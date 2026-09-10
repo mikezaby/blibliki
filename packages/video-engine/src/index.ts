@@ -24,19 +24,19 @@ export type { VideoPropsMapping } from "./modules";
 export { Routes } from "./core/Routes";
 export type { ICreateRoute, IOKind, IPlug, IRoute } from "./core/Routes";
 export {
-  polyPropSchema,
-  resolveVoices,
-  VOICE_LAYOUTS,
-  voiceRect,
-} from "./core/poly";
-export type { IPolyProps, VoiceLayout } from "./core/poly";
+  instancesPropSchema,
+  resolveInstances,
+  INSTANCE_LAYOUTS,
+  instanceRect,
+} from "./core/instances";
+export type { IInstancesProps, InstanceLayout } from "./core/instances";
 export { buildPasses } from "./core/graph";
 export type { RenderPass } from "./core/graph";
 export {
   applyControlRoutes,
   controlName,
   mapRange,
-  voiceControlName,
+  instanceControlName,
 } from "./core/controls";
 export { VideoEngine } from "./VideoEngine";
 export type { IVideoPatch } from "./VideoEngine";

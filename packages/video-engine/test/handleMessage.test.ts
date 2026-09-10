@@ -29,8 +29,8 @@ describe("handleMessage", () => {
     engine.addModule({
       id: "mv",
       name: "mv",
-      moduleType: VideoModuleType.MidiVoices,
-      props: { moduleId: "kb", voices: 2 },
+      moduleType: VideoModuleType.MidiNotes,
+      props: { moduleId: "kb", instances: 2 },
     });
 
     const out = handleMessage(engine, {

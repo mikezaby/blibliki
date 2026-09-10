@@ -70,7 +70,7 @@ function shape(waveform: LFOWaveform, phase: number, held: number): number {
   }
 }
 
-// Unipolar 0..1 at frame rate, one phase per voice. Phase advances by
+// Unipolar 0..1 at frame rate, one phase per instance. Phase advances by
 // dt * frequency, so a dropped frame slows the LFO instead of jumping it.
 // ponytail: no transport sync; needs bpm and a start time from the host.
 export default class LFO extends VideoModule<VideoModuleType.LFO> {
@@ -84,13 +84,13 @@ export default class LFO extends VideoModule<VideoModuleType.LFO> {
     super(VideoModuleType.LFO, DEFAULT_PROPS, params);
   }
 
-  tick(_values: ControlValues, frame: Frame, props = this.props, voice = 0) {
-    const next = (this.phases[voice] ?? 0) + frame.dt * props.frequency;
-    let held = this.held[voice];
+  tick(_values: ControlValues, frame: Frame, props = this.props, instance = 0) {
+    const next = (this.phases[instance] ?? 0) + frame.dt * props.frequency;
+    let held = this.held[instance];
     if (held === undefined || next >= 1) held = Math.random();
-    this.held[voice] = held;
+    this.held[instance] = held;
     const phase = next % 1;
-    this.phases[voice] = phase;
+    this.phases[instance] = phase;
 
     const at = (phase + props.phase) % 1;
 

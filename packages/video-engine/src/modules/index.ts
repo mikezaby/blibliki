@@ -8,10 +8,7 @@ import HueRotate, { hueRotatePropSchema, IHueRotateProps } from "./HueRotate";
 import LFO, { ILFOProps, lfoPropSchema } from "./LFO";
 import Layout, { ILayoutProps, layoutPropSchema } from "./Layout";
 import Merge, { IMergeProps, mergePropSchema } from "./Merge";
-import MidiVoices, {
-  IMidiVoicesProps,
-  midiVoicesPropSchema,
-} from "./MidiVoices";
+import MidiNotes, { IMidiNotesProps, midiNotesPropSchema } from "./MidiNotes";
 import Output, { IOutputProps, outputPropSchema } from "./Output";
 import Source, { ISourceProps, sourcePropSchema } from "./Source";
 
@@ -25,7 +22,7 @@ export enum VideoModuleType {
   LFO = "LFO",
   Envelope = "Envelope",
   Band = "Band",
-  MidiVoices = "MidiVoices",
+  MidiNotes = "MidiNotes",
 }
 
 export type VideoPropsMapping = {
@@ -38,7 +35,7 @@ export type VideoPropsMapping = {
   [VideoModuleType.LFO]: ILFOProps;
   [VideoModuleType.Envelope]: IEnvelopeProps;
   [VideoModuleType.Band]: IBandProps;
-  [VideoModuleType.MidiVoices]: IMidiVoicesProps;
+  [VideoModuleType.MidiNotes]: IMidiNotesProps;
 };
 
 export function createModule<T extends VideoModuleType>(
@@ -70,9 +67,9 @@ export function createModule<T extends VideoModuleType>(
       );
     case VideoModuleType.Band:
       return new Band(params as ICreateVideoModule<VideoModuleType.Band>);
-    case VideoModuleType.MidiVoices:
-      return new MidiVoices(
-        params as ICreateVideoModule<VideoModuleType.MidiVoices>,
+    case VideoModuleType.MidiNotes:
+      return new MidiNotes(
+        params as ICreateVideoModule<VideoModuleType.MidiNotes>,
       );
     default:
       return assertNever(type);
@@ -87,7 +84,7 @@ export type { ILayoutProps } from "./Layout";
 export type { ILFOProps, LFOWaveform } from "./LFO";
 export { LFO_WAVEFORMS } from "./LFO";
 export type { IMergeProps, MergeMode } from "./Merge";
-export type { IMidiVoicesProps } from "./MidiVoices";
+export type { IMidiNotesProps } from "./MidiNotes";
 export { MERGE_MODES } from "./Merge";
 export type { IOutputProps } from "./Output";
 export type { ISourceProps, SourceMode } from "./Source";
@@ -105,7 +102,7 @@ export const videoModuleSchemas: Record<
   [VideoModuleType.LFO]: lfoPropSchema,
   [VideoModuleType.Envelope]: envelopePropSchema,
   [VideoModuleType.Band]: bandPropSchema,
-  [VideoModuleType.MidiVoices]: midiVoicesPropSchema,
+  [VideoModuleType.MidiNotes]: midiNotesPropSchema,
 };
 
 const PROTOTYPES = Object.fromEntries(

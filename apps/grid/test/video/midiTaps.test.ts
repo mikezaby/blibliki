@@ -41,12 +41,12 @@ function fakeEngine() {
 const module = (id: string, moduleId: string) => ({
   id,
   name: id,
-  moduleType: VideoModuleType.MidiVoices,
-  props: { moduleId, voices: 2 },
+  moduleType: VideoModuleType.MidiNotes,
+  props: { moduleId, instances: 2 },
 });
 
 describe("referencedMidiModules", () => {
-  it("collects the audio modules MIDI Voices name, once each", () => {
+  it("collects the audio modules MIDI Notes name, once each", () => {
     const ids = referencedMidiModules([
       module("a", "kb"),
       module("b", "kb"),
@@ -99,7 +99,7 @@ describe("MidiTaps", () => {
     });
   });
 
-  it("stops listening when no MIDI Voices names the module any more", () => {
+  it("stops listening when no MIDI Notes names the module any more", () => {
     const { engine, listeners } = fakeEngine();
     const taps = new MidiTaps(engine, vi.fn());
 

@@ -16,13 +16,13 @@ function envelope(props: Partial<IEnvelopeProps> = {}) {
 function tick(
   module: ReturnType<typeof envelope>,
   props: Partial<IEnvelopeProps>,
-  voice = 0,
+  instance = 0,
 ) {
   return module.tick(
     values,
     { now: 0, dt: 0.1 },
     { ...module.props, ...props },
-    voice,
+    instance,
   )?.out;
 }
 
@@ -52,7 +52,7 @@ describe("Envelope", () => {
     expect(tick(env, { gate: 1 })).toBe(0.3);
   });
 
-  it("keeps one envelope per voice", () => {
+  it("keeps one envelope per instance", () => {
     const env = envelope({ attack: 0.2 });
 
     expect(tick(env, { gate: 1 }, 0)).toBeCloseTo(0.5);

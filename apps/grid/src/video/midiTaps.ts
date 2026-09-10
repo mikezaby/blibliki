@@ -15,7 +15,7 @@ type TapEngine = Pick<Engine, "findModule">;
 export function referencedMidiModules(modules: IVideoModule[]): Set<string> {
   const ids = new Set<string>();
   for (const module of modules) {
-    if (module.moduleType !== VideoModuleType.MidiVoices) continue;
+    if (module.moduleType !== VideoModuleType.MidiNotes) continue;
     const { moduleId } = module.props as { moduleId: string };
     if (moduleId) ids.add(moduleId);
   }
@@ -35,8 +35,8 @@ export function noteEvent(event: MidiEvent): MidiNoteEvent | null {
   };
 }
 
-// One listener per audio module a MIDI Voices names, on its first MIDI
-// output, shared by every MIDI Voices on that module. Listeners live only
+// One listener per audio module a MIDI Notes names, on its first MIDI
+// output, shared by every MIDI Notes on that module. Listeners live only
 // in the engine and are never persisted.
 export class MidiTaps {
   private taps = new Map<string, () => void>();

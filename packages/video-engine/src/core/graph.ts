@@ -1,7 +1,7 @@
 import { VideoModuleType } from "@/modules";
 import { VideoModule } from "./Module";
 import { Routes } from "./Routes";
-import { resolveVoices, VoiceLayout } from "./poly";
+import { resolveInstances, InstanceLayout } from "./instances";
 import { PropSchema } from "./schema";
 
 export type RenderPass = {
@@ -11,21 +11,23 @@ export type RenderPass = {
   inputs: Record<string, string | null>;
   // Numeric uniforms, one per prop the shader can use. Prefixed u_ by the renderer.
   uniforms: Record<string, number>;
-  // Set on the per-voice passes of a module carrying voices; each renders
+  // Set on the per-instance passes of a module carrying instances; each renders
   // to its own target.
-  voice?: number;
-  // Tiles the voices of the `in` input into this module's target instead of
+  instance?: number;
+  // Tiles the instances of the `in` input into this module's target instead of
   // running its shader.
-  compose?: { voices: number; layout: VoiceLayout };
+  compose?: { instances: number; layout: InstanceLayout };
 };
 
 export type ResolveProps = (
   module: VideoModule,
-  voice: number,
+  instance: number,
 ) => Record<string, unknown>;
 
 export const targetKey = (pass: RenderPass) =>
-  pass.voice === undefined ? pass.moduleId : `${pass.moduleId}:${pass.voice}`;
+  pass.instance === undefined
+    ? pass.moduleId
+    : `${pass.moduleId}:${pass.instance}`;
 
 // Targets a pass samples, so the renderer can recycle each after its last
 // reader.
@@ -33,9 +35,12 @@ export function readsOf(pass: RenderPass): string[] {
   if (pass.compose) {
     const source = pass.inputs.in;
     if (source === null || source === undefined) return [];
-    const { voices } = pass.compose;
+    const { instances } = pass.compose;
 
-    return Array.from({ length: voices }, (_, voice) => `${source}:${voice}`);
+    return Array.from(
+      { length: instances },
+      (_, instance) => `${source}:${instance}`,
+    );
   }
 
   return Object.values(pass.inputs).filter(
@@ -64,17 +69,17 @@ export function uniformsFor(
   return uniforms;
 }
 
-// Voices flow down routes as in the audio engine (see resolveVoices). A
-// module with voices renders once per voice, and so does every module after
-// it, each voice reading the matching voice of its inputs and its own
-// resolved props. A mono input to a poly module feeds every voice; a
-// narrower poly input wraps. A module that resolves to one voice with a
-// poly input (Output, Layout) composes the voices into one texture.
+// Instances flow down routes as in the audio engine (see resolveInstances). A
+// module with instances renders once per instance, and so does every module after
+// it, each instance reading the matching instance of its inputs and its own
+// resolved props. A mono input to an instanced module feeds every instance; a
+// narrower instanced input wraps. A module that resolves to one instance with a
+// instanced input (Output, Layout) composes the instances into one texture.
 export function buildPasses(
   modules: Map<string, VideoModule>,
   routes: Routes,
   resolveProps: ResolveProps,
-  voicings: ReadonlyMap<string, number> = resolveVoices(
+  instanceCounts: ReadonlyMap<string, number> = resolveInstances(
     modules,
     routes,
     (module) => resolveProps(module, 0),
@@ -85,7 +90,7 @@ export function buildPasses(
   const visiting = new Set<string>();
 
   const widthOf = (sourceId: string | null) =>
-    sourceId === null ? 1 : (voicings.get(sourceId) ?? 1);
+    sourceId === null ? 1 : (instanceCounts.get(sourceId) ?? 1);
 
   const visit = (id: string) => {
     if (done.has(id)) return;
@@ -104,24 +109,24 @@ export function buildPasses(
     visiting.delete(id);
     done.add(id);
 
-    const voices = voicings.get(id) ?? 1;
+    const instances = instanceCounts.get(id) ?? 1;
     const { moduleType } = module;
 
-    if (voices > 1) {
-      for (let voice = 0; voice < voices; voice += 1) {
+    if (instances > 1) {
+      for (let instance = 0; instance < instances; instance += 1) {
         const inputs: Record<string, string | null> = {};
         for (const [ioName, sourceId] of Object.entries(sources)) {
           const width = widthOf(sourceId);
           inputs[ioName] =
             sourceId !== null && width > 1
-              ? `${sourceId}:${voice % width}`
+              ? `${sourceId}:${instance % width}`
               : sourceId;
         }
         const uniforms = uniformsFor(
-          resolveProps(module, voice),
+          resolveProps(module, instance),
           module.schema,
         );
-        passes.push({ moduleId: id, moduleType, inputs, uniforms, voice });
+        passes.push({ moduleId: id, moduleType, inputs, uniforms, instance });
       }
       return;
     }
@@ -129,13 +134,13 @@ export function buildPasses(
     const props = resolveProps(module, 0);
     const composed = widthOf(sources.in ?? null);
     if (composed > 1) {
-      const layout = (props.layout as VoiceLayout | undefined) ?? "grid";
+      const layout = (props.layout as InstanceLayout | undefined) ?? "grid";
       passes.push({
         moduleId: id,
         moduleType,
         inputs: sources,
         uniforms: {},
-        compose: { voices: composed, layout },
+        compose: { instances: composed, layout },
       });
       return;
     }

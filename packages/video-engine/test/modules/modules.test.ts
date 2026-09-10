@@ -21,7 +21,7 @@ describe("bootstrap modules", () => {
         saturation: 1,
         lightness: 0.5,
         spread: 180,
-        voices: 1,
+        instances: 1,
       },
     ],
     [VideoModuleType.HueRotate, [tex("in"), ctl("amount")], { amount: 0 }],
@@ -41,9 +41,16 @@ describe("bootstrap modules", () => {
     [
       VideoModuleType.Envelope,
       [ctl("gate")],
-      { gate: 0, attack: 0.1, decay: 0.1, sustain: 1, release: 0.1, voices: 1 },
+      {
+        gate: 0,
+        attack: 0.1,
+        decay: 0.1,
+        sustain: 1,
+        release: 0.1,
+        instances: 1,
+      },
     ],
-    [VideoModuleType.MidiVoices, [], { moduleId: "", voices: 1 }],
+    [VideoModuleType.MidiNotes, [], { moduleId: "", instances: 1 }],
     [
       VideoModuleType.Band,
       [ctl("lowHz"), ctl("highHz"), ctl("gain")],
@@ -77,7 +84,7 @@ describe("bootstrap modules", () => {
     expect(outputsFor(VideoModuleType.Merge)).toEqual([tex("out")]);
     expect(outputsFor(VideoModuleType.Output)).toEqual([]);
     expect(outputsFor(VideoModuleType.AudioProp)).toEqual([ctl("out")]);
-    expect(outputsFor(VideoModuleType.MidiVoices)).toEqual([
+    expect(outputsFor(VideoModuleType.MidiNotes)).toEqual([
       ctl("gate"),
       ctl("note"),
       ctl("velocity"),

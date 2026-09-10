@@ -33,7 +33,7 @@ export const VIDEO_MODULE_NAMES: Record<VideoModuleType, string> = {
   [VideoModuleType.LFO]: "LFO",
   [VideoModuleType.Envelope]: "Envelope",
   [VideoModuleType.Band]: "Band",
-  [VideoModuleType.MidiVoices]: "MIDI Voices",
+  [VideoModuleType.MidiNotes]: "MIDI Notes",
 };
 
 const samePlug = (a: IRoute["destination"], b: IRoute["destination"]) =>

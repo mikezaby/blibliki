@@ -138,13 +138,13 @@ describe("VideoEngine", () => {
     expect(engine.findModule("lfo").props).toMatchObject({ frequency: 1 });
   });
 
-  it("ticks a poly control module once per voice and renders its consumers per voice", () => {
+  it("ticks an instanced control module once per instance and renders its consumers per instance", () => {
     const engine = chain();
     engine.addModule({
       id: "env",
       name: "env",
       moduleType: VideoModuleType.Envelope,
-      props: { voices: 2, gate: 1, attack: 0, decay: 0, sustain: 0.5 },
+      props: { instances: 2, gate: 1, attack: 0, decay: 0, sustain: 0.5 },
     });
     engine.addRoute({
       kind: "control",
@@ -163,21 +163,21 @@ describe("VideoEngine", () => {
     expect(
       passes
         .filter((p) => p.moduleId === "fx")
-        .map((p) => [p.voice, p.uniforms.amount]),
+        .map((p) => [p.instance, p.uniforms.amount]),
     ).toEqual([
       [0, 180],
       [1, 180],
     ]);
-    expect(passes.at(-1)?.compose).toEqual({ voices: 2, layout: "grid" });
+    expect(passes.at(-1)?.compose).toEqual({ instances: 2, layout: "grid" });
   });
 
-  it("gives each voice its own note through MIDI Voices and an Envelope", () => {
+  it("gives each instance its own note through MIDI Notes and an Envelope", () => {
     const engine = chain();
     engine.addModule({
       id: "mv",
       name: "mv",
-      moduleType: VideoModuleType.MidiVoices,
-      props: { moduleId: "kb", voices: 2 },
+      moduleType: VideoModuleType.MidiNotes,
+      props: { moduleId: "kb", instances: 2 },
     });
     engine.addModule({
       id: "env",
@@ -217,7 +217,7 @@ describe("VideoEngine", () => {
     expect(
       passes
         .filter((p) => p.moduleId === "fx")
-        .map((p) => [p.voice, p.uniforms.amount]),
+        .map((p) => [p.instance, p.uniforms.amount]),
     ).toEqual([
       [0, 360],
       [1, 0],
@@ -225,7 +225,7 @@ describe("VideoEngine", () => {
     expect(
       passes
         .filter((p) => p.moduleId === "src")
-        .map((p) => [p.voice, p.uniforms.hue]),
+        .map((p) => [p.instance, p.uniforms.hue]),
     ).toEqual([
       [0, 60],
       [1, 0],

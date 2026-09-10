@@ -93,14 +93,15 @@ export default class Band extends VideoModule<VideoModuleType.Band> {
     super(VideoModuleType.Band, DEFAULT_PROPS, params);
   }
 
-  tick(_values: ControlValues, frame: Frame, props = this.props, voice = 0) {
+  tick(_values: ControlValues, frame: Frame, props = this.props, instance = 0) {
     const spectrum = frame.spectra?.get(props.moduleId);
     const level = spectrum
       ? bandLevel(spectrum.bins, spectrum.sampleRate, props)
       : 0;
     const last =
-      (this.last[voice] ?? 0) * props.smoothing + level * (1 - props.smoothing);
-    this.last[voice] = last;
+      (this.last[instance] ?? 0) * props.smoothing +
+      level * (1 - props.smoothing);
+    this.last[instance] = last;
 
     return { out: last };
   }
