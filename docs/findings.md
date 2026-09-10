@@ -70,10 +70,11 @@ grabs the node instead of starting a cable; on audio and video nodes alike,
 at small zoom levels the dot covers most of the handle. Add
 `pointer-events-none` to the indicator.
 
-## A Wavetable test times out under the full parallel test run
+## Engine tests time out under the full parallel test run
 
-`packages/engine/test/modules/Wavetable.test.ts` failed once during a
-repo-wide `pnpm test` (the file took about 11 s), then passed alone and on
-the next full run. It is timing-sensitive under load. Find the test that
-waits on real time and either raise its timeout or drive it from a fake
-clock.
+`packages/engine/test/modules/Wavetable.test.ts` (the file took about 11 s)
+and `packages/engine/test/modules/LFO.test.ts` ("updates the phase parameter
+when props change") each failed once during a repo-wide `pnpm test`, then
+passed alone and on the next full run. They are timing-sensitive under
+load. Find the waits on real time and either raise their timeouts or drive
+them from a fake clock.

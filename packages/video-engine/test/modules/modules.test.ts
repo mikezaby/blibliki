@@ -43,6 +43,7 @@ describe("bootstrap modules", () => {
       [ctl("gate")],
       { gate: 0, attack: 0.1, decay: 0.1, sustain: 1, release: 0.1, voices: 1 },
     ],
+    [VideoModuleType.MidiVoices, [], { moduleId: "", voices: 1 }],
     [
       VideoModuleType.Band,
       [ctl("lowHz"), ctl("highHz"), ctl("gain")],
@@ -76,6 +77,11 @@ describe("bootstrap modules", () => {
     expect(outputsFor(VideoModuleType.Merge)).toEqual([tex("out")]);
     expect(outputsFor(VideoModuleType.Output)).toEqual([]);
     expect(outputsFor(VideoModuleType.AudioProp)).toEqual([ctl("out")]);
+    expect(outputsFor(VideoModuleType.MidiVoices)).toEqual([
+      ctl("gate"),
+      ctl("note"),
+      ctl("velocity"),
+    ]);
     expect(Object.keys(videoModuleSchemas[VideoModuleType.HueRotate])).toEqual([
       "amount",
     ]);

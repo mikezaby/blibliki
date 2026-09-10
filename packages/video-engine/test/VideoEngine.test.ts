@@ -171,6 +171,67 @@ describe("VideoEngine", () => {
     expect(passes.at(-1)?.compose).toEqual({ voices: 2, layout: "grid" });
   });
 
+  it("gives each voice its own note through MIDI Voices and an Envelope", () => {
+    const engine = chain();
+    engine.addModule({
+      id: "mv",
+      name: "mv",
+      moduleType: VideoModuleType.MidiVoices,
+      props: { moduleId: "kb", voices: 2 },
+    });
+    engine.addModule({
+      id: "env",
+      name: "env",
+      moduleType: VideoModuleType.Envelope,
+      props: { attack: 0, decay: 0, sustain: 1 },
+    });
+    engine.addRoute({
+      kind: "control",
+      source: { moduleId: "mv", ioName: "gate" },
+      destination: { moduleId: "env", ioName: "gate" },
+    });
+    engine.addRoute({
+      kind: "control",
+      source: { moduleId: "env", ioName: "out" },
+      destination: { moduleId: "fx", ioName: "amount" },
+      inMin: 0,
+      inMax: 1,
+      outMin: 0,
+      outMax: 360,
+    });
+    engine.addRoute({
+      kind: "control",
+      source: { moduleId: "mv", ioName: "note" },
+      destination: { moduleId: "src", ioName: "hue" },
+      inMin: 0,
+      inMax: 127,
+      outMin: 0,
+      outMax: 127,
+    });
+    engine.midi("kb", { type: "noteOn", note: 60, velocity: 1 });
+    engine.tick({ now: 0, dt: 0.1 });
+    engine.tick({ now: 0.1, dt: 0.1 });
+
+    const passes = engine.passes();
+
+    expect(
+      passes
+        .filter((p) => p.moduleId === "fx")
+        .map((p) => [p.voice, p.uniforms.amount]),
+    ).toEqual([
+      [0, 360],
+      [1, 0],
+    ]);
+    expect(
+      passes
+        .filter((p) => p.moduleId === "src")
+        .map((p) => [p.voice, p.uniforms.hue]),
+    ).toEqual([
+      [0, 60],
+      [1, 0],
+    ]);
+  });
+
   it("keeps its own copy of spectrum bins and feeds them to a Band", () => {
     const engine = chain();
     engine.addModule({

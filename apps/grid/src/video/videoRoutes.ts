@@ -52,12 +52,19 @@ export function validVideoConnection(
   return out !== undefined && out === inp;
 }
 
+const MIDI_NOTE: Range = { min: 0, max: 127 };
+
 // An Audio Prop outputs the raw prop value, so its range is the audio prop's
-// schema range; every other control output is 0..1.
+// schema range, and MIDI Voices' note is a MIDI note number; every other
+// control output is 0..1.
 function sourceRange(
   module: IVideoModule,
+  ioName: string,
   audioModules: AudioModuleInfo[],
 ): Range {
+  if (module.moduleType === VideoModuleType.MidiVoices) {
+    return ioName === "note" ? MIDI_NOTE : UNIT;
+  }
   if (module.moduleType !== VideoModuleType.AudioProp) return UNIT;
 
   const { moduleId, prop } = module.props as { moduleId: string; prop: string };
@@ -117,7 +124,7 @@ export function videoRouteFromConnection(
 
   const from = modules.find((m) => m.id === source);
   const to = modules.find((m) => m.id === target);
-  const input = from ? sourceRange(from, audioModules) : UNIT;
+  const input = from ? sourceRange(from, sourceHandle, audioModules) : UNIT;
   const output = to ? targetRange(to, targetHandle) : UNIT;
 
   return {

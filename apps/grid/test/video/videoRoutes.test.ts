@@ -133,6 +133,33 @@ describe("videoRouteFromConnection", () => {
     });
   });
 
+  it("uses the MIDI note range for a MIDI Voices note output", () => {
+    const mv = {
+      id: "mv",
+      name: "MIDI Voices",
+      moduleType: VideoModuleType.MidiVoices,
+      props: { moduleId: "kb", voices: 4 },
+    };
+    const route = videoRouteFromConnection(
+      "r",
+      {
+        source: "mv",
+        sourceHandle: "note",
+        target: "fx",
+        targetHandle: "amount",
+      },
+      [...modules, mv],
+      [],
+    );
+
+    expect(route).toMatchObject({
+      inMin: 0,
+      inMax: 127,
+      outMin: 0,
+      outMax: 360,
+    });
+  });
+
   it("uses 0..1 for a control source with no audio prop behind it", () => {
     const bare = { ...audioProp, props: { moduleId: "", prop: "" } };
     const route = videoRouteFromConnection(

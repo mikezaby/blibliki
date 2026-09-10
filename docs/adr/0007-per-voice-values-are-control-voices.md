@@ -41,7 +41,5 @@ control cannot drive the voice count.
 
 ## Consequences
 
-Until a per-voice source exists, voices driven by the same gate still
-move together. The next increment brings MIDI into the worker with a
-voice allocator that emits gate, note and velocity per voice, at which
-point each voice takes its own note.
+Voices driven by the same gate still move together; MIDI Voices (ADR 8)
+gives each voice its own note.

@@ -5,6 +5,7 @@ export type {
   ICreateVideoModule,
   IOPort,
   IVideoModule,
+  MidiNoteEvent,
   SpectrumFrame,
 } from "./core/Module";
 export type {

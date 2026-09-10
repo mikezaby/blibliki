@@ -24,6 +24,29 @@ function fxToOutput() {
 }
 
 describe("handleMessage", () => {
+  it("forwards a note to the engine without echoing the patch", () => {
+    const engine = new VideoEngine();
+    engine.addModule({
+      id: "mv",
+      name: "mv",
+      moduleType: VideoModuleType.MidiVoices,
+      props: { moduleId: "kb", voices: 2 },
+    });
+
+    const out = handleMessage(engine, {
+      type: "midi",
+      moduleId: "kb",
+      event: { type: "noteOn", note: 60, velocity: 0.5 },
+    });
+    engine.tick({ now: 0, dt: 0 });
+
+    expect(out).toEqual([]);
+    expect(engine.passes()).toEqual([]);
+    expect(
+      engine.findModule("mv").tick(new Map(), { now: 0, dt: 0 }, undefined, 0),
+    ).toEqual({ gate: 1, note: 60, velocity: 0.5 });
+  });
+
   it("applies a graph command and echoes the patch", () => {
     const engine = new VideoEngine();
 

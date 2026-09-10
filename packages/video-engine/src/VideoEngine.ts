@@ -2,6 +2,7 @@ import {
   Frame,
   ICreateVideoModule,
   IVideoModule,
+  MidiNoteEvent,
   SpectrumFrame,
   VideoModule,
 } from "./core/Module";
@@ -94,6 +95,10 @@ export class VideoEngine {
     }
     frame.bins.set(bins);
     frame.sampleRate = sampleRate;
+  }
+
+  midi(sourceId: string, event: MidiNoteEvent) {
+    for (const module of this.modules.values()) module.onMidi(sourceId, event);
   }
 
   setControls(values: Record<string, number>) {

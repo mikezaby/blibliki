@@ -30,6 +30,13 @@ export type Frame = {
 
 export type ControlValues = ReadonlyMap<string, number>;
 
+// A note from an audio module's MIDI output, as the host forwards it.
+export type MidiNoteEvent = {
+  type: "noteOn" | "noteOff";
+  note: number;
+  velocity: number;
+};
+
 const TEXTURE_OUT: readonly IOPort[] = [{ name: "out", kind: "texture" }];
 
 export abstract class VideoModule<T extends VideoModuleType = VideoModuleType> {
@@ -79,6 +86,11 @@ export abstract class VideoModule<T extends VideoModuleType = VideoModuleType> {
     _voice = 0,
   ): Record<string, number> | null {
     return null;
+  }
+
+  onMidi(_sourceId: string, _event: MidiNoteEvent) {
+    // Note events the host tapped from audio module `sourceId`. MidiVoices
+    // allocates them; every other module ignores them.
   }
 
   serialize(): IVideoModule<T> {

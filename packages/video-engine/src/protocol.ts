@@ -1,5 +1,5 @@
 import { IVideoPatch } from "./VideoEngine";
-import { ICreateVideoModule } from "./core/Module";
+import { ICreateVideoModule, MidiNoteEvent } from "./core/Module";
 import { ICreateRoute } from "./core/Routes";
 
 export type HostMessage =
@@ -20,6 +20,7 @@ export type HostMessage =
   | { type: "addRoute"; route: ICreateRoute }
   | { type: "removeRoute"; id: string }
   | { type: "controls"; values: Record<string, number> }
+  | { type: "midi"; moduleId: string; event: MidiNoteEvent }
   | {
       type: "spectrum";
       moduleId: string;

@@ -3,6 +3,7 @@ import { VideoEngineHost } from "@blibliki/video-engine";
 import type { IVideoPatch } from "@blibliki/video-engine";
 import VideoWorker from "@blibliki/video-engine/worker?worker";
 import { addNotification } from "@/notificationsSlice";
+import { MidiTaps, referencedMidiModules } from "./midiTaps";
 import { referencedAudioModules, SpectrumTaps } from "./spectrumTaps";
 
 type HostStore = {
@@ -13,6 +14,7 @@ type HostStore = {
 
 let host: VideoEngineHost | null = null;
 let taps: SpectrumTaps | null = null;
+let midiTaps: MidiTaps | null = null;
 let hostEngineId = "";
 let unsubscribe: (() => void) | null = null;
 
@@ -29,6 +31,9 @@ export function ensureVideoHost(store: HostStore): VideoEngineHost {
     createWorker: () => new VideoWorker(),
     readSpectrum: () => spectrumTaps.read(),
   });
+  const midi = new MidiTaps(engine, (moduleId, event) => {
+    created.send({ type: "midi", moduleId, event });
+  });
   created.onError((message) => {
     store.dispatch(
       addNotification({ type: "error", title: "Video engine", message }),
@@ -40,16 +45,19 @@ export function ensureVideoHost(store: HostStore): VideoEngineHost {
   let last = store.getState().videoPatch;
   created.send({ type: "load", patch: last });
   spectrumTaps.sync(referencedAudioModules(last.modules));
+  midi.sync(referencedMidiModules(last.modules));
   unsubscribe = store.subscribe(() => {
     const next = store.getState().videoPatch;
     if (next === last) return;
     last = next;
     created.send({ type: "load", patch: next });
     spectrumTaps.sync(referencedAudioModules(next.modules));
+    midi.sync(referencedMidiModules(next.modules));
   });
 
   host = created;
   taps = spectrumTaps;
+  midiTaps = midi;
   hostEngineId = engine.id;
   return created;
 }
@@ -62,9 +70,11 @@ export function disposeVideoHost() {
   // The engine may already be disposed with its modules; taps go with it.
   try {
     taps?.dispose();
+    midiTaps?.dispose();
   } catch {
     // ignore
   }
   taps = null;
+  midiTaps = null;
   hostEngineId = "";
 }
