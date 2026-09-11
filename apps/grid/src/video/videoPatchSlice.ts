@@ -29,6 +29,7 @@ export const VIDEO_MODULE_NAMES: Record<VideoModuleType, string> = {
   [VideoModuleType.Color]: "Color",
   [VideoModuleType.Transform]: "Transform",
   [VideoModuleType.Mirror]: "Mirror",
+  [VideoModuleType.Feedback]: "Feedback",
   [VideoModuleType.Merge]: "Merge",
   [VideoModuleType.Layout]: "Layout",
   [VideoModuleType.Output]: "Visuals",

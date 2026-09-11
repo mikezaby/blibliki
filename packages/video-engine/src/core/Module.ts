@@ -51,6 +51,9 @@ export abstract class VideoModule<T extends VideoModuleType = VideoModuleType> {
   // control inputs named after the prop they drive.
   abstract readonly inputs: readonly IOPort[];
   readonly outputs: readonly IOPort[] = TEXTURE_OUT;
+  // Set by a module whose output the renderer keeps for the next frame,
+  // readable as `<target>:prev`.
+  readonly keepsOutput: boolean = false;
   abstract readonly schema: Record<keyof VideoPropsMapping[T], PropSchema>;
 
   constructor(
@@ -78,6 +81,12 @@ export abstract class VideoModule<T extends VideoModuleType = VideoModuleType> {
     _instance = 0,
   ): Record<string, number> | null {
     return null;
+  }
+
+  // Textures a pass samples that no route provides, by uniform name: a
+  // kept previous frame, or a media frame the host uploads.
+  externalInputs(_instance?: number): Record<string, string> {
+    return {};
   }
 
   receiveMidi(_ioName: string, _event: MidiNoteEvent) {

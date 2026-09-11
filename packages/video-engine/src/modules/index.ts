@@ -5,6 +5,7 @@ import AudioProp, { audioPropPropSchema, IAudioPropProps } from "./AudioProp";
 import Band, { bandPropSchema, IBandProps } from "./Band";
 import Color, { colorPropSchema, IColorProps } from "./Color";
 import Envelope, { envelopePropSchema, IEnvelopeProps } from "./Envelope";
+import Feedback, { feedbackPropSchema, IFeedbackProps } from "./Feedback";
 import HueRotate, { hueRotatePropSchema, IHueRotateProps } from "./HueRotate";
 import LFO, { ILFOProps, lfoPropSchema } from "./LFO";
 import Layout, { ILayoutProps, layoutPropSchema } from "./Layout";
@@ -21,6 +22,7 @@ export enum VideoModuleType {
   Color = "Color",
   Transform = "Transform",
   Mirror = "Mirror",
+  Feedback = "Feedback",
   Merge = "Merge",
   Layout = "Layout",
   Output = "Output",
@@ -37,6 +39,7 @@ export type VideoPropsMapping = {
   [VideoModuleType.Color]: IColorProps;
   [VideoModuleType.Transform]: ITransformProps;
   [VideoModuleType.Mirror]: IMirrorProps;
+  [VideoModuleType.Feedback]: IFeedbackProps;
   [VideoModuleType.Merge]: IMergeProps;
   [VideoModuleType.Layout]: ILayoutProps;
   [VideoModuleType.Output]: IOutputProps;
@@ -66,6 +69,10 @@ export function createModule<T extends VideoModuleType>(
       );
     case VideoModuleType.Mirror:
       return new Mirror(params as ICreateVideoModule<VideoModuleType.Mirror>);
+    case VideoModuleType.Feedback:
+      return new Feedback(
+        params as ICreateVideoModule<VideoModuleType.Feedback>,
+      );
     case VideoModuleType.Merge:
       return new Merge(params as ICreateVideoModule<VideoModuleType.Merge>);
     case VideoModuleType.Layout:
@@ -97,6 +104,7 @@ export type { IAudioPropProps } from "./AudioProp";
 export type { IBandProps } from "./Band";
 export type { IEnvelopeProps } from "./Envelope";
 export type { IColorProps } from "./Color";
+export type { IFeedbackProps } from "./Feedback";
 export type { IHueRotateProps } from "./HueRotate";
 export type { IMirrorProps, MirrorMode } from "./Mirror";
 export { MIRROR_MODES } from "./Mirror";
@@ -119,6 +127,7 @@ export const videoModuleSchemas: Record<
   [VideoModuleType.Color]: colorPropSchema,
   [VideoModuleType.Transform]: transformPropSchema,
   [VideoModuleType.Mirror]: mirrorPropSchema,
+  [VideoModuleType.Feedback]: feedbackPropSchema,
   [VideoModuleType.Merge]: mergePropSchema,
   [VideoModuleType.Layout]: layoutPropSchema,
   [VideoModuleType.Output]: outputPropSchema,

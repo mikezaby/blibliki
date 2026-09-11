@@ -17,6 +17,9 @@ export class Renderer {
   // that does.
   private bound = new Map<string, Target>();
   private pool: Target[] = [];
+  // Textures no route provides: a pass's kept output (`<target>:prev`),
+  // canvas-sized and dropped on resize.
+  private external = new Map<string, WebGLTexture>();
   private black!: WebGLTexture;
   private now = 0;
 
@@ -64,6 +67,7 @@ export class Renderer {
         this.composeInstances(pass.inputs.in ?? null, pass.compose);
       } else {
         this.draw(pass);
+        if (pass.keep) this.keep(pass.target);
       }
 
       for (const key of readsOf(pass)) {
@@ -146,9 +150,23 @@ export class Renderer {
   }
 
   private texture(key: string | null): WebGLTexture {
-    const target = key === null ? undefined : this.bound.get(key);
+    if (key === null) return this.black;
 
-    return target?.texture ?? this.black;
+    return this.external.get(key) ?? this.bound.get(key)?.texture ?? this.black;
+  }
+
+  // Copies the framebuffer just drawn into the pass's kept texture.
+  private keep(target: string) {
+    const { gl } = this;
+    const { width, height } = this.canvas;
+    const key = `${target}:prev`;
+    let texture = this.external.get(key);
+    if (!texture) {
+      texture = this.createTexture(width, height);
+      this.external.set(key, texture);
+    }
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 0, 0, width, height);
   }
 
   private acquire(key: string): Target {
@@ -170,6 +188,7 @@ export class Renderer {
     this.programs.clear();
     this.bound.clear();
     this.pool = [];
+    this.external.clear();
     gl.bindVertexArray(gl.createVertexArray());
 
     for (const [type, fragment] of Object.entries(FRAGMENT)) {
@@ -266,5 +285,10 @@ export class Renderer {
     }
     this.bound.clear();
     this.pool = [];
+    for (const [key, texture] of this.external) {
+      if (!key.endsWith(":prev")) continue;
+      this.gl.deleteTexture(texture);
+      this.external.delete(key);
+    }
   }
 }

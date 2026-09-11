@@ -52,6 +52,11 @@ describe("bootstrap modules", () => {
       { mode: "horizontal", segments: 6, angle: 0, instances: 1 },
     ],
     [
+      VideoModuleType.Feedback,
+      [tex("in"), ctl("decay"), ctl("zoom")],
+      { decay: 0.9, zoom: 1, instances: 1 },
+    ],
+    [
       VideoModuleType.Merge,
       [tex("a"), tex("b"), ctl("amount")],
       { mode: "crossfade", amount: 0.5, instances: 1 },

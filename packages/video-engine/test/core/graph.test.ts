@@ -261,6 +261,33 @@ describe("buildPasses", () => {
     ]);
   });
 
+  it("keeps a Feedback pass's output and feeds it back as prev, per instance", () => {
+    const src = make("src", VideoModuleType.Source);
+    const fb = make("fb", VideoModuleType.Feedback);
+    const out = make("out", VideoModuleType.Output);
+    const routes = new Routes();
+    wire(routes, "src", "fb");
+    wire(routes, "fb", "out");
+
+    const single = buildPasses(graph([src, fb, out]), routes, stored);
+
+    expect(single[1]).toMatchObject({
+      target: "fb",
+      inputs: { in: "src", prev: "fb:prev" },
+      keep: true,
+    });
+    expect(single[2]?.keep).toBeUndefined();
+
+    fb.updateProps({ instances: 2 });
+    const twice = buildPasses(graph([src, fb, out]), routes, stored);
+
+    expect(twice[2]).toMatchObject({
+      target: "fb:1",
+      inputs: { in: "src", prev: "fb:1:prev" },
+      keep: true,
+    });
+  });
+
   it("maps a missing input to null and skips modules not reaching an output", () => {
     const out = make("out", VideoModuleType.Output);
     const orphan = make("orphan", VideoModuleType.Source);

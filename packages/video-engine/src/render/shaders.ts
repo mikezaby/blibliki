@@ -148,6 +148,15 @@ void main() {
   outColor = texture(u_in, uv);
 }`,
 
+  [VideoModuleType.Feedback]: `${HEADER}
+uniform sampler2D u_in, u_prev;
+uniform float u_decay, u_zoom;
+void main() {
+  vec4 c = texture(u_in, v_uv);
+  vec4 p = texture(u_prev, (v_uv - 0.5) / u_zoom + 0.5);
+  outColor = vec4(max(c.rgb, p.rgb * u_decay), 1.0);
+}`,
+
   [VideoModuleType.Layout]: BLIT,
 
   [VideoModuleType.Output]: BLIT,

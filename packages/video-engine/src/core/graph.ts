@@ -16,6 +16,8 @@ export type RenderPass = {
   // Numeric uniforms, one per prop the shader can use. Prefixed u_ by the renderer.
   uniforms: Record<string, number>;
   instance?: number;
+  // The renderer copies this pass's output to `<target>:prev` after drawing.
+  keep?: boolean;
   // Tiles the instances of the `in` input into the target instead of
   // running a shader.
   compose?: { instances: number; layout: InstanceLayout };
@@ -142,9 +144,10 @@ export function buildPasses(
           moduleId: id,
           moduleType,
           target: `${id}:${instance}`,
-          inputs,
+          inputs: { ...inputs, ...module.externalInputs(instance) },
           uniforms: uniformsFor(resolveProps(module, instance), module.schema),
           instance,
+          ...(module.keepsOutput ? { keep: true } : {}),
         });
       }
       return;
@@ -180,8 +183,9 @@ export function buildPasses(
       moduleId: id,
       moduleType,
       target: id,
-      inputs,
+      inputs: { ...inputs, ...module.externalInputs() },
       uniforms: uniformsFor(props, module.schema),
+      ...(module.keepsOutput ? { keep: true } : {}),
     });
   };
 
