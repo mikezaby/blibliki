@@ -43,6 +43,10 @@ export type { IVideoPatch } from "./VideoEngine";
 export type { GraphMessage, HostMessage, WorkerMessage } from "./protocol";
 export { handleMessage } from "./handleMessage";
 export { VideoEngineHost } from "./host/VideoEngineHost";
+export { browserMediaDom, MediaPlayers } from "./host/media";
+export type { MediaDom, MediaPlayer } from "./host/media";
+export { mediaKey } from "./core/media";
+export type { MediaInstanceState, MediaModuleState } from "./core/media";
 export type {
   SpectrumSource,
   VideoEngineHostOptions,

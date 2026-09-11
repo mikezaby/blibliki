@@ -1,5 +1,5 @@
 import { Engine } from "@blibliki/engine";
-import { VideoEngineHost } from "@blibliki/video-engine";
+import { browserMediaDom, VideoEngineHost } from "@blibliki/video-engine";
 import type { IVideoPatch } from "@blibliki/video-engine";
 import VideoWorker from "@blibliki/video-engine/worker?worker";
 import { addNotification } from "@/notificationsSlice";
@@ -31,6 +31,7 @@ export function ensureVideoHost(store: HostStore): VideoEngineHost {
     patchSource: engine,
     createWorker: () => new VideoWorker(),
     readSpectrum: () => spectrumTaps.read(),
+    mediaDom: browserMediaDom,
   });
   const midi = new MidiBridge(engine, (moduleId, ioName, event) => {
     created.send({ type: "midi", moduleId, ioName, event });
@@ -69,6 +70,11 @@ export function ensureVideoHost(store: HostStore): VideoEngineHost {
   bridge = midi;
   hostEngineId = engine.id;
   return created;
+}
+
+// The file an Image or Video module shows, for this session.
+export function setMediaFile(store: HostStore, moduleId: string, file: File) {
+  ensureVideoHost(store).setMediaFile(moduleId, file);
 }
 
 export function disposeVideoHost() {

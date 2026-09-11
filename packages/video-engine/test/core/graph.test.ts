@@ -288,6 +288,29 @@ describe("buildPasses", () => {
     });
   });
 
+  it("gives Image and Video passes the frame the host uploads, per instance for Video", () => {
+    const img = make("img", VideoModuleType.Image);
+    const vid = make("vid", VideoModuleType.Video);
+    vid.updateProps({ instances: 2 });
+    const merge = make("merge", VideoModuleType.Merge);
+    const out = make("out", VideoModuleType.Output);
+    const routes = new Routes();
+    wire(routes, "img", "merge", "a");
+    wire(routes, "vid", "merge", "b");
+    wire(routes, "merge", "out");
+
+    const passes = buildPasses(graph([img, vid, merge, out]), routes, stored);
+
+    expect(passes.find((p) => p.moduleId === "img")?.inputs).toEqual({
+      frame: "media:img",
+    });
+    expect(
+      passes
+        .filter((p) => p.moduleId === "vid" && !p.compose)
+        .map((p) => p.inputs),
+    ).toEqual([{ frame: "media:vid:0" }, { frame: "media:vid:1" }]);
+  });
+
   it("maps a missing input to null and skips modules not reaching an output", () => {
     const out = make("out", VideoModuleType.Output);
     const orphan = make("orphan", VideoModuleType.Source);

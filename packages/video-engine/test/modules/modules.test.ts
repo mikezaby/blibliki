@@ -44,6 +44,12 @@ describe("bootstrap modules", () => {
         instances: 1,
       },
     ],
+    [VideoModuleType.Image, [], { file: "", instances: 1 }],
+    [
+      VideoModuleType.Video,
+      [ctl("speed"), ctl("seek")],
+      { file: "", playing: true, speed: 1, seek: 0, instances: 1 },
+    ],
     [
       VideoModuleType.HueRotate,
       [tex("in"), ctl("amount")],

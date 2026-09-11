@@ -9,6 +9,11 @@ const views = new Views();
 let renderer: Renderer | null = null;
 let frameHandle = 0;
 let lastFrame = 0;
+// Latest decoded frame per media key, kept so a renderer made after a
+// stop gets them again; `pending` names the ones not uploaded yet.
+const frames = new Map<string, ImageBitmap>();
+const pending = new Set<string>();
+let lastMedia = "";
 
 function post(message: WorkerMessage) {
   const transfer =
@@ -35,13 +40,27 @@ function frame(now: number) {
     return;
   }
   try {
-    renderer ??= new Renderer(new OffscreenCanvas(1, 1));
+    if (!renderer) {
+      renderer = new Renderer(new OffscreenCanvas(1, 1));
+      for (const key of frames.keys()) pending.add(key);
+    }
     const { width, height } = views.renderSize();
     renderer.resize(width, height);
+    for (const key of pending) {
+      const bitmap = frames.get(key);
+      if (bitmap) renderer.upload(key, bitmap);
+    }
+    pending.clear();
     const seconds = now / 1000;
     engine.tick({ now: seconds, dt: lastFrame ? seconds - lastFrame : 0 });
     lastFrame = seconds;
     renderer.render(engine.passes(), seconds);
+    const media = engine.mediaState();
+    const mediaJson = JSON.stringify(media);
+    if (mediaJson !== lastMedia) {
+      lastMedia = mediaJson;
+      post({ type: "media", modules: media });
+    }
     for (const view of views.due(now)) {
       void createImageBitmap(renderer.canvas, {
         resizeWidth: view.width,
@@ -82,6 +101,11 @@ self.onmessage = (event: MessageEvent<HostMessage>) => {
         return;
       case "detachView":
         views.detach(message.id);
+        return;
+      case "frame":
+        frames.get(message.key)?.close();
+        frames.set(message.key, message.bitmap);
+        pending.add(message.key);
         return;
       default:
         handleMessage(engine, message).forEach(post);

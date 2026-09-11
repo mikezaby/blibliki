@@ -49,6 +49,18 @@ void main() {
   outColor = vec4(hsl2rgb(vec3(fract(hue / 360.0), u_saturation, u_lightness)), 1.0);
 }`,
 
+  [VideoModuleType.Image]: `${HEADER}
+uniform sampler2D u_frame;
+void main() {
+  outColor = texture(u_frame, v_uv);
+}`,
+
+  [VideoModuleType.Video]: `${HEADER}
+uniform sampler2D u_frame;
+void main() {
+  outColor = texture(u_frame, v_uv);
+}`,
+
   [VideoModuleType.Noise]: `${HEADER}
 uniform float u_scale, u_speed, u_octaves, u_contrast;
 float hash(vec2 p) {

@@ -323,6 +323,27 @@ describe("VideoEngine", () => {
     }).not.toThrow();
   });
 
+  it("reports each Video instance's playback state after a tick", () => {
+    const engine = new VideoEngine();
+    engine.addModule({
+      id: "vid",
+      name: "vid",
+      moduleType: VideoModuleType.Video,
+      props: { instances: 2, seek: 0.3, speed: 2, playing: false },
+    });
+    engine.tick({ now: 0, dt: 0 });
+
+    expect(engine.mediaState()).toEqual([
+      {
+        id: "vid",
+        instances: [
+          { seek: 0.3, speed: 2, playing: false },
+          { seek: 0.3, speed: 2, playing: false },
+        ],
+      },
+    ]);
+  });
+
   it("keeps its own copy of spectrum bins and feeds them to a Band", () => {
     const engine = chain();
     engine.addModule({

@@ -18,7 +18,8 @@ export class Renderer {
   private bound = new Map<string, Target>();
   private pool: Target[] = [];
   // Textures no route provides: a pass's kept output (`<target>:prev`),
-  // canvas-sized and dropped on resize.
+  // canvas-sized and dropped on resize, and media frames (`media:...`) at
+  // their own size, kept until replaced.
   private external = new Map<string, WebGLTexture>();
   private black!: WebGLTexture;
   private now = 0;
@@ -78,8 +79,26 @@ export class Renderer {
     for (const key of Array.from(this.bound.keys())) this.release(key);
   }
 
+  // A decoded frame for `key`, top row first as bitmaps are.
+  upload(key: string, bitmap: ImageBitmap) {
+    const { gl } = this;
+    let texture = this.external.get(key);
+    if (!texture) {
+      texture = this.createTexture(1, 1);
+      this.external.set(key, texture);
+    }
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmap);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  }
+
   dispose() {
     this.disposeTargets();
+    for (const texture of this.external.values()) {
+      this.gl.deleteTexture(texture);
+    }
+    this.external.clear();
     for (const program of this.programs.values()) {
       this.gl.deleteProgram(program);
     }

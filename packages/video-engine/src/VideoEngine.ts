@@ -14,6 +14,7 @@ import {
 } from "./core/controls";
 import { buildPasses, RenderPass } from "./core/graph";
 import { resolveInstances } from "./core/instances";
+import { MediaModuleState } from "./core/media";
 import { PropSchema } from "./core/schema";
 import { createModule, VideoModuleType, VideoPropsMapping } from "./modules";
 
@@ -177,6 +178,28 @@ export class VideoEngine {
       instance,
       this.instanceCounts,
     );
+  }
+
+  // Per-instance playback of every Video module from the last tick's
+  // resolved props, for the host's players.
+  mediaState(): MediaModuleState[] {
+    const modules: MediaModuleState[] = [];
+    for (const module of this.modules.values()) {
+      if (module.moduleType !== VideoModuleType.Video) continue;
+      const count = this.instanceCounts.get(module.id) ?? 1;
+      const instances = Array.from({ length: count }, (_, instance) => {
+        const props = this.resolveProps(module, instance);
+
+        return {
+          seek: Number(props.seek),
+          speed: Number(props.speed),
+          playing: props.playing === true,
+        };
+      });
+      modules.push({ id: module.id, instances });
+    }
+
+    return modules;
   }
 
   serialize(): IVideoPatch {

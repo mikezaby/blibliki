@@ -7,6 +7,7 @@ import Color, { colorPropSchema, IColorProps } from "./Color";
 import Envelope, { envelopePropSchema, IEnvelopeProps } from "./Envelope";
 import Feedback, { feedbackPropSchema, IFeedbackProps } from "./Feedback";
 import HueRotate, { hueRotatePropSchema, IHueRotateProps } from "./HueRotate";
+import Image, { IImageProps, imagePropSchema } from "./Image";
 import LFO, { ILFOProps, lfoPropSchema } from "./LFO";
 import Layout, { ILayoutProps, layoutPropSchema } from "./Layout";
 import Merge, { IMergeProps, mergePropSchema } from "./Merge";
@@ -17,11 +18,14 @@ import Output, { IOutputProps, outputPropSchema } from "./Output";
 import Shapes, { IShapesProps, shapesPropSchema } from "./Shapes";
 import Source, { ISourceProps, sourcePropSchema } from "./Source";
 import Transform, { ITransformProps, transformPropSchema } from "./Transform";
+import Video, { IVideoProps, videoPropSchema } from "./Video";
 
 export enum VideoModuleType {
   Source = "Source",
   Noise = "Noise",
   Shapes = "Shapes",
+  Image = "Image",
+  Video = "Video",
   HueRotate = "HueRotate",
   Color = "Color",
   Transform = "Transform",
@@ -41,6 +45,8 @@ export type VideoPropsMapping = {
   [VideoModuleType.Source]: ISourceProps;
   [VideoModuleType.Noise]: INoiseProps;
   [VideoModuleType.Shapes]: IShapesProps;
+  [VideoModuleType.Image]: IImageProps;
+  [VideoModuleType.Video]: IVideoProps;
   [VideoModuleType.HueRotate]: IHueRotateProps;
   [VideoModuleType.Color]: IColorProps;
   [VideoModuleType.Transform]: ITransformProps;
@@ -67,6 +73,10 @@ export function createModule<T extends VideoModuleType>(
       return new Noise(params as ICreateVideoModule<VideoModuleType.Noise>);
     case VideoModuleType.Shapes:
       return new Shapes(params as ICreateVideoModule<VideoModuleType.Shapes>);
+    case VideoModuleType.Image:
+      return new Image(params as ICreateVideoModule<VideoModuleType.Image>);
+    case VideoModuleType.Video:
+      return new Video(params as ICreateVideoModule<VideoModuleType.Video>);
     case VideoModuleType.HueRotate:
       return new HueRotate(
         params as ICreateVideoModule<VideoModuleType.HueRotate>,
@@ -116,6 +126,8 @@ export type { IEnvelopeProps } from "./Envelope";
 export type { IColorProps } from "./Color";
 export type { IFeedbackProps } from "./Feedback";
 export type { IHueRotateProps } from "./HueRotate";
+export type { IImageProps } from "./Image";
+export type { IVideoProps } from "./Video";
 export type { IMirrorProps, MirrorMode } from "./Mirror";
 export type { INoiseProps } from "./Noise";
 export type { IShapesProps, Shape } from "./Shapes";
@@ -138,6 +150,8 @@ export const videoModuleSchemas: Record<
   [VideoModuleType.Source]: sourcePropSchema,
   [VideoModuleType.Noise]: noisePropSchema,
   [VideoModuleType.Shapes]: shapesPropSchema,
+  [VideoModuleType.Image]: imagePropSchema,
+  [VideoModuleType.Video]: videoPropSchema,
   [VideoModuleType.HueRotate]: hueRotatePropSchema,
   [VideoModuleType.Color]: colorPropSchema,
   [VideoModuleType.Transform]: transformPropSchema,

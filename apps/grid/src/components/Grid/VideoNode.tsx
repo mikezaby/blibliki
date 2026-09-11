@@ -8,6 +8,7 @@ import {
 } from "@blibliki/video-engine";
 import type { NodeProps } from "@xyflow/react";
 import AudioPropBody from "@/components/VideoModule/AudioPropBody";
+import MediaBody from "@/components/VideoModule/MediaBody";
 import VideoField from "@/components/VideoModule/VideoField";
 import VisualsBody from "@/components/VideoModule/VisualsBody";
 import { useAppSelector } from "@/hooks";
@@ -30,6 +31,20 @@ export default function VideoNode({ id, selected }: NodeProps) {
   const schema = videoModuleSchemas[module.moduleType];
   const props = module.props as Record<string, unknown>;
 
+  const fields = (
+    <Stack direction="row" gap={2} className="flex-wrap">
+      {Object.entries(schema).map(([prop, propSchema]) => (
+        <VideoField
+          key={prop}
+          moduleId={module.id}
+          prop={prop}
+          schema={propSchema}
+          value={props[prop]}
+        />
+      ))}
+    </Stack>
+  );
+
   const body = () => {
     switch (module.moduleType) {
       case VideoModuleType.Output:
@@ -42,20 +57,24 @@ export default function VideoNode({ id, selected }: NodeProps) {
             prop={props.prop as string}
           />
         );
-      default:
+      case VideoModuleType.Image:
+      case VideoModuleType.Video:
         return (
-          <Stack direction="row" gap={2} className="flex-wrap">
-            {Object.entries(schema).map(([prop, propSchema]) => (
-              <VideoField
-                key={prop}
-                moduleId={module.id}
-                prop={prop}
-                schema={propSchema}
-                value={props[prop]}
-              />
-            ))}
+          <Stack gap={2}>
+            <MediaBody
+              id={module.id}
+              file={(props.file as string | undefined) ?? ""}
+              accept={
+                module.moduleType === VideoModuleType.Image
+                  ? "image/*"
+                  : "video/*"
+              }
+            />
+            {fields}
           </Stack>
         );
+      default:
+        return fields;
     }
   };
 
