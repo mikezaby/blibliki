@@ -18,6 +18,7 @@ import Output, { IOutputProps, outputPropSchema } from "./Output";
 import Shapes, { IShapesProps, shapesPropSchema } from "./Shapes";
 import Source, { ISourceProps, sourcePropSchema } from "./Source";
 import Transform, { ITransformProps, transformPropSchema } from "./Transform";
+import Trigger, { ITriggerProps, triggerPropSchema } from "./Trigger";
 import Video, { IVideoProps, videoPropSchema } from "./Video";
 
 export enum VideoModuleType {
@@ -37,6 +38,7 @@ export enum VideoModuleType {
   AudioProp = "AudioProp",
   LFO = "LFO",
   Envelope = "Envelope",
+  Trigger = "Trigger",
   Band = "Band",
   MidiNotes = "MidiNotes",
 }
@@ -58,6 +60,7 @@ export type VideoPropsMapping = {
   [VideoModuleType.AudioProp]: IAudioPropProps;
   [VideoModuleType.LFO]: ILFOProps;
   [VideoModuleType.Envelope]: IEnvelopeProps;
+  [VideoModuleType.Trigger]: ITriggerProps;
   [VideoModuleType.Band]: IBandProps;
   [VideoModuleType.MidiNotes]: IMidiNotesProps;
 };
@@ -109,6 +112,8 @@ export function createModule<T extends VideoModuleType>(
       return new Envelope(
         params as ICreateVideoModule<VideoModuleType.Envelope>,
       );
+    case VideoModuleType.Trigger:
+      return new Trigger(params as ICreateVideoModule<VideoModuleType.Trigger>);
     case VideoModuleType.Band:
       return new Band(params as ICreateVideoModule<VideoModuleType.Band>);
     case VideoModuleType.MidiNotes:
@@ -134,6 +139,8 @@ export type { IShapesProps, Shape } from "./Shapes";
 export { SHAPES } from "./Shapes";
 export { MIRROR_MODES } from "./Mirror";
 export type { ITransformProps } from "./Transform";
+export type { ITriggerProps, TriggerMode } from "./Trigger";
+export { TRIGGER_MODES } from "./Trigger";
 export type { ILayoutProps } from "./Layout";
 export type { ILFOProps, LFOWaveform } from "./LFO";
 export { LFO_WAVEFORMS } from "./LFO";
@@ -163,6 +170,7 @@ export const videoModuleSchemas: Record<
   [VideoModuleType.AudioProp]: audioPropPropSchema,
   [VideoModuleType.LFO]: lfoPropSchema,
   [VideoModuleType.Envelope]: envelopePropSchema,
+  [VideoModuleType.Trigger]: triggerPropSchema,
   [VideoModuleType.Band]: bandPropSchema,
   [VideoModuleType.MidiNotes]: midiNotesPropSchema,
 };

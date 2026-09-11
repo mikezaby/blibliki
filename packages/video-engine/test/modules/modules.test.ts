@@ -108,6 +108,11 @@ describe("bootstrap modules", () => {
     ],
     [VideoModuleType.MidiNotes, [midi("in")], { instances: 1 }],
     [
+      VideoModuleType.Trigger,
+      [ctl("input"), ctl("threshold")],
+      { input: 0, threshold: 0.5, mode: "pulse", hold: 0.1, instances: 1 },
+    ],
+    [
       VideoModuleType.Band,
       [ctl("lowHz"), ctl("highHz"), ctl("gain")],
       { moduleId: "", lowHz: 20, highHz: 200, gain: 1, smoothing: 0 },

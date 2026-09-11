@@ -40,6 +40,7 @@ export const VIDEO_MODULE_NAMES: Record<VideoModuleType, string> = {
   [VideoModuleType.AudioProp]: "Audio Prop",
   [VideoModuleType.LFO]: "LFO",
   [VideoModuleType.Envelope]: "Envelope",
+  [VideoModuleType.Trigger]: "Trigger",
   [VideoModuleType.Band]: "Band",
   [VideoModuleType.MidiNotes]: "MIDI Notes",
 };
