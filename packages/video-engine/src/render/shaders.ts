@@ -49,6 +49,51 @@ void main() {
   outColor = vec4(hsl2rgb(vec3(fract(hue / 360.0), u_saturation, u_lightness)), 1.0);
 }`,
 
+  [VideoModuleType.Noise]: `${HEADER}
+uniform float u_scale, u_speed, u_octaves, u_contrast;
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+float vnoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+    mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
+    f.y);
+}
+void main() {
+  float aspect = u_resolution.x / max(u_resolution.y, 1.0);
+  vec2 p = v_uv * vec2(aspect, 1.0) * u_scale;
+  vec2 drift = vec2(u_time * u_speed, u_time * u_speed * 0.7);
+  float n = 0.0;
+  float amp = 0.5;
+  float sum = 0.0;
+  for (int o = 0; o < 4; o++) {
+    if (float(o) >= u_octaves) break;
+    n += amp * vnoise(p + drift);
+    sum += amp;
+    p *= 2.0;
+    amp *= 0.5;
+  }
+  n = clamp((n / sum - 0.5) * u_contrast + 0.5, 0.0, 1.0);
+  outColor = vec4(vec3(n), 1.0);
+}`,
+
+  [VideoModuleType.Shapes]: `${HEADER}
+uniform float u_shape, u_size, u_thickness, u_count, u_x, u_y, u_softness;
+void main() {
+  float aspect = u_resolution.x / max(u_resolution.y, 1.0);
+  vec2 p = (v_uv - vec2(u_x, u_y)) * vec2(aspect, 1.0);
+  int shape = int(u_shape + 0.5);
+  float d = shape == 0 ? length(p) - u_size
+    : shape == 1 ? abs(length(p) - u_size) - u_thickness
+    : abs(fract(v_uv.x * u_count) - 0.5) - u_thickness;
+  float m = 1.0 - smoothstep(0.0, max(u_softness, 0.0005), d);
+  outColor = vec4(vec3(m), m);
+}`,
+
   [VideoModuleType.HueRotate]: `${HEADER}
 uniform sampler2D u_in;
 uniform float u_amount;

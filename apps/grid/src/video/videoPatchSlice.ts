@@ -25,6 +25,8 @@ export type SavedVideoPatch = {
 
 export const VIDEO_MODULE_NAMES: Record<VideoModuleType, string> = {
   [VideoModuleType.Source]: "Source",
+  [VideoModuleType.Noise]: "Noise",
+  [VideoModuleType.Shapes]: "Shapes",
   [VideoModuleType.HueRotate]: "Hue Rotate",
   [VideoModuleType.Color]: "Color",
   [VideoModuleType.Transform]: "Transform",

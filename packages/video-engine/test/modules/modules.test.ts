@@ -26,6 +26,25 @@ describe("bootstrap modules", () => {
       },
     ],
     [
+      VideoModuleType.Noise,
+      [ctl("scale"), ctl("speed"), ctl("contrast")],
+      { scale: 8, speed: 0.2, octaves: 3, contrast: 1.5, instances: 1 },
+    ],
+    [
+      VideoModuleType.Shapes,
+      [ctl("size"), ctl("thickness"), ctl("count"), ctl("x"), ctl("y")],
+      {
+        shape: "circle",
+        size: 0.25,
+        thickness: 0.05,
+        count: 4,
+        x: 0.5,
+        y: 0.5,
+        softness: 0.01,
+        instances: 1,
+      },
+    ],
+    [
       VideoModuleType.HueRotate,
       [tex("in"), ctl("amount")],
       { amount: 0, instances: 1 },

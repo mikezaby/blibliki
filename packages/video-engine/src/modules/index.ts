@@ -12,12 +12,16 @@ import Layout, { ILayoutProps, layoutPropSchema } from "./Layout";
 import Merge, { IMergeProps, mergePropSchema } from "./Merge";
 import MidiNotes, { IMidiNotesProps, midiNotesPropSchema } from "./MidiNotes";
 import Mirror, { IMirrorProps, mirrorPropSchema } from "./Mirror";
+import Noise, { INoiseProps, noisePropSchema } from "./Noise";
 import Output, { IOutputProps, outputPropSchema } from "./Output";
+import Shapes, { IShapesProps, shapesPropSchema } from "./Shapes";
 import Source, { ISourceProps, sourcePropSchema } from "./Source";
 import Transform, { ITransformProps, transformPropSchema } from "./Transform";
 
 export enum VideoModuleType {
   Source = "Source",
+  Noise = "Noise",
+  Shapes = "Shapes",
   HueRotate = "HueRotate",
   Color = "Color",
   Transform = "Transform",
@@ -35,6 +39,8 @@ export enum VideoModuleType {
 
 export type VideoPropsMapping = {
   [VideoModuleType.Source]: ISourceProps;
+  [VideoModuleType.Noise]: INoiseProps;
+  [VideoModuleType.Shapes]: IShapesProps;
   [VideoModuleType.HueRotate]: IHueRotateProps;
   [VideoModuleType.Color]: IColorProps;
   [VideoModuleType.Transform]: ITransformProps;
@@ -57,6 +63,10 @@ export function createModule<T extends VideoModuleType>(
   switch (type) {
     case VideoModuleType.Source:
       return new Source(params as ICreateVideoModule<VideoModuleType.Source>);
+    case VideoModuleType.Noise:
+      return new Noise(params as ICreateVideoModule<VideoModuleType.Noise>);
+    case VideoModuleType.Shapes:
+      return new Shapes(params as ICreateVideoModule<VideoModuleType.Shapes>);
     case VideoModuleType.HueRotate:
       return new HueRotate(
         params as ICreateVideoModule<VideoModuleType.HueRotate>,
@@ -107,6 +117,9 @@ export type { IColorProps } from "./Color";
 export type { IFeedbackProps } from "./Feedback";
 export type { IHueRotateProps } from "./HueRotate";
 export type { IMirrorProps, MirrorMode } from "./Mirror";
+export type { INoiseProps } from "./Noise";
+export type { IShapesProps, Shape } from "./Shapes";
+export { SHAPES } from "./Shapes";
 export { MIRROR_MODES } from "./Mirror";
 export type { ITransformProps } from "./Transform";
 export type { ILayoutProps } from "./Layout";
@@ -123,6 +136,8 @@ export const videoModuleSchemas: Record<
   Record<string, PropSchema>
 > = {
   [VideoModuleType.Source]: sourcePropSchema,
+  [VideoModuleType.Noise]: noisePropSchema,
+  [VideoModuleType.Shapes]: shapesPropSchema,
   [VideoModuleType.HueRotate]: hueRotatePropSchema,
   [VideoModuleType.Color]: colorPropSchema,
   [VideoModuleType.Transform]: transformPropSchema,
