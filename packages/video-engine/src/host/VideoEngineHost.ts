@@ -36,6 +36,7 @@ export class VideoEngineHost {
   private media: MediaPlayers | null = null;
   private patchListeners = new Set<(patch: IVideoPatch) => void>();
   private errorListeners = new Set<(message: string) => void>();
+  private valuesListeners = new Set<(values: Record<string, number>) => void>();
 
   constructor(private options: VideoEngineHostOptions) {
     this.worker = options.createWorker();
@@ -144,6 +145,13 @@ export class VideoEngineHost {
     return () => this.errorListeners.delete(listener);
   }
 
+  // Control module outputs by name, a few times a second while a view is
+  // attached.
+  onValues(listener: (values: Record<string, number>) => void) {
+    this.valuesListeners.add(listener);
+    return () => this.valuesListeners.delete(listener);
+  }
+
   dispose() {
     this.disposed = true;
     cancelAnimationFrame(this.frameHandle);
@@ -174,6 +182,11 @@ export class VideoEngineHost {
         return;
       case "media":
         this.media?.apply(message.modules);
+        return;
+      case "values":
+        this.valuesListeners.forEach((listener) => {
+          listener(message.values);
+        });
         return;
       case "ready":
         return;

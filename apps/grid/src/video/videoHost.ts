@@ -6,6 +6,7 @@ import { addNotification } from "@/notificationsSlice";
 import { bridgedMidiRoutes, MidiBridge } from "./midiBridge";
 import { patchMessages } from "./patchDiff";
 import { referencedAudioModules, SpectrumTaps } from "./spectrumTaps";
+import { videoValues } from "./videoValues";
 
 type HostStore = {
   getState: () => { videoPatch: IVideoPatch; modules: unknown };
@@ -35,6 +36,9 @@ export function ensureVideoHost(store: HostStore): VideoEngineHost {
   });
   const midi = new MidiBridge(engine, (moduleId, ioName, event) => {
     created.send({ type: "midi", moduleId, ioName, event });
+  });
+  created.onValues((values) => {
+    videoValues.set(values);
   });
   created.onError((message) => {
     store.dispatch(

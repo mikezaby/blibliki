@@ -323,6 +323,20 @@ describe("VideoEngine", () => {
     }).not.toThrow();
   });
 
+  it("lists control outputs by name for readouts, without the host's pushes", () => {
+    const engine = chain();
+    engine.addModule({
+      id: "lfo",
+      name: "lfo",
+      moduleType: VideoModuleType.LFO,
+      props: { waveform: "sawtooth", phase: 0 },
+    });
+    engine.setControls({ "patch:osc:frequency": 440 });
+    engine.tick({ now: 0.25, dt: 0.25 });
+
+    expect(engine.controlValues()).toEqual({ "lfo:out": 0.25 });
+  });
+
   it("reports each Video instance's playback state after a tick", () => {
     const engine = new VideoEngine();
     engine.addModule({

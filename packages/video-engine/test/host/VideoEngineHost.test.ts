@@ -130,3 +130,24 @@ describe("VideoEngineHost spectrum tick", () => {
     expect(sent("spectrum")).toHaveLength(1);
   });
 });
+
+describe("VideoEngineHost values", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("hands control values from the worker to listeners", () => {
+    const { host, reply } = setup();
+    const listener = vi.fn();
+    const stop = host.onValues(listener);
+
+    reply({ type: "values", values: { "lfo:out": 0.5 } });
+
+    expect(listener).toHaveBeenCalledWith({ "lfo:out": 0.5 });
+
+    stop();
+    reply({ type: "values", values: { "lfo:out": 0.7 } });
+
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+});

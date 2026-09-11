@@ -180,6 +180,17 @@ export class VideoEngine {
     );
   }
 
+  // Every control module output by name, for readouts on the host; the
+  // host's own pushes are left out.
+  controlValues(): Record<string, number> {
+    const values: Record<string, number> = {};
+    for (const [name, value] of this.controls) {
+      if (!name.startsWith("patch:")) values[name] = value;
+    }
+
+    return values;
+  }
+
   // Per-instance playback of every Video module from the last tick's
   // resolved props, for the host's players.
   mediaState(): MediaModuleState[] {

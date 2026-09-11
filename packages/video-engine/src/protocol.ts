@@ -38,6 +38,8 @@ export type WorkerMessage =
   | { type: "viewsDropped" }
   // Each Video module's per-instance playback state, whenever it changes.
   | { type: "media"; modules: MediaModuleState[] }
+  // Control module outputs by name, a few times a second while rendering.
+  | { type: "values"; values: Record<string, number> }
   | { type: "error"; message: string };
 
 export type GraphMessage = Exclude<

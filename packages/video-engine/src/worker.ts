@@ -14,6 +14,8 @@ let lastFrame = 0;
 const frames = new Map<string, ImageBitmap>();
 const pending = new Set<string>();
 let lastMedia = "";
+let lastValuesAt = -Infinity;
+const VALUES_INTERVAL_MS = 100;
 
 function post(message: WorkerMessage) {
   const transfer =
@@ -60,6 +62,10 @@ function frame(now: number) {
     if (mediaJson !== lastMedia) {
       lastMedia = mediaJson;
       post({ type: "media", modules: media });
+    }
+    if (now - lastValuesAt >= VALUES_INTERVAL_MS) {
+      lastValuesAt = now;
+      post({ type: "values", values: engine.controlValues() });
     }
     for (const view of views.due(now)) {
       void createImageBitmap(renderer.canvas, {
