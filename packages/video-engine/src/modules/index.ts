@@ -3,18 +3,24 @@ import { ICreateVideoModule, IOPort, VideoModule } from "@/core/Module";
 import { PropSchema } from "@/core/schema";
 import AudioProp, { audioPropPropSchema, IAudioPropProps } from "./AudioProp";
 import Band, { bandPropSchema, IBandProps } from "./Band";
+import Color, { colorPropSchema, IColorProps } from "./Color";
 import Envelope, { envelopePropSchema, IEnvelopeProps } from "./Envelope";
 import HueRotate, { hueRotatePropSchema, IHueRotateProps } from "./HueRotate";
 import LFO, { ILFOProps, lfoPropSchema } from "./LFO";
 import Layout, { ILayoutProps, layoutPropSchema } from "./Layout";
 import Merge, { IMergeProps, mergePropSchema } from "./Merge";
 import MidiNotes, { IMidiNotesProps, midiNotesPropSchema } from "./MidiNotes";
+import Mirror, { IMirrorProps, mirrorPropSchema } from "./Mirror";
 import Output, { IOutputProps, outputPropSchema } from "./Output";
 import Source, { ISourceProps, sourcePropSchema } from "./Source";
+import Transform, { ITransformProps, transformPropSchema } from "./Transform";
 
 export enum VideoModuleType {
   Source = "Source",
   HueRotate = "HueRotate",
+  Color = "Color",
+  Transform = "Transform",
+  Mirror = "Mirror",
   Merge = "Merge",
   Layout = "Layout",
   Output = "Output",
@@ -28,6 +34,9 @@ export enum VideoModuleType {
 export type VideoPropsMapping = {
   [VideoModuleType.Source]: ISourceProps;
   [VideoModuleType.HueRotate]: IHueRotateProps;
+  [VideoModuleType.Color]: IColorProps;
+  [VideoModuleType.Transform]: ITransformProps;
+  [VideoModuleType.Mirror]: IMirrorProps;
   [VideoModuleType.Merge]: IMergeProps;
   [VideoModuleType.Layout]: ILayoutProps;
   [VideoModuleType.Output]: IOutputProps;
@@ -49,6 +58,14 @@ export function createModule<T extends VideoModuleType>(
       return new HueRotate(
         params as ICreateVideoModule<VideoModuleType.HueRotate>,
       );
+    case VideoModuleType.Color:
+      return new Color(params as ICreateVideoModule<VideoModuleType.Color>);
+    case VideoModuleType.Transform:
+      return new Transform(
+        params as ICreateVideoModule<VideoModuleType.Transform>,
+      );
+    case VideoModuleType.Mirror:
+      return new Mirror(params as ICreateVideoModule<VideoModuleType.Mirror>);
     case VideoModuleType.Merge:
       return new Merge(params as ICreateVideoModule<VideoModuleType.Merge>);
     case VideoModuleType.Layout:
@@ -79,7 +96,11 @@ export function createModule<T extends VideoModuleType>(
 export type { IAudioPropProps } from "./AudioProp";
 export type { IBandProps } from "./Band";
 export type { IEnvelopeProps } from "./Envelope";
+export type { IColorProps } from "./Color";
 export type { IHueRotateProps } from "./HueRotate";
+export type { IMirrorProps, MirrorMode } from "./Mirror";
+export { MIRROR_MODES } from "./Mirror";
+export type { ITransformProps } from "./Transform";
 export type { ILayoutProps } from "./Layout";
 export type { ILFOProps, LFOWaveform } from "./LFO";
 export { LFO_WAVEFORMS } from "./LFO";
@@ -95,6 +116,9 @@ export const videoModuleSchemas: Record<
 > = {
   [VideoModuleType.Source]: sourcePropSchema,
   [VideoModuleType.HueRotate]: hueRotatePropSchema,
+  [VideoModuleType.Color]: colorPropSchema,
+  [VideoModuleType.Transform]: transformPropSchema,
+  [VideoModuleType.Mirror]: mirrorPropSchema,
   [VideoModuleType.Merge]: mergePropSchema,
   [VideoModuleType.Layout]: layoutPropSchema,
   [VideoModuleType.Output]: outputPropSchema,

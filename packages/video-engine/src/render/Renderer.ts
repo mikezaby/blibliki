@@ -18,6 +18,7 @@ export class Renderer {
   private bound = new Map<string, Target>();
   private pool: Target[] = [];
   private black!: WebGLTexture;
+  private now = 0;
 
   constructor(readonly canvas: OffscreenCanvas) {
     const gl = canvas.getContext("webgl2");
@@ -41,10 +42,11 @@ export class Renderer {
     this.disposeTargets();
   }
 
-  render(passes: RenderPass[]) {
+  render(passes: RenderPass[], now = 0) {
     const { gl } = this;
     const { width, height } = this.canvas;
     gl.viewport(0, 0, width, height);
+    this.now = now;
 
     const lastRead = new Map<string, number>();
     passes.forEach((pass, index) => {
@@ -99,6 +101,12 @@ export class Renderer {
     for (const [name, value] of Object.entries(pass.uniforms)) {
       gl.uniform1f(gl.getUniformLocation(program, `u_${name}`), value);
     }
+    gl.uniform1f(gl.getUniformLocation(program, "u_time"), this.now);
+    gl.uniform2f(
+      gl.getUniformLocation(program, "u_resolution"),
+      this.canvas.width,
+      this.canvas.height,
+    );
 
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }

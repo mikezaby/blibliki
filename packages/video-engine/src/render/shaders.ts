@@ -8,10 +8,13 @@ void main() {
   gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
 }`;
 
+// Every pass gets the clock in seconds and the target size in pixels.
 const HEADER = `#version 300 es
 precision highp float;
 in vec2 v_uv;
 out vec4 outColor;
+uniform float u_time;
+uniform vec2 u_resolution;
 `;
 
 const HSL = `
@@ -80,7 +83,69 @@ void main() {
     outColor = edge < u_amount ? a : b;
     return;
   }
+  if (mode >= 5) {
+    vec3 blend = mode == 5 ? min(a.rgb + b.rgb, 1.0)
+      : mode == 6 ? a.rgb * b.rgb
+      : mode == 7 ? 1.0 - (1.0 - a.rgb) * (1.0 - b.rgb)
+      : abs(a.rgb - b.rgb);
+    outColor = vec4(mix(a.rgb, blend, u_amount), 1.0);
+    return;
+  }
   outColor = mix(a, b, u_amount);
+}`,
+
+  [VideoModuleType.Color]: `${HEADER}
+uniform sampler2D u_in;
+uniform float u_brightness, u_contrast, u_saturation, u_invert;
+void main() {
+  vec4 c = texture(u_in, v_uv);
+  vec3 rgb = (c.rgb - 0.5) * u_contrast + 0.5 + u_brightness;
+  float luma = dot(rgb, vec3(0.299, 0.587, 0.114));
+  rgb = mix(vec3(luma), rgb, u_saturation);
+  rgb = clamp(rgb, 0.0, 1.0);
+  if (u_invert > 0.5) rgb = 1.0 - rgb;
+  outColor = vec4(rgb, c.a);
+}`,
+
+  [VideoModuleType.Transform]: `${HEADER}
+uniform sampler2D u_in;
+uniform float u_zoom, u_rotate, u_x, u_y, u_tile;
+void main() {
+  float aspect = u_resolution.x / max(u_resolution.y, 1.0);
+  vec2 p = v_uv - 0.5 - vec2(u_x, u_y) * 0.5;
+  p.x *= aspect;
+  float a = radians(-u_rotate);
+  p = vec2(p.x * cos(a) - p.y * sin(a), p.x * sin(a) + p.y * cos(a)) / u_zoom;
+  p.x /= aspect;
+  vec2 uv = p + 0.5;
+  if (u_tile > 0.5) {
+    uv = fract(uv);
+  } else if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+    outColor = vec4(0.0);
+    return;
+  }
+  outColor = texture(u_in, uv);
+}`,
+
+  [VideoModuleType.Mirror]: `${HEADER}
+uniform sampler2D u_in;
+uniform float u_mode, u_segments, u_angle;
+void main() {
+  int mode = int(u_mode + 0.5);
+  vec2 uv = v_uv;
+  if (mode == 0 || mode == 2) uv.x = uv.x < 0.5 ? uv.x : 1.0 - uv.x;
+  if (mode == 1 || mode == 2) uv.y = uv.y < 0.5 ? uv.y : 1.0 - uv.y;
+  if (mode == 3) {
+    float aspect = u_resolution.x / max(u_resolution.y, 1.0);
+    vec2 p = (v_uv - 0.5) * vec2(aspect, 1.0);
+    float seg = 6.28318530718 / max(u_segments, 1.0);
+    float a = atan(p.y, p.x) - radians(u_angle);
+    a = mod(a, seg);
+    a = abs(a - seg * 0.5);
+    p = length(p) * vec2(cos(a), sin(a));
+    uv = p / vec2(aspect, 1.0) + 0.5;
+  }
+  outColor = texture(u_in, uv);
 }`,
 
   [VideoModuleType.Layout]: BLIT,

@@ -41,7 +41,7 @@ function frame(now: number) {
     const seconds = now / 1000;
     engine.tick({ now: seconds, dt: lastFrame ? seconds - lastFrame : 0 });
     lastFrame = seconds;
-    renderer.render(engine.passes());
+    renderer.render(engine.passes(), seconds);
     for (const view of views.due(now)) {
       void createImageBitmap(renderer.canvas, {
         resizeWidth: view.width,

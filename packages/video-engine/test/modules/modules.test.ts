@@ -31,6 +31,27 @@ describe("bootstrap modules", () => {
       { amount: 0, instances: 1 },
     ],
     [
+      VideoModuleType.Color,
+      [tex("in"), ctl("brightness"), ctl("contrast"), ctl("saturation")],
+      {
+        brightness: 0,
+        contrast: 1,
+        saturation: 1,
+        invert: false,
+        instances: 1,
+      },
+    ],
+    [
+      VideoModuleType.Transform,
+      [tex("in"), ctl("zoom"), ctl("rotate"), ctl("x"), ctl("y")],
+      { zoom: 1, rotate: 0, x: 0, y: 0, tile: false, instances: 1 },
+    ],
+    [
+      VideoModuleType.Mirror,
+      [tex("in"), ctl("segments"), ctl("angle")],
+      { mode: "horizontal", segments: 6, angle: 0, instances: 1 },
+    ],
+    [
       VideoModuleType.Merge,
       [tex("a"), tex("b"), ctl("amount")],
       { mode: "crossfade", amount: 0.5, instances: 1 },
