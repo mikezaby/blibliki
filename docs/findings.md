@@ -80,14 +80,3 @@ have correct param value immediately when relying on hooks") each failed
 once during a `pnpm test` run, then passed alone and on the next run. They are timing-sensitive under
 load. Find the waits on real time and either raise their timeouts or drive
 them from a fake clock.
-
-## Every video patch edit reloads the worker and resets module state
-
-`apps/grid/src/video/videoHost.ts` sends the whole patch as a `load`
-message on every store change, and `VideoEngine.load` clears and recreates
-all modules and routes. So turning any knob on any video node restarts LFO
-phases, drops held MIDI notes, and resets Envelope stages and Band
-smoothing, on every instance. The protocol already has `addModule`,
-`removeModule`, `updateProps`, `addRoute` and `removeRoute`; dispatch those
-from the slice actions instead of `load`, and keep `load` for opening a
-patch.

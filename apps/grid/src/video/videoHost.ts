@@ -4,6 +4,7 @@ import type { IVideoPatch } from "@blibliki/video-engine";
 import VideoWorker from "@blibliki/video-engine/worker?worker";
 import { addNotification } from "@/notificationsSlice";
 import { bridgedMidiRoutes, MidiBridge } from "./midiBridge";
+import { patchMessages } from "./patchDiff";
 import { referencedAudioModules, SpectrumTaps } from "./spectrumTaps";
 
 type HostStore = {
@@ -40,8 +41,8 @@ export function ensureVideoHost(store: HostStore): VideoEngineHost {
     );
   });
 
-  // ponytail: the whole patch is re-sent on every change; per-command
-  // messages if a patch ever grows large enough for that to show.
+  // The worker gets the whole patch once, then only what changed, so an
+  // edit never resets the state of the modules around it.
   let last = store.getState().videoPatch;
   created.send({ type: "load", patch: last });
   spectrumTaps.sync(referencedAudioModules(last.modules));
@@ -57,8 +58,8 @@ export function ensureVideoHost(store: HostStore): VideoEngineHost {
       midi.sync(bridgedMidiRoutes(next.routes, next.modules));
     }
     if (next === last) return;
+    for (const message of patchMessages(last, next)) created.send(message);
     last = next;
-    created.send({ type: "load", patch: next });
     spectrumTaps.sync(referencedAudioModules(next.modules));
     midi.sync(bridgedMidiRoutes(next.routes, next.modules));
   });
