@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { Frame } from "@/core/Module";
-import { createModule, videoModuleSchemas, VideoModuleType } from "@/modules";
-import type { IAudioFollowerProps } from "@/modules";
+import {
+  AUDIO_FOLLOWER_PRESETS,
+  createModule,
+  resolvePropsUpdate,
+  videoModuleSchemas,
+  VideoModuleType,
+} from "@/modules";
+import type { IAudioFollowerProps, ILFOProps } from "@/modules";
 
 // fftSize 8 at 8 kHz: bin centers 0, 1000, 2000 and 3000 Hz.
 const spectra = new Map([
@@ -21,6 +27,7 @@ function follower(props: Partial<IAudioFollowerProps> = {}) {
     moduleType: VideoModuleType.AudioFollower,
     props: {
       moduleId: "osc",
+      preset: "custom",
       source: "band",
       lowHz: 0,
       highHz: 1000,
@@ -57,6 +64,7 @@ describe("AudioFollower", () => {
     });
 
     expect(module.props).toEqual({
+      preset: "custom",
       moduleId: "",
       source: "band",
       lowHz: 20,
@@ -121,6 +129,82 @@ describe("AudioFollower", () => {
 
     expect(module.tick(values, frame, module.props, 0)?.out).toBeCloseTo(first);
     expect(module.tick(values, frame, module.props, 1)?.out).toBeCloseTo(first);
+  });
+
+  it("lists its presets first, custom then the built-ins", () => {
+    const schema = videoModuleSchemas[VideoModuleType.AudioFollower];
+
+    expect(Object.keys(schema)[0]).toBe("preset");
+    expect(schema.preset).toMatchObject({
+      kind: "enum",
+      options: ["custom", ...AUDIO_FOLLOWER_PRESETS.map((p) => p.id)],
+    });
+    expect(AUDIO_FOLLOWER_PRESETS.map((p) => p.id)).toEqual([
+      "kick",
+      "bass",
+      "snare",
+      "hats",
+      "mids",
+      "loudness",
+      "swell",
+    ]);
+  });
+
+  it("choosing a preset writes its props in the same update", () => {
+    const current = follower().props as IAudioFollowerProps;
+
+    expect(
+      resolvePropsUpdate(VideoModuleType.AudioFollower, current, {
+        preset: "kick",
+      }),
+    ).toEqual({
+      preset: "kick",
+      source: "band",
+      lowHz: 40,
+      highHz: 120,
+      minDb: -60,
+      maxDb: -10,
+      attack: 0.005,
+      release: 0.15,
+    });
+    expect(
+      resolvePropsUpdate(VideoModuleType.AudioFollower, current, {
+        preset: "loudness",
+      }),
+    ).toMatchObject({ preset: "loudness", source: "level", minDb: -50 });
+  });
+
+  it("editing a preset's prop flips the preset to custom, the module does not", () => {
+    const current = {
+      ...(follower().props as IAudioFollowerProps),
+      preset: "kick",
+    };
+
+    expect(
+      resolvePropsUpdate(VideoModuleType.AudioFollower, current, {
+        lowHz: 60,
+      }),
+    ).toEqual({ lowHz: 60, preset: "custom" });
+    expect(
+      resolvePropsUpdate(VideoModuleType.AudioFollower, current, {
+        moduleId: "other",
+      }),
+    ).toEqual({ moduleId: "other" });
+    expect(
+      resolvePropsUpdate(VideoModuleType.AudioFollower, current, {
+        preset: "custom",
+      }),
+    ).toEqual({ preset: "custom" });
+  });
+
+  it("leaves other modules' updates alone", () => {
+    const lfo = createModule({ name: "lfo", moduleType: VideoModuleType.LFO });
+
+    expect(
+      resolvePropsUpdate(VideoModuleType.LFO, lfo.props as ILFOProps, {
+        frequency: 2,
+      }),
+    ).toEqual({ frequency: 2 });
   });
 
   it("outputs 0 for an unknown module, silence, or a frame without spectra", () => {

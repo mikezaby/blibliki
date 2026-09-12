@@ -116,6 +116,7 @@ describe("bootstrap modules", () => {
       VideoModuleType.AudioFollower,
       [ctl("lowHz"), ctl("highHz")],
       {
+        preset: "custom",
         moduleId: "",
         source: "band",
         lowHz: 20,

@@ -12,6 +12,7 @@ export const FOLLOWER_SOURCES = ["level", "band"] as const;
 export type FollowerSource = (typeof FOLLOWER_SOURCES)[number];
 
 export type IAudioFollowerProps = {
+  preset: string;
   moduleId: string;
   source: FollowerSource;
   lowHz: number;
@@ -22,7 +23,70 @@ export type IAudioFollowerProps = {
   release: number;
 };
 
+export const CUSTOM_PRESET = "custom";
+
+type PresetProps = Omit<IAudioFollowerProps, "preset" | "moduleId">;
+export type IAudioFollowerPreset = { id: string; props: PresetProps };
+
+const band = (
+  lowHz: number,
+  highHz: number,
+  minDb: number,
+  maxDb: number,
+  attack: number,
+  release: number,
+): PresetProps => ({
+  source: "band",
+  lowHz,
+  highHz,
+  minDb,
+  maxDb,
+  attack,
+  release,
+});
+
+// Starting points tuned by ear against a Master output; the user's edits
+// win and flip the preset to custom.
+export const AUDIO_FOLLOWER_PRESETS: IAudioFollowerPreset[] = [
+  { id: "kick", props: band(40, 120, -60, -10, 0.005, 0.15) },
+  { id: "bass", props: band(40, 250, -60, -10, 0.01, 0.3) },
+  { id: "snare", props: band(1000, 4000, -60, -15, 0.003, 0.12) },
+  { id: "hats", props: band(6000, 16000, -70, -20, 0.002, 0.08) },
+  { id: "mids", props: band(300, 3000, -60, -15, 0.01, 0.2) },
+  {
+    id: "loudness",
+    props: { ...band(20, 20000, -50, 0, 0.01, 0.25), source: "level" },
+  },
+  {
+    id: "swell",
+    props: { ...band(20, 20000, -50, 0, 0.3, 1), source: "level" },
+  },
+];
+
+const PRESET_PROP_NAMES = Object.keys(
+  AUDIO_FOLLOWER_PRESETS[0]!.props,
+) as (keyof PresetProps)[];
+
+// Choosing a preset writes its props with the change; editing one of those
+// props afterwards flips the preset back to custom, as Wavetable does.
+export function withPreset(
+  current: IAudioFollowerProps,
+  changes: Partial<IAudioFollowerProps>,
+): Partial<IAudioFollowerProps> {
+  if (changes.preset !== undefined) {
+    const preset = AUDIO_FOLLOWER_PRESETS.find((p) => p.id === changes.preset);
+
+    return preset ? { ...changes, ...preset.props } : changes;
+  }
+  const touchesPreset = PRESET_PROP_NAMES.some((name) => name in changes);
+
+  return touchesPreset && current.preset !== CUSTOM_PRESET
+    ? { ...changes, preset: CUSTOM_PRESET }
+    : changes;
+}
+
 const DEFAULT_PROPS: IAudioFollowerProps = {
+  preset: CUSTOM_PRESET,
   moduleId: "",
   source: "band",
   lowHz: 20,
@@ -35,8 +99,18 @@ const DEFAULT_PROPS: IAudioFollowerProps = {
 
 export const audioFollowerPropSchema: ModulePropSchema<
   IAudioFollowerProps,
-  { moduleId: AudioModuleProp; source: EnumProp<FollowerSource> }
+  {
+    preset: EnumProp<string>;
+    moduleId: AudioModuleProp;
+    source: EnumProp<FollowerSource>;
+  }
 > = {
+  preset: {
+    kind: "enum",
+    options: [CUSTOM_PRESET, ...AUDIO_FOLLOWER_PRESETS.map((p) => p.id)],
+    label: "Preset",
+    shortLabel: "pre",
+  },
   moduleId: {
     kind: "audioModule",
     label: "Audio module",
@@ -112,7 +186,7 @@ type SavedBandProps = Partial<
 export function fromBand(props: SavedBandProps): Partial<IAudioFollowerProps> {
   const { moduleId, lowHz, highHz } = props;
 
-  return { moduleId, source: "band", lowHz, highHz };
+  return { preset: CUSTOM_PRESET, moduleId, source: "band", lowHz, highHz };
 }
 
 // Level of an audio module's output, overall or of one frequency band,

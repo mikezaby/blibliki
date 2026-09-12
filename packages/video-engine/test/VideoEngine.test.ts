@@ -408,6 +408,7 @@ describe("VideoEngine", () => {
     const module = engine.findModule("b");
     expect(module.moduleType).toBe(VideoModuleType.AudioFollower);
     expect(module.props).toMatchObject({
+      preset: "custom",
       moduleId: "sp",
       source: "band",
       lowHz: 100,

@@ -10,6 +10,7 @@ import AudioFollower, {
   audioFollowerPropSchema,
   fromBand,
   IAudioFollowerProps,
+  withPreset,
 } from "./AudioFollower";
 import AudioProp, { audioPropPropSchema, IAudioPropProps } from "./AudioProp";
 import Color, { colorPropSchema, IColorProps } from "./Color";
@@ -137,8 +138,16 @@ export function createModule<T extends VideoModuleType>(
 }
 
 export type { IAudioPropProps } from "./AudioProp";
-export type { IAudioFollowerProps, FollowerSource } from "./AudioFollower";
-export { FOLLOWER_SOURCES } from "./AudioFollower";
+export type {
+  IAudioFollowerProps,
+  IAudioFollowerPreset,
+  FollowerSource,
+} from "./AudioFollower";
+export {
+  AUDIO_FOLLOWER_PRESETS,
+  CUSTOM_PRESET,
+  FOLLOWER_SOURCES,
+} from "./AudioFollower";
 export type { IEnvelopeProps } from "./Envelope";
 export type { IColorProps } from "./Color";
 export type { IFeedbackProps } from "./Feedback";
@@ -186,6 +195,22 @@ export const videoModuleSchemas: Record<
   [VideoModuleType.AudioFollower]: audioFollowerPropSchema,
   [VideoModuleType.MidiNotes]: midiNotesPropSchema,
 };
+
+// The props a user's change should write, for the store that owns the
+// patch: a module can expand one change into several, as a preset does.
+export function resolvePropsUpdate<T extends VideoModuleType>(
+  moduleType: T,
+  current: VideoPropsMapping[T],
+  changes: Partial<VideoPropsMapping[T]>,
+): Partial<VideoPropsMapping[T]> {
+  if (moduleType === VideoModuleType.AudioFollower) {
+    return withPreset(current as IAudioFollowerProps, changes) as Partial<
+      VideoPropsMapping[T]
+    >;
+  }
+
+  return changes;
+}
 
 // Module types renamed since a patch could have saved them. Band became
 // AudioFollower on 2026-09-12.

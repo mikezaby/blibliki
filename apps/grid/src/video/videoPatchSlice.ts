@@ -3,6 +3,7 @@ import {
   type IRoute,
   type IVideoModule,
   type IVideoPatch,
+  resolvePropsUpdate,
   upgradeModule,
   VideoModuleType,
 } from "@blibliki/video-engine";
@@ -76,7 +77,15 @@ export const videoPatchSlice = createSlice({
       action: PayloadAction<{ id: string; props: Record<string, unknown> }>,
     ) => {
       const module = state.modules.find((m) => m.id === action.payload.id);
-      if (module) Object.assign(module.props, action.payload.props);
+      if (!module) return;
+      Object.assign(
+        module.props,
+        resolvePropsUpdate(
+          module.moduleType,
+          module.props,
+          action.payload.props as Partial<typeof module.props>,
+        ),
+      );
     },
     // A texture route replaces the one into the same input; control routes
     // into one prop accumulate. Re-adding an id replaces that route.

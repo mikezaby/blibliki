@@ -17,6 +17,7 @@ export {
   createModule,
   inputsFor,
   outputsFor,
+  resolvePropsUpdate,
   upgradeModule,
   videoModuleSchemas,
   VideoModuleType,
