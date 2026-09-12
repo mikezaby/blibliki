@@ -183,8 +183,14 @@ One commit each, tested and reviewed before the next:
 
 1. Rename Band to AudioFollower, `minDb`, `maxDb`, `attack` and `release`
    replacing gain and smoothing, band source only, and the Band alias.
+   Done 2026-09-12.
 2. Level source, with the host's `levelDb` on the spectrum message and the
-   ADR 2 sentence.
-3. Presets.
-4. SampleHold.
-5. Trigger hysteresis.
+   ADR 2 sentence. Done 2026-09-12.
+3. Presets. Done 2026-09-12. The grid's slice runs every props update
+   through `resolvePropsUpdate` from the registry, so the expansion and
+   the flip to custom live next to the module and the store stays the only
+   writer.
+4. SampleHold. Done 2026-09-12.
+5. Trigger hysteresis. Done 2026-09-12.
+
+All five are on branch `feat/audio-follower`, one commit each, not merged.
