@@ -15,6 +15,7 @@ type Tap = { moduleId: string; routeId: string };
 // What a tap needs from the engine's Spectrum module, which is not exported.
 type Analyser = {
   getFrequencies: () => Float32Array;
+  getValues: () => Float32Array;
   audioNode: { context: { sampleRate: number } };
 };
 
@@ -33,6 +34,18 @@ export function referencedAudioModules(modules: IVideoModule[]): Set<string> {
 // tapped from its first audio output, shared by every follower on that
 // module. Taps live only in the engine; the patch is saved from the store,
 // so they are never persisted.
+// Sample peak of one analyser buffer in dB, the reading VuMeter shows;
+// -Infinity for silence.
+function peakDb(samples: Float32Array): number {
+  let peak = 0;
+  for (const v of samples) {
+    const abs = Math.abs(v);
+    if (abs > peak) peak = abs;
+  }
+
+  return 20 * Math.log10(peak);
+}
+
 export class SpectrumTaps {
   private taps = new Map<string, Tap>();
 
@@ -56,6 +69,7 @@ export class SpectrumTaps {
         id,
         bins: spectrum.getFrequencies(),
         sampleRate: spectrum.audioNode.context.sampleRate,
+        levelDb: peakDb(spectrum.getValues()),
       };
     }
   }

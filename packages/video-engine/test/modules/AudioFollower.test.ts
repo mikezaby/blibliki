@@ -5,7 +5,14 @@ import type { IAudioFollowerProps } from "@/modules";
 
 // fftSize 8 at 8 kHz: bin centers 0, 1000, 2000 and 3000 Hz.
 const spectra = new Map([
-  ["osc", { bins: new Float32Array([-30, -100, -65, -100]), sampleRate: 8000 }],
+  [
+    "osc",
+    {
+      bins: new Float32Array([-30, -100, -65, -100]),
+      sampleRate: 8000,
+      levelDb: -40,
+    },
+  ],
 ]);
 
 function follower(props: Partial<IAudioFollowerProps> = {}) {
@@ -14,6 +21,7 @@ function follower(props: Partial<IAudioFollowerProps> = {}) {
     moduleType: VideoModuleType.AudioFollower,
     props: {
       moduleId: "osc",
+      source: "band",
       lowHz: 0,
       highHz: 1000,
       minDb: -100,
@@ -50,6 +58,7 @@ describe("AudioFollower", () => {
 
     expect(module.props).toEqual({
       moduleId: "",
+      source: "band",
       lowHz: 20,
       highHz: 200,
       minDb: -60,
@@ -70,6 +79,15 @@ describe("AudioFollower", () => {
     expect(out(follower({ minDb: -60, maxDb: 0 }))).toBe(0);
   });
 
+  it("reads the host's overall level, ignoring the range, when the source is level", () => {
+    expect(out(follower({ source: "level", minDb: -50, maxDb: -30 }))).toBe(
+      0.5,
+    );
+    expect(
+      out(follower({ source: "level", lowHz: 500, highHz: 1500 })),
+    ).toBeCloseTo(6 / 7);
+  });
+
   it("falls back to the bin nearest the range's center when none falls inside", () => {
     expect(out(follower({ lowHz: 1600, highHz: 1900 }))).toBeCloseTo(0.5);
   });
@@ -79,7 +97,14 @@ describe("AudioFollower", () => {
     const silent: Frame = {
       ...frame,
       spectra: new Map([
-        ["osc", { bins: new Float32Array(4).fill(-100), sampleRate: 8000 }],
+        [
+          "osc",
+          {
+            bins: new Float32Array(4).fill(-100),
+            sampleRate: 8000,
+            levelDb: -100,
+          },
+        ],
       ]),
     };
 
@@ -103,7 +128,14 @@ describe("AudioFollower", () => {
     expect(out(follower(), { now: 0, dt: 0 })).toBe(0);
 
     const silent = new Map([
-      ["osc", { bins: new Float32Array(4).fill(-Infinity), sampleRate: 8000 }],
+      [
+        "osc",
+        {
+          bins: new Float32Array(4).fill(-Infinity),
+          sampleRate: 8000,
+          levelDb: -Infinity,
+        },
+      ],
     ]);
     expect(out(follower(), { ...frame, spectra: silent })).toBe(0);
   });

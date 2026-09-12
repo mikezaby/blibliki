@@ -5,11 +5,15 @@ import {
   IOPort,
   VideoModule,
 } from "@/core/Module";
-import { AudioModuleProp, ModulePropSchema } from "@/core/schema";
+import { AudioModuleProp, EnumProp, ModulePropSchema } from "@/core/schema";
 import { VideoModuleType } from ".";
+
+export const FOLLOWER_SOURCES = ["level", "band"] as const;
+export type FollowerSource = (typeof FOLLOWER_SOURCES)[number];
 
 export type IAudioFollowerProps = {
   moduleId: string;
+  source: FollowerSource;
   lowHz: number;
   highHz: number;
   minDb: number;
@@ -20,6 +24,7 @@ export type IAudioFollowerProps = {
 
 const DEFAULT_PROPS: IAudioFollowerProps = {
   moduleId: "",
+  source: "band",
   lowHz: 20,
   highHz: 200,
   minDb: -60,
@@ -30,12 +35,18 @@ const DEFAULT_PROPS: IAudioFollowerProps = {
 
 export const audioFollowerPropSchema: ModulePropSchema<
   IAudioFollowerProps,
-  { moduleId: AudioModuleProp }
+  { moduleId: AudioModuleProp; source: EnumProp<FollowerSource> }
 > = {
   moduleId: {
     kind: "audioModule",
     label: "Audio module",
     shortLabel: "mod",
+  },
+  source: {
+    kind: "enum",
+    options: [...FOLLOWER_SOURCES],
+    label: "Source",
+    shortLabel: "src",
   },
   lowHz: {
     kind: "number",
@@ -101,14 +112,15 @@ type SavedBandProps = Partial<
 export function fromBand(props: SavedBandProps): Partial<IAudioFollowerProps> {
   const { moduleId, lowHz, highHz } = props;
 
-  return { moduleId, lowHz, highHz };
+  return { moduleId, source: "band", lowHz, highHz };
 }
 
-// Level of one frequency band of an audio module's output, mapped from
-// the minDb..maxDb window to 0..1 and followed with attack and release
-// ballistics, one level per instance. The host keeps one analyser per
-// referenced module and ships its bins each frame; this only averages a
-// slice, so many followers on one module cost one FFT.
+// Level of an audio module's output, overall or of one frequency band,
+// mapped from the minDb..maxDb window to 0..1 and followed with attack
+// and release ballistics, one level per instance. The host keeps one
+// analyser per referenced module and ships its peak and bins each frame;
+// this only averages a slice, so many followers on one module cost one
+// FFT.
 export default class AudioFollower extends VideoModule<VideoModuleType.AudioFollower> {
   readonly inputs = [
     { name: "lowHz", kind: "control" },
@@ -124,9 +136,13 @@ export default class AudioFollower extends VideoModule<VideoModuleType.AudioFoll
 
   tick(_values: ControlValues, frame: Frame, props = this.props, instance = 0) {
     const spectrum = frame.spectra?.get(props.moduleId);
-    const db = spectrum
-      ? bandDb(spectrum.bins, spectrum.sampleRate, props)
-      : -Infinity;
+    let db = -Infinity;
+    if (spectrum) {
+      db =
+        props.source === "level"
+          ? spectrum.levelDb
+          : bandDb(spectrum.bins, spectrum.sampleRate, props);
+    }
     const target = clamp01((db - props.minDb) / (props.maxDb - props.minDb));
 
     const last = this.levels[instance] ?? 0;

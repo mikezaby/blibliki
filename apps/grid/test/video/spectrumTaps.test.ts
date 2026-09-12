@@ -8,6 +8,7 @@ import {
 } from "../../src/video/spectrumTaps";
 
 const bins = new Float32Array([-30, -40]);
+const samples = new Float32Array([0.1, -0.5, 0.25]);
 
 function fakeEngine() {
   let next = 0;
@@ -17,6 +18,7 @@ function fakeEngine() {
       const id = `tap${++next}`;
       taps.set(id, {
         getFrequencies: () => bins,
+        getValues: () => samples,
         audioNode: { context: { sampleRate: 48000 } },
       });
       return { id };
@@ -95,7 +97,9 @@ describe("SpectrumTaps", () => {
       source: { moduleId: "osc", ioName: "out" },
       destination: { moduleId: "tap1", ioName: "in" },
     });
-    expect([...taps.read()]).toEqual([{ id: "osc", bins, sampleRate: 48000 }]);
+    const [source] = [...taps.read()];
+    expect(source).toMatchObject({ id: "osc", bins, sampleRate: 48000 });
+    expect(source?.levelDb).toBeCloseTo(20 * Math.log10(0.5));
   });
 
   it("removes the analyser when no AudioFollower references the module any more", () => {

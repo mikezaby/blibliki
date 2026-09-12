@@ -137,7 +137,8 @@ export function createModule<T extends VideoModuleType>(
 }
 
 export type { IAudioPropProps } from "./AudioProp";
-export type { IAudioFollowerProps } from "./AudioFollower";
+export type { IAudioFollowerProps, FollowerSource } from "./AudioFollower";
+export { FOLLOWER_SOURCES } from "./AudioFollower";
 export type { IEnvelopeProps } from "./Envelope";
 export type { IColorProps } from "./Color";
 export type { IFeedbackProps } from "./Feedback";

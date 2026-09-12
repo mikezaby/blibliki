@@ -25,7 +25,11 @@ Two feeds, both over `postMessage` to the worker:
   reduced them to three fixed bands before that). The analysers are hidden
   taps the video host creates on the audio modules Bands name, one per
   module however many Bands share it. One buffer is in flight at a time and
-  comes back after each read, so steady state allocates nothing.
+  comes back after each read, so steady state allocates nothing. Since
+  2026-09-12 the host also takes the sample peak of each tap's time-domain
+  buffer, one JS loop per tap per frame, and sends it as a dB number for
+  the AudioFollower's overall level; a second transferred buffer for one
+  number was not worth it.
 
 ## Alternatives rejected
 

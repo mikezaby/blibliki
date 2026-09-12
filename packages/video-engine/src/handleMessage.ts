@@ -15,7 +15,12 @@ export function handleMessage(
         engine.midi(message.moduleId, message.ioName, message.event);
         return [];
       case "spectrum":
-        engine.setSpectrum(message.moduleId, message.bins, message.sampleRate);
+        engine.setSpectrum(
+          message.moduleId,
+          message.bins,
+          message.sampleRate,
+          message.levelDb,
+        );
         return [
           {
             type: "spectrumBuffer",

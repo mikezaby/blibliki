@@ -54,7 +54,7 @@ describe("videoPatchSlice", () => {
       id: "b",
       name: "Band",
       moduleType: VideoModuleType.AudioFollower,
-      props: { moduleId: "osc", lowHz: 100, highHz: 400 },
+      props: { moduleId: "osc", source: "band", lowHz: 100, highHz: 400 },
     });
   });
 

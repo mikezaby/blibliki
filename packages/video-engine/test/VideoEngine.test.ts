@@ -384,7 +384,7 @@ describe("VideoEngine", () => {
       outMax: 360,
     });
     const bins = new Float32Array([-30, -100, -65, -100]);
-    engine.setSpectrum("sp", bins, 8000);
+    engine.setSpectrum("sp", bins, 8000, -40);
     bins.fill(-100);
     engine.tick({ now: 0, dt: 0 });
 
@@ -409,6 +409,7 @@ describe("VideoEngine", () => {
     expect(module.moduleType).toBe(VideoModuleType.AudioFollower);
     expect(module.props).toMatchObject({
       moduleId: "sp",
+      source: "band",
       lowHz: 100,
       highHz: 400,
       minDb: -60,

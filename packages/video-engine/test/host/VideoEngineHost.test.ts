@@ -5,7 +5,12 @@ import { HostMessage, WorkerMessage } from "@/protocol";
 type FakeWorker = Worker & { postMessage: ReturnType<typeof vi.fn> };
 
 function setup(
-  readSpectrum?: () => { id: string; bins: Float32Array; sampleRate: number }[],
+  readSpectrum?: () => {
+    id: string;
+    bins: Float32Array;
+    sampleRate: number;
+    levelDb: number;
+  }[],
 ) {
   let pending: FrameRequestCallback | null = null;
   vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
@@ -77,7 +82,9 @@ describe("VideoEngineHost spectrum tick", () => {
 
   it("sends nothing while no view is attached", () => {
     const bins = new Float32Array([-30, -40]);
-    const { tick, sent } = setup(() => [{ id: "m1", bins, sampleRate: 48000 }]);
+    const { tick, sent } = setup(() => [
+      { id: "m1", bins, sampleRate: 48000, levelDb: -6 },
+    ]);
 
     tick();
 
@@ -87,13 +94,19 @@ describe("VideoEngineHost spectrum tick", () => {
   it("keeps one buffer per module in flight", () => {
     const bins = new Float32Array([-30, -40]);
     const { host, canvas, tick, sent, reply } = setup(() => [
-      { id: "m1", bins, sampleRate: 48000 },
+      { id: "m1", bins, sampleRate: 48000, levelDb: -6 },
     ]);
 
     host.attachView("preview", canvas, 15);
     tick();
     expect(sent("spectrum")).toEqual([
-      { type: "spectrum", moduleId: "m1", bins, sampleRate: 48000 },
+      {
+        type: "spectrum",
+        moduleId: "m1",
+        bins,
+        sampleRate: 48000,
+        levelDb: -6,
+      },
     ]);
     expect(sent("spectrum")[0]?.bins).not.toBe(bins);
 
@@ -112,7 +125,7 @@ describe("VideoEngineHost spectrum tick", () => {
   it("stops reading only when the worker drops its views", () => {
     const bins = new Float32Array([-30, -40]);
     const { host, canvas, tick, sent, reply } = setup(() => [
-      { id: "m1", bins, sampleRate: 48000 },
+      { id: "m1", bins, sampleRate: 48000, levelDb: -6 },
     ]);
     host.attachView("preview", canvas, 15);
 

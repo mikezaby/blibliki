@@ -111,12 +111,14 @@ describe("handleMessage", () => {
       moduleId: "m1",
       bins,
       sampleRate: 48000,
+      levelDb: -12,
     });
 
     expect(out).toEqual([{ type: "spectrumBuffer", moduleId: "m1", bins }]);
     expect(engine.spectra.get("m1")).toEqual({
       bins: new Float32Array([-30, -30, -30]),
       sampleRate: 48000,
+      levelDb: -12,
     });
   });
 

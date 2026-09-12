@@ -117,6 +117,7 @@ describe("bootstrap modules", () => {
       [ctl("lowHz"), ctl("highHz")],
       {
         moduleId: "",
+        source: "band",
         lowHz: 20,
         highHz: 200,
         minDb: -60,

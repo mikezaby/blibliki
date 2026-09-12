@@ -99,14 +99,20 @@ export class VideoEngine {
     this.routes.removeRoute(id);
   }
 
-  setSpectrum(moduleId: string, bins: Float32Array, sampleRate: number) {
+  setSpectrum(
+    moduleId: string,
+    bins: Float32Array,
+    sampleRate: number,
+    levelDb: number,
+  ) {
     let frame = this.spectra.get(moduleId);
     if (frame?.bins.length !== bins.length) {
-      frame = { bins: new Float32Array(bins.length), sampleRate };
+      frame = { bins: new Float32Array(bins.length), sampleRate, levelDb };
       this.spectra.set(moduleId, frame);
     }
     frame.bins.set(bins);
     frame.sampleRate = sampleRate;
+    frame.levelDb = levelDb;
   }
 
   // A note the host bridged from an audio MIDI output into `moduleId`'s
