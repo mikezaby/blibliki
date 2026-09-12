@@ -9,26 +9,108 @@ import {
 
 const tex = (name: string) => ({ name, kind: "texture" }) as const;
 const ctl = (name: string) => ({ name, kind: "control" }) as const;
+const midi = (name: string) => ({ name, kind: "midi" }) as const;
 
 describe("bootstrap modules", () => {
   it.each([
     [
       VideoModuleType.Source,
       [ctl("hue"), ctl("saturation"), ctl("lightness"), ctl("spread")],
-      { mode: "solid", hue: 0, saturation: 1, lightness: 0.5, spread: 180 },
+      {
+        mode: "solid",
+        hue: 0,
+        saturation: 1,
+        lightness: 0.5,
+        spread: 180,
+        instances: 1,
+      },
     ],
-    [VideoModuleType.HueRotate, [tex("in"), ctl("amount")], { amount: 0 }],
+    [
+      VideoModuleType.Noise,
+      [ctl("scale"), ctl("speed"), ctl("contrast")],
+      { scale: 8, speed: 0.2, octaves: 3, contrast: 1.5, instances: 1 },
+    ],
+    [
+      VideoModuleType.Shapes,
+      [ctl("size"), ctl("thickness"), ctl("count"), ctl("x"), ctl("y")],
+      {
+        shape: "circle",
+        size: 0.25,
+        thickness: 0.05,
+        count: 4,
+        x: 0.5,
+        y: 0.5,
+        softness: 0.01,
+        instances: 1,
+      },
+    ],
+    [VideoModuleType.Image, [], { file: "", instances: 1 }],
+    [
+      VideoModuleType.Video,
+      [ctl("speed"), ctl("seek")],
+      { file: "", playing: true, speed: 1, seek: 0, instances: 1 },
+    ],
+    [
+      VideoModuleType.HueRotate,
+      [tex("in"), ctl("amount")],
+      { amount: 0, instances: 1 },
+    ],
+    [
+      VideoModuleType.Color,
+      [tex("in"), ctl("brightness"), ctl("contrast"), ctl("saturation")],
+      {
+        brightness: 0,
+        contrast: 1,
+        saturation: 1,
+        invert: false,
+        instances: 1,
+      },
+    ],
+    [
+      VideoModuleType.Transform,
+      [tex("in"), ctl("zoom"), ctl("rotate"), ctl("x"), ctl("y")],
+      { zoom: 1, rotate: 0, x: 0, y: 0, tile: false, instances: 1 },
+    ],
+    [
+      VideoModuleType.Mirror,
+      [tex("in"), ctl("segments"), ctl("angle")],
+      { mode: "horizontal", segments: 6, angle: 0, instances: 1 },
+    ],
+    [
+      VideoModuleType.Feedback,
+      [tex("in"), ctl("decay"), ctl("zoom")],
+      { decay: 0.9, zoom: 1, instances: 1 },
+    ],
     [
       VideoModuleType.Merge,
       [tex("a"), tex("b"), ctl("amount")],
-      { mode: "crossfade", amount: 0.5 },
+      { mode: "crossfade", amount: 0.5, instances: 1 },
     ],
+    [VideoModuleType.Layout, [tex("in")], { layout: "grid" }],
     [VideoModuleType.Output, [tex("in")], {}],
     [VideoModuleType.AudioProp, [], { moduleId: "", prop: "" }],
     [
       VideoModuleType.LFO,
       [ctl("frequency")],
-      { frequency: 1, waveform: "sine", phase: 0 },
+      { frequency: 1, waveform: "sine", phase: 0, instances: 1 },
+    ],
+    [
+      VideoModuleType.Envelope,
+      [midi("in"), ctl("gate")],
+      {
+        gate: 0,
+        attack: 0.1,
+        decay: 0.1,
+        sustain: 1,
+        release: 0.1,
+        instances: 1,
+      },
+    ],
+    [VideoModuleType.MidiNotes, [midi("in")], { instances: 1 }],
+    [
+      VideoModuleType.Trigger,
+      [ctl("input"), ctl("threshold")],
+      { input: 0, threshold: 0.5, mode: "pulse", hold: 0.1, instances: 1 },
     ],
     [
       VideoModuleType.Band,
@@ -63,7 +145,13 @@ describe("bootstrap modules", () => {
     expect(outputsFor(VideoModuleType.Merge)).toEqual([tex("out")]);
     expect(outputsFor(VideoModuleType.Output)).toEqual([]);
     expect(outputsFor(VideoModuleType.AudioProp)).toEqual([ctl("out")]);
+    expect(outputsFor(VideoModuleType.MidiNotes)).toEqual([
+      ctl("gate"),
+      ctl("note"),
+      ctl("velocity"),
+    ]);
     expect(Object.keys(videoModuleSchemas[VideoModuleType.HueRotate])).toEqual([
+      "instances",
       "amount",
     ]);
   });

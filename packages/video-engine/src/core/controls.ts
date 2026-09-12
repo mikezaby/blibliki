@@ -26,20 +26,39 @@ export function controlName(moduleId: string, output: string): string {
   return `${moduleId}:${output}`;
 }
 
+export function instanceControlName(
+  moduleId: string,
+  output: string,
+  instance: number,
+): string {
+  return `${moduleId}:${output}:${instance}`;
+}
+
+const NO_INSTANCES: ReadonlyMap<string, number> = new Map();
+
 // Several routes into one prop add: the first route's outMin plus every
 // route's swing, clamped to the prop's schema range when one is given, so a
-// single route is a plain range mapping.
+// single route is a plain range mapping. `instance` reads the matching
+// instance of an instanced source (by `instanceCounts`), wrapping around a
+// narrower one; a single source feeds every instance, and a single consumer
+// reads instance 0.
 export function applyControlRoutes<P extends Record<string, unknown>>(
   props: P,
   routes: readonly IRoute[],
   values: ControlValues,
   schema: Record<string, PropSchema> = {},
+  instance = 0,
+  instanceCounts: ReadonlyMap<string, number> = NO_INSTANCES,
 ): P {
   const sums = new Map<string, number>();
 
   for (const route of routes) {
+    const { moduleId, ioName } = route.source;
+    const width = instanceCounts.get(moduleId) ?? 1;
     const value = values.get(
-      controlName(route.source.moduleId, route.source.ioName),
+      width > 1
+        ? instanceControlName(moduleId, ioName, instance % width)
+        : controlName(moduleId, ioName),
     );
     if (value === undefined) continue;
     const outMin = route.outMin ?? 0;

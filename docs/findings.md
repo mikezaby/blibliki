@@ -69,3 +69,29 @@ over each handle's center. It is not `nodrag`, so a press exactly on it
 grabs the node instead of starting a cable; on audio and video nodes alike,
 at small zoom levels the dot covers most of the handle. Add
 `pointer-events-none` to the indicator.
+
+## Engine tests time out under the full parallel test run
+
+`packages/engine/test/modules/Wavetable.test.ts` (the file took about 11 s)
+and `packages/engine/test/modules/LFO.test.ts` ("updates the phase parameter
+when props change", "initializes the phase parameter immediately from
+props") and `packages/engine/test/core/Module.test.ts` ("should still
+have correct param value immediately when relying on hooks") each failed
+once during a `pnpm test` run, then passed alone and on the next run. They are timing-sensitive under
+load. Find the waits on real time and either raise their timeouts or drive
+them from a fake clock.
+
+## Media files are not persisted with a patch
+
+`apps/grid/src/components/VideoModule/MediaBody.tsx` keeps the picked file
+in the host for the session and saves only its name, so a reloaded patch
+shows the name and a black picture until the file is picked again. Store
+picked files in IndexedDB keyed by module id, as glijs does, and restore
+them when the video host starts.
+
+## Video nodes show controls that rarely matter
+
+Every instanced module shows Instances, and Source shows Spread in solid
+mode where it does nothing. Hide Spread unless the mode is gradient, and
+consider a compact header control for Instances like the audio nodes'
+Voices, in `apps/grid/src/components/Grid/VideoNode.tsx`.

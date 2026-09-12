@@ -87,20 +87,23 @@ export default class Band extends VideoModule<VideoModuleType.Band> {
   ] as const;
   readonly outputs: readonly IOPort[] = [{ name: "out", kind: "control" }];
   readonly schema = bandPropSchema;
-  private last = 0;
+  private last: number[] = [];
 
   constructor(params: ICreateVideoModule<VideoModuleType.Band>) {
     super(VideoModuleType.Band, DEFAULT_PROPS, params);
   }
 
-  tick(_values: ControlValues, frame: Frame, props = this.props) {
+  tick(_values: ControlValues, frame: Frame, props = this.props, instance = 0) {
     const spectrum = frame.spectra?.get(props.moduleId);
     const level = spectrum
       ? bandLevel(spectrum.bins, spectrum.sampleRate, props)
       : 0;
-    this.last = this.last * props.smoothing + level * (1 - props.smoothing);
+    const last =
+      (this.last[instance] ?? 0) * props.smoothing +
+      level * (1 - props.smoothing);
+    this.last[instance] = last;
 
-    return { out: this.last };
+    return { out: last };
   }
 }
 

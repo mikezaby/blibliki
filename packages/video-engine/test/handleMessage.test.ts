@@ -24,6 +24,30 @@ function fxToOutput() {
 }
 
 describe("handleMessage", () => {
+  it("delivers a bridged note to a module's MIDI input without echoing the patch", () => {
+    const engine = new VideoEngine();
+    engine.addModule({
+      id: "notes",
+      name: "notes",
+      moduleType: VideoModuleType.MidiNotes,
+      props: { instances: 2 },
+    });
+
+    const out = handleMessage(engine, {
+      type: "midi",
+      moduleId: "notes",
+      ioName: "in",
+      event: { type: "noteOn", note: 60, velocity: 0.5, instance: 1 },
+    });
+
+    expect(out).toEqual([]);
+    expect(
+      engine
+        .findModule("notes")
+        .tick(new Map(), { now: 0, dt: 0 }, undefined, 1),
+    ).toEqual({ gate: 1, note: 60, velocity: 0.5 });
+  });
+
   it("applies a graph command and echoes the patch", () => {
     const engine = new VideoEngine();
 

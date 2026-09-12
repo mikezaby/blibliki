@@ -1,6 +1,7 @@
 import { IVideoPatch } from "./VideoEngine";
-import { ICreateVideoModule } from "./core/Module";
+import { ICreateVideoModule, MidiNoteEvent } from "./core/Module";
 import { ICreateRoute } from "./core/Routes";
+import { MediaModuleState } from "./core/media";
 
 export type HostMessage =
   | {
@@ -20,6 +21,9 @@ export type HostMessage =
   | { type: "addRoute"; route: ICreateRoute }
   | { type: "removeRoute"; id: string }
   | { type: "controls"; values: Record<string, number> }
+  | { type: "midi"; moduleId: string; ioName: string; event: MidiNoteEvent }
+  // A decoded media frame for the renderer, transferred.
+  | { type: "frame"; key: string; bitmap: ImageBitmap }
   | {
       type: "spectrum";
       moduleId: string;
@@ -32,9 +36,16 @@ export type WorkerMessage =
   | { type: "patch"; patch: IVideoPatch }
   | { type: "spectrumBuffer"; moduleId: string; bins: Float32Array }
   | { type: "viewsDropped" }
+  // Each Video module's per-instance playback state, whenever it changes.
+  | { type: "media"; modules: MediaModuleState[] }
+  // Control module outputs by name, a few times a second while rendering.
+  | { type: "values"; values: Record<string, number> }
   | { type: "error"; message: string };
 
 export type GraphMessage = Exclude<
   HostMessage,
-  { type: "attachView" } | { type: "resizeView" } | { type: "detachView" }
+  | { type: "attachView" }
+  | { type: "resizeView" }
+  | { type: "detachView" }
+  | { type: "frame" }
 >;

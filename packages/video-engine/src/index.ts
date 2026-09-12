@@ -5,6 +5,7 @@ export type {
   ICreateVideoModule,
   IOPort,
   IVideoModule,
+  MidiNoteEvent,
   SpectrumFrame,
 } from "./core/Module";
 export type {
@@ -22,14 +23,30 @@ export {
 export type { VideoPropsMapping } from "./modules";
 export { Routes } from "./core/Routes";
 export type { ICreateRoute, IOKind, IPlug, IRoute } from "./core/Routes";
+export {
+  instancesPropSchema,
+  resolveInstances,
+  INSTANCE_LAYOUTS,
+  instanceRect,
+} from "./core/instances";
+export type { IInstancesProps, InstanceLayout } from "./core/instances";
 export { buildPasses } from "./core/graph";
 export type { RenderPass } from "./core/graph";
-export { applyControlRoutes, controlName, mapRange } from "./core/controls";
+export {
+  applyControlRoutes,
+  controlName,
+  mapRange,
+  instanceControlName,
+} from "./core/controls";
 export { VideoEngine } from "./VideoEngine";
 export type { IVideoPatch } from "./VideoEngine";
 export type { GraphMessage, HostMessage, WorkerMessage } from "./protocol";
 export { handleMessage } from "./handleMessage";
 export { VideoEngineHost } from "./host/VideoEngineHost";
+export { browserMediaDom, MediaPlayers } from "./host/media";
+export type { MediaDom, MediaPlayer } from "./host/media";
+export { mediaKey } from "./core/media";
+export type { MediaInstanceState, MediaModuleState } from "./core/media";
 export type {
   SpectrumSource,
   VideoEngineHostOptions,

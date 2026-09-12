@@ -16,7 +16,12 @@ type VideoConnection = {
   targetHandle?: string | null;
 };
 
-type AudioModuleInfo = { id: string; name: string; moduleType: ModuleType };
+type AudioModuleInfo = {
+  id: string;
+  name: string;
+  moduleType: ModuleType;
+  outputs?: { name: string; ioType: string }[];
+};
 
 type Range = { min: number; max: number; exp?: number };
 
@@ -52,12 +57,19 @@ export function validVideoConnection(
   return out !== undefined && out === inp;
 }
 
+const MIDI_NOTE: Range = { min: 0, max: 127 };
+
 // An Audio Prop outputs the raw prop value, so its range is the audio prop's
-// schema range; every other control output is 0..1.
+// schema range, and MIDI Notes' note is a MIDI note number; every other
+// control output is 0..1.
 function sourceRange(
   module: IVideoModule,
+  ioName: string,
   audioModules: AudioModuleInfo[],
 ): Range {
+  if (module.moduleType === VideoModuleType.MidiNotes) {
+    return ioName === "note" ? MIDI_NOTE : UNIT;
+  }
   if (module.moduleType !== VideoModuleType.AudioProp) return UNIT;
 
   const { moduleId, prop } = module.props as { moduleId: string; prop: string };
@@ -75,6 +87,31 @@ function targetRange(module: IVideoModule, prop: string): Range {
   const schema = videoModuleSchemas[module.moduleType][prop];
 
   return schema?.kind === "number" ? schema : UNIT;
+}
+
+// A cable from an audio module's MIDI output into a video module's MIDI
+// input. The route lives in the video patch and the host bridges its
+// events (ADR 10). Null when the cable is not that.
+export function midiBridgeRoute(
+  id: string,
+  connection: VideoConnection,
+  modules: IVideoModule[],
+  audioModules: AudioModuleInfo[],
+): IRoute | null {
+  const { source, sourceHandle, target, targetHandle } = connection;
+  if (!source || !sourceHandle || !target || !targetHandle) return null;
+  const output = audioModules
+    .find((m) => m.id === source)
+    ?.outputs?.find((io) => io.name === sourceHandle);
+  if (output?.ioType !== "midiOutput") return null;
+  if (portKind(modules, target, targetHandle, "input") !== "midi") return null;
+
+  return {
+    id,
+    kind: "midi",
+    source: { moduleId: source, ioName: sourceHandle },
+    destination: { moduleId: target, ioName: targetHandle },
+  };
 }
 
 export const CONTROL_EDGE = "controlEdge";
@@ -96,6 +133,7 @@ export function withEdgeTypes<E extends { id: string; type?: string }>(
 
 // Builds the route a cable stands for. A control cable gets the default
 // range: the source's natural range into the target prop's schema range.
+// Texture and MIDI cables carry no range.
 export function videoRouteFromConnection(
   id: string,
   connection: VideoConnection,
@@ -113,11 +151,11 @@ export function videoRouteFromConnection(
     source: { moduleId: source, ioName: sourceHandle },
     destination: { moduleId: target, ioName: targetHandle },
   };
-  if (route.kind === "texture") return route;
+  if (route.kind !== "control") return route;
 
   const from = modules.find((m) => m.id === source);
   const to = modules.find((m) => m.id === target);
-  const input = from ? sourceRange(from, audioModules) : UNIT;
+  const input = from ? sourceRange(from, sourceHandle, audioModules) : UNIT;
   const output = to ? targetRange(to, targetHandle) : UNIT;
 
   return {

@@ -1,14 +1,28 @@
-import { RenderPass } from "@/core/graph";
+import { readsOf, RenderPass } from "@/core/graph";
+import { instanceRect } from "@/core/instances";
 import { VideoModuleType } from "@/modules";
-import { FRAGMENT, VERTEX } from "./shaders";
+import { COMPOSE, FRAGMENT, VERTEX } from "./shaders";
 
 type Target = { texture: WebGLTexture; framebuffer: WebGLFramebuffer };
 
 export class Renderer {
   private gl: WebGL2RenderingContext;
   private programs = new Map<VideoModuleType, WebGLProgram>();
-  private targets = new Map<string, Target>();
+  private compose!: WebGLProgram;
+  // Canvas-sized targets: `bound` holds the ones written this frame by key,
+  // `pool` the free ones. A target goes back to the pool after its last
+  // reader, so peak use is about the widest instance count plus one, not one
+  // per module and instance.
+  // ponytail: nothing survives a frame; a feedback pass will need a target
+  // that does.
+  private bound = new Map<string, Target>();
+  private pool: Target[] = [];
+  // Textures no route provides: a pass's kept output (`<target>:prev`),
+  // canvas-sized and dropped on resize, and media frames (`media:...`) at
+  // their own size, kept until replaced.
+  private external = new Map<string, WebGLTexture>();
   private black!: WebGLTexture;
+  private now = 0;
 
   constructor(readonly canvas: OffscreenCanvas) {
     const gl = canvas.getContext("webgl2");
@@ -32,58 +46,174 @@ export class Renderer {
     this.disposeTargets();
   }
 
-  render(passes: RenderPass[]) {
+  render(passes: RenderPass[], now = 0) {
     const { gl } = this;
     const { width, height } = this.canvas;
     gl.viewport(0, 0, width, height);
+    this.now = now;
 
-    for (const pass of passes) {
-      const program = this.programs.get(pass.moduleType);
-      if (!program) continue;
-      gl.useProgram(program);
+    const lastRead = new Map<string, number>();
+    passes.forEach((pass, index) => {
+      for (const key of readsOf(pass)) lastRead.set(key, index);
+    });
 
+    passes.forEach((pass, index) => {
       const isOutput = pass.moduleType === VideoModuleType.Output;
       gl.bindFramebuffer(
         gl.FRAMEBUFFER,
-        isOutput ? null : this.target(pass.moduleId).framebuffer,
+        isOutput ? null : this.acquire(pass.target).framebuffer,
       );
 
-      let unit = 0;
-      for (const [ioName, sourceId] of Object.entries(pass.inputs)) {
-        const texture =
-          sourceId === null ? this.black : this.target(sourceId).texture;
-        gl.activeTexture(gl.TEXTURE0 + unit);
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.uniform1i(gl.getUniformLocation(program, `u_${ioName}`), unit);
-        unit += 1;
+      if (pass.compose) {
+        this.composeInstances(pass.inputs.in ?? null, pass.compose);
+      } else {
+        this.draw(pass);
+        if (pass.keep) this.keep(pass.target);
       }
 
-      for (const [name, value] of Object.entries(pass.uniforms)) {
-        gl.uniform1f(gl.getUniformLocation(program, `u_${name}`), value);
+      for (const key of readsOf(pass)) {
+        if (lastRead.get(key) === index) this.release(key);
       }
+    });
 
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    for (const key of Array.from(this.bound.keys())) this.release(key);
+  }
+
+  // A decoded frame for `key`, top row first as bitmaps are.
+  upload(key: string, bitmap: ImageBitmap) {
+    const { gl } = this;
+    let texture = this.external.get(key);
+    if (!texture) {
+      texture = this.createTexture(1, 1);
+      this.external.set(key, texture);
     }
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmap);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
   }
 
   dispose() {
     this.disposeTargets();
+    for (const texture of this.external.values()) {
+      this.gl.deleteTexture(texture);
+    }
+    this.external.clear();
     for (const program of this.programs.values()) {
       this.gl.deleteProgram(program);
     }
     this.programs.clear();
+    this.gl.deleteProgram(this.compose);
     this.gl.deleteTexture(this.black);
+  }
+
+  private draw(pass: RenderPass) {
+    const { gl } = this;
+    const program = this.programs.get(pass.moduleType);
+    if (!program) return;
+    gl.useProgram(program);
+
+    let unit = 0;
+    for (const [ioName, key] of Object.entries(pass.inputs)) {
+      gl.activeTexture(gl.TEXTURE0 + unit);
+      gl.bindTexture(gl.TEXTURE_2D, this.texture(key));
+      gl.uniform1i(gl.getUniformLocation(program, `u_${ioName}`), unit);
+      unit += 1;
+    }
+
+    for (const [name, value] of Object.entries(pass.uniforms)) {
+      gl.uniform1f(gl.getUniformLocation(program, `u_${name}`), value);
+    }
+    gl.uniform1f(gl.getUniformLocation(program, "u_time"), this.now);
+    gl.uniform2f(
+      gl.getUniformLocation(program, "u_resolution"),
+      this.canvas.width,
+      this.canvas.height,
+    );
+
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+
+  // One draw per instance with the viewport set to its cell, sampling the same
+  // cell of that instance's frame.
+  private composeInstances(
+    source: string | null,
+    { instances, layout }: NonNullable<RenderPass["compose"]>,
+  ) {
+    const { gl } = this;
+    const { width, height } = this.canvas;
+    gl.clearColor(0, 0, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(this.compose);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.uniform1i(gl.getUniformLocation(this.compose, "u_in"), 0);
+    const rect = gl.getUniformLocation(this.compose, "u_rect");
+
+    for (let instance = 0; instance < instances; instance += 1) {
+      const cell = instanceRect(instance, instances, layout);
+      gl.viewport(
+        Math.round(cell.x * width),
+        Math.round(cell.y * height),
+        Math.round(cell.width * width),
+        Math.round(cell.height * height),
+      );
+      gl.bindTexture(
+        gl.TEXTURE_2D,
+        this.texture(source === null ? null : `${source}:${instance}`),
+      );
+      gl.uniform4f(rect, cell.x, cell.y, cell.width, cell.height);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+
+    gl.viewport(0, 0, width, height);
+  }
+
+  private texture(key: string | null): WebGLTexture {
+    if (key === null) return this.black;
+
+    return this.external.get(key) ?? this.bound.get(key)?.texture ?? this.black;
+  }
+
+  // Copies the framebuffer just drawn into the pass's kept texture.
+  private keep(target: string) {
+    const { gl } = this;
+    const { width, height } = this.canvas;
+    const key = `${target}:prev`;
+    let texture = this.external.get(key);
+    if (!texture) {
+      texture = this.createTexture(width, height);
+      this.external.set(key, texture);
+    }
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 0, 0, width, height);
+  }
+
+  private acquire(key: string): Target {
+    const target = this.pool.pop() ?? this.createTarget();
+    this.bound.set(key, target);
+
+    return target;
+  }
+
+  private release(key: string) {
+    const target = this.bound.get(key);
+    if (!target) return;
+    this.bound.delete(key);
+    this.pool.push(target);
   }
 
   private setup() {
     const { gl } = this;
     this.programs.clear();
-    this.targets.clear();
+    this.bound.clear();
+    this.pool = [];
+    this.external.clear();
     gl.bindVertexArray(gl.createVertexArray());
 
     for (const [type, fragment] of Object.entries(FRAGMENT)) {
       this.programs.set(type as VideoModuleType, this.compile(fragment));
     }
+    this.compose = this.compile(COMPOSE);
 
     this.black = this.createTexture(1, 1);
     gl.texImage2D(
@@ -147,13 +277,7 @@ export class Renderer {
     return texture;
   }
 
-  // One canvas-sized texture per non-output module, created on first use.
-  // ponytail: targets outlive removed modules until the next resize; prune
-  // against the pass list if memory matters.
-  private target(moduleId: string): Target {
-    const existing = this.targets.get(moduleId);
-    if (existing) return existing;
-
+  private createTarget(): Target {
     const { gl } = this;
     const texture = this.createTexture(this.canvas.width, this.canvas.height);
     const framebuffer = gl.createFramebuffer();
@@ -167,17 +291,23 @@ export class Renderer {
     );
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-    const target = { texture, framebuffer };
-    this.targets.set(moduleId, target);
-
-    return target;
+    return { texture, framebuffer };
   }
 
   private disposeTargets() {
-    for (const { texture, framebuffer } of this.targets.values()) {
+    for (const { texture, framebuffer } of [
+      ...this.bound.values(),
+      ...this.pool,
+    ]) {
       this.gl.deleteTexture(texture);
       this.gl.deleteFramebuffer(framebuffer);
     }
-    this.targets.clear();
+    this.bound.clear();
+    this.pool = [];
+    for (const [key, texture] of this.external) {
+      if (!key.endsWith(":prev")) continue;
+      this.gl.deleteTexture(texture);
+      this.external.delete(key);
+    }
   }
 }

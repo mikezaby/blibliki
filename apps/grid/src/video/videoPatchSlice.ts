@@ -25,12 +25,24 @@ export type SavedVideoPatch = {
 
 export const VIDEO_MODULE_NAMES: Record<VideoModuleType, string> = {
   [VideoModuleType.Source]: "Source",
+  [VideoModuleType.Noise]: "Noise",
+  [VideoModuleType.Shapes]: "Shapes",
+  [VideoModuleType.Image]: "Image",
+  [VideoModuleType.Video]: "Video",
   [VideoModuleType.HueRotate]: "Hue Rotate",
+  [VideoModuleType.Color]: "Color",
+  [VideoModuleType.Transform]: "Transform",
+  [VideoModuleType.Mirror]: "Mirror",
+  [VideoModuleType.Feedback]: "Feedback",
   [VideoModuleType.Merge]: "Merge",
+  [VideoModuleType.Layout]: "Layout",
   [VideoModuleType.Output]: "Visuals",
   [VideoModuleType.AudioProp]: "Audio Prop",
   [VideoModuleType.LFO]: "LFO",
+  [VideoModuleType.Envelope]: "Envelope",
+  [VideoModuleType.Trigger]: "Trigger",
   [VideoModuleType.Band]: "Band",
+  [VideoModuleType.MidiNotes]: "MIDI Notes",
 };
 
 const samePlug = (a: IRoute["destination"], b: IRoute["destination"]) =>

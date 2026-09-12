@@ -19,7 +19,7 @@ import {
   removeVideoModule,
   removeVideoRoute,
 } from "@/video/videoPatchSlice";
-import { videoRouteFromConnection } from "@/video/videoRoutes";
+import { midiBridgeRoute, videoRouteFromConnection } from "@/video/videoRoutes";
 
 export type IGridNodes = {
   nodes: Node[];
@@ -127,7 +127,7 @@ export const onEdgesChange =
       if (change.type !== "remove") return;
 
       const edge = edges.find((candidate) => candidate.id === change.id);
-      if (edge && video.has(edge.source)) {
+      if (edge && (video.has(edge.source) || video.has(edge.target))) {
         dispatch(removeVideoRoute(change.id));
       } else {
         Engine.current.removeRoute(change.id);
@@ -158,6 +158,19 @@ export const connect =
       dispatch(addEdge({ id, ...connection }));
       return;
     }
+    if (source && target && !video.has(source) && video.has(target)) {
+      const id = uuidv4();
+      const route = midiBridgeRoute(
+        id,
+        connection,
+        state.videoPatch.modules,
+        modulesSelector.selectAll(state),
+      );
+      if (!route) return;
+      dispatch(addVideoRoute(route));
+      dispatch(addEdge({ id, ...connection }));
+      return;
+    }
 
     dispatch(onConnect(connection));
   };
@@ -166,7 +179,7 @@ export function hydrateEngineRoutes(gridNodes: IGridNodes) {
   const video = videoNodeIds(gridNodes.nodes);
 
   gridNodes.edges.forEach((edge) => {
-    if (video.has(edge.source)) return;
+    if (video.has(edge.source) || video.has(edge.target)) return;
 
     const route: IRoute = {
       id: edge.id,

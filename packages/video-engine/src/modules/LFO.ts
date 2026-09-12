@@ -5,6 +5,11 @@ import {
   IOPort,
   VideoModule,
 } from "@/core/Module";
+import {
+  DEFAULT_INSTANCES_PROPS,
+  IInstancesProps,
+  instancesPropSchema,
+} from "@/core/instances";
 import { EnumProp, ModulePropSchema } from "@/core/schema";
 import { VideoModuleType } from ".";
 
@@ -18,18 +23,24 @@ export const LFO_WAVEFORMS = [
 
 export type LFOWaveform = (typeof LFO_WAVEFORMS)[number];
 
-export type ILFOProps = {
+export type ILFOProps = IInstancesProps & {
   frequency: number;
   waveform: LFOWaveform;
   phase: number;
 };
 
-const DEFAULT_PROPS: ILFOProps = { frequency: 1, waveform: "sine", phase: 0 };
+const DEFAULT_PROPS: ILFOProps = {
+  frequency: 1,
+  waveform: "sine",
+  phase: 0,
+  ...DEFAULT_INSTANCES_PROPS,
+};
 
 export const lfoPropSchema: ModulePropSchema<
   ILFOProps,
   { waveform: EnumProp<LFOWaveform> }
 > = {
+  ...instancesPropSchema,
   frequency: {
     kind: "number",
     min: 0.01,
@@ -70,27 +81,30 @@ function shape(waveform: LFOWaveform, phase: number, held: number): number {
   }
 }
 
-// Unipolar 0..1 at frame rate. Phase advances by dt * frequency, so a dropped
-// frame slows the LFO instead of jumping it. ponytail: no transport sync;
-// needs bpm and a start time from the host.
+// Unipolar 0..1 at frame rate, one phase per instance. Phase advances by
+// dt * frequency, so a dropped frame slows the LFO instead of jumping it.
+// ponytail: no transport sync; needs bpm and a start time from the host.
 export default class LFO extends VideoModule<VideoModuleType.LFO> {
   readonly inputs = [{ name: "frequency", kind: "control" }] as const;
   readonly outputs: readonly IOPort[] = [{ name: "out", kind: "control" }];
   readonly schema = lfoPropSchema;
-  private phase = 0;
-  private held = Math.random();
+  private phases: number[] = [];
+  private held: number[] = [Math.random()];
 
   constructor(params: ICreateVideoModule<VideoModuleType.LFO>) {
     super(VideoModuleType.LFO, DEFAULT_PROPS, params);
   }
 
-  tick(_values: ControlValues, frame: Frame, props = this.props) {
-    const next = this.phase + frame.dt * props.frequency;
-    if (next >= 1) this.held = Math.random();
-    this.phase = next % 1;
+  tick(_values: ControlValues, frame: Frame, props = this.props, instance = 0) {
+    const next = (this.phases[instance] ?? 0) + frame.dt * props.frequency;
+    let held = this.held[instance];
+    if (held === undefined || next >= 1) held = Math.random();
+    this.held[instance] = held;
+    const phase = next % 1;
+    this.phases[instance] = phase;
 
-    const at = (this.phase + props.phase) % 1;
+    const at = (phase + props.phase) % 1;
 
-    return { out: shape(props.waveform, at, this.held) };
+    return { out: shape(props.waveform, at, held) };
   }
 }

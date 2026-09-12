@@ -1,5 +1,6 @@
 import { IVideoPatch } from "@/VideoEngine";
 import { HostMessage, WorkerMessage } from "@/protocol";
+import { MediaDom, MediaPlayers } from "./media";
 import { PatchSource, propsToControls } from "./mirror";
 import { openProjectorWindow, ProjectorWindow } from "./projectorWindow";
 
@@ -15,6 +16,8 @@ export type VideoEngineHostOptions = {
   // Current frequency bins (dB) per Spectrum module. Arrays are copied
   // before transfer, so yielding the analyser's own buffer is fine.
   readSpectrum?: () => Iterable<SpectrumSource>;
+  // Where to decode media; without it Image and Video modules stay black.
+  mediaDom?: MediaDom;
 };
 
 const PROJECTOR_VIEW = "projector";
@@ -30,8 +33,10 @@ export class VideoEngineHost {
   private views = new Set<string>();
   private frameHandle = 0;
   private disposed = false;
+  private media: MediaPlayers | null = null;
   private patchListeners = new Set<(patch: IVideoPatch) => void>();
   private errorListeners = new Set<(message: string) => void>();
+  private valuesListeners = new Set<(values: Record<string, number>) => void>();
 
   constructor(private options: VideoEngineHostOptions) {
     this.worker = options.createWorker();
@@ -58,6 +63,16 @@ export class VideoEngineHost {
     if (options.readSpectrum) {
       this.frameHandle = requestAnimationFrame(this.tick);
     }
+    if (options.mediaDom) {
+      this.media = new MediaPlayers(options.mediaDom, (key, bitmap) => {
+        this.send({ type: "frame", key, bitmap }, [bitmap]);
+      });
+    }
+  }
+
+  // The file behind an Image or Video module, for this session.
+  setMediaFile(moduleId: string, file: Blob) {
+    this.media?.setFile(moduleId, file);
   }
 
   // The canvas is transferred; it must not have been drawn on and cannot be
@@ -130,9 +145,17 @@ export class VideoEngineHost {
     return () => this.errorListeners.delete(listener);
   }
 
+  // Control module outputs by name, a few times a second while a view is
+  // attached.
+  onValues(listener: (values: Record<string, number>) => void) {
+    this.valuesListeners.add(listener);
+    return () => this.valuesListeners.delete(listener);
+  }
+
   dispose() {
     this.disposed = true;
     cancelAnimationFrame(this.frameHandle);
+    this.media?.dispose();
     this.projector?.window.close();
     this.projector = null;
     this.worker.terminate();
@@ -156,6 +179,14 @@ export class VideoEngineHost {
         return;
       case "viewsDropped":
         this.views.clear();
+        return;
+      case "media":
+        this.media?.apply(message.modules);
+        return;
+      case "values":
+        this.valuesListeners.forEach((listener) => {
+          listener(message.values);
+        });
         return;
       case "ready":
         return;

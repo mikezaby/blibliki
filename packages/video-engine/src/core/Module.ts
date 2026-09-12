@@ -29,6 +29,16 @@ export type Frame = {
 
 export type ControlValues = ReadonlyMap<string, number>;
 
+// A note the host bridged from an audio module's MIDI output. `instance`
+// is the voice the audio Voice Scheduler chose, when one sits before the
+// cable.
+export type MidiNoteEvent = {
+  type: "noteOn" | "noteOff";
+  note: number;
+  velocity: number;
+  instance?: number;
+};
+
 const TEXTURE_OUT: readonly IOPort[] = [{ name: "out", kind: "texture" }];
 
 export abstract class VideoModule<T extends VideoModuleType = VideoModuleType> {
@@ -41,6 +51,9 @@ export abstract class VideoModule<T extends VideoModuleType = VideoModuleType> {
   // control inputs named after the prop they drive.
   abstract readonly inputs: readonly IOPort[];
   readonly outputs: readonly IOPort[] = TEXTURE_OUT;
+  // Set by a module whose output the renderer keeps for the next frame,
+  // readable as `<target>:prev`.
+  readonly keepsOutput: boolean = false;
   abstract readonly schema: Record<keyof VideoPropsMapping[T], PropSchema>;
 
   constructor(
@@ -58,15 +71,27 @@ export abstract class VideoModule<T extends VideoModuleType = VideoModuleType> {
     this.props = { ...this.props, ...props };
   }
 
-  // Control modules compute their outputs once per frame from `props`, which
-  // the engine has already run through the module's control routes; texture
-  // modules return null and are never ticked.
+  // Control modules compute their outputs once per frame and instance from
+  // `props`, which the engine has already run through the module's control
+  // routes for that instance; texture modules return null and are never ticked.
   tick(
     _values: ControlValues,
     _frame: Frame,
     _props: VideoPropsMapping[T] = this.props,
+    _instance = 0,
   ): Record<string, number> | null {
     return null;
+  }
+
+  // Textures a pass samples that no route provides, by uniform name: a
+  // kept previous frame, or a media frame the host uploads.
+  externalInputs(_instance?: number): Record<string, string> {
+    return {};
+  }
+
+  receiveMidi(_ioName: string, _event: MidiNoteEvent) {
+    // A note arriving on MIDI input `ioName`. Modules with a MIDI input
+    // react per instance; the rest ignore it.
   }
 
   serialize(): IVideoModule<T> {

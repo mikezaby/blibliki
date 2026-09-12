@@ -1,4 +1,9 @@
 import { ICreateVideoModule, VideoModule } from "@/core/Module";
+import {
+  DEFAULT_INSTANCES_PROPS,
+  IInstancesProps,
+  instancesPropSchema,
+} from "@/core/instances";
 import { EnumProp, ModulePropSchema } from "@/core/schema";
 import { VideoModuleType } from ".";
 
@@ -9,20 +14,33 @@ export const MERGE_MODES = [
   "vertical",
   "horizontal",
   "diagonal",
+  "add",
+  "multiply",
+  "screen",
+  "difference",
 ] as const;
 
 export type MergeMode = (typeof MERGE_MODES)[number];
 
-// amount is the blend for crossfade, the layer opacity for overlay, and the
-// split position for the three splits.
-export type IMergeProps = { mode: MergeMode; amount: number };
+// amount is the blend for crossfade, the layer opacity for overlay, the
+// split position for the three splits, and how much of the blend result
+// shows for add, multiply, screen and difference.
+export type IMergeProps = IInstancesProps & {
+  mode: MergeMode;
+  amount: number;
+};
 
-const DEFAULT_PROPS: IMergeProps = { mode: "crossfade", amount: 0.5 };
+const DEFAULT_PROPS: IMergeProps = {
+  mode: "crossfade",
+  amount: 0.5,
+  ...DEFAULT_INSTANCES_PROPS,
+};
 
 export const mergePropSchema: ModulePropSchema<
   IMergeProps,
   { mode: EnumProp<MergeMode> }
 > = {
+  ...instancesPropSchema,
   mode: {
     kind: "enum",
     options: [...MERGE_MODES],

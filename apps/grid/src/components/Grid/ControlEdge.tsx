@@ -10,6 +10,7 @@ import {
   Input,
   Label,
   Stack,
+  Text,
 } from "@blibliki/ui";
 import {
   BaseEdge,
@@ -21,6 +22,7 @@ import { SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { updateVideoRoute } from "@/video/videoPatchSlice";
+import { useOutputValue } from "@/video/videoValues";
 
 const RANGE_KEYS = ["inMin", "inMax", "outMin", "outMax", "exp"] as const;
 type RangeKey = (typeof RANGE_KEYS)[number];
@@ -64,10 +66,28 @@ export default function ControlEdge({
             transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
           }}
         >
-          <RangeEditor routeId={id} />
+          <Stack direction="row" align="center" gap={1}>
+            <Readout routeId={id} />
+            <RangeEditor routeId={id} />
+          </Stack>
         </div>
       </EdgeLabelRenderer>
     </>
+  );
+}
+
+// The source's current value, so a silent Band or a stuck LFO shows.
+function Readout({ routeId }: { routeId: string }) {
+  const source = useAppSelector(
+    (state) => state.videoPatch.routes.find((r) => r.id === routeId)?.source,
+  );
+  const value = useOutputValue(source?.moduleId ?? "", source?.ioName ?? "");
+  if (value === undefined) return null;
+
+  return (
+    <Text asChild size="sm" className="font-mono tabular-nums">
+      <span>{value.toFixed(2)}</span>
+    </Text>
   );
 }
 

@@ -6,6 +6,7 @@ import {
   validVideoConnection,
   videoRouteFromConnection,
   withEdgeTypes,
+  midiBridgeRoute,
 } from "../../src/video/videoRoutes";
 
 const osc = { id: "osc", name: "Osc", moduleType: ModuleType.Oscillator };
@@ -130,6 +131,64 @@ describe("videoRouteFromConnection", () => {
       outMin: 0,
       outMax: 360,
       exp: undefined,
+    });
+  });
+
+  it("makes a bridged MIDI route from an audio MIDI output into a video MIDI input", () => {
+    const env = {
+      id: "env",
+      name: "Envelope",
+      moduleType: VideoModuleType.Envelope,
+      props: { instances: 4 },
+    };
+    const keys = {
+      id: "keys",
+      name: "MIDI In",
+      moduleType: ModuleType.MidiInput,
+      outputs: [{ name: "midi out", ioType: "midiOutput" }],
+    };
+    const cable = (sourceHandle: string, targetHandle: string) =>
+      midiBridgeRoute(
+        "r",
+        { source: "keys", sourceHandle, target: "env", targetHandle },
+        [...modules, env],
+        [keys],
+      );
+
+    expect(cable("midi out", "in")).toEqual({
+      id: "r",
+      kind: "midi",
+      source: { moduleId: "keys", ioName: "midi out" },
+      destination: { moduleId: "env", ioName: "in" },
+    });
+    expect(cable("midi out", "gate")).toBeNull();
+    expect(cable("out", "in")).toBeNull();
+  });
+
+  it("uses the MIDI note range for a MIDI Notes note output", () => {
+    const mv = {
+      id: "mv",
+      name: "MIDI Notes",
+      moduleType: VideoModuleType.MidiNotes,
+      props: { instances: 4 },
+    };
+    const route = videoRouteFromConnection(
+      "r",
+      {
+        source: "mv",
+        sourceHandle: "note",
+        target: "fx",
+        targetHandle: "amount",
+      },
+      [...modules, mv],
+      [],
+    );
+
+    expect(route).toMatchObject({
+      inMin: 0,
+      inMax: 127,
+      outMin: 0,
+      outMax: 360,
     });
   });
 

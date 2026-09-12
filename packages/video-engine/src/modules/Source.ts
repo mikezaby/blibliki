@@ -1,10 +1,15 @@
 import { ICreateVideoModule, VideoModule } from "@/core/Module";
+import {
+  DEFAULT_INSTANCES_PROPS,
+  IInstancesProps,
+  instancesPropSchema,
+} from "@/core/instances";
 import { EnumProp, ModulePropSchema } from "@/core/schema";
 import { VideoModuleType } from ".";
 
 export type SourceMode = "solid" | "gradient";
 
-export type ISourceProps = {
+export type ISourceProps = IInstancesProps & {
   mode: SourceMode;
   hue: number;
   saturation: number;
@@ -18,12 +23,14 @@ const DEFAULT_PROPS: ISourceProps = {
   saturation: 1,
   lightness: 0.5,
   spread: 180,
+  ...DEFAULT_INSTANCES_PROPS,
 };
 
 export const sourcePropSchema: ModulePropSchema<
   ISourceProps,
   { mode: EnumProp<SourceMode> }
 > = {
+  ...instancesPropSchema,
   mode: {
     kind: "enum",
     options: ["solid", "gradient"],

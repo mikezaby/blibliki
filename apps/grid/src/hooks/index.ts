@@ -27,7 +27,7 @@ import {
   addNode as _addNode,
 } from "@/components/Grid/gridNodesSlice";
 import type { RootState, AppDispatch } from "@/store";
-import { validVideoConnection } from "@/video/videoRoutes";
+import { midiBridgeRoute, validVideoConnection } from "@/video/videoRoutes";
 
 // Use throughout your app instead of plain `useDispatch` and `useSelector`
 export const useAppDispatch: () => AppDispatch = useDispatch;
@@ -238,6 +238,7 @@ export function useGridNodes() {
   const dispatch = useAppDispatch();
   const { nodes, edges, viewport } = useAppSelector((state) => state.gridNodes);
   const videoModules = useAppSelector((state) => state.videoPatch.modules);
+  const audioModules = useAppSelector(modulesSelector.selectAll);
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
@@ -272,6 +273,11 @@ export function useGridNodes() {
 
       const sourceIsVideo = videoModules.some((m) => m.id === source);
       const targetIsVideo = videoModules.some((m) => m.id === target);
+      if (!sourceIsVideo && targetIsVideo) {
+        return (
+          midiBridgeRoute("", connection, videoModules, audioModules) !== null
+        );
+      }
       if (sourceIsVideo !== targetIsVideo) return false;
       if (sourceIsVideo) return validVideoConnection(connection, videoModules);
 
@@ -280,7 +286,7 @@ export function useGridNodes() {
         destination: { moduleId: target, ioName: targetHandle },
       });
     },
-    [videoModules],
+    [videoModules, audioModules],
   );
 
   return {

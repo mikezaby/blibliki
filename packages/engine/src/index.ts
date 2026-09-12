@@ -1,4 +1,6 @@
 export { Engine } from "./Engine";
+export { MidiOutput } from "./core/IO";
+export type { MidiListener } from "./core/IO";
 export type {
   EngineStateUpdate,
   EngineStateUpdateCallback,

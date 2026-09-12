@@ -41,6 +41,7 @@ describe("LFO", () => {
       frequency: 1,
       waveform: "sine",
       phase: 0,
+      instances: 1,
     });
   });
 
@@ -96,5 +97,17 @@ describe("LFO", () => {
     expect(
       module.tick(values, { now: 0.125, dt: 0.125 }, driven)?.out,
     ).toBeCloseTo(1);
+  });
+
+  it("advances a phase per instance", () => {
+    const module = lfo({ waveform: "sawtooth" });
+    module.tick(values, { now: 0.25, dt: 0.25 }, undefined, 0);
+
+    expect(
+      module.tick(values, { now: 0.5, dt: 0.25 }, undefined, 0)?.out,
+    ).toBeCloseTo(0.5);
+    expect(
+      module.tick(values, { now: 0.5, dt: 0.25 }, undefined, 1)?.out,
+    ).toBeCloseTo(0.25);
   });
 });

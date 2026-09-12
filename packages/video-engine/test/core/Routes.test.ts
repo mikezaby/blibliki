@@ -2,6 +2,23 @@ import { describe, expect, it } from "vitest";
 import { Routes } from "@/core/Routes";
 
 describe("Routes", () => {
+  it("accumulates MIDI routes into one input", () => {
+    const routes = new Routes();
+    const into = (moduleId: string) =>
+      routes.addRoute({
+        kind: "midi",
+        source: { moduleId, ioName: "midi out" },
+        destination: { moduleId: "env", ioName: "in" },
+      });
+    into("keys");
+    into("seq");
+
+    expect(routes.serialize().map((r) => r.source.moduleId)).toEqual([
+      "keys",
+      "seq",
+    ]);
+  });
+
   it("adds a route with a generated id", () => {
     const routes = new Routes();
     const route = routes.addRoute({
