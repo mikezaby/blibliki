@@ -17,6 +17,10 @@ const SupportedModules = Object.values(AvailableModules)
   .map(({ moduleType }) => moduleType)
   .sort();
 
+const VideoModules = Object.values(VideoModuleType).sort((a, b) =>
+  VIDEO_MODULE_NAMES[a].localeCompare(VIDEO_MODULE_NAMES[b]),
+);
+
 const PANEL_BASE_CLASS =
   "absolute top-12 left-0 z-10 flex h-[calc(100vh-3rem)] w-56 flex-col border-r border-b transition-transform duration-300 ease-in-out";
 const PANEL_VISIBLE_CLASS = "translate-x-0";
@@ -97,7 +101,7 @@ export default function AudioModules() {
             </Text>
           </Stack>
           <ul className="px-3 space-y-1">
-            {Object.values(VideoModuleType).map((type) => (
+            {VideoModules.map((type) => (
               <li key={type}>
                 <Button
                   color="neutral"
