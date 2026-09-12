@@ -19,6 +19,7 @@ export type TriggerMode = (typeof TRIGGER_MODES)[number];
 export type ITriggerProps = IInstancesProps & {
   input: number;
   threshold: number;
+  hysteresis: number;
   mode: TriggerMode;
   hold: number;
 };
@@ -26,6 +27,7 @@ export type ITriggerProps = IInstancesProps & {
 const DEFAULT_PROPS: ITriggerProps = {
   input: 0,
   threshold: 0.5,
+  hysteresis: 0,
   mode: "pulse",
   hold: 0.1,
   ...DEFAULT_INSTANCES_PROPS,
@@ -52,6 +54,14 @@ export const triggerPropSchema: ModulePropSchema<
     label: "Threshold",
     shortLabel: "thresh",
   },
+  hysteresis: {
+    kind: "number",
+    min: 0,
+    max: 0.5,
+    step: 0.01,
+    label: "Hysteresis",
+    shortLabel: "hyst",
+  },
   mode: {
     kind: "enum",
     options: [...TRIGGER_MODES],
@@ -72,7 +82,9 @@ export const triggerPropSchema: ModulePropSchema<
 type State = { above: boolean; remaining: number };
 
 // Turns a level into a gate: 1 while the input is above the threshold, or
-// a pulse of `hold` seconds each time it crosses upward. An AudioFollower
+// a pulse of `hold` seconds each time it crosses upward. The gate opens
+// above the threshold and closes below threshold minus hysteresis, so a
+// level hovering at the line does not chatter. An AudioFollower
 // into the input and the output into an Envelope's gate makes a hit fire a shape.
 export default class Trigger extends VideoModule<VideoModuleType.Trigger> {
   readonly inputs = [
@@ -89,7 +101,9 @@ export default class Trigger extends VideoModule<VideoModuleType.Trigger> {
 
   tick(_values: ControlValues, frame: Frame, props = this.props, instance = 0) {
     const state = (this.states[instance] ??= { above: false, remaining: 0 });
-    const above = props.input > props.threshold;
+    const above = state.above
+      ? props.input > props.threshold - props.hysteresis
+      : props.input > props.threshold;
     const rising = above && !state.above;
     state.above = above;
     if (props.mode === "gate") return { out: above ? 1 : 0 };

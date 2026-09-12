@@ -110,7 +110,14 @@ describe("bootstrap modules", () => {
     [
       VideoModuleType.Trigger,
       [ctl("input"), ctl("threshold")],
-      { input: 0, threshold: 0.5, mode: "pulse", hold: 0.1, instances: 1 },
+      {
+        input: 0,
+        threshold: 0.5,
+        hysteresis: 0,
+        mode: "pulse",
+        hold: 0.1,
+        instances: 1,
+      },
     ],
     [
       VideoModuleType.SampleHold,
