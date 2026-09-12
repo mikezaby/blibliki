@@ -113,6 +113,11 @@ describe("bootstrap modules", () => {
       { input: 0, threshold: 0.5, mode: "pulse", hold: 0.1, instances: 1 },
     ],
     [
+      VideoModuleType.SampleHold,
+      [ctl("input"), ctl("trigger")],
+      { input: 0, trigger: 0, instances: 1 },
+    ],
+    [
       VideoModuleType.AudioFollower,
       [ctl("lowHz"), ctl("highHz")],
       {

@@ -25,6 +25,10 @@ import MidiNotes, { IMidiNotesProps, midiNotesPropSchema } from "./MidiNotes";
 import Mirror, { IMirrorProps, mirrorPropSchema } from "./Mirror";
 import Noise, { INoiseProps, noisePropSchema } from "./Noise";
 import Output, { IOutputProps, outputPropSchema } from "./Output";
+import SampleHold, {
+  ISampleHoldProps,
+  sampleHoldPropSchema,
+} from "./SampleHold";
 import Shapes, { IShapesProps, shapesPropSchema } from "./Shapes";
 import Source, { ISourceProps, sourcePropSchema } from "./Source";
 import Transform, { ITransformProps, transformPropSchema } from "./Transform";
@@ -49,6 +53,7 @@ export enum VideoModuleType {
   LFO = "LFO",
   Envelope = "Envelope",
   Trigger = "Trigger",
+  SampleHold = "SampleHold",
   AudioFollower = "AudioFollower",
   MidiNotes = "MidiNotes",
 }
@@ -71,6 +76,7 @@ export type VideoPropsMapping = {
   [VideoModuleType.LFO]: ILFOProps;
   [VideoModuleType.Envelope]: IEnvelopeProps;
   [VideoModuleType.Trigger]: ITriggerProps;
+  [VideoModuleType.SampleHold]: ISampleHoldProps;
   [VideoModuleType.AudioFollower]: IAudioFollowerProps;
   [VideoModuleType.MidiNotes]: IMidiNotesProps;
 };
@@ -124,6 +130,10 @@ export function createModule<T extends VideoModuleType>(
       );
     case VideoModuleType.Trigger:
       return new Trigger(params as ICreateVideoModule<VideoModuleType.Trigger>);
+    case VideoModuleType.SampleHold:
+      return new SampleHold(
+        params as ICreateVideoModule<VideoModuleType.SampleHold>,
+      );
     case VideoModuleType.AudioFollower:
       return new AudioFollower(
         params as ICreateVideoModule<VideoModuleType.AudioFollower>,
@@ -161,6 +171,7 @@ export { SHAPES } from "./Shapes";
 export { MIRROR_MODES } from "./Mirror";
 export type { ITransformProps } from "./Transform";
 export type { ITriggerProps, TriggerMode } from "./Trigger";
+export type { ISampleHoldProps } from "./SampleHold";
 export { TRIGGER_MODES } from "./Trigger";
 export type { ILayoutProps } from "./Layout";
 export type { ILFOProps, LFOWaveform } from "./LFO";
@@ -192,6 +203,7 @@ export const videoModuleSchemas: Record<
   [VideoModuleType.LFO]: lfoPropSchema,
   [VideoModuleType.Envelope]: envelopePropSchema,
   [VideoModuleType.Trigger]: triggerPropSchema,
+  [VideoModuleType.SampleHold]: sampleHoldPropSchema,
   [VideoModuleType.AudioFollower]: audioFollowerPropSchema,
   [VideoModuleType.MidiNotes]: midiNotesPropSchema,
 };
