@@ -35,6 +35,29 @@ const texture: IRoute = {
 };
 
 describe("videoPatchSlice", () => {
+  it("loads a saved Band as an AudioFollower keeping its module and range", () => {
+    const state = reducer(
+      EMPTY_VIDEO_PATCH,
+      setVideoPatch({
+        modules: [
+          {
+            id: "b",
+            name: "Band",
+            moduleType: "Band",
+            props: { moduleId: "osc", lowHz: 100, highHz: 400, gain: 2 },
+          } as never,
+        ],
+      }),
+    );
+
+    expect(state.modules[0]).toEqual({
+      id: "b",
+      name: "Band",
+      moduleType: VideoModuleType.AudioFollower,
+      props: { moduleId: "osc", lowHz: 100, highHz: 400 },
+    });
+  });
+
   it("removing a module drops routes on either end", () => {
     const state = {
       modules: [audioProp, fx],

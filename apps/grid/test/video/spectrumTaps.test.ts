@@ -47,24 +47,24 @@ function fakeEngine() {
 }
 
 describe("referencedAudioModules", () => {
-  it("collects the audio module every Band points at, once", () => {
+  it("collects the audio module every AudioFollower points at, once", () => {
     const modules = [
       {
         id: "b1",
         name: "b1",
-        moduleType: VideoModuleType.Band,
+        moduleType: VideoModuleType.AudioFollower,
         props: { moduleId: "osc" },
       },
       {
         id: "b2",
         name: "b2",
-        moduleType: VideoModuleType.Band,
+        moduleType: VideoModuleType.AudioFollower,
         props: { moduleId: "osc" },
       },
       {
         id: "b3",
         name: "b3",
-        moduleType: VideoModuleType.Band,
+        moduleType: VideoModuleType.AudioFollower,
         props: { moduleId: "" },
       },
       {
@@ -98,7 +98,7 @@ describe("SpectrumTaps", () => {
     expect([...taps.read()]).toEqual([{ id: "osc", bins, sampleRate: 48000 }]);
   });
 
-  it("removes the analyser when no Band references the module any more", () => {
+  it("removes the analyser when no AudioFollower references the module any more", () => {
     const engine = fakeEngine();
     const taps = new SpectrumTaps(engine as never);
 

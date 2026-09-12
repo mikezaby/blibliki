@@ -21,7 +21,7 @@ type Analyser = {
 export function referencedAudioModules(modules: IVideoModule[]): Set<string> {
   const ids = new Set<string>();
   for (const module of modules) {
-    if (module.moduleType !== VideoModuleType.Band) continue;
+    if (module.moduleType !== VideoModuleType.AudioFollower) continue;
     const { moduleId } = module.props as { moduleId: string };
     if (moduleId) ids.add(moduleId);
   }
@@ -29,10 +29,10 @@ export function referencedAudioModules(modules: IVideoModule[]): Set<string> {
   return ids;
 }
 
-// One hidden Spectrum module per audio module a Band references, tapped
-// from its first audio output, shared by every Band on that module. Taps
-// live only in the engine; the patch is saved from the store, so they are
-// never persisted.
+// One hidden Spectrum module per audio module an AudioFollower references,
+// tapped from its first audio output, shared by every follower on that
+// module. Taps live only in the engine; the patch is saved from the store,
+// so they are never persisted.
 export class SpectrumTaps {
   private taps = new Map<string, Tap>();
 

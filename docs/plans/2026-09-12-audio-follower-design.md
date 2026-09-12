@@ -121,9 +121,12 @@ First table; the windows and times are starting points to tune by ear:
 ### Loading saved Band nodes
 
 A saved `Band` loads as an AudioFollower with its `moduleId`, `lowHz` and
-`highHz` kept, `source` set to band, and defaults for the rest. One alias
-in the module registry. Band shipped on 2026-09-06, so patches from this
-week hold some, and an unknown module type would fail the whole patch.
+`highHz` kept, `source` set to band, and defaults for the rest. One
+`upgradeModule` function in the module registry does the mapping; the
+grid's slice runs saved modules through it on load, and the engine's own
+`load` does too for any other host. Band shipped on 2026-09-06, so patches
+from this week hold some, and an unknown module type would fail the whole
+patch.
 
 ## SampleHold
 

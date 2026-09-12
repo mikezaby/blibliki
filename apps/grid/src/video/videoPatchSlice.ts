@@ -3,6 +3,7 @@ import {
   type IRoute,
   type IVideoModule,
   type IVideoPatch,
+  upgradeModule,
   VideoModuleType,
 } from "@blibliki/video-engine";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
@@ -41,7 +42,7 @@ export const VIDEO_MODULE_NAMES: Record<VideoModuleType, string> = {
   [VideoModuleType.LFO]: "LFO",
   [VideoModuleType.Envelope]: "Envelope",
   [VideoModuleType.Trigger]: "Trigger",
-  [VideoModuleType.Band]: "Band",
+  [VideoModuleType.AudioFollower]: "Audio Follower",
   [VideoModuleType.MidiNotes]: "MIDI Notes",
 };
 
@@ -53,7 +54,7 @@ export const videoPatchSlice = createSlice({
   initialState: EMPTY_VIDEO_PATCH,
   reducers: {
     setVideoPatch: (_, action: PayloadAction<SavedVideoPatch>) => ({
-      modules: action.payload.modules ?? [],
+      modules: (action.payload.modules ?? []).map(upgradeModule),
       routes: (action.payload.routes ?? []).map((route) => ({
         ...route,
         kind: route.kind ?? "texture",

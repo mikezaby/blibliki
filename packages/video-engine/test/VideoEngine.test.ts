@@ -358,13 +358,21 @@ describe("VideoEngine", () => {
     ]);
   });
 
-  it("keeps its own copy of spectrum bins and feeds them to a Band", () => {
+  it("keeps its own copy of spectrum bins and feeds them to an AudioFollower", () => {
     const engine = chain();
     engine.addModule({
       id: "band",
       name: "band",
-      moduleType: VideoModuleType.Band,
-      props: { moduleId: "sp", lowHz: 0, highHz: 1000 },
+      moduleType: VideoModuleType.AudioFollower,
+      props: {
+        moduleId: "sp",
+        lowHz: 0,
+        highHz: 1000,
+        minDb: -100,
+        maxDb: -30,
+        attack: 0,
+        release: 0,
+      },
     });
     engine.addRoute({
       kind: "control",
@@ -381,6 +389,31 @@ describe("VideoEngine", () => {
     engine.tick({ now: 0, dt: 0 });
 
     expect(engine.passes()[1]?.uniforms.amount).toBeCloseTo(180);
+  });
+
+  it("loads a saved Band as an AudioFollower keeping its module and range", () => {
+    const engine = new VideoEngine();
+    engine.load({
+      modules: [
+        {
+          id: "b",
+          name: "Band",
+          moduleType: "Band",
+          props: { moduleId: "sp", lowHz: 100, highHz: 400, gain: 2 },
+        } as never,
+      ],
+      routes: [],
+    });
+
+    const module = engine.findModule("b");
+    expect(module.moduleType).toBe(VideoModuleType.AudioFollower);
+    expect(module.props).toMatchObject({
+      moduleId: "sp",
+      lowHz: 100,
+      highHz: 400,
+      minDb: -60,
+    });
+    expect(module.props).not.toHaveProperty("gain");
   });
 
   it("updates props", () => {

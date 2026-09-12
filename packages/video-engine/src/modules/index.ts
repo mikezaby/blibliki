@@ -1,8 +1,17 @@
 import { assertNever } from "@blibliki/utils";
-import { ICreateVideoModule, IOPort, VideoModule } from "@/core/Module";
+import {
+  ICreateVideoModule,
+  IOPort,
+  IVideoModule,
+  VideoModule,
+} from "@/core/Module";
 import { PropSchema } from "@/core/schema";
+import AudioFollower, {
+  audioFollowerPropSchema,
+  fromBand,
+  IAudioFollowerProps,
+} from "./AudioFollower";
 import AudioProp, { audioPropPropSchema, IAudioPropProps } from "./AudioProp";
-import Band, { bandPropSchema, IBandProps } from "./Band";
 import Color, { colorPropSchema, IColorProps } from "./Color";
 import Envelope, { envelopePropSchema, IEnvelopeProps } from "./Envelope";
 import Feedback, { feedbackPropSchema, IFeedbackProps } from "./Feedback";
@@ -39,7 +48,7 @@ export enum VideoModuleType {
   LFO = "LFO",
   Envelope = "Envelope",
   Trigger = "Trigger",
-  Band = "Band",
+  AudioFollower = "AudioFollower",
   MidiNotes = "MidiNotes",
 }
 
@@ -61,7 +70,7 @@ export type VideoPropsMapping = {
   [VideoModuleType.LFO]: ILFOProps;
   [VideoModuleType.Envelope]: IEnvelopeProps;
   [VideoModuleType.Trigger]: ITriggerProps;
-  [VideoModuleType.Band]: IBandProps;
+  [VideoModuleType.AudioFollower]: IAudioFollowerProps;
   [VideoModuleType.MidiNotes]: IMidiNotesProps;
 };
 
@@ -114,8 +123,10 @@ export function createModule<T extends VideoModuleType>(
       );
     case VideoModuleType.Trigger:
       return new Trigger(params as ICreateVideoModule<VideoModuleType.Trigger>);
-    case VideoModuleType.Band:
-      return new Band(params as ICreateVideoModule<VideoModuleType.Band>);
+    case VideoModuleType.AudioFollower:
+      return new AudioFollower(
+        params as ICreateVideoModule<VideoModuleType.AudioFollower>,
+      );
     case VideoModuleType.MidiNotes:
       return new MidiNotes(
         params as ICreateVideoModule<VideoModuleType.MidiNotes>,
@@ -126,7 +137,7 @@ export function createModule<T extends VideoModuleType>(
 }
 
 export type { IAudioPropProps } from "./AudioProp";
-export type { IBandProps } from "./Band";
+export type { IAudioFollowerProps } from "./AudioFollower";
 export type { IEnvelopeProps } from "./Envelope";
 export type { IColorProps } from "./Color";
 export type { IFeedbackProps } from "./Feedback";
@@ -171,9 +182,21 @@ export const videoModuleSchemas: Record<
   [VideoModuleType.LFO]: lfoPropSchema,
   [VideoModuleType.Envelope]: envelopePropSchema,
   [VideoModuleType.Trigger]: triggerPropSchema,
-  [VideoModuleType.Band]: bandPropSchema,
+  [VideoModuleType.AudioFollower]: audioFollowerPropSchema,
   [VideoModuleType.MidiNotes]: midiNotesPropSchema,
 };
+
+// Module types renamed since a patch could have saved them. Band became
+// AudioFollower on 2026-09-12.
+export function upgradeModule(saved: IVideoModule): IVideoModule {
+  if ((saved.moduleType as string) !== "Band") return saved;
+
+  return {
+    ...saved,
+    moduleType: VideoModuleType.AudioFollower,
+    props: fromBand(saved.props as Parameters<typeof fromBand>[0]),
+  };
+}
 
 const PROTOTYPES = Object.fromEntries(
   Object.values(VideoModuleType).map((moduleType) => [

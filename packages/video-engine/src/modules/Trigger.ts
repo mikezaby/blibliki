@@ -72,8 +72,8 @@ export const triggerPropSchema: ModulePropSchema<
 type State = { above: boolean; remaining: number };
 
 // Turns a level into a gate: 1 while the input is above the threshold, or
-// a pulse of `hold` seconds each time it crosses upward. A Band into the
-// input and the output into an Envelope's gate makes a hit fire a shape.
+// a pulse of `hold` seconds each time it crosses upward. An AudioFollower
+// into the input and the output into an Envelope's gate makes a hit fire a shape.
 export default class Trigger extends VideoModule<VideoModuleType.Trigger> {
   readonly inputs = [
     { name: "input", kind: "control" },

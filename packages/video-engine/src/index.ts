@@ -17,6 +17,7 @@ export {
   createModule,
   inputsFor,
   outputsFor,
+  upgradeModule,
   videoModuleSchemas,
   VideoModuleType,
 } from "./modules";
