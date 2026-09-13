@@ -8,6 +8,7 @@ import {
 } from "../../src/video/spectrumTaps";
 
 const bins = new Float32Array([-30, -40]);
+const samples = new Float32Array([0.1, -0.5, 0.25]);
 
 function fakeEngine() {
   let next = 0;
@@ -17,6 +18,7 @@ function fakeEngine() {
       const id = `tap${++next}`;
       taps.set(id, {
         getFrequencies: () => bins,
+        getValues: () => samples,
         audioNode: { context: { sampleRate: 48000 } },
       });
       return { id };
@@ -47,24 +49,24 @@ function fakeEngine() {
 }
 
 describe("referencedAudioModules", () => {
-  it("collects the audio module every Band points at, once", () => {
+  it("collects the audio module every AudioFollower points at, once", () => {
     const modules = [
       {
         id: "b1",
         name: "b1",
-        moduleType: VideoModuleType.Band,
+        moduleType: VideoModuleType.AudioFollower,
         props: { moduleId: "osc" },
       },
       {
         id: "b2",
         name: "b2",
-        moduleType: VideoModuleType.Band,
+        moduleType: VideoModuleType.AudioFollower,
         props: { moduleId: "osc" },
       },
       {
         id: "b3",
         name: "b3",
-        moduleType: VideoModuleType.Band,
+        moduleType: VideoModuleType.AudioFollower,
         props: { moduleId: "" },
       },
       {
@@ -95,10 +97,12 @@ describe("SpectrumTaps", () => {
       source: { moduleId: "osc", ioName: "out" },
       destination: { moduleId: "tap1", ioName: "in" },
     });
-    expect([...taps.read()]).toEqual([{ id: "osc", bins, sampleRate: 48000 }]);
+    const [source] = [...taps.read()];
+    expect(source).toMatchObject({ id: "osc", bins, sampleRate: 48000 });
+    expect(source?.levelDb).toBeCloseTo(20 * Math.log10(0.5));
   });
 
-  it("removes the analyser when no Band references the module any more", () => {
+  it("removes the analyser when no AudioFollower references the module any more", () => {
     const engine = fakeEngine();
     const taps = new SpectrumTaps(engine as never);
 

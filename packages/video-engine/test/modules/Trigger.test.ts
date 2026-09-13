@@ -43,6 +43,32 @@ describe("Trigger", () => {
     expect(tick(trig, 0.9)).toBe(1);
   });
 
+  it("closes the gate only below threshold minus hysteresis", () => {
+    const trig = trigger({ mode: "gate", threshold: 0.5, hysteresis: 0.2 });
+
+    expect(tick(trig, 0.4)).toBe(0);
+    expect(tick(trig, 0.6)).toBe(1);
+    expect(tick(trig, 0.4)).toBe(1);
+    expect(tick(trig, 0.31)).toBe(1);
+    expect(tick(trig, 0.29)).toBe(0);
+    expect(tick(trig, 0.4)).toBe(0);
+  });
+
+  it("re-arms a pulse only below threshold minus hysteresis", () => {
+    const trig = trigger({
+      mode: "pulse",
+      threshold: 0.5,
+      hysteresis: 0.2,
+      hold: 0.01,
+    });
+
+    expect(tick(trig, 0.6)).toBe(1);
+    expect(tick(trig, 0.4)).toBe(0);
+    expect(tick(trig, 0.6)).toBe(0);
+    expect(tick(trig, 0.2)).toBe(0);
+    expect(tick(trig, 0.6)).toBe(1);
+  });
+
   it("keeps a state per instance", () => {
     const trig = trigger({ mode: "pulse", hold: 0.1 });
 

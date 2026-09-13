@@ -1,8 +1,18 @@
 import { assertNever } from "@blibliki/utils";
-import { ICreateVideoModule, IOPort, VideoModule } from "@/core/Module";
+import {
+  ICreateVideoModule,
+  IOPort,
+  IVideoModule,
+  VideoModule,
+} from "@/core/Module";
 import { PropSchema } from "@/core/schema";
+import AudioFollower, {
+  audioFollowerPropSchema,
+  fromBand,
+  IAudioFollowerProps,
+  withPreset,
+} from "./AudioFollower";
 import AudioProp, { audioPropPropSchema, IAudioPropProps } from "./AudioProp";
-import Band, { bandPropSchema, IBandProps } from "./Band";
 import Color, { colorPropSchema, IColorProps } from "./Color";
 import Envelope, { envelopePropSchema, IEnvelopeProps } from "./Envelope";
 import Feedback, { feedbackPropSchema, IFeedbackProps } from "./Feedback";
@@ -15,6 +25,10 @@ import MidiNotes, { IMidiNotesProps, midiNotesPropSchema } from "./MidiNotes";
 import Mirror, { IMirrorProps, mirrorPropSchema } from "./Mirror";
 import Noise, { INoiseProps, noisePropSchema } from "./Noise";
 import Output, { IOutputProps, outputPropSchema } from "./Output";
+import SampleHold, {
+  ISampleHoldProps,
+  sampleHoldPropSchema,
+} from "./SampleHold";
 import Shapes, { IShapesProps, shapesPropSchema } from "./Shapes";
 import Source, { ISourceProps, sourcePropSchema } from "./Source";
 import Transform, { ITransformProps, transformPropSchema } from "./Transform";
@@ -39,7 +53,8 @@ export enum VideoModuleType {
   LFO = "LFO",
   Envelope = "Envelope",
   Trigger = "Trigger",
-  Band = "Band",
+  SampleHold = "SampleHold",
+  AudioFollower = "AudioFollower",
   MidiNotes = "MidiNotes",
 }
 
@@ -61,7 +76,8 @@ export type VideoPropsMapping = {
   [VideoModuleType.LFO]: ILFOProps;
   [VideoModuleType.Envelope]: IEnvelopeProps;
   [VideoModuleType.Trigger]: ITriggerProps;
-  [VideoModuleType.Band]: IBandProps;
+  [VideoModuleType.SampleHold]: ISampleHoldProps;
+  [VideoModuleType.AudioFollower]: IAudioFollowerProps;
   [VideoModuleType.MidiNotes]: IMidiNotesProps;
 };
 
@@ -114,8 +130,14 @@ export function createModule<T extends VideoModuleType>(
       );
     case VideoModuleType.Trigger:
       return new Trigger(params as ICreateVideoModule<VideoModuleType.Trigger>);
-    case VideoModuleType.Band:
-      return new Band(params as ICreateVideoModule<VideoModuleType.Band>);
+    case VideoModuleType.SampleHold:
+      return new SampleHold(
+        params as ICreateVideoModule<VideoModuleType.SampleHold>,
+      );
+    case VideoModuleType.AudioFollower:
+      return new AudioFollower(
+        params as ICreateVideoModule<VideoModuleType.AudioFollower>,
+      );
     case VideoModuleType.MidiNotes:
       return new MidiNotes(
         params as ICreateVideoModule<VideoModuleType.MidiNotes>,
@@ -126,7 +148,16 @@ export function createModule<T extends VideoModuleType>(
 }
 
 export type { IAudioPropProps } from "./AudioProp";
-export type { IBandProps } from "./Band";
+export type {
+  IAudioFollowerProps,
+  IAudioFollowerPreset,
+  FollowerSource,
+} from "./AudioFollower";
+export {
+  AUDIO_FOLLOWER_PRESETS,
+  CUSTOM_PRESET,
+  FOLLOWER_SOURCES,
+} from "./AudioFollower";
 export type { IEnvelopeProps } from "./Envelope";
 export type { IColorProps } from "./Color";
 export type { IFeedbackProps } from "./Feedback";
@@ -140,6 +171,7 @@ export { SHAPES } from "./Shapes";
 export { MIRROR_MODES } from "./Mirror";
 export type { ITransformProps } from "./Transform";
 export type { ITriggerProps, TriggerMode } from "./Trigger";
+export type { ISampleHoldProps } from "./SampleHold";
 export { TRIGGER_MODES } from "./Trigger";
 export type { ILayoutProps } from "./Layout";
 export type { ILFOProps, LFOWaveform } from "./LFO";
@@ -171,9 +203,38 @@ export const videoModuleSchemas: Record<
   [VideoModuleType.LFO]: lfoPropSchema,
   [VideoModuleType.Envelope]: envelopePropSchema,
   [VideoModuleType.Trigger]: triggerPropSchema,
-  [VideoModuleType.Band]: bandPropSchema,
+  [VideoModuleType.SampleHold]: sampleHoldPropSchema,
+  [VideoModuleType.AudioFollower]: audioFollowerPropSchema,
   [VideoModuleType.MidiNotes]: midiNotesPropSchema,
 };
+
+// The props a user's change should write, for the store that owns the
+// patch: a module can expand one change into several, as a preset does.
+export function resolvePropsUpdate<T extends VideoModuleType>(
+  moduleType: T,
+  current: VideoPropsMapping[T],
+  changes: Partial<VideoPropsMapping[T]>,
+): Partial<VideoPropsMapping[T]> {
+  if (moduleType === VideoModuleType.AudioFollower) {
+    return withPreset(current as IAudioFollowerProps, changes) as Partial<
+      VideoPropsMapping[T]
+    >;
+  }
+
+  return changes;
+}
+
+// Module types renamed since a patch could have saved them. Band became
+// AudioFollower on 2026-09-12.
+export function upgradeModule(saved: IVideoModule): IVideoModule {
+  if ((saved.moduleType as string) !== "Band") return saved;
+
+  return {
+    ...saved,
+    moduleType: VideoModuleType.AudioFollower,
+    props: fromBand(saved.props as Parameters<typeof fromBand>[0]),
+  };
+}
 
 const PROTOTYPES = Object.fromEntries(
   Object.values(VideoModuleType).map((moduleType) => [

@@ -29,6 +29,7 @@ export type HostMessage =
       moduleId: string;
       bins: Float32Array;
       sampleRate: number;
+      levelDb: number;
     };
 
 export type WorkerMessage =

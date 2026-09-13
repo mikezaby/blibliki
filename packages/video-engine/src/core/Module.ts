@@ -18,8 +18,13 @@ export type ICreateVideoModule<T extends VideoModuleType = VideoModuleType> =
 
 export type IOPort = { name: string; kind: IOKind };
 
-// One Spectrum module's bins (dB per bin) as the host last read them.
-export type SpectrumFrame = { bins: Float32Array; sampleRate: number };
+// One Spectrum module's bins (dB per bin) and its sample peak in dB, as
+// the host last read them.
+export type SpectrumFrame = {
+  bins: Float32Array;
+  sampleRate: number;
+  levelDb: number;
+};
 
 export type Frame = {
   now: number;

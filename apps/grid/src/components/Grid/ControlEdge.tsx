@@ -76,7 +76,7 @@ export default function ControlEdge({
   );
 }
 
-// The source's current value, so a silent Band or a stuck LFO shows.
+// The source's current value, so a silent follower or a stuck LFO shows.
 function Readout({ routeId }: { routeId: string }) {
   const source = useAppSelector(
     (state) => state.videoPatch.routes.find((r) => r.id === routeId)?.source,

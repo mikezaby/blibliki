@@ -110,12 +110,34 @@ describe("bootstrap modules", () => {
     [
       VideoModuleType.Trigger,
       [ctl("input"), ctl("threshold")],
-      { input: 0, threshold: 0.5, mode: "pulse", hold: 0.1, instances: 1 },
+      {
+        input: 0,
+        threshold: 0.5,
+        hysteresis: 0,
+        mode: "pulse",
+        hold: 0.1,
+        instances: 1,
+      },
     ],
     [
-      VideoModuleType.Band,
-      [ctl("lowHz"), ctl("highHz"), ctl("gain")],
-      { moduleId: "", lowHz: 20, highHz: 200, gain: 1, smoothing: 0 },
+      VideoModuleType.SampleHold,
+      [ctl("input"), ctl("trigger")],
+      { input: 0, trigger: 0, instances: 1 },
+    ],
+    [
+      VideoModuleType.AudioFollower,
+      [ctl("lowHz"), ctl("highHz")],
+      {
+        preset: "custom",
+        moduleId: "",
+        source: "band",
+        lowHz: 20,
+        highHz: 200,
+        minDb: -60,
+        maxDb: -10,
+        attack: 0.01,
+        release: 0.15,
+      },
     ],
   ])(
     "%s declares its inputs and default props",

@@ -6,6 +6,7 @@ import reducer, {
   EMPTY_VIDEO_PATCH,
   removeVideoModule,
   setVideoPatch,
+  updateVideoModuleProps,
   updateVideoRoute,
 } from "../../src/video/videoPatchSlice";
 
@@ -35,6 +36,63 @@ const texture: IRoute = {
 };
 
 describe("videoPatchSlice", () => {
+  it("loads a saved Band as an AudioFollower keeping its module and range", () => {
+    const state = reducer(
+      EMPTY_VIDEO_PATCH,
+      setVideoPatch({
+        modules: [
+          {
+            id: "b",
+            name: "Band",
+            moduleType: "Band",
+            props: { moduleId: "osc", lowHz: 100, highHz: 400, gain: 2 },
+          } as never,
+        ],
+      }),
+    );
+
+    expect(state.modules[0]).toEqual({
+      id: "b",
+      name: "Band",
+      moduleType: VideoModuleType.AudioFollower,
+      props: {
+        preset: "custom",
+        moduleId: "osc",
+        source: "band",
+        lowHz: 100,
+        highHz: 400,
+      },
+    });
+  });
+
+  it("choosing a follower preset writes its props, and an edit flips it back", () => {
+    const follower = {
+      id: "f",
+      name: "Audio Follower",
+      moduleType: VideoModuleType.AudioFollower,
+      props: { preset: "custom", moduleId: "osc", lowHz: 20, highHz: 200 },
+    };
+    const picked = reducer(
+      { modules: [follower], routes: [] },
+      updateVideoModuleProps({ id: "f", props: { preset: "hats" } }),
+    );
+    expect(picked.modules[0]?.props).toMatchObject({
+      preset: "hats",
+      moduleId: "osc",
+      lowHz: 6000,
+      highHz: 16000,
+    });
+
+    const edited = reducer(
+      picked,
+      updateVideoModuleProps({ id: "f", props: { highHz: 12000 } }),
+    );
+    expect(edited.modules[0]?.props).toMatchObject({
+      preset: "custom",
+      highHz: 12000,
+    });
+  });
+
   it("removing a module drops routes on either end", () => {
     const state = {
       modules: [audioProp, fx],

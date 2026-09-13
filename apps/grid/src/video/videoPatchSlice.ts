@@ -3,6 +3,8 @@ import {
   type IRoute,
   type IVideoModule,
   type IVideoPatch,
+  resolvePropsUpdate,
+  upgradeModule,
   VideoModuleType,
 } from "@blibliki/video-engine";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
@@ -41,7 +43,8 @@ export const VIDEO_MODULE_NAMES: Record<VideoModuleType, string> = {
   [VideoModuleType.LFO]: "LFO",
   [VideoModuleType.Envelope]: "Envelope",
   [VideoModuleType.Trigger]: "Trigger",
-  [VideoModuleType.Band]: "Band",
+  [VideoModuleType.SampleHold]: "Sample & Hold",
+  [VideoModuleType.AudioFollower]: "Audio Follower",
   [VideoModuleType.MidiNotes]: "MIDI Notes",
 };
 
@@ -53,7 +56,7 @@ export const videoPatchSlice = createSlice({
   initialState: EMPTY_VIDEO_PATCH,
   reducers: {
     setVideoPatch: (_, action: PayloadAction<SavedVideoPatch>) => ({
-      modules: action.payload.modules ?? [],
+      modules: (action.payload.modules ?? []).map(upgradeModule),
       routes: (action.payload.routes ?? []).map((route) => ({
         ...route,
         kind: route.kind ?? "texture",
@@ -75,7 +78,15 @@ export const videoPatchSlice = createSlice({
       action: PayloadAction<{ id: string; props: Record<string, unknown> }>,
     ) => {
       const module = state.modules.find((m) => m.id === action.payload.id);
-      if (module) Object.assign(module.props, action.payload.props);
+      if (!module) return;
+      Object.assign(
+        module.props,
+        resolvePropsUpdate(
+          module.moduleType,
+          module.props,
+          action.payload.props as Partial<typeof module.props>,
+        ),
+      );
     },
     // A texture route replaces the one into the same input; control routes
     // into one prop accumulate. Re-adding an id replaces that route.

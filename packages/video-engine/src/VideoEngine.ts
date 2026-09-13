@@ -16,7 +16,12 @@ import { buildPasses, RenderPass } from "./core/graph";
 import { resolveInstances } from "./core/instances";
 import { MediaModuleState } from "./core/media";
 import { PropSchema } from "./core/schema";
-import { createModule, VideoModuleType, VideoPropsMapping } from "./modules";
+import {
+  createModule,
+  upgradeModule,
+  VideoModuleType,
+  VideoPropsMapping,
+} from "./modules";
 
 export type IVideoPatch = {
   modules: IVideoModule[];
@@ -30,7 +35,7 @@ export class VideoEngine {
   // the host, and control module outputs written by tick.
   private controls = new Map<string, number>();
   // Raw bins per audio Spectrum module, copied because the host's buffer
-  // goes back to it after every message. Band modules read these.
+  // goes back to it after every message. AudioFollower modules read these.
   readonly spectra = new Map<string, SpectrumFrame>();
   private instanceCounts: ReadonlyMap<string, number> = new Map();
 
@@ -94,14 +99,20 @@ export class VideoEngine {
     this.routes.removeRoute(id);
   }
 
-  setSpectrum(moduleId: string, bins: Float32Array, sampleRate: number) {
+  setSpectrum(
+    moduleId: string,
+    bins: Float32Array,
+    sampleRate: number,
+    levelDb: number,
+  ) {
     let frame = this.spectra.get(moduleId);
     if (frame?.bins.length !== bins.length) {
-      frame = { bins: new Float32Array(bins.length), sampleRate };
+      frame = { bins: new Float32Array(bins.length), sampleRate, levelDb };
       this.spectra.set(moduleId, frame);
     }
     frame.bins.set(bins);
     frame.sampleRate = sampleRate;
+    frame.levelDb = levelDb;
   }
 
   // A note the host bridged from an audio MIDI output into `moduleId`'s
@@ -225,7 +236,7 @@ export class VideoEngine {
   load(patch: IVideoPatch) {
     this.modules.clear();
     this.routes.clear();
-    patch.modules.forEach((m) => this.addModule(m));
+    patch.modules.forEach((m) => this.addModule(upgradeModule(m)));
     patch.routes.forEach((r) => this.addRoute(r));
   }
 }
