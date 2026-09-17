@@ -29,18 +29,13 @@ static asset or the shell, through `not_found_handling`. It answers at
 
 Pushing the `live` branch is the release, as it is for grid:
 `.github/workflows/deploy.yml` builds and runs `wrangler deploy` with an API
-token. The workflow reads these repository secrets:
-
-- `CLOUDFLARE_API_TOKEN`, from the "Edit Cloudflare Workers" token template,
-  and `CLOUDFLARE_ACCOUNT_ID`
-- the seven `VITE_*` values from this app's `.env`, since they are inlined
-  into the client bundle at build time
-
-```bash
-gh secret set -f apps/instruments/.env          # the seven VITE_* values
-gh secret set CLOUDFLARE_API_TOKEN
-gh secret set CLOUDFLARE_ACCOUNT_ID
-```
+token. The workflow reads the seven `VITE_*` values from this app's `.env`, since
+they are inlined into the client bundle at build time. `VITE_FIREBASE_API_KEY`
+and `VITE_CLERK_PUBLISHABLE_KEY` are repository secrets, the other five are
+repository variables. `CLOUDFLARE_API_TOKEN` (an account policy with Workers
+Scripts Edit and Account Settings Read, plus a zone policy on blibliki.com
+with Workers Routes Edit and DNS Edit) and `CLOUDFLARE_ACCOUNT_ID` are
+secrets.
 
 From a machine with `wrangler login` done, the same deploy is
 `pnpm run deploy:cloudflare`, and `pnpm exec wrangler deploy --dry-run` shows
