@@ -95,3 +95,9 @@ Every instanced module shows Instances, and Source shows Spread in solid
 mode where it does nothing. Hide Spread unless the mode is gradient, and
 consider a compact header control for Instances like the audio nodes'
 Voices, in `apps/grid/src/components/Grid/VideoNode.tsx`.
+
+## CLAUDE.md lists apps that no longer exist
+
+The repository structure section of `CLAUDE.md` lists `apps/demo` and
+`apps/bubbleton`, which are gone, and omits `apps/mobile`, `apps/pi-display`
+and `apps/storybook`. Replace the list with the current `apps/` directory.

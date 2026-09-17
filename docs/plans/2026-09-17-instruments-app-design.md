@@ -1,6 +1,7 @@
 # Instruments App Design
 
-Status: agreed 2026-09-17, not yet implemented.
+Status: agreed 2026-09-17. Routes, picker and device drafts landed; sign-in
+and the Cloudflare deploy are still to come.
 
 ## Why
 
