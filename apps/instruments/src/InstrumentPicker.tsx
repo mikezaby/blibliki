@@ -1,12 +1,15 @@
 import type { IInstrument } from "@blibliki/models";
 import { Button, Surface, Text } from "@blibliki/ui";
 import { Search } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { filterInstruments } from "./filterInstruments";
 
 export type InstrumentPickerProps = {
   load: () => Promise<IInstrument[]>;
   onSelect: (instrument: IInstrument) => void;
+  // Rendered beside the title, for whatever the host puts there (an account
+  // button, nothing at all).
+  actionSlot?: ReactNode;
 };
 
 type PickerState =
@@ -24,6 +27,7 @@ function trackCount(instrument: IInstrument) {
 export default function InstrumentPicker({
   load,
   onSelect,
+  actionSlot,
 }: InstrumentPickerProps) {
   const [state, setState] = useState<PickerState>({ status: "loading" });
   const [query, setQuery] = useState("");
@@ -70,13 +74,16 @@ export default function InstrumentPicker({
       className="fixed inset-0 overflow-y-auto bg-zinc-950 px-5 py-6"
     >
       <div className="mx-auto flex max-w-2xl flex-col gap-5">
-        <Text
-          asChild
-          weight="semibold"
-          className="block font-mono text-lg uppercase tracking-[0.22em] text-zinc-300"
-        >
-          <h1>Choose an instrument</h1>
-        </Text>
+        <div className="flex items-center justify-between gap-4">
+          <Text
+            asChild
+            weight="semibold"
+            className="block font-mono text-lg uppercase tracking-[0.22em] text-zinc-300"
+          >
+            <h1>Choose an instrument</h1>
+          </Text>
+          {actionSlot}
+        </div>
 
         <div className="flex items-center gap-3 rounded-2xl bg-zinc-900/60 px-4">
           <Search className="h-4 w-4 shrink-0 text-zinc-500" aria-hidden />

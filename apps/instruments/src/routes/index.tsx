@@ -1,6 +1,7 @@
 import { Instrument } from "@blibliki/models";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import InstrumentPicker from "../InstrumentPicker";
+import { AccountButton } from "../auth";
 import { isFirebaseConfigured } from "../firebase";
 
 export const Route = createFileRoute("/")({
@@ -23,6 +24,7 @@ function IndexPage() {
   return (
     <InstrumentPicker
       load={loadInstruments}
+      actionSlot={<AccountButton />}
       onSelect={(instrument) => {
         void navigate({
           to: "/instrument/$instrumentId",

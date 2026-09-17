@@ -1,13 +1,11 @@
 import { InstrumentPerformance } from "@blibliki/instrument/react";
 import { Instrument } from "@blibliki/models";
 import { Button } from "@blibliki/ui";
+import { useUser } from "@clerk/react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import {
-  clearInstrumentDraft,
-  resolveInstrumentDocument,
-  saveInstrumentDraft,
-} from "../instrumentStore";
+import { resolveInstrumentDocument } from "../instrumentStore";
+import { persistInstrument } from "../persistInstrument";
 
 export const Route = createFileRoute("/instrument/$instrumentId")({
   loader: async ({ params }) => {
@@ -17,8 +15,20 @@ export const Route = createFileRoute("/instrument/$instrumentId")({
   component: InstrumentPage,
 });
 
+async function saveRemote(
+  instrument: ReturnType<Instrument["serialize"]>,
+  document: Parameters<typeof persistInstrument>[3],
+) {
+  await new Instrument({ ...instrument, document }).save();
+}
+
+async function loadRemote(instrumentId: string) {
+  return (await Instrument.find(instrumentId)).serialize();
+}
+
 function InstrumentPage() {
   const instrument = Route.useLoaderData();
+  const { user } = useUser();
 
   return (
     <InstrumentPerformance
@@ -41,33 +51,14 @@ function InstrumentPage() {
           </Link>
         </Button>
       }
-      // No login yet, so saving keeps the work on this device as a draft
-      // rather than writing back to an instrument this app cannot attribute
-      // to a user.
-      onPersist={(action, nextDocument) => {
-        if (action === "saveDraft") {
-          saveInstrumentDraft(localStorage, instrument.id, nextDocument);
-
-          return {
-            notice: {
-              title: "SAVE COMPLETE",
-              message: "Draft stored on device",
-              tone: "success",
-            },
-          };
-        }
-
-        clearInstrumentDraft(localStorage, instrument.id);
-
-        return {
-          document: resolveInstrumentDocument(localStorage, instrument),
-          notice: {
-            title: "DRAFT DISCARDED",
-            message: "Reloaded from cloud",
-            tone: "success",
-          },
-        };
-      }}
+      onPersist={(action, nextDocument) =>
+        persistInstrument(
+          { storage: localStorage, userId: user?.id, saveRemote, loadRemote },
+          instrument,
+          action,
+          nextDocument,
+        )
+      }
     />
   );
 }

@@ -4,7 +4,7 @@ import {
 } from "@blibliki/instrument";
 import type { IInstrument } from "@blibliki/models";
 
-type DeviceStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
+export type DeviceStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
 const DRAFT_KEY_PREFIX = "blibliki.instrument.";
 

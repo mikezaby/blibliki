@@ -226,12 +226,18 @@ importers:
       '@blibliki/ui':
         specifier: workspace:^
         version: link:../../packages/ui
+      '@clerk/react':
+        specifier: 6.14.2
+        version: 6.14.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@tanstack/react-router':
         specifier: 1.170.32
         version: 1.170.32(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@tanstack/react-start':
         specifier: 1.168.49
         version: 1.168.49(esbuild@0.28.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.4)(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.12))
+      firebase:
+        specifier: 12.17.1
+        version: 12.17.1
       lucide-react:
         specifier: 1.31.0
         version: 1.31.0(react@19.2.8)

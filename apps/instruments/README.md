@@ -19,11 +19,23 @@ available for later.
 
 ## Instruments and saving
 
-Reads are anonymous, as in `apps/mobile`. There is no sign-in yet, so the
-controller's save command writes a per-instrument draft to `localStorage`
-(`src/instrumentStore.ts`), and the console opens that draft in preference to
-the stored instrument. Discard deletes the draft and reloads from Firestore.
+Reads are anonymous, as in `apps/mobile`. Sign-in is Clerk, with the Clerk
+session exchanged for a Firebase custom token (`src/auth.tsx`, the same
+exchange grid does) so Firestore accepts writes.
 
-The Firebase keys live in this app's own `.env` (gitignored), the same six
-`VITE_FIREBASE_*` values `apps/grid/.env` has. Without them the picker says so
-instead of failing inside Firestore.
+What the controller's save command does depends on who is looking
+(`src/persistInstrument.ts`):
+
+- the signed-in owner of the instrument writes it back to Firestore
+- anyone else keeps a per-instrument draft in `localStorage`
+  (`src/instrumentStore.ts`), and the console opens that draft in preference
+  to the stored instrument
+
+Discard deletes the draft and reloads from Firestore. Grid saves regardless of
+owner; the check here is deliberate, so a visitor can never overwrite
+someone's instrument.
+
+The keys live in this app's own `.env` (gitignored): the six
+`VITE_FIREBASE_*` values and `VITE_CLERK_PUBLISHABLE_KEY`, the same ones
+`apps/grid/.env` has. Without the Firebase keys the picker says so instead of
+failing inside Firestore. Without the Clerk key the app refuses to start.

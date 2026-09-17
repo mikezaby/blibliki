@@ -19,8 +19,10 @@
     "@blibliki/instrument": "workspace:^",
     "@blibliki/models": "workspace:^",
     "@blibliki/ui": "workspace:^",
+    "@clerk/react": "6.14.2",
     "@tanstack/react-router": "1.170.32",
     "@tanstack/react-start": "1.168.49",
+    "firebase": "12.17.1",
     "lucide-react": "1.31.0",
     "react": "catalog:react-19",
     "react-dom": "catalog:react-19"

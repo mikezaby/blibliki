@@ -1,7 +1,7 @@
 # Instruments App Design
 
-Status: agreed 2026-09-17. Routes, picker and device drafts landed; sign-in
-and the Cloudflare deploy are still to come.
+Status: agreed 2026-09-17. Routes, picker, drafts and sign-in landed; the
+Cloudflare deploy is still to come.
 
 ## Why
 
