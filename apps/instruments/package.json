@@ -8,7 +8,7 @@
     "build": "vite build",
     "clean:dist": "rm -rf ./dist",
     "preview": "vite preview",
-    "deploy": "pnpm run build && wrangler deploy",
+    "deploy:cloudflare": "pnpm run build && wrangler deploy",
     "test": "vitest run",
     "tsc": "tsc --noEmit",
     "lint": "eslint src test",

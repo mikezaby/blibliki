@@ -90,7 +90,13 @@ prerendered as `index.html`, `not_found_handling` is
 without invoking the Worker at all.
 
 Firebase and Clerk keys come from the app's own `.env`. Mobile keeps
-reading grid's. CI is unchanged. Deploys are run by a human.
+reading grid's. CI is unchanged.
+
+The release flow copies grid's: pushing the `live` branch deploys, through a
+GitHub Action that runs `wrangler deploy` with an API token, so no machine
+needs `wrangler login`. The domain is `play.blibliki.com`: short, says what
+you do there, and does not commit to "instrument" or "performance" if the
+app grows.
 
 ## Testing
 

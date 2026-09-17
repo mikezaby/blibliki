@@ -23,16 +23,29 @@ functions stay available for later.
 The app deploys as a Cloudflare Worker with static assets, on the free plan:
 asset requests are unmetered and the Worker only runs for `/_serverFn/*` and
 `/api/*` (`run_worker_first` in `wrangler.jsonc`). Every other path is a
-static asset or the shell, through `not_found_handling`.
+static asset or the shell, through `not_found_handling`. It answers at
+`play.blibliki.com`, a custom domain in `wrangler.jsonc` that needs the
+`blibliki.com` zone in the same Cloudflare account.
+
+Pushing the `live` branch is the release, as it is for grid on Netlify:
+`.github/workflows/deploy-instruments.yml` builds and runs `wrangler deploy`
+with an API token. The workflow reads these repository secrets:
+
+- `CLOUDFLARE_API_TOKEN`, from the "Edit Cloudflare Workers" token template,
+  and `CLOUDFLARE_ACCOUNT_ID`
+- the seven `VITE_*` values from this app's `.env`, since they are inlined
+  into the client bundle at build time
 
 ```bash
-pnpm exec wrangler login
-pnpm deploy                    # builds, then wrangler deploy
-pnpm exec wrangler deploy --dry-run   # what would ship, without shipping
+gh secret set -f apps/instruments/.env          # the seven VITE_* values
+gh secret set CLOUDFLARE_API_TOKEN
+gh secret set CLOUDFLARE_ACCOUNT_ID
 ```
 
-The `VITE_*` keys are inlined at build time, so a Cloudflare build (Workers
-Builds or CI) needs them as build variables. Nothing is read at runtime.
+From a machine with `wrangler login` done, the same deploy is
+`pnpm run deploy:cloudflare`, and `pnpm exec wrangler deploy --dry-run` shows
+what would ship without shipping it. Plain `pnpm deploy` is pnpm's own
+command, which is why the script has the suffix.
 
 Both page routes set `ssr: false`. SPA mode only changes the prerender, so a
 page request that does reach the Worker would otherwise run the route's
