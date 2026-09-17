@@ -9,6 +9,7 @@
     "build": "pnpm run generate:firebase-config && vite build",
     "clean:dist": "rm -rf ./dist",
     "preview": "vite preview",
+    "deploy:cloudflare": "pnpm run build && wrangler deploy",
     "test": "vitest run",
     "test:ui": "vitest run test/ui",
     "tsc": "tsc --noEmit",
@@ -55,6 +56,7 @@
     "babel-plugin-react-compiler": "catalog:react-19",
     "jsdom": "30.0.1",
     "vite": "catalog:vite",
-    "vitest": "catalog:test"
+    "vitest": "catalog:test",
+    "wrangler": "4.132.0"
   }
 }
