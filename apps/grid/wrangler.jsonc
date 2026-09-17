@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "blibliki-grid",
+  "compatibility_date": "2026-09-01",
+  // Static assets only, no Worker code: every path that is not a file gets
+  // index.html, which is what the Netlify redirect used to do. The JSON under
+  // /api keeps its content type from the file extension.
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+  },
+  // Cutover: once the app is verified on its workers.dev address, delete the
+  // Netlify CNAME for the domain in the blibliki.com zone and uncomment this
+  // with the real host. wrangler creates the record and certificate.
+  // "routes": [{ "pattern": "grid.blibliki.com", "custom_domain": true }],
+  "observability": {
+    "enabled": true,
+  },
+}

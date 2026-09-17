@@ -211,6 +211,9 @@ importers:
       vitest:
         specifier: catalog:test
         version: 4.1.10(@types/node@26.2.0)(jsdom@30.0.1)(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.12))
+      wrangler:
+        specifier: 4.132.0
+        version: 4.132.0(@types/node@26.2.0)
 
   apps/instruments:
     dependencies:

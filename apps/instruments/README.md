@@ -27,9 +27,9 @@ static asset or the shell, through `not_found_handling`. It answers at
 `play.blibliki.com`, a custom domain in `wrangler.jsonc` that needs the
 `blibliki.com` zone in the same Cloudflare account.
 
-Pushing the `live` branch is the release, as it is for grid on Netlify:
-`.github/workflows/deploy-instruments.yml` builds and runs `wrangler deploy`
-with an API token. The workflow reads these repository secrets:
+Pushing the `live` branch is the release, as it is for grid:
+`.github/workflows/deploy.yml` builds and runs `wrangler deploy` with an API
+token. The workflow reads these repository secrets:
 
 - `CLOUDFLARE_API_TOKEN`, from the "Edit Cloudflare Workers" token template,
   and `CLOUDFLARE_ACCOUNT_ID`

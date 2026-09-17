@@ -16,14 +16,17 @@ import Web Audio code. If both stay identical, move the types to
 `onStateUpdate`. `VideoEngineHost` works around it with a disposed flag.
 Add `removePropsUpdateCallback` to `packages/engine/src/Engine.ts`.
 
-## Wavetable engine tests are flaky under real-time AudioContext
+## Engine tests are flaky under real-time AudioContext
 
 `packages/engine/test/modules/Wavetable.test.ts` times out on different
 tests from run to run ("stays stable with mismatched table harmonic
 lengths", "updates output on position changes without starting
-transport"), on `main` as well as on feature branches. Each test waits
-on a real-time context; the 10 s hook timeout is hit under load. Make
-those tests use an offline context or raise their timeout.
+transport"), and `Envelope.test.ts` ("should output silence when not
+triggered") failed the same way once, on `main` as well as on feature
+branches. It happens when `pnpm test` runs every package's suite at once
+and passes when the file runs alone. Each test waits on a real-time
+context; the 10 s hook timeout is hit under load. Make those tests use an
+offline context or raise their timeout.
 
 ## Palette drag buttons have no keyboard path
 
