@@ -39,6 +39,16 @@ page request that does reach the Worker would otherwise run the route's
 loader, and the instrument loader reads Firestore, which only exists in the
 browser. With it off the Worker answers with the shell.
 
+Firebase is initialized when the client router is created (`src/router.tsx`),
+not in the root route's `beforeLoad`: the shell is prerendered, so on the
+client the root match is restored from the dehydrated state and that hook
+never runs in the browser.
+
+`pnpm dev` logs a React hydration mismatch on every page. The dev server
+renders the pending boundary of an `ssr: false` route while the client
+already has the component; React regenerates the tree and the page works.
+The built shell does not produce it.
+
 When a local run misbehaves, check for a leftover `workerd` process first:
 `pnpm preview` and `wrangler dev` do not always take their runtime down with
 them, and a stale one keeps serving the previous build.

@@ -6,7 +6,6 @@ import {
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { AuthProvider } from "../auth";
-import { initializeFirebaseOnce } from "../firebase";
 import styles from "../styles.css?url";
 
 export const Route = createRootRoute({
@@ -21,14 +20,6 @@ export const Route = createRootRoute({
     ],
     links: [{ rel: "stylesheet", href: styles }],
   }),
-  // Instruments are read from Firestore, so this has to happen before any
-  // route asks for one. The shell is prerendered at build time, where there
-  // is no window and no reason to initialize.
-  beforeLoad: () => {
-    if (typeof window !== "undefined") {
-      initializeFirebaseOnce();
-    }
-  },
   component: RootComponent,
 });
 
