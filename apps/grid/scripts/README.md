@@ -29,3 +29,19 @@ which builds with the `VITE_*` repository variables and secrets and runs
 Every path that is not a file gets `index.html`, and
 `public/api/firebase-config.json` ships as a static file with its JSON content
 type, so the Pi keeps fetching it from the same URL.
+
+### Domain:
+
+The Worker answers at `blibliki.com`, a custom domain in `wrangler.jsonc` that
+the deploy creates in the `blibliki.com` zone. `www.blibliki.com` is not a
+second route: a static-assets `_redirects` file cannot match on host, and a
+redirect Worker would put every request through the Worker instead of the
+unmetered asset path. It is a redirect rule in the zone, set once in the
+dashboard:
+
+1. DNS: add a proxied `AAAA` record `www` pointing at `100::`, so requests for
+   `www` reach Cloudflare's edge without an origin.
+2. Rules, Redirect Rules: when the hostname equals `www.blibliki.com`, redirect
+   with status 301 to the dynamic expression
+   `concat("https://blibliki.com", http.request.uri.path)`, preserving the
+   query string.

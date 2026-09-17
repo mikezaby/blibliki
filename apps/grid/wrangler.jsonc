@@ -9,10 +9,9 @@
     "directory": "./dist",
     "not_found_handling": "single-page-application",
   },
-  // Cutover: once the app is verified on its workers.dev address, delete the
-  // Netlify CNAME for the domain in the blibliki.com zone and uncomment this
-  // with the real host. wrangler creates the record and certificate.
-  // "routes": [{ "pattern": "grid.blibliki.com", "custom_domain": true }],
+  // wrangler creates the DNS record and certificate on deploy. www is not a
+  // route: it is a redirect rule in the zone, see scripts/README.md.
+  "routes": [{ "pattern": "blibliki.com", "custom_domain": true }],
   "observability": {
     "enabled": true,
   },
