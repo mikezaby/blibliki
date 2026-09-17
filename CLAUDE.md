@@ -18,6 +18,7 @@ This is a pnpm monorepo with the following structure:
 
 - **apps/** - Applications consuming the packages
   - **grid/** - Main visual patching interface (React + Redux + TanStack Router + Firebase)
+  - **instruments/** - Instrument performance console as its own app (TanStack Start in SPA mode, deploys to Cloudflare)
   - **demo/** - Simple demo application
   - **bubbleton/** - Additional demo application
 

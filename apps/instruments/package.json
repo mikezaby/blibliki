@@ -1,0 +1,43 @@
+{
+  "name": "instruments",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --port 4200",
+    "build": "vite build",
+    "clean:dist": "rm -rf ./dist",
+    "preview": "vite preview",
+    "deploy:cloudflare": "pnpm run build && wrangler deploy",
+    "test": "vitest run",
+    "tsc": "tsc --noEmit",
+    "lint": "eslint src test",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
+  },
+  "dependencies": {
+    "@blibliki/engine": "workspace:^",
+    "@blibliki/instrument": "workspace:^",
+    "@blibliki/models": "workspace:^",
+    "@blibliki/ui": "workspace:^",
+    "@clerk/react": "6.14.2",
+    "@tanstack/react-router": "1.170.32",
+    "@tanstack/react-start": "1.168.49",
+    "firebase": "12.17.1",
+    "lucide-react": "1.31.0",
+    "react": "catalog:react-19",
+    "react-dom": "catalog:react-19"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.54.10",
+    "@tailwindcss/vite": "catalog:tailwindcss",
+    "@types/node": "catalog:node",
+    "@types/react": "catalog:react-19",
+    "@types/react-dom": "catalog:react-19",
+    "@vitejs/plugin-react": "catalog:react-19",
+    "tailwindcss": "catalog:tailwindcss",
+    "vite": "catalog:vite",
+    "vitest": "catalog:test",
+    "wrangler": "4.132.0"
+  }
+}
