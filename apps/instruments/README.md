@@ -10,12 +10,38 @@ the same one `apps/grid` and `apps/mobile` render.
 
 ```bash
 pnpm dev       # http://localhost:4200
-pnpm build     # static shell plus client bundle in dist/
+pnpm build     # dist/client (shell and assets) and dist/server (the Worker)
+pnpm preview   # the built Worker under the local Cloudflare runtime
 ```
 
 It is a TanStack Start app in SPA mode: nothing here renders on a server, so
-only the shell is prerendered. Server routes and server functions stay
-available for later.
+only the shell is prerendered, as `index.html`. Server routes and server
+functions stay available for later.
+
+## Deploying to Cloudflare
+
+The app deploys as a Cloudflare Worker with static assets, on the free plan:
+asset requests are unmetered and the Worker only runs for `/_serverFn/*` and
+`/api/*` (`run_worker_first` in `wrangler.jsonc`). Every other path is a
+static asset or the shell, through `not_found_handling`.
+
+```bash
+pnpm exec wrangler login
+pnpm deploy                    # builds, then wrangler deploy
+pnpm exec wrangler deploy --dry-run   # what would ship, without shipping
+```
+
+The `VITE_*` keys are inlined at build time, so a Cloudflare build (Workers
+Builds or CI) needs them as build variables. Nothing is read at runtime.
+
+Both page routes set `ssr: false`. SPA mode only changes the prerender, so a
+page request that does reach the Worker would otherwise run the route's
+loader, and the instrument loader reads Firestore, which only exists in the
+browser. With it off the Worker answers with the shell.
+
+When a local run misbehaves, check for a leftover `workerd` process first:
+`pnpm preview` and `wrangler dev` do not always take their runtime down with
+them, and a stale one keeps serving the previous build.
 
 ## Instruments and saving
 

@@ -8,6 +8,7 @@ allowBuilds:
   esbuild: true
   protobufjs: false
   slint-ui: false
+  workerd: true
 catalogs:
   utils:
     "es-toolkit": 1.50.0

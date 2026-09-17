@@ -1,3 +1,4 @@
+import { cloudflare } from "@cloudflare/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
@@ -13,10 +14,15 @@ export default defineConfig({
     },
   },
   plugins: [
+    cloudflare({ viteEnvironment: { name: "ssr" } }),
     // SPA mode: nothing here renders on a server (Web Audio, Web MIDI, the
     // Firebase client SDK), so only the shell is prerendered. Server routes
-    // and server functions stay available.
-    tanstackStart({ spa: { enabled: true } }),
+    // and server functions stay available. The shell is named index.html so
+    // Cloudflare's single-page-application fallback can serve it as a static
+    // asset for every path wrangler.jsonc does not send to the Worker.
+    tanstackStart({
+      spa: { enabled: true, prerender: { outputPath: "/index.html" } },
+    }),
     viteReact(),
     tailwindcss(),
   ],

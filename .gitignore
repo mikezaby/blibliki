@@ -41,3 +41,6 @@ docs/untracked/
 .claude/rules/generated/
 .claude/skills
 .hal
+
+# Wrangler local state
+.wrangler

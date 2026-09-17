@@ -5,6 +5,9 @@ import { AccountButton } from "../auth";
 import { isFirebaseConfigured } from "../firebase";
 
 export const Route = createFileRoute("/")({
+  // Pages read Firestore and drive Web Audio, neither of which exists on the
+  // server. A request that does reach the Worker gets the shell.
+  ssr: false,
   component: IndexPage,
 });
 

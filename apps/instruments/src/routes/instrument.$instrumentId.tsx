@@ -8,6 +8,8 @@ import { resolveInstrumentDocument } from "../instrumentStore";
 import { persistInstrument } from "../persistInstrument";
 
 export const Route = createFileRoute("/instrument/$instrumentId")({
+  // The loader reads Firestore, which is only initialized in the browser.
+  ssr: false,
   loader: async ({ params }) => {
     const instrument = await Instrument.find(params.instrumentId);
     return instrument.serialize();

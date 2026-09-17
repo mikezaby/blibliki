@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "blibliki-instruments",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",
+  // The Vite plugin fills in assets.directory. Every other path is a static
+  // asset or the SPA shell, so the Worker only sees server functions and
+  // server routes.
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/_serverFn/*", "/api/*"],
+  },
+  "observability": {
+    "enabled": true,
+  },
+}

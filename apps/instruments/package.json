@@ -8,6 +8,7 @@
     "build": "vite build",
     "clean:dist": "rm -rf ./dist",
     "preview": "vite preview",
+    "deploy": "pnpm run build && wrangler deploy",
     "test": "vitest run",
     "tsc": "tsc --noEmit",
     "lint": "eslint src test",
@@ -28,6 +29,7 @@
     "react-dom": "catalog:react-19"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "1.54.10",
     "@tailwindcss/vite": "catalog:tailwindcss",
     "@types/node": "catalog:node",
     "@types/react": "catalog:react-19",
@@ -35,6 +37,7 @@
     "@vitejs/plugin-react": "catalog:react-19",
     "tailwindcss": "catalog:tailwindcss",
     "vite": "catalog:vite",
-    "vitest": "catalog:test"
+    "vitest": "catalog:test",
+    "wrangler": "4.132.0"
   }
 }

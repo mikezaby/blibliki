@@ -1,7 +1,7 @@
 # Instruments App Design
 
-Status: agreed 2026-09-17. Routes, picker, drafts and sign-in landed; the
-Cloudflare deploy is still to come.
+Status: agreed 2026-09-17, implemented the same day. The first deploy has
+not been run yet.
 
 ## Why
 
@@ -78,6 +78,16 @@ Following the TanStack Start hosting guide: `@cloudflare/vite-plugin` and
 plugin list, `wrangler.jsonc` with `main` set to the Start server entry and
 `nodejs_compat` in `compatibility_flags`, and a `deploy` script that runs
 `wrangler deploy` after the build.
+
+Found while wiring it: SPA mode only changes the prerender. A page request
+that reaches the Worker still runs the matched route's loader, and the
+instrument loader reads Firestore, which is not initialized there. Both
+page routes therefore set `ssr: false`, so the Worker answers with the
+shell and the client does the loading. On top of that the shell is
+prerendered as `index.html`, `not_found_handling` is
+`single-page-application` and `run_worker_first` names `/_serverFn/*` and
+`/api/*`, so Cloudflare can serve every other path as a static asset
+without invoking the Worker at all.
 
 Firebase and Clerk keys come from the app's own `.env`. Mobile keeps
 reading grid's. CI is unchanged. Deploys are run by a human.
