@@ -3,10 +3,15 @@ import { Instrument } from "@blibliki/models";
 import { Button } from "@blibliki/ui";
 import { useUser } from "@clerk/react";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
+import { HEADER_PILL_CLASS } from "../headerPill";
 import { resolveInstrumentDocument } from "../instrumentStore";
 import { persistInstrument } from "../persistInstrument";
-import { loadInstrument } from "../recipeInstrument";
+import {
+  isRecipeInstrumentId,
+  loadInstrument,
+  recipeIdOf,
+} from "../recipeInstrument";
 
 async function findRemote(instrumentId: string) {
   return (await Instrument.find(instrumentId)).serialize();
@@ -43,17 +48,32 @@ function InstrumentPage() {
       document={resolveInstrumentDocument(localStorage, instrument)}
       allowFullscreen
       backSlot={
-        <Button
-          asChild
-          variant="text"
-          color="neutral"
-          className="rounded-full border border-zinc-700 bg-zinc-950 px-4 font-mono uppercase tracking-[0.14em] text-zinc-200 hover:bg-zinc-900"
-        >
-          <Link to="/">
-            <ArrowLeft className="h-4 w-4" />
-            Instruments
-          </Link>
-        </Button>
+        <>
+          <Button
+            asChild
+            variant="text"
+            color="neutral"
+            className={HEADER_PILL_CLASS}
+          >
+            <Link to="/">
+              <ArrowLeft className="h-4 w-4" />
+              Instruments
+            </Link>
+          </Button>
+          {isRecipeInstrumentId(instrument.id) ? (
+            <Button
+              asChild
+              variant="text"
+              color="neutral"
+              className={HEADER_PILL_CLASS}
+            >
+              <Link to="/new" search={{ recipe: recipeIdOf(instrument.id) }}>
+                <Plus className="h-4 w-4" />
+                Make it mine
+              </Link>
+            </Button>
+          ) : null}
+        </>
       }
       onPersist={(action, nextDocument) =>
         persistInstrument(

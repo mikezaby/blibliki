@@ -1,6 +1,8 @@
 # Instrument Wizard Design
 
-Status: agreed 2026-09-20, not implemented.
+Status: agreed 2026-09-20, implemented the same day on branch
+`feat/instrument-wizard`. The four recipes are placeholders that nobody has
+tuned by ear yet.
 
 ## Why
 
@@ -31,16 +33,19 @@ fields is a form. It asks for intent first and lets the user adjust after.
 ## Flow
 
 A full page at `/new`, not a Dialog over the picker. It needs room on a
-phone, the back button should work, and it has to stay mounted while the
-Clerk sign-in modal is open. State is one `useState` in the route: step,
-recipe id, working document, name. No store. The step indicator is a plain
+phone and the back button should work. State is one `useState` in the
+route: step, recipe id, working document, name. No store. The same value is
+mirrored to `sessionStorage`, because signing in with an OAuth provider
+leaves the page and comes back, and the visitor must find the wizard where
+they left it. The step indicator is a plain
 "Step 2 of 3" line, so `@blibliki/ui` gets no new primitive.
 
 1. **Recipe.** One card per recipe: title, one-line description, and a
    summary derived from the document ("drums · bass · 2 synths"). Two
-   actions per card, **Try** and **Use this**.
-2. **Fine-tune.** The structure editor described below, with a prominent
-   **Skip**.
+   actions per card, **Try it first** and **Use this**.
+2. **Fine-tune.** The structure editor described below. Skipping it is the
+   **Continue** button, which sits in a footer that stays on screen, so it
+   is one tap from anywhere in the list.
 3. **Name and create.** Signed out, this opens the Clerk modal first. Then
    `new Instrument({ name, userId, document }).save()` and navigate to
    `/instrument/<id>`, so the user lands in the console.
@@ -84,9 +89,10 @@ can be opened on an existing instrument later. It lives in
 `apps/instruments` until grid or mobile wants it, then moves to
 `@blibliki/instrument/react`.
 
-A vertical list, one row per track, master last. Collapsed, a row is a
-one-line summary (`2 · Bass · Three osc · sequencer · ch 2 · dist → delay`)
-with an on/off switch. Tapping a row opens it. One row is open at a time,
+A vertical list, one row per track, master last. Collapsed, a row is the
+track's name over a one-line summary
+(`Three osc · sequencer · ch 2 · Distortion → Delay`, or just `Off`) with an
+on/off switch. Tapping a row opens it. One row is open at a time,
 which keeps the screen short on a phone.
 
 Inside an open row, top to bottom:
@@ -100,13 +106,19 @@ Inside an open row, top to bottom:
 5. An "Advanced" fold: MIDI channel, voices, and routing (internal, or fed
    from another track in serial or parallel mode)
 
-The options, the defaults and the hiding rule match grid's editor: a track
-fed from another track hides source, channel and voices, because it only
-processes incoming audio. The master row shows its four effects only.
+The defaults and the hiding rule match grid's editor: a track fed from
+another track hides source, channel and voices, because it only processes
+incoming audio. The routing options are narrower than grid's: a track cannot
+be fed from itself or from the master. The master row shows its four effects
+only.
 
 Labels say what a choice does ("Fed from track 3"), not the field name.
-Everything is built from `Card`, `Stack`, `Switch`, `Input`, `Label` and
-`OptionSelect`.
+Every control is from `@blibliki/ui`: `Button`, `Switch`, `Input`, `Label`,
+`OptionSelect` and `Stack`. Nothing was added to the library. Two pieces the
+library has no component for are built in place: the row that opens and
+closes (a `Button` with `aria-expanded` and local state) and the "Advanced"
+fold (a native `<details>`). If a second screen needs either, that is the
+point to add a Collapsible to `@blibliki/ui` instead of copying these.
 
 Changing a source is safe. The compiler skips saved slot values whose block
 or slot no longer exists (`createTrackFromDocument.ts`), so the old values

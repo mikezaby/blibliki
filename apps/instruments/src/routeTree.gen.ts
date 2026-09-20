@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as NewRouteImport } from './routes/new'
 import { Route as InstrumentInstrumentIdRouteImport } from './routes/instrument.$instrumentId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewRoute = NewRouteImport.update({
+  id: '/new',
+  path: '/new',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InstrumentInstrumentIdRoute = InstrumentInstrumentIdRouteImport.update({
@@ -25,27 +31,31 @@ const InstrumentInstrumentIdRoute = InstrumentInstrumentIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/new': typeof NewRoute
   '/instrument/$instrumentId': typeof InstrumentInstrumentIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/new': typeof NewRoute
   '/instrument/$instrumentId': typeof InstrumentInstrumentIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/new': typeof NewRoute
   '/instrument/$instrumentId': typeof InstrumentInstrumentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/instrument/$instrumentId'
+  fullPaths: '/' | '/new' | '/instrument/$instrumentId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/instrument/$instrumentId'
-  id: '__root__' | '/' | '/instrument/$instrumentId'
+  to: '/' | '/new' | '/instrument/$instrumentId'
+  id: '__root__' | '/' | '/new' | '/instrument/$instrumentId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  NewRoute: typeof NewRoute
   InstrumentInstrumentIdRoute: typeof InstrumentInstrumentIdRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/new': {
+      id: '/new'
+      path: '/new'
+      fullPath: '/new'
+      preLoaderRoute: typeof NewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/instrument/$instrumentId': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  NewRoute: NewRoute,
   InstrumentInstrumentIdRoute: InstrumentInstrumentIdRoute,
 }
 export const routeTree = rootRouteImport
