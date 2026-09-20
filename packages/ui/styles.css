@@ -873,6 +873,31 @@
     );
   }
 
+  :where(.ui-logo-mark) {
+    flex-shrink: 0;
+  }
+
+  :where(.ui-logo) {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4em;
+    white-space: nowrap;
+  }
+
+  /* The mark is 1.4 capitals tall and centred on them, so the name reads a
+   * little smaller than the mark at any font size. It sits on the baseline and
+   * is pushed down by half of what it has over the capitals. The em values
+   * are for browsers without the cap unit. */
+  :where(.ui-logo__mark) {
+    flex-shrink: 0;
+    width: 1em;
+    height: 1em;
+    transform: translateY(0.14em);
+    width: 1.4cap;
+    height: 1.4cap;
+    transform: translateY(0.2cap);
+  }
+
   .ui-switch {
     --ui-switch-color: var(--ui-color-primary-500);
     --ui-switch-color-hover: var(--ui-color-primary-600);

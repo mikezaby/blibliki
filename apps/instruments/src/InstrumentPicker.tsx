@@ -1,5 +1,5 @@
 import type { IInstrument } from "@blibliki/models";
-import { Button, Surface, Text } from "@blibliki/ui";
+import { Button, Logo, Surface, Text } from "@blibliki/ui";
 import { Search } from "lucide-react";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { filterInstruments } from "./filterInstruments";
@@ -75,13 +75,16 @@ export default function InstrumentPicker({
     >
       <div className="mx-auto flex max-w-2xl flex-col gap-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <Text
-            asChild
-            weight="semibold"
-            className="block font-mono text-lg uppercase tracking-[0.22em] text-zinc-300"
-          >
-            <h1>Choose an instrument</h1>
-          </Text>
+          <div className="flex items-center gap-3">
+            <Logo className="h-7 w-7 shrink-0 text-zinc-300" />
+            <Text
+              asChild
+              weight="semibold"
+              className="block font-mono text-lg uppercase tracking-[0.22em] text-zinc-300"
+            >
+              <h1>Choose an instrument</h1>
+            </Text>
+          </div>
           {actionSlot}
         </div>
 

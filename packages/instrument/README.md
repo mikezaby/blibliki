@@ -296,6 +296,12 @@ import { InstrumentPerformance } from "@blibliki/instrument/react";
 />;
 ```
 
+The faceplate carries the Blibliki badge at the foot of its left column, under
+the meters, where hardware carries its maker's name. It is `Logo` from
+`@blibliki/ui` with its wordmark, so the mark stands a little taller than the
+lettering and the two scale together. It is part of the console, not something
+a host passes in: every app that renders the console is a Blibliki app.
+
 The console is a faceplate, not a responsive page. It is laid out once at a
 fixed 1536px design width and then scaled as a whole to fit whatever stage it
 lands on — growing as well as shrinking — so an eight-encoder band stays an

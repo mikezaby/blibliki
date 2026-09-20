@@ -1,6 +1,7 @@
 dist
 .vite
-public
+# Written by scripts/generate-firebase-config.js. The rest of public is tracked.
+public/api
 
 # Local Netlify folder
 .netlify

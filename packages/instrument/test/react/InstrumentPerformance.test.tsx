@@ -586,6 +586,24 @@ describe("InstrumentPerformance", () => {
     ).toBeTruthy();
   });
 
+  it("carries the Blibliki badge in the left column of the faceplate", async () => {
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    await screen.findByRole("button", { name: "Start" });
+
+    // In the column with the stats and meters, the way a maker's mark sits on
+    // hardware, not up in the header with the controls.
+    expect(screen.getByText("Blibliki").closest("aside")).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Start" }).closest("aside"),
+    ).toBeNull();
+  });
+
   it("finds the fullscreen API behind Safari's webkit prefix", async () => {
     // Safari, desktop and iPadOS alike, only ever exposed the prefixed names.
     Reflect.deleteProperty(document, "exitFullscreen");

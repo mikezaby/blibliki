@@ -4,7 +4,7 @@ import {
   ModuleType,
   TransportState,
 } from "@blibliki/engine";
-import { Button, Surface, Text, cn } from "@blibliki/ui";
+import { Button, Logo, Surface, Text, cn } from "@blibliki/ui";
 import {
   ChevronLeft,
   ChevronRight,
@@ -843,7 +843,7 @@ export default function InstrumentPerformance({
             </div>
 
             <div className="mt-6 grid grid-cols-[18rem_minmax(0,1fr)] gap-5">
-              <aside>
+              <aside className="flex flex-col">
                 <ConsoleStat
                   label="Track"
                   value={trackName}
@@ -884,6 +884,13 @@ export default function InstrumentPerformance({
                     resetKey={activeTrack?.key ?? ""}
                   />
                 ) : null}
+                {/* The maker's badge, where hardware carries one. */}
+                <div className="mt-auto px-4 pb-1 pt-6">
+                  <Logo
+                    wordmark
+                    className="font-mono text-2xl uppercase leading-none tracking-[0.2em] text-zinc-500"
+                  />
+                </div>
               </aside>
 
               <div className="instrument-performance-display">
