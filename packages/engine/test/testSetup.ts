@@ -36,7 +36,21 @@ beforeEach(async (ctx) => {
   await ctx.engine.resume();
 });
 
+// ponytail: node-web-audio-api deadlocks in close() about 1 time in 20 when a
+// worklet processor is still starting, which is any short Wavetable test. A
+// healthy close takes under 25ms, so give up after 1s and leak that context.
+// An upstream fix replaces this.
+const CLOSE_TIMEOUT_MS = 1000;
+
 afterEach(async (ctx) => {
   ctx.engine?.dispose();
-  await ctx.context?.close();
+
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  await Promise.race([
+    ctx.context?.close(),
+    new Promise<void>((resolve) => {
+      timer = setTimeout(resolve, CLOSE_TIMEOUT_MS);
+    }),
+  ]);
+  clearTimeout(timer);
 });
