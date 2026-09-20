@@ -153,7 +153,11 @@ Day one:
 
 The first versions are placeholders with sensible values and simple
 patterns, written so the wizard works end to end. They are meant to be
-replaced with versions tuned by ear.
+replaced with versions tuned by ear. Because nobody tuned them, they are
+not pasted documents: each is the default document plus what differs,
+written with `createRecipeDocument` and step lanes like
+`{ C1: "x...x...x...x..." }`. A recipe tuned by ear replaces that with the
+saved document.
 
 ## Shared reducers
 

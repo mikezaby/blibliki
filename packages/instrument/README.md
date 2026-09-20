@@ -54,6 +54,7 @@ Important files:
 - `src/document/InstrumentDocument.ts`: document model helper.
 - `src/document/SavedInstrumentDocument.ts`: converts runtime state back into a saved document.
 - `src/document/documentEdits.ts`: immutable edits an editor applies to a document (track fields, fx chain, routing, slot values).
+- `src/recipes/`: starting documents a new instrument can be created from, one file per recipe, listed in `instrumentRecipes`. A recipe is `{ id, title, description, document }`. To add one, tune an instrument in the app, save it, copy its document into a new file and add it to `src/recipes/index.ts`. `recipeDocument.ts` and `stepLanes.ts` are the shorthand the first recipes are written in.
 - `src/templates/defaultTemplate.ts`: product templates.
 - `src/profiles/hardwareProfile.ts`: supported hardware profile metadata.
 

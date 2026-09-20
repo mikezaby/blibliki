@@ -13,6 +13,8 @@ export {
   updateTrackDocument,
   updateTrackFxChain,
 } from "./document/documentEdits";
+export { findInstrumentRecipe, instrumentRecipes } from "./recipes";
+export type { InstrumentRecipe } from "./recipes";
 export {
   CURRENT_INSTRUMENT_VERSION,
   migrateInstrumentDocument,
