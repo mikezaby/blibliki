@@ -15,13 +15,11 @@ import {
 } from "lucide-react";
 import {
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   type KeyboardEvent,
   type PointerEvent,
   type ReactNode,
-  type RefObject,
 } from "react";
 import {
   createInstrumentControllerSession,
@@ -35,6 +33,19 @@ import type {
 } from "@/display/InstrumentDisplayState";
 import { createSavedInstrumentDocument } from "@/document/SavedInstrumentDocument";
 import type { InstrumentDocument } from "@/document/types";
+import EncoderGlyph from "./EncoderGlyph";
+import {
+  getCellCc,
+  getCellKey,
+  isInactiveCell,
+  parseCellVisualValue,
+  renderCellLabel,
+  renderCellValue,
+  type BandCell,
+  type BandKey,
+} from "./bandCell";
+import { createFaceplateStyle, useFitToScreen } from "./faceplateFit";
+import { useFullscreen } from "./fullscreen";
 
 export type InstrumentPersistenceResult = {
   // Shown on the performance display once the action settles.
@@ -80,28 +91,6 @@ type SessionSource = {
   initialDisplayNotice?: InstrumentDisplayState["notice"];
 };
 
-type BandCell =
-  | InstrumentDisplayState["globalBand"]["slots"][number]
-  | InstrumentDisplayState["upperBand"]["slots"][number];
-
-type BandKey = "global" | "upper" | "lower";
-
-type CellVisualValue = {
-  kind: "number" | "enum" | "boolean" | "text";
-  visualNormalized: number | null;
-  // Position (0..1) the fill arc anchors at. Defaults to 0 (fill from min); a
-  // bipolar range (min < 0 < max) anchors at the zero value so the arc fills
-  // as a band from center toward the value.
-  anchorNormalized?: number;
-  showEncoder: boolean;
-  empty: boolean;
-};
-
-const EMPTY_SLOT_TEXT = "--";
-// The console is a faceplate, not a responsive page: it is laid out once at this
-// width and then scaled as a whole to whatever screen it lands on. Nothing
-// inside reflows, so an 8-encoder band stays an 8-encoder band on a phone.
-const DESIGN_WIDTH = 1536;
 // The navigation buttons on a Launch Control XL3. On-screen prev/next plays the
 // same CCs, so navigation, LED sync and display all follow one path whether the
 // performer used the hardware or the screen.
@@ -119,445 +108,9 @@ const MAX_TICKS_PER_EVENT = 63;
 // Drag distance that advances one tick. Small enough that a flick sweeps a
 // range, large enough that a shaky finger does not.
 const PIXELS_PER_TICK = 3;
-const ENCODER_CENTER = 32;
-const ENCODER_RADIUS = 24;
-const ENCODER_START_ANGLE = 135;
-const ENCODER_SWEEP_ANGLE = 270;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
-}
-
-type WebkitFullscreenDocument = Document & {
-  webkitFullscreenElement?: Element | null;
-  webkitExitFullscreen?: () => Promise<void> | void;
-};
-
-type WebkitFullscreenElement = HTMLElement & {
-  webkitRequestFullscreen?: () => Promise<void> | void;
-};
-
-// Safari only ever shipped the prefixed Fullscreen API, on the desktop and on
-// iPadOS alike, so checking the standard names alone hides the control on every
-// Safari there is. iPhone Safari has neither and nothing can be done about
-// that: element fullscreen does not exist on it.
-function getFullscreenApi() {
-  if (typeof document === "undefined") {
-    return undefined;
-  }
-
-  const owner = document as WebkitFullscreenDocument;
-  const root = document.documentElement as WebkitFullscreenElement;
-  const prefixed = typeof root.requestFullscreen !== "function";
-
-  const canRequest = prefixed
-    ? typeof root.webkitRequestFullscreen === "function"
-    : true;
-  const canExit = prefixed
-    ? typeof owner.webkitExitFullscreen === "function"
-    : typeof owner.exitFullscreen === "function";
-
-  if (!canRequest || !canExit) {
-    return undefined;
-  }
-
-  return {
-    // Called as methods rather than through extracted references, so `this`
-    // is whatever each implementation expects it to be.
-    request: () =>
-      prefixed ? root.webkitRequestFullscreen?.() : root.requestFullscreen(),
-    exit: () =>
-      prefixed ? owner.webkitExitFullscreen?.() : owner.exitFullscreen(),
-    isFullscreen: () =>
-      (owner.fullscreenElement ?? owner.webkitFullscreenElement) === root,
-  };
-}
-
-// Uniform scale that fits the faceplate inside the stage, growing as well as
-// shrinking so the console always fills what it is given, plus the offset that
-// centres the scaled result.
-//
-// The centring is done by hand rather than by the layout on purpose. The
-// faceplate's layout box stays DESIGN_WIDTH wide however small the stage gets,
-// and centring a box wider than its container is where the browser's own
-// alignment gets subtle: a grid item lands in an implicit `auto` track sized to
-// its own max-content, so it is centred in 1536px of track rather than in the
-// stage, and drifts off screen as the stage shrinks. With `transform-origin: 0
-// 0` and an explicit translate there is nothing left to interpret.
-// A device you turn, rather than a window you resize: the primary pointer is a
-// finger and there is no hover. Rotating the console only makes sense somewhere
-// the performer can rotate the hardware back, so a narrow desktop window keeps
-// the orientation its display has and simply scales down.
-export function isHandheldDevice() {
-  return (
-    typeof window !== "undefined" &&
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(pointer: coarse) and (hover: none)").matches
-  );
-}
-
-export function createFaceplateFit(
-  stageWidth: number,
-  stageHeight: number,
-  contentHeight: number,
-  canRotate = false,
-) {
-  if (stageWidth <= 0 || stageHeight <= 0 || contentHeight <= 0) {
-    return { scale: 1, x: 0, y: 0, rotated: false };
-  }
-
-  // No browser lets a page demand landscape — screen.orientation.lock needs
-  // fullscreen where it exists at all, and iOS has never had it — so on a
-  // handheld held upright the console turns a quarter turn instead and the
-  // performer turns the device to match. Held in landscape there is nothing to
-  // do.
-  const rotated = canRotate && stageHeight > stageWidth;
-  if (rotated) {
-    const scale = Math.min(
-      stageHeight / DESIGN_WIDTH,
-      stageWidth / contentHeight,
-    );
-
-    // Rotating by 90° puts the faceplate's own +y along screen -x, so its
-    // width lands on the stage's height and the leftover is split the other
-    // way about.
-    return {
-      scale,
-      x: (stageWidth + contentHeight * scale) / 2,
-      y: (stageHeight - DESIGN_WIDTH * scale) / 2,
-      rotated,
-    };
-  }
-
-  const scale = Math.min(
-    stageWidth / DESIGN_WIDTH,
-    stageHeight / contentHeight,
-  );
-
-  return {
-    scale,
-    x: (stageWidth - DESIGN_WIDTH * scale) / 2,
-    y: (stageHeight - contentHeight * scale) / 2,
-    rotated,
-  };
-}
-
-export function createFaceplateStyle(fit: {
-  scale: number;
-  x: number;
-  y: number;
-  rotated: boolean;
-}) {
-  const rotate = fit.rotated ? " rotate(90deg)" : "";
-
-  return {
-    width: DESIGN_WIDTH,
-    transformOrigin: "0 0",
-    transform: `translate(${String(fit.x)}px, ${String(fit.y)}px)${rotate} scale(${String(fit.scale)})`,
-  };
-}
-
-function useFitToScreen(
-  stageRef: RefObject<HTMLDivElement | null>,
-  faceplateRef: RefObject<HTMLDivElement | null>,
-) {
-  const [fit, setFit] = useState({ scale: 1, x: 0, y: 0, rotated: false });
-
-  // Layout effect, so the first paint is already at the right size rather than
-  // flashing a 1536px-wide console on a phone.
-  useLayoutEffect(() => {
-    const stage = stageRef.current;
-    const faceplate = faceplateRef.current;
-    // jsdom and other non-layout environments have no ResizeObserver; the
-    // console still renders, just at 1:1.
-    if (!stage || !faceplate || typeof ResizeObserver === "undefined") {
-      return;
-    }
-
-    const measure = () => {
-      // offsetHeight is the pre-transform layout height, so the scale this
-      // produces never feeds back into the measurement it came from.
-      setFit(
-        createFaceplateFit(
-          stage.clientWidth,
-          stage.clientHeight,
-          faceplate.offsetHeight,
-          isHandheldDevice(),
-        ),
-      );
-    };
-
-    measure();
-    // Observing the stage covers window resizes and orientation changes;
-    // observing the faceplate covers content that grows, like a new notice.
-    const observer = new ResizeObserver(measure);
-    observer.observe(stage);
-    observer.observe(faceplate);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [stageRef, faceplateRef]);
-
-  return fit;
-}
-
-function toRadians(angle: number) {
-  return (angle * Math.PI) / 180;
-}
-
-function createEncoderPoint(radius: number, angle: number) {
-  const radians = toRadians(angle);
-
-  return {
-    x: ENCODER_CENTER + radius * Math.cos(radians),
-    y: ENCODER_CENTER + radius * Math.sin(radians),
-  };
-}
-
-function formatPointValue(value: number) {
-  return value.toFixed(2);
-}
-
-export function createEncoderArcPath(normalized: number | null, anchor = 0) {
-  if (normalized === null) {
-    return "";
-  }
-
-  const safeNormalized = clamp(normalized, 0, 1);
-  const safeAnchor = clamp(anchor, 0, 1);
-  const lo = Math.min(safeAnchor, safeNormalized);
-  const hi = Math.max(safeAnchor, safeNormalized);
-  if (hi - lo <= 0) {
-    return "";
-  }
-
-  const start = createEncoderPoint(
-    ENCODER_RADIUS,
-    ENCODER_START_ANGLE + lo * ENCODER_SWEEP_ANGLE,
-  );
-  const end = createEncoderPoint(
-    ENCODER_RADIUS,
-    ENCODER_START_ANGLE + hi * ENCODER_SWEEP_ANGLE,
-  );
-  const largeArc = hi - lo > 2 / 3 ? 1 : 0;
-
-  return `M ${formatPointValue(start.x)} ${formatPointValue(start.y)} A ${ENCODER_RADIUS} ${ENCODER_RADIUS} 0 ${largeArc} 1 ${formatPointValue(end.x)} ${formatPointValue(end.y)}`;
-}
-
-function createFullEncoderTrackPath() {
-  const start = createEncoderPoint(ENCODER_RADIUS, ENCODER_START_ANGLE);
-  const midpoint = createEncoderPoint(
-    ENCODER_RADIUS,
-    ENCODER_START_ANGLE + 180,
-  );
-  const end = createEncoderPoint(
-    ENCODER_RADIUS,
-    ENCODER_START_ANGLE + ENCODER_SWEEP_ANGLE,
-  );
-
-  return [
-    `M ${formatPointValue(start.x)} ${formatPointValue(start.y)}`,
-    `A ${ENCODER_RADIUS} ${ENCODER_RADIUS} 0 1 1 ${formatPointValue(midpoint.x)} ${formatPointValue(midpoint.y)}`,
-    `A ${ENCODER_RADIUS} ${ENCODER_RADIUS} 0 0 1 ${formatPointValue(end.x)} ${formatPointValue(end.y)}`,
-  ].join(" ");
-}
-
-const ENCODER_TRACK_PATH = createFullEncoderTrackPath();
-
-function renderCellValue(slot: BandCell) {
-  if ("kind" in slot && slot.kind === "empty") {
-    return EMPTY_SLOT_TEXT;
-  }
-
-  return slot.valueText;
-}
-
-function renderCellLabel(slot: BandCell) {
-  if ("kind" in slot && slot.kind === "empty") {
-    return EMPTY_SLOT_TEXT;
-  }
-
-  return slot.shortLabel;
-}
-
-function isEmptyCell(slot: BandCell) {
-  return "kind" in slot && slot.kind === "empty";
-}
-
-function isInactiveCell(slot: BandCell) {
-  if (isEmptyCell(slot)) {
-    return true;
-  }
-
-  return slot.inactive === true;
-}
-
-function normalizeNumericValue(value: number) {
-  if (value >= 20 && value <= 20000) {
-    return clamp(
-      (Math.log10(value) - Math.log10(20)) /
-        (Math.log10(20000) - Math.log10(20)),
-      0,
-      1,
-    );
-  }
-
-  if (value >= 0 && value <= 1) {
-    return value;
-  }
-
-  if (value >= 0 && value <= 100) {
-    return value / 100;
-  }
-
-  if (value >= 0 && value <= 127) {
-    return value / 127;
-  }
-
-  return 0.5;
-}
-
-function parseCellVisualValue(slot: BandCell): CellVisualValue {
-  if (isEmptyCell(slot)) {
-    return {
-      kind: "text",
-      visualNormalized: null,
-      showEncoder: true,
-      empty: true,
-    };
-  }
-
-  const valueText = renderCellValue(slot);
-  const trimmedValue = valueText.trim();
-  if (trimmedValue === EMPTY_SLOT_TEXT) {
-    return {
-      kind: "text",
-      visualNormalized: null,
-      showEncoder: false,
-      empty: false,
-    };
-  }
-
-  if (
-    slot.valueSpec?.kind === "boolean" &&
-    typeof slot.rawValue === "boolean"
-  ) {
-    return {
-      kind: "boolean",
-      visualNormalized: slot.rawValue ? 1 : 0,
-      showEncoder: false,
-      empty: false,
-    };
-  }
-
-  if (
-    slot.valueSpec?.kind === "enum" &&
-    (typeof slot.rawValue === "string" || typeof slot.rawValue === "number")
-  ) {
-    const optionIndex = slot.valueSpec.options.findIndex(
-      (option) => option === slot.rawValue,
-    );
-    const optionCount = slot.valueSpec.options.length;
-
-    return {
-      kind: "enum",
-      visualNormalized:
-        optionIndex < 0 || optionCount <= 1
-          ? 0.5
-          : optionIndex / (optionCount - 1),
-      showEncoder: false,
-      empty: false,
-    };
-  }
-
-  if (slot.valueSpec?.kind === "number" && typeof slot.rawValue === "number") {
-    const { min, max, exp } = slot.valueSpec;
-    if (min !== undefined && max !== undefined && min !== max) {
-      const applyExp = (n: number) =>
-        exp !== undefined && exp !== 1 ? Math.pow(n, 1 / exp) : n;
-      const normalized = clamp((slot.rawValue - min) / (max - min), 0, 1);
-      const bipolar = min < 0 && max > 0;
-
-      return {
-        kind: "number",
-        visualNormalized: applyExp(normalized),
-        anchorNormalized: bipolar ? applyExp((0 - min) / (max - min)) : 0,
-        showEncoder: true,
-        empty: false,
-      };
-    }
-
-    return {
-      kind: "number",
-      visualNormalized: normalizeNumericValue(slot.rawValue),
-      showEncoder: true,
-      empty: false,
-    };
-  }
-
-  const normalizedText = trimmedValue.toUpperCase();
-  if (normalizedText === "ON" || normalizedText === "OFF") {
-    return {
-      kind: "boolean",
-      visualNormalized: normalizedText === "ON" ? 1 : 0,
-      showEncoder: false,
-      empty: false,
-    };
-  }
-
-  const percentMatch = trimmedValue.match(/^(-?\d+(?:\.\d+)?)%$/);
-  if (percentMatch) {
-    return {
-      kind: "number",
-      visualNormalized: clamp(Number(percentMatch[1]) / 100, 0, 1),
-      showEncoder: true,
-      empty: false,
-    };
-  }
-
-  const bpmMatch = trimmedValue.match(/^(-?\d+(?:\.\d+)?)\s*BPM$/i);
-  if (bpmMatch) {
-    return {
-      kind: "number",
-      visualNormalized: clamp(Number(bpmMatch[1]) / 240, 0, 1),
-      showEncoder: true,
-      empty: false,
-    };
-  }
-
-  const numericValue = Number(trimmedValue);
-  if (Number.isFinite(numericValue)) {
-    return {
-      kind: "number",
-      visualNormalized: normalizeNumericValue(numericValue),
-      showEncoder: true,
-      empty: false,
-    };
-  }
-
-  return {
-    kind: "enum",
-    visualNormalized: 0.5,
-    showEncoder: false,
-    empty: false,
-  };
-}
-
-function getCellCc(slot: BandCell) {
-  return "cc" in slot ? slot.cc : undefined;
-}
-
-function getCellKey(slot: BandCell, bandKey: BandKey, index: number) {
-  if (isEmptyCell(slot)) {
-    return `${bandKey}-${index}`;
-  }
-
-  if ("blockKey" in slot) {
-    return `${slot.blockKey}.${slot.slotKey}`;
-  }
-
-  return `global.${slot.key}`;
 }
 
 function getNoticeToneStyles(tone?: "info" | "success" | "warning" | "error") {
@@ -805,51 +358,6 @@ function PerformanceMeter({
   );
 }
 
-function EncoderGlyph({
-  normalized,
-  anchor,
-  inactive,
-  accent,
-}: {
-  normalized: number | null;
-  anchor?: number;
-  inactive: boolean;
-  accent: boolean;
-}) {
-  const activeArcPath = createEncoderArcPath(normalized, anchor);
-
-  return (
-    <svg
-      viewBox="0 0 64 64"
-      aria-hidden="true"
-      className="h-9 w-16 overflow-visible"
-    >
-      <path
-        d={ENCODER_TRACK_PATH}
-        fill="none"
-        stroke={inactive ? "rgb(63 63 70 / 0.45)" : "rgb(113 113 122 / 0.5)"}
-        strokeWidth="4"
-        strokeLinecap="round"
-      />
-      {activeArcPath ? (
-        <path
-          d={activeArcPath}
-          fill="none"
-          stroke={
-            inactive
-              ? "rgb(82 82 91 / 0.5)"
-              : accent
-                ? "rgb(232 121 249 / 0.95)"
-                : "rgb(244 244 245 / 0.92)"
-          }
-          strokeWidth="4"
-          strokeLinecap="round"
-        />
-      ) : null}
-    </svg>
-  );
-}
-
 function PerformanceBand({
   bandKey,
   sections,
@@ -1091,7 +599,7 @@ export default function InstrumentPerformance({
   const [state, setState] = useState<PerformanceState>({
     status: "loading",
   });
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const fullscreen = useFullscreen(allowFullscreen);
   const documentRef = useRef(instrumentDocument);
   const stageRef = useRef<HTMLDivElement>(null);
   const faceplateRef = useRef<HTMLDivElement>(null);
@@ -1206,34 +714,6 @@ export default function InstrumentPerformance({
     };
   }, [sessionSource, name, onPersist]);
 
-  useEffect(() => {
-    if (typeof document === "undefined") {
-      return;
-    }
-
-    const api = getFullscreenApi();
-    if (!api) {
-      return;
-    }
-
-    const syncFullscreenState = () => {
-      setIsFullscreen(api.isFullscreen());
-    };
-
-    syncFullscreenState();
-    // Safari reports the change under its own event name.
-    document.addEventListener("fullscreenchange", syncFullscreenState);
-    document.addEventListener("webkitfullscreenchange", syncFullscreenState);
-
-    return () => {
-      document.removeEventListener("fullscreenchange", syncFullscreenState);
-      document.removeEventListener(
-        "webkitfullscreenchange",
-        syncFullscreenState,
-      );
-    };
-  }, []);
-
   const displayState = state.displayState;
   // Source outputs to meter, derived from the live runtime patch so the track
   // meter follows the active track (changing it resets that meter's peak hold).
@@ -1260,7 +740,6 @@ export default function InstrumentPerformance({
   const isTransportRunning =
     displayState?.header.transportState === TransportState.playing;
   const isSequencerEdit = displayState?.header.mode === "seqEdit";
-  const fullscreenApi = allowFullscreen ? getFullscreenApi() : undefined;
 
   const sendControlChange = (cc: number, ccValue: number) => {
     const { controllerSession, engine } = state;
@@ -1282,16 +761,6 @@ export default function InstrumentPerformance({
 
   const pressButton = (cc: number) => () => {
     sendControlChange(cc, BUTTON_PRESS_VALUE);
-  };
-
-  const handleFullscreenToggle = async () => {
-    if (!fullscreenApi) {
-      return;
-    }
-
-    await (fullscreenApi.isFullscreen()
-      ? fullscreenApi.exit()
-      : fullscreenApi.request());
   };
 
   return (
@@ -1333,21 +802,21 @@ export default function InstrumentPerformance({
                 {backSlot}
                 {/* Only where there is browser chrome to escape, and only
                     where the host asked for it. */}
-                {fullscreenApi ? (
+                {fullscreen.available ? (
                   <Button
                     variant="outlined"
                     color="neutral"
                     onClick={() => {
-                      void handleFullscreenToggle();
+                      void fullscreen.toggle();
                     }}
                     className="rounded-full border-zinc-600 px-5 font-mono uppercase tracking-[0.14em] text-zinc-200 hover:border-zinc-400 hover:bg-zinc-900"
                   >
-                    {isFullscreen ? (
+                    {fullscreen.isFullscreen ? (
                       <Minimize2 className="h-4 w-4" />
                     ) : (
                       <Maximize2 className="h-4 w-4" />
                     )}
-                    {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                    {fullscreen.isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
                   </Button>
                 ) : null}
                 <Button
