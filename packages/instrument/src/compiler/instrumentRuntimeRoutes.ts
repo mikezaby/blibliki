@@ -26,28 +26,37 @@ export function createTrackNoteRuntime(
     return { modules: [], routes: [] };
   }
 
-  if (trackDocument.noteSource === "stepSequencer") {
-    if (!stepSequencerId) {
-      return { modules: [], routes: [] };
-    }
+  const externalRuntime = noteInputId
+    ? track.createExternalMidiRuntime(
+        { moduleId: noteInputId, ioName: "midi out" },
+        { scopeBlockPlugs: true },
+      )
+    : { modules: [], routes: [] };
 
-    return track.createInternalMidiRuntime(
-      { moduleId: stepSequencerId, ioName: "midi" },
-      { scopeBlockPlugs: true },
-    );
+  if (trackDocument.noteSource !== "stepSequencer" || !stepSequencerId) {
+    return externalRuntime;
   }
 
-  if (!noteInputId) {
-    return { modules: [], routes: [] };
-  }
-
-  return track.createExternalMidiRuntime(
-    {
-      moduleId: noteInputId,
-      ioName: "midi out",
-    },
-    { scopeBlockPlugs: true },
+  // The sequencer joins external midi at the voice scheduler, so both share
+  // one voice allocation. With a note input the scheduler and its outgoing
+  // routes already exist, and only the sequencer's own route is new.
+  const sequencerRuntime = track.createInternalMidiRuntime(
+    { moduleId: stepSequencerId, ioName: "midi" },
+    { scopeBlockPlugs: true, includeModules: !noteInputId },
   );
+  const externalRouteIds = new Set(
+    externalRuntime.routes.map((route) => route.id),
+  );
+
+  return {
+    modules: [...externalRuntime.modules, ...sequencerRuntime.modules],
+    routes: [
+      ...externalRuntime.routes,
+      ...sequencerRuntime.routes.filter(
+        (route) => !externalRouteIds.has(route.id),
+      ),
+    ],
+  };
 }
 
 function findMasterTrack(

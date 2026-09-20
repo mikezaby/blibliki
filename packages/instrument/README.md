@@ -82,7 +82,7 @@ Important files:
 - `src/tracks/Track.ts`: default concrete track layout.
 - `src/tracks/TrackSourceProfile.ts`: source block and source-page selection.
 - `src/tracks/TrackEffectProfile.ts`: FX block and FX-page selection.
-- `src/tracks/TrackMidiRuntime.ts`: note-input runtime modules and routes for external MIDI or step sequencer tracks.
+- `src/tracks/TrackMidiRuntime.ts`: note-input runtime modules and routes. Every note track takes external MIDI on its channel, and a step sequencer track also feeds its sequencer into the same voice scheduler.
 - `src/tracks/createTrackFromDocument.ts`: turns a saved track document into a `Track` instance.
 
 The default `Track` is product opinion, not compiler logic. It says what a Blibliki track contains. The compiler later turns that into engine-ready modules and routes.
