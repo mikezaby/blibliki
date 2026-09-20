@@ -13,6 +13,7 @@ export {
   updateTrackDocument,
   updateTrackFxChain,
 } from "./document/documentEdits";
+export { isMasterTrackDocument } from "./document/masterTrack";
 export { findInstrumentRecipe, instrumentRecipes } from "./recipes";
 export type { InstrumentRecipe } from "./recipes";
 export {
