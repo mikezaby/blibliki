@@ -113,3 +113,21 @@ sequencer types, and has its own `createDefaultInstrumentDocument()`, while
 already importing `createDefaultGlobalController` from
 `@blibliki/instrument`. The two copies match today. Delete the grid copy and
 import the types and the factory from the package.
+
+## Grid lets a track be fed from itself or from the master
+
+`audioSourceOptions` in
+`apps/grid/src/components/Instruments/InstrumentEditor.tsx` lists every
+track, including the one being edited and the master track. Filter both out,
+as `apps/instruments/src/InstrumentStructureEditor.tsx` does.
+
+## The console's meter polls a module that is already gone
+
+Opening an instrument in `apps/instruments` under `pnpm dev` throws
+"The module with id ... is not exists" twice while the console loads. The
+throw is `engine.findModule(meterId)` in the meter's `render` loop in
+`packages/instrument/src/react/InstrumentPerformance.tsx`, for the VuMeter
+the effect added itself, so the module was removed without that effect's
+cleanup stopping the loop first. Not traced further. Guard the lookup, or
+stop the loop when the engine is rebuilt. `useInstrumentSession` (increment 3
+of the performance split) is the natural place.
