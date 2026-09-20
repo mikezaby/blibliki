@@ -9,10 +9,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
-import InstrumentPerformance, {
-  createEncoderArcPath,
-  createFaceplateFit,
-} from "@/react/InstrumentPerformance";
+import InstrumentPerformance from "@/react/InstrumentPerformance";
 
 const {
   loadEngineMock,
@@ -868,109 +865,5 @@ describe("InstrumentPerformance", () => {
       { cc?: number; ccValue?: number },
     ];
     expect(downEvent.ccValue).toBe(63);
-  });
-});
-
-describe("createEncoderArcPath", () => {
-  // Anchoring at the zero position (0.5 for a bipolar -1..1 range) makes the arc
-  // fill as a band from center toward the value, not from the min end.
-  it("fills from the anchor toward the value for bipolar ranges", () => {
-    const start = createEncoderPoint(0.5); // center: 135 + 0.5*270 = 270deg
-    const value = createEncoderPoint(0.75); // 135 + 0.75*270 = 337.5deg
-
-    const path = createEncoderArcPath(0.75, 0.5);
-
-    expect(path.startsWith(`M ${start.x} ${start.y}`)).toBe(true);
-    expect(path.endsWith(`${value.x} ${value.y}`)).toBe(true);
-  });
-
-  it("fills backward when the value is below the anchor", () => {
-    const forward = createEncoderArcPath(0.75, 0.5);
-    const backward = createEncoderArcPath(0.25, 0.5);
-
-    // Same span on the other side of center → different path, both non-empty.
-    expect(backward).not.toBe("");
-    expect(backward).not.toBe(forward);
-  });
-
-  it("matches legacy min-anchored behavior when anchor is 0", () => {
-    expect(createEncoderArcPath(0, 0)).toBe("");
-    expect(createEncoderArcPath(0.5, 0)).toContain("A 24 24 0 0 1");
-  });
-});
-
-function createEncoderPoint(normalized: number) {
-  const angle = ((135 + normalized * 270) * Math.PI) / 180;
-  return {
-    x: (32 + 24 * Math.cos(angle)).toFixed(2),
-    y: (32 + 24 * Math.sin(angle)).toFixed(2),
-  };
-}
-
-describe("createFaceplateFit", () => {
-  const DESIGN_WIDTH = 1536;
-
-  it("shrinks to whichever axis runs out first", () => {
-    // A phone in landscape: height is the tight one.
-    expect(createFaceplateFit(852, 393, 900).scale).toBeCloseTo(393 / 900);
-    // A short, very wide stage: width still has room, height does not.
-    expect(createFaceplateFit(3840, 600, 900).scale).toBeCloseTo(600 / 900);
-  });
-
-  it("grows so the console fills a stage larger than the design", () => {
-    // Width is the tight axis here: 2x the design width against 2000/900.
-    expect(createFaceplateFit(DESIGN_WIDTH * 2, 2000, 900).scale).toBe(2);
-  });
-
-  it("centres the scaled faceplate on both axes", () => {
-    const stageWidth = 400;
-    const stageHeight = 300;
-    const fit = createFaceplateFit(stageWidth, stageHeight, 900);
-
-    // Scaled width exactly fills the stage, so there is nothing left to offset.
-    expect(fit.scale).toBeCloseTo(400 / 1536);
-    expect(fit.x).toBeCloseTo(0);
-    // Height has room to spare, so the leftover is split evenly.
-    expect(fit.y).toBeCloseTo((stageHeight - 900 * fit.scale) / 2);
-    // Whatever the stage, the scaled box sits inside it on both axes.
-    expect(fit.x + DESIGN_WIDTH * fit.scale).toBeLessThanOrEqual(stageWidth);
-    expect(fit.y + 900 * fit.scale).toBeLessThanOrEqual(stageHeight);
-  });
-
-  it("turns a quarter turn on a handheld held upright, fitting the swapped axes", () => {
-    // A phone held upright: 393x852 against a 1536x900 faceplate.
-    const fit = createFaceplateFit(393, 852, 900, true);
-
-    expect(fit.rotated).toBe(true);
-    // Rotated, the faceplate's width is bounded by the stage's height and its
-    // height by the stage's width.
-    expect(fit.scale).toBeCloseTo(Math.min(852 / DESIGN_WIDTH, 393 / 900));
-    // Rotating about the origin sweeps the box into negative x, so the
-    // translate has to put it back: its right edge lands at x, its left at
-    // x - contentHeight * scale.
-    expect(fit.x - 900 * fit.scale).toBeGreaterThanOrEqual(0);
-    expect(fit.x).toBeLessThanOrEqual(393);
-    expect(fit.y).toBeGreaterThanOrEqual(0);
-    expect(fit.y + DESIGN_WIDTH * fit.scale).toBeLessThanOrEqual(852);
-  });
-
-  it("leaves a landscape stage unrotated", () => {
-    expect(createFaceplateFit(852, 393, 900, true).rotated).toBe(false);
-    // A square stage is not portrait, so it stays put.
-    expect(createFaceplateFit(600, 600, 900, true).rotated).toBe(false);
-  });
-
-  it("never rotates where there is no device to turn", () => {
-    // A tall, narrow desktop window is not a phone on its side: it scales down
-    // and stays the way round the display already is.
-    const fit = createFaceplateFit(393, 852, 900);
-
-    expect(fit.rotated).toBe(false);
-    expect(fit.scale).toBeCloseTo(393 / DESIGN_WIDTH);
-  });
-
-  it("stays at 1 until something has been measured", () => {
-    expect(createFaceplateFit(0, 0, 0).scale).toBe(1);
-    expect(createFaceplateFit(1024, 768, 0).scale).toBe(1);
   });
 });

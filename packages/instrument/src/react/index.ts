@@ -1,7 +1,5 @@
-export {
-  default as InstrumentPerformance,
-  createEncoderArcPath,
-} from "./InstrumentPerformance";
+export { default as InstrumentPerformance } from "./InstrumentPerformance";
+export { createEncoderArcPath } from "./EncoderGlyph";
 export type {
   InstrumentPerformanceProps,
   InstrumentPersistenceResult,
