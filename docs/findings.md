@@ -104,3 +104,12 @@ Voices, in `apps/grid/src/components/Grid/VideoNode.tsx`.
 The repository structure section of `CLAUDE.md` lists `apps/demo` and
 `apps/bubbleton`, which are gone, and omits `apps/mobile`, `apps/pi-display`
 and `apps/storybook`. Replace the list with the current `apps/` directory.
+
+## Grid keeps its own copy of the instrument document types
+
+`apps/grid/src/instruments/document.ts` redeclares `InstrumentDocument`,
+`InstrumentTrackDocument`, `SourceProfileId`, `EffectProfileId` and the
+sequencer types, and has its own `createDefaultInstrumentDocument()`, while
+already importing `createDefaultGlobalController` from
+`@blibliki/instrument`. The two copies match today. Delete the grid copy and
+import the types and the factory from the package.
