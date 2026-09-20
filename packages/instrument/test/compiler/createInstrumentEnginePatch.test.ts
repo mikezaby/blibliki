@@ -353,7 +353,7 @@ describe("createInstrumentEnginePatch", () => {
     expect(patchModuleIds).toContain("track-2.runtime.voiceScheduler");
     expect(patchModuleIds).toContain("track-6.runtime.stepSequencer");
     expect(patchModuleIds).toContain("track-6.runtime.voiceScheduler");
-    expect(patchModuleIds).not.toContain("track-6.runtime.midiChannelFilter");
+    expect(patchModuleIds).toContain("track-6.runtime.midiChannelFilter");
     expect(patchModuleIds).not.toContain("track-1.runtime.midiChannelFilter");
     expect(patchModuleIds).not.toContain("track-3.runtime.midiChannelFilter");
     expect(patchModuleIds).not.toContain("track-4.runtime.stepSequencer");

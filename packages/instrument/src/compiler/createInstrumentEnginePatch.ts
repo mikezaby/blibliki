@@ -54,9 +54,7 @@ export function createInstrumentEnginePatch(
     createTrackFromDocument(trackDocument, options.trackVoices),
   );
   const hasExternalMidiTracks = enabledTrackDocuments.some(
-    (track) =>
-      !isAudioBusTrack(track.audioSource) &&
-      track.noteSource === "externalMidi",
+    (track) => !isAudioBusTrack(track.audioSource),
   );
   const masterTrackKey = enabledTrackDocuments.find((track) =>
     isMasterTrack(track.audioSource),

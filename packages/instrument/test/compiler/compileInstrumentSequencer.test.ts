@@ -9,7 +9,7 @@ import { createInstrumentEnginePatch } from "@/compiler/createInstrumentEnginePa
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
 
 describe("createInstrumentEnginePatch noteSource", () => {
-  it("routes step-sequencer tracks through a local sequencer instead of external midi channel filters", () => {
+  it("routes step-sequencer tracks through a local sequencer alongside external midi", () => {
     const document = createDefaultInstrumentDocument();
     const firstTrack = document.tracks[0];
     if (!firstTrack) {
@@ -60,9 +60,29 @@ describe("createInstrumentEnginePatch noteSource", () => {
       runtime.patch.routes.some(
         ({ source, destination }) =>
           source.moduleId === "instrument.runtime.noteInput" &&
-          destination.moduleId === "track-1.runtime.midiChannelFilter",
+          source.ioName === "midi out" &&
+          destination.moduleId === "track-1.runtime.midiChannelFilter" &&
+          destination.ioName === "midi in",
       ),
-    ).toBe(false);
+    ).toBe(true);
+
+    expect(
+      runtime.patch.routes.some(
+        ({ source, destination }) =>
+          source.moduleId === "track-1.runtime.midiChannelFilter" &&
+          source.ioName === "midi out" &&
+          destination.moduleId === "track-1.runtime.voiceScheduler" &&
+          destination.ioName === "midi in",
+      ),
+    ).toBe(true);
+
+    const moduleIds = runtime.patch.modules.map((module) => module.id);
+    expect(
+      moduleIds.filter((id) => id === "track-1.runtime.voiceScheduler"),
+    ).toHaveLength(1);
+
+    const routeIds = runtime.patch.routes.map((route) => route.id);
+    expect(new Set(routeIds).size).toBe(routeIds.length);
 
     expect(
       runtime.patch.routes.some(
