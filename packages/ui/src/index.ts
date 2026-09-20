@@ -27,6 +27,7 @@ export {
   type TextareaProps,
 } from "./components/textarea";
 export { Label } from "./components/label";
+export { Logo, type LogoProps } from "./components/logo";
 export { Text, textVariants, type TextProps } from "./components/text";
 export { Badge, badgeVariants, type BadgeProps } from "./components/badge";
 export { Switch, type SwitchProps } from "./components/switch";
