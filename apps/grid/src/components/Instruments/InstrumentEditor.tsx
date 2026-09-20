@@ -7,11 +7,17 @@ import {
   type PropSchema,
 } from "@blibliki/engine";
 import {
+  cloneInstrumentDocument,
   compileTrack,
   createTrackFromDocument,
   getGlobalControlValueSpec,
   launchControlXL3GlobalRow,
   migrateInstrumentDocument,
+  selectTrackAudioSource,
+  updateGlobalBlock,
+  updateTrackControllerSlotValue,
+  updateTrackDocument,
+  updateTrackFxChain,
   type MacroEncoder,
   type MacroMapping,
   type SlotInitialValue,
@@ -74,14 +80,6 @@ import type {
   InstrumentTrackDocument,
   SourceProfileId,
 } from "@/instruments/document";
-import {
-  cloneInstrumentDocument,
-  selectTrackAudioSource,
-  updateGlobalBlock,
-  updateTrackControllerSlotValue,
-  updateTrackDocument,
-  updateTrackFxChain,
-} from "@/instruments/editorState";
 import { addNotification } from "@/notificationsSlice";
 
 const SOURCE_PROFILE_OPTIONS: SourceProfileId[] = [

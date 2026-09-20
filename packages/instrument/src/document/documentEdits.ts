@@ -4,7 +4,7 @@ import type {
   InstrumentGlobalBlock,
   InstrumentTrackControllerSlotValues,
   InstrumentTrackDocument,
-} from "@/instruments/document";
+} from "./types";
 
 export function cloneInstrumentDocument(
   document: InstrumentDocument,

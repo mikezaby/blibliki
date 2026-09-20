@@ -1,21 +1,19 @@
 import { describe, expect, it } from "vitest";
-import {
-  createDefaultInstrumentDocument,
-  type InstrumentDocument,
-} from "../../src/instruments/document";
+import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
 import {
   cloneInstrumentDocument,
   selectTrackAudioSource,
   updateTrackControllerSlotValue,
   updateTrackDocument,
   updateTrackFxChain,
-} from "../../src/instruments/editorState";
+} from "@/document/documentEdits";
+import type { InstrumentDocument } from "@/document/types";
 
 function createDocument(): InstrumentDocument {
   return createDefaultInstrumentDocument();
 }
 
-describe("instrument editor state helpers", () => {
+describe("documentEdits", () => {
   it("clones documents so editor updates do not mutate the original data", () => {
     const document = createDocument();
     const cloned = cloneInstrumentDocument(document);
@@ -98,7 +96,7 @@ describe("instrument editor state helpers", () => {
       "source.presetId": "glass-bell",
       "fx1.drive": 0.72,
     });
-    expect(document.tracks[0]?.controllerSlotValues).toEqual({
+    expect(document.tracks[0].controllerSlotValues).toEqual({
       "source.presetId": "warm-morph",
       "fx1.drive": 0.72,
     });
