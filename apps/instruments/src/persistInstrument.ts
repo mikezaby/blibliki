@@ -31,7 +31,8 @@ export function ownsInstrument(
   instrument: IInstrument,
   userId: string | undefined,
 ) {
-  return userId !== undefined && instrument.userId === userId;
+  // A recipe has an empty owner, which must not match an empty user id.
+  return Boolean(userId) && instrument.userId === userId;
 }
 
 export async function persistInstrument(

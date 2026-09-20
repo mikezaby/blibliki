@@ -74,7 +74,7 @@ export default function InstrumentPicker({
       className="fixed inset-0 overflow-y-auto bg-zinc-950 px-5 py-6"
     >
       <div className="mx-auto flex max-w-2xl flex-col gap-5">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <Text
             asChild
             weight="semibold"

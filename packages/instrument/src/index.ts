@@ -6,6 +6,17 @@ export { default as TrackGainBlock } from "./blocks/TrackGainBlock";
 export { default as InstrumentDocumentModel } from "./document/InstrumentDocument";
 export { createDefaultInstrumentDocument } from "./document/defaultDocument";
 export {
+  cloneInstrumentDocument,
+  selectTrackAudioSource,
+  updateGlobalBlock,
+  updateTrackControllerSlotValue,
+  updateTrackDocument,
+  updateTrackFxChain,
+} from "./document/documentEdits";
+export { isMasterTrackDocument } from "./document/masterTrack";
+export { findInstrumentRecipe, instrumentRecipes } from "./recipes";
+export type { InstrumentRecipe } from "./recipes";
+export {
   CURRENT_INSTRUMENT_VERSION,
   migrateInstrumentDocument,
 } from "./document/version";

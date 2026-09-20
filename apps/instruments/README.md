@@ -3,10 +3,11 @@
 The instrument performance console as its own web app, following the
 [instruments app design](../../docs/plans/2026-09-17-instruments-app-design.md).
 
-Two routes: `/` lists the instruments from Firestore with a name filter, and
+Three routes: `/` lists the instruments from Firestore with a name filter,
 `/instrument/$instrumentId` renders the console from
 [`@blibliki/instrument/react`](../../packages/instrument/README.md#the-react-entry-point),
-the same one `apps/grid` and `apps/mobile` render.
+the same one `apps/grid` and `apps/mobile` render, and `/new` is the wizard
+that creates an instrument.
 
 ```bash
 pnpm dev       # http://localhost:4200
@@ -42,10 +43,17 @@ From a machine with `wrangler login` done, the same deploy is
 what would ship without shipping it. Plain `pnpm deploy` is pnpm's own
 command, which is why the script has the suffix.
 
-Both page routes set `ssr: false`. SPA mode only changes the prerender, so a
+Every page route sets `ssr: false`. SPA mode only changes the prerender, so a
 page request that does reach the Worker would otherwise run the route's
 loader, and the instrument loader reads Firestore, which only exists in the
 browser. With it off the Worker answers with the shell.
+
+A route's `loader` is not code-split the way its component is, and the
+prerender evaluates it on the server. Anything a loader imports must
+therefore stay clear of `@blibliki/instrument`, whose audio build reads
+`window` as it loads. `src/recipeInstrument.ts` imports it inside
+`loadInstrument` for that reason; a static import there fails the build
+with "window is not defined".
 
 Firebase is initialized when the client router is created (`src/router.tsx`),
 not in the root route's `beforeLoad`: the shell is prerendered, so on the
@@ -78,6 +86,25 @@ What the controller's save command does depends on who is looking
 Discard deletes the draft and reloads from Firestore. Grid saves regardless of
 owner; the check here is deliberate, so a visitor can never overwrite
 someone's instrument.
+
+## Creating an instrument
+
+`/new` follows the
+[instrument wizard design](../../docs/plans/2026-09-20-instrument-wizard-design.md)
+in three steps: pick a recipe from `@blibliki/instrument`, optionally change
+the structure (`src/InstrumentStructureEditor.tsx`: which tracks are on,
+their source, effects, sequencer, and routing under "Advanced"), then name it
+and create. Creating writes a new Firestore instrument and opens it in the
+console. Sound is shaped there, not in the wizard.
+
+A recipe is also an instrument: `/instrument/recipe.<id>` opens it in the
+console without an account (`src/recipeInstrument.ts`). It has no owner, so
+the save rules above keep a visitor's changes in a device draft. "Make it
+mine" in the console header starts the wizard from that draft.
+
+Sign-in is only asked for at the last step. The wizard keeps its state in
+`sessionStorage` (`src/newInstrumentDraft.ts`), because an OAuth sign-in
+leaves the page and comes back.
 
 The keys live in this app's own `.env` (gitignored): the six
 `VITE_FIREBASE_*` values and `VITE_CLERK_PUBLISHABLE_KEY`, the same ones
