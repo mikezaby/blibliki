@@ -16,18 +16,6 @@ import Web Audio code. If both stay identical, move the types to
 `onStateUpdate`. `VideoEngineHost` works around it with a disposed flag.
 Add `removePropsUpdateCallback` to `packages/engine/src/Engine.ts`.
 
-## Engine tests are flaky under real-time AudioContext
-
-`packages/engine/test/modules/Wavetable.test.ts` times out on different
-tests from run to run ("stays stable with mismatched table harmonic
-lengths", "updates output on position changes without starting
-transport"), and `Envelope.test.ts` ("should output silence when not
-triggered") failed the same way once, on `main` as well as on feature
-branches. It happens when `pnpm test` runs every package's suite at once
-and passes when the file runs alone. Each test waits on a real-time
-context; the 10 s hook timeout is hit under load. Make those tests use an
-offline context or raise their timeout.
-
 ## Palette drag buttons have no keyboard path
 
 The audio and video module buttons in
@@ -72,17 +60,6 @@ over each handle's center. It is not `nodrag`, so a press exactly on it
 grabs the node instead of starting a cable; on audio and video nodes alike,
 at small zoom levels the dot covers most of the handle. Add
 `pointer-events-none` to the indicator.
-
-## Engine tests time out under the full parallel test run
-
-`packages/engine/test/modules/Wavetable.test.ts` (the file took about 11 s)
-and `packages/engine/test/modules/LFO.test.ts` ("updates the phase parameter
-when props change", "initializes the phase parameter immediately from
-props") and `packages/engine/test/core/Module.test.ts` ("should still
-have correct param value immediately when relying on hooks") each failed
-once during a `pnpm test` run, then passed alone and on the next run. They are timing-sensitive under
-load. Find the waits on real time and either raise their timeouts or drive
-them from a fake clock.
 
 ## Media files are not persisted with a patch
 
@@ -131,3 +108,20 @@ the effect added itself, so the module was removed without that effect's
 cleanup stopping the loop first. Not traced further. Guard the lookup, or
 stop the loop when the engine is rebuilt. `useInstrumentSession` (increment 3
 of the performance split) is the natural place.
+
+## CLAUDE.md says only the engine has tests
+
+`CLAUDE.md` says "only engine has tests currently" in the commands list and
+again under Testing. Twelve workspaces have a test script now. Replace both
+sentences with the current split: `pnpm test:rest` and `pnpm test:engine`.
+
+## node-web-audio-api deadlocks when a context closes during worklet startup
+
+`AudioContext.close()` in `node-web-audio-api` 2.2.0 never resolves about 1
+time in 20 when it is called within 10 ms of creating an `AudioWorkletNode`
+whose processor is slow to construct (Wavetable). The render thread stops
+and no thread uses CPU. `packages/engine/test/testSetup.ts` gives up on the
+close after 1 s. Browsers are not affected; `packages/pi` could hit it only
+by shutting down while a patch loads. Report it upstream with a loop that
+creates a context, adds a worklet node and closes at once, then drop the
+timeout when a fixed version is in the catalog.
