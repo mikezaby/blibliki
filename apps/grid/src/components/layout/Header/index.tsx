@@ -4,6 +4,7 @@ import {
   IconButton,
   Input,
   Label,
+  Logo,
   Stack,
   Surface,
   Text,
@@ -59,7 +60,9 @@ export default function Header() {
       >
         <Stack direction="row" align="center" gap={2} className="mr-4">
           <Text asChild size="lg" weight="semibold" className="tracking-tight">
-            <h1>Blibliki</h1>
+            <h1>
+              <Logo wordmark />
+            </h1>
           </Text>
         </Stack>
 
