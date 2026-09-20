@@ -191,5 +191,6 @@ One commit each, reviewed before the next starts.
 
 1. Move the reducers into the package, grid imports them.
 2. Recipes and their test.
-3. The `recipe.*` loader branch and "Make it mine".
-4. The `/new` wizard and the picker button.
+3. The `recipe.*` loader branch.
+4. The `/new` wizard, the picker button, and "Make it mine", which links to
+   `/new` and so cannot land before it.

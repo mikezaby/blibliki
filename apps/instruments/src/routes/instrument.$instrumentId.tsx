@@ -6,14 +6,20 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { resolveInstrumentDocument } from "../instrumentStore";
 import { persistInstrument } from "../persistInstrument";
+import { loadInstrument } from "../recipeInstrument";
+
+async function findRemote(instrumentId: string) {
+  return (await Instrument.find(instrumentId)).serialize();
+}
+
+function loadRemote(instrumentId: string) {
+  return loadInstrument(instrumentId, findRemote);
+}
 
 export const Route = createFileRoute("/instrument/$instrumentId")({
   // The loader reads Firestore, which is only initialized in the browser.
   ssr: false,
-  loader: async ({ params }) => {
-    const instrument = await Instrument.find(params.instrumentId);
-    return instrument.serialize();
-  },
+  loader: ({ params }) => loadRemote(params.instrumentId),
   component: InstrumentPage,
 });
 
@@ -22,10 +28,6 @@ async function saveRemote(
   document: Parameters<typeof persistInstrument>[3],
 ) {
   await new Instrument({ ...instrument, document }).save();
-}
-
-async function loadRemote(instrumentId: string) {
-  return (await Instrument.find(instrumentId)).serialize();
 }
 
 function InstrumentPage() {
