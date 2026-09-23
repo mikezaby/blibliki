@@ -23,6 +23,8 @@ const STEP_5 = 41;
 const STEP_3 = 39;
 const STEP_7 = 43;
 const PROBABILITY = 14;
+const PULSES = 13;
+const ROTATE = 14;
 const PITCH_1 = 29;
 const VELOCITY_1 = 21;
 
@@ -486,5 +488,150 @@ describe("LaunchControlXL3Surface step copy", () => {
 
     expect(released.command).toEqual({ type: "none" });
     expect(getSteps(released.runtimePatch)[2]?.active).toBe(true);
+  });
+});
+
+describe("LaunchControlXL3Surface fill", () => {
+  function activeNotes(runtimePatch: CompiledInstrumentEnginePatch) {
+    return getSteps(runtimePatch).map((step) =>
+      step.active ? step.notes.map((note) => note.note).join("+") : "",
+    );
+  }
+
+  it("shift + pulses previews a euclidean fill and writes it when shift is released", () => {
+    const surface = new LaunchControlXL3Surface();
+    const shifted = press(surface, createStepEditPatch(), SHIFT, 0);
+
+    const previewed = turn(surface, shifted.runtimePatch, PULSES, 4, 10);
+
+    expect(previewed.command).toEqual({ type: "seqEdit.update", cc: PULSES });
+    expect(previewed.runtimePatch.runtime.navigation.fill).toEqual({
+      pulses: 4,
+      rotate: 0,
+    });
+    expect(activeNotes(previewed.runtimePatch).every((n) => n === "")).toBe(
+      true,
+    );
+
+    const written = release(surface, previewed.runtimePatch, SHIFT, 20);
+
+    expect(written.command).toMatchObject({
+      type: "seqEdit.update",
+      update: { id: "track-1.runtime.stepSequencer" },
+    });
+    expect(written.runtimePatch.runtime.navigation.fill).toBeUndefined();
+    expect(activeNotes(written.runtimePatch)).toEqual([
+      "C3",
+      "",
+      "",
+      "",
+      "C3",
+      "",
+      "",
+      "",
+      "C3",
+      "",
+      "",
+      "",
+      "C3",
+      "",
+      "",
+      "",
+    ]);
+  });
+
+  it("rotate moves the hits off the beat", () => {
+    const surface = new LaunchControlXL3Surface();
+    const shifted = press(surface, createStepEditPatch(), SHIFT, 0);
+    const pulsed = turn(surface, shifted.runtimePatch, PULSES, 4, 10);
+    const rotated = turn(surface, pulsed.runtimePatch, ROTATE, 2, 20);
+
+    const written = release(surface, rotated.runtimePatch, SHIFT, 30);
+
+    expect(activeNotes(written.runtimePatch)).toEqual([
+      "",
+      "",
+      "C3",
+      "",
+      "",
+      "",
+      "C3",
+      "",
+      "",
+      "",
+      "C3",
+      "",
+      "",
+      "",
+      "C3",
+      "",
+    ]);
+  });
+
+  it("the fill places and removes only the default note", () => {
+    const surface = new LaunchControlXL3Surface();
+    const runtimePatch = createStepEditPatch({
+      0: {
+        active: true,
+        notes: [
+          { note: "C3", velocity: 100 },
+          { note: "E3", velocity: 100 },
+        ],
+      },
+      4: { active: true, notes: [{ note: "G3", velocity: 100 }] },
+      6: { active: true, notes: [{ note: "C3", velocity: 100 }] },
+    });
+    const shifted = press(surface, runtimePatch, SHIFT, 0);
+
+    // Two steps hold C3 already, so one tick makes three pulses.
+    const pulsed = turn(surface, shifted.runtimePatch, PULSES, 1, 10);
+    expect(pulsed.runtimePatch.runtime.navigation.fill?.pulses).toBe(3);
+
+    const written = release(surface, pulsed.runtimePatch, SHIFT, 20);
+
+    expect(activeNotes(written.runtimePatch)).toEqual([
+      "C3+E3",
+      "",
+      "",
+      "",
+      "G3",
+      "C3",
+      "",
+      "",
+      "",
+      "",
+      "C3",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ]);
+  });
+
+  it("pressing shift for something else writes nothing", () => {
+    const surface = new LaunchControlXL3Surface();
+    const runtimePatch = createStepEditPatch({
+      3: { active: true, notes: [{ note: "E3", velocity: 100 }] },
+    });
+    const shifted = press(surface, runtimePatch, SHIFT, 0);
+
+    const released = release(surface, shifted.runtimePatch, SHIFT, 10);
+
+    expect(released.command).toEqual({ type: "none" });
+    expect(getSteps(released.runtimePatch)).toEqual(getSteps(runtimePatch));
+  });
+
+  it("shift + a pitch encoder moves the held step an octave per tick", () => {
+    const surface = new LaunchControlXL3Surface();
+    const runtimePatch = createStepEditPatch({
+      0: { active: true, notes: [{ note: "C3", velocity: 100 }] },
+    });
+    const held = press(surface, runtimePatch, STEP_1, 0);
+    const shifted = press(surface, held.runtimePatch, SHIFT, 5);
+
+    const octaveUp = turn(surface, shifted.runtimePatch, PITCH_1, 1, 10);
+
+    expect(getSteps(octaveUp.runtimePatch)[0]?.notes[0]?.note).toBe("C4");
   });
 });

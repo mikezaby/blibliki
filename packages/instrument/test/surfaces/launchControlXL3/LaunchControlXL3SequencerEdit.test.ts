@@ -180,6 +180,54 @@ describe("LaunchControlXL3SequencerEdit", () => {
     expect(ledValues.get(39)).toBe(127);
   });
 
+  it("previews the fill on the LEDs and labels the fill encoders while shift is held", () => {
+    const sequencerEdit = new LaunchControlXL3SequencerEdit();
+    const runtimePatch = createInstrumentEnginePatch(
+      createStepSequencerInstrumentDocument(),
+      {
+        navigation: {
+          mode: "seqEdit",
+          shiftPressed: true,
+          fill: { pulses: 4, rotate: 1 },
+        },
+      },
+    );
+    const ledValues = new Map<number, number>();
+
+    sequencerEdit.syncStepButtonLeds(
+      {
+        findModule: () => ({
+          moduleType: ModuleType.MidiOutput,
+          onMidiEvent: (event) => {
+            ledValues.set(event.cc!, event.ccValue!);
+          },
+        }),
+      },
+      runtimePatch,
+    );
+
+    expect([37, 38, 42, 46, 50].map((cc) => ledValues.get(cc))).toEqual([
+      0, 127, 127, 127, 127,
+    ]);
+
+    const displayState = sequencerEdit.createDisplayState(runtimePatch);
+
+    expect(displayState?.globalBand.slots[0]).toEqual(
+      expect.objectContaining({
+        key: "pulses",
+        label: "Pulses",
+        valueText: "4",
+      }),
+    );
+    expect(displayState?.globalBand.slots[1]).toEqual(
+      expect.objectContaining({
+        key: "rotate",
+        label: "Rotate",
+        valueText: "1",
+      }),
+    );
+  });
+
   it("applies encoder events to the held sequencer step", () => {
     const sequencerEdit = new LaunchControlXL3SequencerEdit();
     const runtimePatch = createInstrumentEnginePatch(

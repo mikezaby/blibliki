@@ -2,6 +2,7 @@ import { TransportState } from "@blibliki/engine";
 import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
 import type { InstrumentDisplayState } from "@/display/InstrumentDisplayState";
 import {
+  countDefaultNoteSteps,
   getActivePage,
   getHeldStepIndices,
   getStepDefaults,
@@ -65,20 +66,26 @@ export function createLaunchControlXL3SequencerDisplayState(
     { note: defaults.note, velocity: defaults.velocity },
   ];
   const sections = [{ label: describeHeldSteps(heldSteps), startIndex: 0 }];
-
-  return {
-    header: {
-      instrumentName: runtimePatch.compiledInstrument.name,
-      trackName: activeTrack.name,
-      pageKey: runtimePatch.runtime.navigation.activePage,
-      controllerPage: 1,
-      midiChannel: activeTrack.midiChannel,
-      transportState: TransportState.stopped,
-      mode: "seqEdit",
-      heldSteps,
-    },
-    globalBand: {
-      slots: [
+  const { shiftPressed, fill } = runtimePatch.runtime.navigation;
+  // With Shift down the first two encoders become the fill controls.
+  const fillSlots = shiftPressed
+    ? [
+        {
+          key: "pulses",
+          label: "Pulses",
+          shortLabel: "PULS",
+          cc: STEP_CONTROL_CCS[0],
+          valueText: `${fill?.pulses ?? countDefaultNoteSteps(runtimePatch)}`,
+        },
+        {
+          key: "rotate",
+          label: "Rotate",
+          shortLabel: "ROT",
+          cc: STEP_CONTROL_CCS[1],
+          valueText: `${fill?.rotate ?? 0}`,
+        },
+      ]
+    : [
         {
           key: "active",
           label: "Active",
@@ -94,6 +101,22 @@ export function createLaunchControlXL3SequencerDisplayState(
           cc: STEP_CONTROL_CCS[1],
           valueText: `${step?.probability ?? defaults.probability}%`,
         },
+      ];
+
+  return {
+    header: {
+      instrumentName: runtimePatch.compiledInstrument.name,
+      trackName: activeTrack.name,
+      pageKey: runtimePatch.runtime.navigation.activePage,
+      controllerPage: 1,
+      midiChannel: activeTrack.midiChannel,
+      transportState: TransportState.stopped,
+      mode: "seqEdit",
+      heldSteps,
+    },
+    globalBand: {
+      slots: [
+        ...fillSlots,
         {
           key: "duration",
           label: "Duration",

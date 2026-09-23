@@ -22,6 +22,8 @@ const GESTURES: Record<
   growLoop: { gesture: "Turn Loop Length", oled: "Loop Bars" },
   duplicateBar: { gesture: "Shift + Page ▼", oled: "S+Pgv Dup" },
   copyStep: { gesture: "Shift + step, steps", oled: "S+Step Copy" },
+  fillBar: { gesture: "Shift + encoders 1, 2", oled: "S+E1,2 Fill" },
+  octave: { gesture: "Shift + pitch", oled: "S+Pitch Oct" },
   tapStep: { gesture: "Tap a step", oled: "Tap Toggle" },
   holdStep: { gesture: "Hold a step + turn", oled: "Hold Edit" },
   holdSeveral: { gesture: "Hold more steps", oled: "Hold+ Batch" },

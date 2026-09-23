@@ -121,6 +121,7 @@ export function normalizeInstrumentNavigation(
     heldSteps: options.navigation?.heldSteps ?? [],
     stepDefaults: options.navigation?.stepDefaults ?? {},
     copySource: options.navigation?.copySource,
+    fill: options.navigation?.fill,
   };
 }
 

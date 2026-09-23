@@ -68,6 +68,13 @@ export type InstrumentNavigationState = {
   stepDefaults: Record<string, Partial<StepDefaults>>;
   // The step tapped first while Shift is held; later taps paste it.
   copySource?: number;
+  // A euclidean fill being previewed while Shift is held; written on release.
+  fill?: FillPattern;
+};
+
+export type FillPattern = {
+  pulses: number;
+  rotate: number;
 };
 
 export type CompiledInstrument = {

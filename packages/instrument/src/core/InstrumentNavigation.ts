@@ -99,6 +99,10 @@ function normalizeNavigation(
       navigation.copySource < 16
         ? navigation.copySource
         : undefined,
+    fill:
+      mode === "seqEdit" && navigation.shiftPressed
+        ? navigation.fill
+        : undefined,
   };
 }
 

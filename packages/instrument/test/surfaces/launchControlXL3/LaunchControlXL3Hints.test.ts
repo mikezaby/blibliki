@@ -58,6 +58,7 @@ describe("createLaunchControlXL3Hints", () => {
       "growLoop",
       "duplicateBar",
       "copyStep",
+      "fillBar",
       "leaveStepEdit",
       "saveDraft",
       "discardDraft",
@@ -76,6 +77,7 @@ describe("createLaunchControlXL3Hints", () => {
       "editHeld",
       "holdSeveral",
       "releaseHeld",
+      "octave",
       "switchBar",
       "leaveStepEdit",
     ]);

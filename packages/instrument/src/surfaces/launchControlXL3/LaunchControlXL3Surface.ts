@@ -10,12 +10,23 @@ import {
 } from "@/macros/macroMapping";
 import type { MacroEncoder } from "@/macros/types";
 import {
+  applyFill,
+  applyStepEntryControl,
   copyStep,
+  countDefaultNoteSteps,
   duplicateBar,
   STEP_HOLD_MS,
+  STEPS_PER_PAGE,
   toggleStepEntry,
 } from "@/sequencer/stepEntry";
-import { applyLaunchControlXL3SequencerEncoderEvent } from "./LaunchControlXL3SequencerPatch";
+import {
+  getRelativeDelta,
+  STEP_CONTROL_CCS,
+} from "./LaunchControlXL3SequencerControls";
+import {
+  applyLaunchControlXL3SequencerEncoderEvent,
+  resolveLaunchControlXL3SequencerControl,
+} from "./LaunchControlXL3SequencerPatch";
 
 // A macro turn nudges each target's engine prop by `delta` (the change in the
 // macro's offset), leaving the base — the target's dedicated encoder value —
@@ -79,6 +90,9 @@ const STEP_BUTTON_CC_START = 37;
 const STEP_BUTTON_CC_END = 52;
 const ENCODER_CC_START = 13;
 const ENCODER_CC_END = 36;
+const PULSES_CC = STEP_CONTROL_CCS[0];
+const ROTATE_CC = STEP_CONTROL_CCS[1];
+const SEMITONES_PER_OCTAVE = 12;
 
 function createNoopResult(
   runtimePatch: CompiledInstrumentEnginePatch,
@@ -254,7 +268,7 @@ function reduceStepEditEvent(
   ccValue: number,
   now: number,
 ): LaunchControlXL3Result | undefined {
-  const { heldSteps, shiftPressed, copySource } =
+  const { heldSteps, shiftPressed, copySource, fill } =
     runtimePatch.runtime.navigation;
 
   if (isStepButton(cc)) {
@@ -324,11 +338,52 @@ function reduceStepEditEvent(
   }
 
   if (isEncoder(cc)) {
-    const edit = applyLaunchControlXL3SequencerEncoderEvent(
-      runtimePatch,
-      cc,
-      ccValue,
-    );
+    const delta = getRelativeDelta(ccValue);
+
+    // Shift turns the first two encoders into the fill's pulses and rotate,
+    // previewed on the LEDs until Shift's release writes it.
+    if (shiftPressed && (cc === PULSES_CC || cc === ROTATE_CC)) {
+      if (delta === 0) {
+        return createNoopResult(runtimePatch);
+      }
+
+      const current = fill ?? {
+        pulses: countDefaultNoteSteps(runtimePatch),
+        rotate: 0,
+      };
+      const nextFill =
+        cc === PULSES_CC
+          ? {
+              ...current,
+              pulses: Math.max(
+                0,
+                Math.min(STEPS_PER_PAGE, current.pulses + delta),
+              ),
+            }
+          : {
+              ...current,
+              rotate:
+                (((current.rotate + delta) % STEPS_PER_PAGE) + STEPS_PER_PAGE) %
+                STEPS_PER_PAGE,
+            };
+
+      return {
+        runtimePatch: updateInstrumentNavigation(runtimePatch, {
+          fill: nextFill,
+        }),
+        command: { type: "seqEdit.update", cc },
+      };
+    }
+
+    const control = resolveLaunchControlXL3SequencerControl(cc);
+    const edit =
+      shiftPressed && control?.kind === "pitch"
+        ? applyStepEntryControl(
+            runtimePatch,
+            control,
+            delta * SEMITONES_PER_OCTAVE,
+          )
+        : applyLaunchControlXL3SequencerEncoderEvent(runtimePatch, cc, ccValue);
     if (!edit) {
       return createNoopResult(runtimePatch);
     }
@@ -359,15 +414,22 @@ export class LaunchControlXL3Surface {
     }
 
     if (event.cc === SHIFT_CC) {
-      return {
-        runtimePatch: updateInstrumentNavigation(runtimePatch, {
-          shiftPressed: event.ccValue === 127,
-          copySource: undefined,
-        }),
-        command: {
-          type: "none",
-        },
-      };
+      const pressed = event.ccValue === 127;
+      const fill = pressed ? undefined : runtimePatch.runtime.navigation.fill;
+      const nextRuntimePatch = updateInstrumentNavigation(runtimePatch, {
+        shiftPressed: pressed,
+        copySource: undefined,
+        fill: undefined,
+      });
+      // A fill previewed while Shift was down is written as it goes up.
+      const written = fill ? applyFill(nextRuntimePatch, fill) : null;
+
+      return written
+        ? {
+            runtimePatch: written.runtimePatch,
+            command: { type: "seqEdit.update", update: written.update },
+          }
+        : { runtimePatch: nextRuntimePatch, command: { type: "none" } };
     }
 
     const macroResult = applyMacroEncoderEvent(

@@ -11,6 +11,7 @@ import {
 } from "@blibliki/engine";
 import type {
   CompiledInstrumentEnginePatch,
+  FillPattern,
   StepDefaults,
 } from "@/compiler/instrumentTypes";
 import {
@@ -687,6 +688,129 @@ export function copyStep(
   });
 }
 
+// Pulse j lands on floor(j * steps / pulses): every count spreads as evenly
+// as it can, with the first hit on the downbeat before any rotation.
+export function euclideanOnsets(pulses: number, steps: number, rotate: number) {
+  const onsets = new Set<number>();
+
+  for (let pulse = 0; pulse < Math.min(pulses, steps); pulse += 1) {
+    onsets.add((Math.floor((pulse * steps) / pulses) + rotate + steps) % steps);
+  }
+
+  return onsets;
+}
+
+function hasNote(step: IStep, note: string) {
+  return step.notes.some((candidate) => candidate.note === note);
+}
+
+// The fill owns one note, the default. Other notes on a step are left alone.
+function fillSteps(
+  steps: IStep[],
+  fill: FillPattern,
+  defaults: StepDefaults,
+): IStep[] {
+  const onsets = euclideanOnsets(fill.pulses, steps.length, fill.rotate);
+
+  return steps.map((step, index) => {
+    const present = hasNote(step, defaults.note);
+
+    if (onsets.has(index)) {
+      if (present) {
+        return step.active ? step : { ...step, active: true };
+      }
+
+      const notes = [
+        ...step.notes,
+        { note: defaults.note, velocity: defaults.velocity },
+      ];
+
+      return step.notes.length === 0
+        ? {
+            ...step,
+            active: true,
+            notes,
+            duration: defaults.duration,
+            probability: defaults.probability,
+          }
+        : { ...step, active: true, notes };
+    }
+
+    if (!present) {
+      return step;
+    }
+
+    const notes = step.notes.filter(
+      (candidate) => candidate.note !== defaults.note,
+    );
+
+    return { ...step, notes, active: notes.length > 0 && step.active };
+  });
+}
+
+export function countDefaultNoteSteps(
+  runtimePatch: CompiledInstrumentEnginePatch,
+) {
+  const stepSequencer = getStepSequencerProps(runtimePatch);
+  if (!stepSequencer) {
+    return 0;
+  }
+
+  const { page } = getActivePage(stepSequencer.props, runtimePatch);
+  const defaults = getStepDefaults(runtimePatch, stepSequencer.props);
+
+  return (page?.steps ?? []).filter((step) => hasNote(step, defaults.note))
+    .length;
+}
+
+export function previewFill(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  fill: FillPattern,
+): IStep[] | null {
+  const stepSequencer = getStepSequencerProps(runtimePatch);
+  if (!stepSequencer) {
+    return null;
+  }
+
+  const { page } = getActivePage(stepSequencer.props, runtimePatch);
+  if (!page) {
+    return null;
+  }
+
+  return fillSteps(
+    page.steps,
+    fill,
+    getStepDefaults(runtimePatch, stepSequencer.props),
+  );
+}
+
+export function applyFill(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  fill: FillPattern,
+): StepEntryUpdate | null {
+  const stepSequencer = getStepSequencerProps(runtimePatch);
+  const steps = previewFill(runtimePatch, fill);
+  if (!stepSequencer || !steps) {
+    return null;
+  }
+
+  const { moduleId, props } = stepSequencer;
+  const pageIndex = runtimePatch.runtime.navigation.sequencerPageIndex;
+
+  return updateStepSequencerProps(runtimePatch, moduleId, {
+    patterns: props.patterns.map((pattern, patternIndex) =>
+      patternIndex === props.activePatternNo
+        ? {
+            ...pattern,
+            pages: pattern.pages.map((page, candidateIndex) =>
+              candidateIndex === pageIndex ? { ...page, steps } : page,
+            ),
+          }
+        : pattern,
+    ),
+  });
+}
+
 export function getStepStates(
   runtimePatch: CompiledInstrumentEnginePatch,
 ): StepState[] {
@@ -705,10 +829,14 @@ export function getStepStates(
 
   const { page } = getActivePage(stepSequencer.props, runtimePatch);
   const heldSteps = new Set(getHeldStepIndices(runtimePatch));
-  const { copySource } = runtimePatch.runtime.navigation;
+  const { copySource, fill } = runtimePatch.runtime.navigation;
+  const preview = fill ? previewFill(runtimePatch, fill) : null;
+  const onsets = fill
+    ? euclideanOnsets(fill.pulses, STEPS_PER_PAGE, fill.rotate)
+    : null;
 
   return states.map((_, stepIndex) => {
-    if (stepIndex === copySource) {
+    if (stepIndex === copySource || onsets?.has(stepIndex)) {
       return "source";
     }
 
@@ -716,7 +844,7 @@ export function getStepStates(
       return "held";
     }
 
-    const step = page?.steps[stepIndex];
+    const step = preview ? preview[stepIndex] : page?.steps[stepIndex];
     if (!step?.active) {
       return "off";
     }
