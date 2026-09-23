@@ -888,7 +888,7 @@ export default function InstrumentPerformance({
                 <div className="mt-auto px-4 pb-1 pt-6">
                   <Logo
                     wordmark
-                    className="font-mono text-2xl uppercase leading-none tracking-[0.2em] text-zinc-500"
+                    className="text-2xl leading-none text-zinc-500"
                   />
                 </div>
               </aside>

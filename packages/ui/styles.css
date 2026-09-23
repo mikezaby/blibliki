@@ -877,11 +877,22 @@
     flex-shrink: 0;
   }
 
+  /* The name is set once, here, for every app: lowercase in the monospace
+   * stack the apps' mono text uses, semibold, barely tracked. In that face the
+   * tittles on its three i's are small squares, like the one on the mark, and
+   * the lack of tracking keeps it apart from the uppercase, wide-tracked
+   * labels around it. Callers set only colour and font size. */
   :where(.ui-logo) {
     display: inline-flex;
     align-items: baseline;
     gap: 0.4em;
     white-space: nowrap;
+    font-family:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+      "Courier New", monospace;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: none;
   }
 
   /* The mark is 1.4 capitals tall and centred on them, so the name reads a

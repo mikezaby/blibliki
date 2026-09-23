@@ -298,12 +298,14 @@ Thin wrappers over Radix primitives with `ui-*` classes applied. Use the named r
 ### `Logo`
 ```tsx
 <Logo className="h-7 w-7" />                  // the mark alone, sized by the caller
-<Logo wordmark className="text-2xl" />        // mark + "Blibliki", sized by font size
+<Logo wordmark className="text-2xl" />        // mark + "blibliki", sized by font size
 ```
 - The Blibliki logo for every app. Takes the text colour (`currentColor`).
-- `wordmark?: boolean` writes the name beside the mark. The mark is then 1.4
-  capitals tall and centred on them (`.ui-logo__mark` in `styles.css`), and
-  the typeface, case and tracking come from the caller.
+- `wordmark?: boolean` writes the name beside the mark. The name is part of
+  the logo: lowercase `blibliki`, the mono stack, weight 600, 0.02em tracking,
+  fixed in `.ui-logo` in `styles.css`. The mark is 1.4 capitals tall and
+  centred on them (`.ui-logo__mark`). Callers pass only colour and font size;
+  never `font-*`, `uppercase` or `tracking-*`.
 - Without `wordmark` it is an `img` named "Blibliki"; with it the mark is
   hidden from assistive technology and the word is the name.
 - Each app's `public/favicon.svg` carries the same path with its own fills. If
