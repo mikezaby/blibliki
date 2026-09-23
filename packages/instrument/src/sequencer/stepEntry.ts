@@ -1,4 +1,6 @@
 import {
+  type IPage,
+  type IPattern,
   type IStep,
   type IStepSequencerProps,
   type IUpdateModule,
@@ -28,6 +30,9 @@ export const DEFAULT_STEP_VELOCITY = 100;
 export const DEFAULT_STEP_DURATION: IStep["duration"] = "1/16";
 export const STEP_HOLD_MS = 300;
 export const STEPS_PER_PAGE = 16;
+// The engine's loopLength schema stops at 16 (StepSequencer.ts), and the
+// schema itself is not exported.
+export const MAX_LOOP_LENGTH = 16;
 export const DURATION_OPTIONS = stepPropSchema.duration.options;
 export const RESOLUTION_OPTIONS = Object.values(Resolution);
 export const PLAYBACK_OPTIONS = Object.values(PlaybackMode);
@@ -513,9 +518,10 @@ export function applyStepEntryControl(
         ),
       });
     case "loopLength":
-      return updateStepSequencerProps(runtimePatch, moduleId, {
-        loopLength: mapRelativeNumber(props.loopLength, delta, 1, 4),
-      });
+      return setLoopLength(
+        runtimePatch,
+        mapRelativeNumber(props.loopLength, delta, 1, MAX_LOOP_LENGTH),
+      );
     default:
       break;
   }
@@ -547,6 +553,111 @@ export function applyStepEntryControl(
   return learned
     ? { ...edit, runtimePatch: withStepDefaults(edit.runtimePatch, learned) }
     : edit;
+}
+
+function isEmptyPage(page: IPage) {
+  return page.steps.every(
+    (step) => step.notes.length === 0 && step.ccMessages.length === 0,
+  );
+}
+
+function copyPage(page: IPage, name: string): IPage {
+  return {
+    name,
+    steps: page.steps.map((step) => ({
+      ...step,
+      notes: step.notes.map((note) => ({ ...note })),
+      ccMessages: step.ccMessages.map((message) => ({ ...message })),
+    })),
+  };
+}
+
+// Bars past the loop keep their steps, so shrinking and growing again brings
+// them back. Only a bar that becomes active while empty is filled from the
+// bar before it, which chains when the loop grows by several.
+function growPattern(pattern: IPattern, from: number, to: number): IPattern {
+  const pages = [...pattern.pages];
+
+  for (let index = Math.max(from, 1); index < to; index += 1) {
+    const previous = pages[index - 1];
+    const page = pages[index];
+    if (!previous) {
+      break;
+    }
+
+    if (!page) {
+      pages.push(copyPage(previous, `Page ${index + 1}`));
+    } else if (isEmptyPage(page)) {
+      pages[index] = copyPage(previous, page.name);
+    }
+  }
+
+  return { ...pattern, pages };
+}
+
+export function setLoopLength(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  loopLength: number,
+): StepEntryUpdate | null {
+  const stepSequencer = getStepSequencerProps(runtimePatch);
+  if (!stepSequencer) {
+    return null;
+  }
+
+  const { moduleId, props } = stepSequencer;
+  const next = Math.max(1, Math.min(MAX_LOOP_LENGTH, loopLength));
+  if (next === props.loopLength) {
+    return null;
+  }
+
+  if (next < props.loopLength) {
+    return updateStepSequencerProps(runtimePatch, moduleId, {
+      loopLength: next,
+    });
+  }
+
+  return updateStepSequencerProps(runtimePatch, moduleId, {
+    patterns: props.patterns.map((pattern, index) =>
+      index === props.activePatternNo
+        ? growPattern(pattern, props.loopLength, next)
+        : pattern,
+    ),
+    loopLength: next,
+  });
+}
+
+// Copies the current bar onto the following one, growing the loop to reach
+// it, and makes that bar the active page. The caller moves navigation there.
+export function duplicateBar(
+  runtimePatch: CompiledInstrumentEnginePatch,
+): StepEntryUpdate | null {
+  const stepSequencer = getStepSequencerProps(runtimePatch);
+  if (!stepSequencer) {
+    return null;
+  }
+
+  const { moduleId, props } = stepSequencer;
+  const sourceIndex = runtimePatch.runtime.navigation.sequencerPageIndex;
+  const targetIndex = sourceIndex + 1;
+  const pattern = props.patterns[props.activePatternNo];
+  const source = pattern?.pages[sourceIndex];
+  if (!pattern || !source || targetIndex >= MAX_LOOP_LENGTH) {
+    return null;
+  }
+
+  const pages = [...pattern.pages];
+  pages[targetIndex] = copyPage(
+    source,
+    pages[targetIndex]?.name ?? `Page ${targetIndex + 1}`,
+  );
+
+  return updateStepSequencerProps(runtimePatch, moduleId, {
+    patterns: props.patterns.map((candidate, index) =>
+      index === props.activePatternNo ? { ...pattern, pages } : candidate,
+    ),
+    loopLength: Math.max(props.loopLength, targetIndex + 1),
+    activePageNo: targetIndex,
+  });
 }
 
 export function getStepStates(

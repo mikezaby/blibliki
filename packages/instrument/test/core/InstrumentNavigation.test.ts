@@ -64,13 +64,14 @@ describe("InstrumentNavigation", () => {
     });
 
     // Index -1 wraps to the last track, which is the master track. It has no
-    // sourceAmp page, so the page falls back to its first page (filterMod).
+    // sourceAmp page, so the page falls back to its first page (filterMod),
+    // and no sequencer, so the bar index wraps to 0.
     expect(navigation.serialize()).toEqual({
       activeTrackIndex: 7,
       activePage: "filterMod",
       mode: "performance",
       shiftPressed: true,
-      sequencerPageIndex: 1,
+      sequencerPageIndex: 0,
       heldSteps: [],
       stepDefaults: {},
     });
@@ -235,7 +236,7 @@ describe("InstrumentNavigation", () => {
     expect(navigation.navigate("previousTrack").serialize()).toMatchObject({
       activeTrackIndex: 7,
       mode: "performance",
-      sequencerPageIndex: 3,
+      sequencerPageIndex: 0,
     });
   });
 });

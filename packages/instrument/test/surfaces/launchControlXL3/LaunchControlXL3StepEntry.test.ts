@@ -15,6 +15,8 @@ import { LaunchControlXL3Surface } from "@/surfaces/launchControlXL3/LaunchContr
 
 const SHIFT = 63;
 const PAGE_UP = 106;
+const PAGE_DOWN = 107;
+const LOOP_LENGTH = 20;
 const STEP_1 = 37;
 const STEP_4 = 40;
 const STEP_5 = 41;
@@ -59,7 +61,7 @@ function createStepEditPatch(
   });
 }
 
-function getSteps(runtimePatch: CompiledInstrumentEnginePatch) {
+function getSequencerProps(runtimePatch: CompiledInstrumentEnginePatch) {
   const stepSequencer = runtimePatch.patch.modules.find(
     (module) => module.id === "track-1.runtime.stepSequencer",
   );
@@ -67,8 +69,11 @@ function getSteps(runtimePatch: CompiledInstrumentEnginePatch) {
     throw new Error("Expected the first track's step sequencer");
   }
 
-  return (stepSequencer.props as IStepSequencerProps).patterns[0]!.pages[0]!
-    .steps;
+  return stepSequencer.props as IStepSequencerProps;
+}
+
+function getSteps(runtimePatch: CompiledInstrumentEnginePatch, page = 0) {
+  return getSequencerProps(runtimePatch).patterns[0]!.pages[page]!.steps;
 }
 
 function press(
@@ -270,5 +275,142 @@ describe("LaunchControlXL3Surface step entry", () => {
 
     expect(left.runtimePatch.runtime.navigation.mode).toBe("performance");
     expect(left.runtimePatch.runtime.navigation.heldSteps).toEqual([]);
+  });
+});
+
+describe("LaunchControlXL3Surface bars", () => {
+  it("growing the loop appends bars and fills an empty new bar from the one before it", () => {
+    const surface = new LaunchControlXL3Surface();
+    const runtimePatch = createStepEditPatch({
+      0: { active: true, notes: [{ note: "C3", velocity: 100 }] },
+    });
+
+    const twoBars = turn(surface, runtimePatch, LOOP_LENGTH, 1);
+
+    expect(getSequencerProps(twoBars.runtimePatch).loopLength).toBe(2);
+    expect(getSteps(twoBars.runtimePatch, 1)).toEqual(
+      getSteps(twoBars.runtimePatch, 0),
+    );
+
+    const fiveBars = turn(surface, twoBars.runtimePatch, LOOP_LENGTH, 3);
+    const props = getSequencerProps(fiveBars.runtimePatch);
+
+    expect(props.loopLength).toBe(5);
+    expect(props.patterns[0]?.pages).toHaveLength(5);
+    expect(getSteps(fiveBars.runtimePatch, 4)).toEqual(
+      getSteps(fiveBars.runtimePatch, 0),
+    );
+    expect(fiveBars.command).toMatchObject({
+      type: "seqEdit.update",
+      update: { changes: { props: { loopLength: 5 } } },
+    });
+  });
+
+  it("brings a bar that still holds steps back as it was when the loop grows again", () => {
+    const surface = new LaunchControlXL3Surface();
+    const document = createStepEditDocument({
+      0: { active: true, notes: [{ note: "C3", velocity: 100 }] },
+    });
+    const secondPage = document.tracks[0]!.sequencer.pages[1]!;
+    secondPage.steps[0] = {
+      ...secondPage.steps[0]!,
+      active: true,
+      notes: [{ note: "D3", velocity: 90 }],
+    };
+    document.tracks[0]!.sequencer.loopLength = 2;
+    const runtimePatch = createInstrumentEnginePatch(document, {
+      navigation: { mode: "seqEdit" },
+    });
+
+    const oneBar = turn(surface, runtimePatch, LOOP_LENGTH, -1);
+    expect(getSequencerProps(oneBar.runtimePatch).loopLength).toBe(1);
+
+    const twoBars = turn(surface, oneBar.runtimePatch, LOOP_LENGTH, 1);
+
+    expect(getSteps(twoBars.runtimePatch, 1)[0]?.notes).toEqual([
+      { note: "D3", velocity: 90 },
+    ]);
+  });
+
+  it("caps the loop at the engine's sixteen bars", () => {
+    const surface = new LaunchControlXL3Surface();
+
+    const capped = turn(surface, createStepEditPatch(), LOOP_LENGTH, 40);
+
+    expect(getSequencerProps(capped.runtimePatch).loopLength).toBe(16);
+    expect(
+      getSequencerProps(capped.runtimePatch).patterns[0]?.pages,
+    ).toHaveLength(16);
+  });
+
+  it("shift + page down duplicates the bar onto the next one and moves there", () => {
+    const surface = new LaunchControlXL3Surface();
+    const runtimePatch = createStepEditPatch({
+      2: { active: true, notes: [{ note: "E3", velocity: 100 }] },
+    });
+
+    const shifted = press(surface, runtimePatch, SHIFT, 0);
+    const duplicated = press(surface, shifted.runtimePatch, PAGE_DOWN, 10);
+
+    expect(duplicated.command).toMatchObject({
+      type: "seqEdit.update",
+      update: { changes: { props: { loopLength: 2, activePageNo: 1 } } },
+    });
+    expect(duplicated.runtimePatch.runtime.navigation.sequencerPageIndex).toBe(
+      1,
+    );
+    expect(getSteps(duplicated.runtimePatch, 1)).toEqual(
+      getSteps(duplicated.runtimePatch, 0),
+    );
+
+    const again = press(surface, duplicated.runtimePatch, PAGE_DOWN, 20);
+
+    expect(getSequencerProps(again.runtimePatch).loopLength).toBe(3);
+    expect(again.runtimePatch.runtime.navigation.sequencerPageIndex).toBe(2);
+    expect(getSteps(again.runtimePatch, 2)[2]?.notes).toEqual([
+      { note: "E3", velocity: 100 },
+    ]);
+  });
+
+  it("shift + page down overwrites the next bar inside the loop", () => {
+    const surface = new LaunchControlXL3Surface();
+    const document = createStepEditDocument({
+      0: { active: true, notes: [{ note: "C3", velocity: 100 }] },
+    });
+    const secondPage = document.tracks[0]!.sequencer.pages[1]!;
+    secondPage.steps[5] = {
+      ...secondPage.steps[5]!,
+      active: true,
+      notes: [{ note: "G3", velocity: 90 }],
+    };
+    document.tracks[0]!.sequencer.loopLength = 2;
+    const runtimePatch = createInstrumentEnginePatch(document, {
+      navigation: { mode: "seqEdit" },
+    });
+
+    const shifted = press(surface, runtimePatch, SHIFT, 0);
+    const duplicated = press(surface, shifted.runtimePatch, PAGE_DOWN, 10);
+
+    expect(getSequencerProps(duplicated.runtimePatch).loopLength).toBe(2);
+    expect(getSteps(duplicated.runtimePatch, 1)).toEqual(
+      getSteps(duplicated.runtimePatch, 0),
+    );
+  });
+
+  it("bar navigation wraps around the bars the pattern has", () => {
+    const surface = new LaunchControlXL3Surface();
+    const runtimePatch = createStepEditPatch();
+
+    const fiveBars = turn(surface, runtimePatch, LOOP_LENGTH, 4);
+    let bar = fiveBars.runtimePatch;
+    for (let i = 0; i < 4; i += 1) {
+      bar = press(surface, bar, PAGE_UP, i).runtimePatch;
+    }
+
+    expect(bar.runtime.navigation.sequencerPageIndex).toBe(4);
+    expect(
+      press(surface, bar, PAGE_UP, 10).runtimePatch.runtime.navigation
+        .sequencerPageIndex,
+    ).toBe(0);
   });
 });

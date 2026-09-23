@@ -9,7 +9,11 @@ import {
   reduceMacroValue,
 } from "@/macros/macroMapping";
 import type { MacroEncoder } from "@/macros/types";
-import { STEP_HOLD_MS, toggleStepEntry } from "@/sequencer/stepEntry";
+import {
+  duplicateBar,
+  STEP_HOLD_MS,
+  toggleStepEntry,
+} from "@/sequencer/stepEntry";
 import { applyLaunchControlXL3SequencerEncoderEvent } from "./LaunchControlXL3SequencerPatch";
 
 // A macro turn nudges each target's engine prop by `delta` (the change in the
@@ -404,6 +408,25 @@ export class LaunchControlXL3Surface {
           type: "seqEdit.toggle",
           enabled,
         },
+      };
+    }
+
+    if (
+      event.cc === PAGE_DOWN_CC &&
+      currentNavigation.shiftPressed &&
+      currentNavigation.mode === "seqEdit" &&
+      sequencerTrack
+    ) {
+      const duplicated = duplicateBar(runtimePatch);
+      if (!duplicated) {
+        return createNoopResult(runtimePatch);
+      }
+
+      return {
+        runtimePatch: updateInstrumentNavigation(duplicated.runtimePatch, {
+          sequencerPageIndex: currentNavigation.sequencerPageIndex + 1,
+        }),
+        command: { type: "seqEdit.update", update: duplicated.update },
       };
     }
 

@@ -10,6 +10,8 @@ export type InstrumentHintAction =
   | "switchTrack"
   | "switchPage"
   | "switchBar"
+  | "growLoop"
+  | "duplicateBar"
   | "tapStep"
   | "holdStep"
   | "holdSeveral"
@@ -33,6 +35,8 @@ const HINT_TEXT: Record<InstrumentHintAction, string> = {
   switchTrack: "Previous or next track",
   switchPage: "Previous or next page of controls",
   switchBar: "Previous or next bar",
+  growLoop: "Add bars to the loop; a new bar copies the one before it",
+  duplicateBar: "Copy this bar onto the next one and go there",
   tapStep: "Toggle the step; a new one takes the defaults",
   holdStep: "Edit that step with the encoders",
   holdSeveral: "Edit the held steps together",
@@ -70,6 +74,8 @@ export function listInstrumentHintActions(
       "holdSeveral",
       "setDefaults",
       "switchBar",
+      "growLoop",
+      "duplicateBar",
       "leaveStepEdit",
       "saveDraft",
       "discardDraft",

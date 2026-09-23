@@ -19,6 +19,8 @@ const GESTURES: Record<
   switchTrack: { gesture: "Track ◀ ▶", oled: "Tr<> Track" },
   switchPage: { gesture: "Page ▲ ▼", oled: "Pg^v Page" },
   switchBar: { gesture: "Page ▲ ▼", oled: "Pg^v Bar" },
+  growLoop: { gesture: "Turn Loop Length", oled: "Loop Bars" },
+  duplicateBar: { gesture: "Shift + Page ▼", oled: "S+Pgv Dup" },
   tapStep: { gesture: "Tap a step", oled: "Tap Toggle" },
   holdStep: { gesture: "Hold a step + turn", oled: "Hold Edit" },
   holdSeveral: { gesture: "Hold more steps", oled: "Hold+ Batch" },

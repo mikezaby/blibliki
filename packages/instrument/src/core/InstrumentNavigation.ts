@@ -1,3 +1,4 @@
+import { type IStepSequencerProps, ModuleType } from "@blibliki/engine";
 import type {
   CompiledInstrumentEnginePatch,
   CompiledInstrumentLaunchControlXL3PageSummary,
@@ -13,8 +14,25 @@ function wrapIndex(nextIndex: number, length: number) {
   return ((nextIndex % length) + length) % length;
 }
 
-function wrapSequencerPageIndex(pageIndex: number) {
-  return wrapIndex(pageIndex, 4);
+function getSequencerPageCount(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  activeTrackIndex: number,
+) {
+  const track = runtimePatch.compiledInstrument.tracks[activeTrackIndex];
+  const moduleId = track
+    ? runtimePatch.runtime.stepSequencerIds[track.key]
+    : undefined;
+  const module = runtimePatch.patch.modules.find(
+    (candidate) => candidate.id === moduleId,
+  );
+  if (module?.moduleType !== ModuleType.StepSequencer) {
+    return 1;
+  }
+
+  const props = module.props as IStepSequencerProps;
+  const pattern = props.patterns[props.activePatternNo] ?? props.patterns[0];
+
+  return Math.max(1, pattern?.pages.length ?? 1);
 }
 
 function isSequencerTrack(
@@ -62,7 +80,10 @@ function normalizeNavigation(
     activePage,
     mode,
     shiftPressed: navigation.shiftPressed,
-    sequencerPageIndex: wrapSequencerPageIndex(navigation.sequencerPageIndex),
+    sequencerPageIndex: wrapIndex(
+      navigation.sequencerPageIndex,
+      getSequencerPageCount(runtimePatch, activeTrackIndex),
+    ),
     heldSteps:
       mode === "seqEdit"
         ? navigation.heldSteps.filter(
