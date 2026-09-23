@@ -27,6 +27,7 @@ const STEP_LED_VALUES: Record<StepState, number> = {
   off: STEP_LED_OFF,
   programmed: STEP_LED_PROGRAMMED,
   held: STEP_LED_HELD,
+  source: STEP_LED_HELD,
 };
 
 export function syncLaunchControlXL3SequencerStepButtonLeds(

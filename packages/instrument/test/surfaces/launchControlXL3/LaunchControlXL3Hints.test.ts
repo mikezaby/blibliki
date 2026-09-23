@@ -57,6 +57,7 @@ describe("createLaunchControlXL3Hints", () => {
       "switchBar",
       "growLoop",
       "duplicateBar",
+      "copyStep",
       "leaveStepEdit",
       "saveDraft",
       "discardDraft",

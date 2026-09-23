@@ -20,6 +20,8 @@ const LOOP_LENGTH = 20;
 const STEP_1 = 37;
 const STEP_4 = 40;
 const STEP_5 = 41;
+const STEP_3 = 39;
+const STEP_7 = 43;
 const PROBABILITY = 14;
 const PITCH_1 = 29;
 const VELOCITY_1 = 21;
@@ -412,5 +414,77 @@ describe("LaunchControlXL3Surface bars", () => {
       press(surface, bar, PAGE_UP, 10).runtimePatch.runtime.navigation
         .sequencerPageIndex,
     ).toBe(0);
+  });
+});
+
+describe("LaunchControlXL3Surface step copy", () => {
+  const seeded = {
+    2: {
+      active: true,
+      notes: [{ note: "E3", velocity: 90 }],
+      probability: 80,
+      duration: "1/8" as const,
+    },
+  };
+
+  it("shift + step marks the copy source and every later tap pastes it", () => {
+    const surface = new LaunchControlXL3Surface();
+    const shifted = press(surface, createStepEditPatch(seeded), SHIFT, 0);
+
+    const source = press(surface, shifted.runtimePatch, STEP_3, 10);
+
+    expect(source.command).toEqual({ type: "seqEdit.hold" });
+    expect(source.runtimePatch.runtime.navigation.copySource).toBe(2);
+    expect(source.runtimePatch.runtime.navigation.heldSteps).toEqual([]);
+
+    const pasted = press(surface, source.runtimePatch, STEP_5, 20);
+
+    expect(pasted.command).toMatchObject({
+      type: "seqEdit.update",
+      update: { id: "track-1.runtime.stepSequencer" },
+    });
+    expect(getSteps(pasted.runtimePatch)[4]).toEqual(
+      getSteps(pasted.runtimePatch)[2],
+    );
+    expect(pasted.runtimePatch.runtime.navigation.copySource).toBe(2);
+
+    const pastedAgain = press(surface, pasted.runtimePatch, STEP_7, 30);
+
+    expect(getSteps(pastedAgain.runtimePatch)[6]?.notes).toEqual([
+      { note: "E3", velocity: 90 },
+    ]);
+  });
+
+  it("releasing shift clears the copy source", () => {
+    const surface = new LaunchControlXL3Surface();
+    const shifted = press(surface, createStepEditPatch(seeded), SHIFT, 0);
+    const source = press(surface, shifted.runtimePatch, STEP_3, 10);
+
+    const released = release(surface, source.runtimePatch, SHIFT, 20);
+
+    expect(released.runtimePatch.runtime.navigation.copySource).toBeUndefined();
+
+    const tapped = release(
+      surface,
+      press(surface, released.runtimePatch, STEP_5, 30).runtimePatch,
+      STEP_5,
+      40,
+    );
+
+    expect(getSteps(tapped.runtimePatch)[4]?.notes).toEqual([
+      { note: "E3", velocity: 90 },
+    ]);
+    expect(getSteps(tapped.runtimePatch)[4]?.probability).toBe(80);
+  });
+
+  it("a step release while shift is held toggles nothing", () => {
+    const surface = new LaunchControlXL3Surface();
+    const shifted = press(surface, createStepEditPatch(seeded), SHIFT, 0);
+    const source = press(surface, shifted.runtimePatch, STEP_3, 10);
+
+    const released = release(surface, source.runtimePatch, STEP_3, 20);
+
+    expect(released.command).toEqual({ type: "none" });
+    expect(getSteps(released.runtimePatch)[2]?.active).toBe(true);
   });
 });

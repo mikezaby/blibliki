@@ -127,8 +127,12 @@ describe("LaunchControlXL3Surface", () => {
       shifted.runtimePatch,
       MidiEvent.fromCC(106, 127, 0),
     );
-    const result = surface.reduceEvent(
+    const unshifted = surface.reduceEvent(
       seqEdit.runtimePatch,
+      MidiEvent.fromCC(63, 0, 0),
+    );
+    const result = surface.reduceEvent(
+      unshifted.runtimePatch,
       MidiEvent.fromCC(40, 127, 0),
     );
 

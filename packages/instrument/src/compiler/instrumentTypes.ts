@@ -66,6 +66,8 @@ export type InstrumentNavigationState = {
   sequencerPageIndex: number;
   heldSteps: HeldStep[];
   stepDefaults: Record<string, Partial<StepDefaults>>;
+  // The step tapped first while Shift is held; later taps paste it.
+  copySource?: number;
 };
 
 export type CompiledInstrument = {

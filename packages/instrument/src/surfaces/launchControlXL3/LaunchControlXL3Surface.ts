@@ -10,6 +10,7 @@ import {
 } from "@/macros/macroMapping";
 import type { MacroEncoder } from "@/macros/types";
 import {
+  copyStep,
   duplicateBar,
   STEP_HOLD_MS,
   toggleStepEntry,
@@ -253,10 +254,37 @@ function reduceStepEditEvent(
   ccValue: number,
   now: number,
 ): LaunchControlXL3Result | undefined {
-  const { heldSteps } = runtimePatch.runtime.navigation;
+  const { heldSteps, shiftPressed, copySource } =
+    runtimePatch.runtime.navigation;
 
   if (isStepButton(cc)) {
     const stepIndex = cc - STEP_BUTTON_CC_START;
+
+    // With Shift down the buttons copy: the first tap is the source, the
+    // rest are pasted onto. Releases mean nothing here.
+    if (shiftPressed) {
+      if (ccValue !== 127) {
+        return createNoopResult(runtimePatch);
+      }
+
+      if (copySource === undefined) {
+        return {
+          runtimePatch: updateInstrumentNavigation(runtimePatch, {
+            copySource: stepIndex,
+          }),
+          command: { type: "seqEdit.hold" },
+        };
+      }
+
+      const pasted = copyStep(runtimePatch, copySource, stepIndex);
+
+      return pasted
+        ? {
+            runtimePatch: pasted.runtimePatch,
+            command: { type: "seqEdit.update", update: pasted.update },
+          }
+        : createNoopResult(runtimePatch);
+    }
 
     if (ccValue === 127) {
       return {
@@ -334,6 +362,7 @@ export class LaunchControlXL3Surface {
       return {
         runtimePatch: updateInstrumentNavigation(runtimePatch, {
           shiftPressed: event.ccValue === 127,
+          copySource: undefined,
         }),
         command: {
           type: "none",

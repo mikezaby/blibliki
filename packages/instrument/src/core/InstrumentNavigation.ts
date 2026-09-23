@@ -91,6 +91,14 @@ function normalizeNavigation(
           )
         : [],
     stepDefaults: navigation.stepDefaults,
+    copySource:
+      mode === "seqEdit" &&
+      navigation.shiftPressed &&
+      navigation.copySource !== undefined &&
+      navigation.copySource >= 0 &&
+      navigation.copySource < 16
+        ? navigation.copySource
+        : undefined,
   };
 }
 

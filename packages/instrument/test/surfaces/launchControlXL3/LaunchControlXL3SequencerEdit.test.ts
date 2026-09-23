@@ -155,6 +155,31 @@ describe("LaunchControlXL3SequencerEdit", () => {
     ]);
   });
 
+  it("lights the copy source fully", () => {
+    const sequencerEdit = new LaunchControlXL3SequencerEdit();
+    const runtimePatch = createInstrumentEnginePatch(
+      createStepSequencerInstrumentDocument(),
+      {
+        navigation: { mode: "seqEdit", shiftPressed: true, copySource: 2 },
+      },
+    );
+    const ledValues = new Map<number, number>();
+
+    sequencerEdit.syncStepButtonLeds(
+      {
+        findModule: () => ({
+          moduleType: ModuleType.MidiOutput,
+          onMidiEvent: (event) => {
+            ledValues.set(event.cc!, event.ccValue!);
+          },
+        }),
+      },
+      runtimePatch,
+    );
+
+    expect(ledValues.get(39)).toBe(127);
+  });
+
   it("applies encoder events to the held sequencer step", () => {
     const sequencerEdit = new LaunchControlXL3SequencerEdit();
     const runtimePatch = createInstrumentEnginePatch(

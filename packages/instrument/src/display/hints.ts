@@ -12,6 +12,7 @@ export type InstrumentHintAction =
   | "switchBar"
   | "growLoop"
   | "duplicateBar"
+  | "copyStep"
   | "tapStep"
   | "holdStep"
   | "holdSeveral"
@@ -37,6 +38,7 @@ const HINT_TEXT: Record<InstrumentHintAction, string> = {
   switchBar: "Previous or next bar",
   growLoop: "Add bars to the loop; a new bar copies the one before it",
   duplicateBar: "Copy this bar onto the next one and go there",
+  copyStep: "Copy the first step tapped onto the ones tapped after it",
   tapStep: "Toggle the step; a new one takes the defaults",
   holdStep: "Edit that step with the encoders",
   holdSeveral: "Edit the held steps together",
@@ -76,6 +78,7 @@ export function listInstrumentHintActions(
       "switchBar",
       "growLoop",
       "duplicateBar",
+      "copyStep",
       "leaveStepEdit",
       "saveDraft",
       "discardDraft",

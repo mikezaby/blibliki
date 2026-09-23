@@ -55,7 +55,7 @@ export type StepEntryUpdate = {
   update?: IUpdateModule<ModuleType.StepSequencer>;
 };
 
-export type StepState = "off" | "programmed" | "held";
+export type StepState = "off" | "programmed" | "held" | "source";
 
 export type ActiveStepSequencer = {
   moduleId: string;
@@ -660,6 +660,33 @@ export function duplicateBar(
   });
 }
 
+export function copyStep(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  fromIndex: number,
+  toIndex: number,
+): StepEntryUpdate | null {
+  const stepSequencer = getStepSequencerProps(runtimePatch);
+  if (!stepSequencer || fromIndex === toIndex) {
+    return null;
+  }
+
+  const { moduleId, props } = stepSequencer;
+  const pageIndex = runtimePatch.runtime.navigation.sequencerPageIndex;
+  const source =
+    props.patterns[props.activePatternNo]?.pages[pageIndex]?.steps[fromIndex];
+  if (!source) {
+    return null;
+  }
+
+  return updateStepSequencerProps(runtimePatch, moduleId, {
+    patterns: updateSteps(props, pageIndex, [toIndex], () => ({
+      ...source,
+      notes: source.notes.map((note) => ({ ...note })),
+      ccMessages: source.ccMessages.map((message) => ({ ...message })),
+    })),
+  });
+}
+
 export function getStepStates(
   runtimePatch: CompiledInstrumentEnginePatch,
 ): StepState[] {
@@ -678,8 +705,13 @@ export function getStepStates(
 
   const { page } = getActivePage(stepSequencer.props, runtimePatch);
   const heldSteps = new Set(getHeldStepIndices(runtimePatch));
+  const { copySource } = runtimePatch.runtime.navigation;
 
   return states.map((_, stepIndex) => {
+    if (stepIndex === copySource) {
+      return "source";
+    }
+
     if (heldSteps.has(stepIndex)) {
       return "held";
     }
