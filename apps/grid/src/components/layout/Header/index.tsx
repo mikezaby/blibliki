@@ -59,7 +59,7 @@ export default function Header() {
         className="flex h-12 min-w-[920px] items-center border-x-0 border-t-0 px-4"
       >
         <Stack direction="row" align="center" gap={2} className="mr-4">
-          <Text asChild size="lg" weight="semibold" className="tracking-tight">
+          <Text asChild size="lg">
             <h1>
               <Logo wordmark />
             </h1>

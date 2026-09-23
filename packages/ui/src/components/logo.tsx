@@ -8,8 +8,10 @@ const MARK_PATH =
   "M16 6H48V20.4H37V35.6H48V48H31.6V59H24.4V48H6V16A10 10 0 0 1 16 6ZM6 52H20.4V63H35.6V52H48V68.4H59V75.6H48V94H16A10 10 0 0 1 6 84ZM52 52H68.4V41H75.6V52H94V84A10 10 0 0 1 84 94H52V79.6H63V64.4H52ZM68.4 29.8H75.6V37H68.4Z";
 
 export interface LogoProps {
-  // Writes the name beside the mark. The mark then follows the font size,
-  // standing a little taller than the capitals.
+  // Writes the name beside the mark. The name is part of the logo, so its
+  // face, weight, case and spacing are fixed here (see .ui-logo in
+  // styles.css). The caller sets only the colour and the font size, which
+  // the mark follows, standing a little taller than the letters.
   wordmark?: boolean;
   className?: string;
 }
@@ -40,7 +42,7 @@ function Logo({ wordmark = false, className }: LogoProps) {
       >
         <path d={MARK_PATH} />
       </svg>
-      Blibliki
+      blibliki
     </span>
   );
 }

@@ -30,15 +30,15 @@ export const Mark: Story = {
   ),
 };
 
+// The wordmark's face, weight, case and spacing are fixed by the component.
+// Only the size changes from one use to the next.
 export const Wordmark: Story = {
   render: () => (
     <Stack gap={4}>
-      <Logo wordmark className="text-4xl font-semibold tracking-tight" />
-      <Logo wordmark className="text-xl font-semibold tracking-tight" />
-      <Logo
-        wordmark
-        className="font-mono text-2xl uppercase tracking-[0.22em]"
-      />
+      <Logo wordmark className="text-5xl" />
+      <Logo wordmark className="text-2xl" />
+      <Logo wordmark className="text-lg" />
+      <Logo wordmark className="text-sm" />
     </Stack>
   ),
 };

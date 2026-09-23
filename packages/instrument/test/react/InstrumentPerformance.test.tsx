@@ -598,7 +598,7 @@ describe("InstrumentPerformance", () => {
 
     // In the column with the stats and meters, the way a maker's mark sits on
     // hardware, not up in the header with the controls.
-    expect(screen.getByText("Blibliki").closest("aside")).toBeTruthy();
+    expect(screen.getByText("blibliki").closest("aside")).toBeTruthy();
     expect(
       screen.getByRole("button", { name: "Start" }).closest("aside"),
     ).toBeNull();
