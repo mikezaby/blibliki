@@ -125,3 +125,14 @@ close after 1 s. Browsers are not affected; `packages/pi` could hit it only
 by shutting down while a patch loads. Report it upstream with a loop that
 creates a context, adds a worklet node and closes at once, then drop the
 timeout when a fixed version is in the catalog.
+
+## WetDryMixer's crossfade test still fails now and then
+
+`packages/engine/test/utils/WetDryMixer.test.ts`, "should use equal-power
+crossfade curve", failed once in a full `pnpm test` on 2026-09-23 with the dry
+gain read as 0.924 where 1 was expected, on a branch that changes nothing in
+the engine. The file passes on its own and the whole engine suite passed on
+the next run. The value read is the curve one step early, so the gain is
+being read before the automation has landed rather than computed wrongly.
+Have the test wait on the context's time, or read the gain through a
+rendered buffer, instead of reading `gain.value` right after `setMix`.
