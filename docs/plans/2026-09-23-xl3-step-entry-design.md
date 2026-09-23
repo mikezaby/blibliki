@@ -1,7 +1,8 @@
 # Step Entry on the Launch Control XL3
 
-Status: proposed 2026-09-23, decisions taken in conversation, awaiting
-review. Supersedes the "Seq Edit Mode" and "Seq Edit Encoder Layout"
+Status: agreed 2026-09-23 and implemented the same day on branch
+`feat/step-edit-improvements`, one commit per increment, pending the device
+checks under "Open questions". Supersedes the "Seq Edit Mode" and "Seq Edit Encoder Layout"
 sections of `docs/plans/2026-03-11-blibliki-pi-one-step-further-design.md`.
 The gesture survey behind it is `docs/research/step-entry-workflows.md` on
 branch `docs/step-entry-research`. Issues #66 to #70 refer to this as the
@@ -174,6 +175,35 @@ Not asked for, but the model needs it.
 - The per-encoder value overlay that the OLED shows in performance mode
   fires in Step Edit too, so holding a step and turning pitch shows the
   note name.
+
+## Other controllers
+
+The XL3 is the only controller today and a second one is expected. The step
+logic (held steps, defaults, toggle, batch edit, bars, copy, fill) lives in
+`packages/instrument/src/sequencer/stepEntry.ts` and knows nothing about
+CCs. The list of actions a hint can name lives in
+`packages/instrument/src/display/hints.ts`. The XL3 files map its buttons and
+encoders onto those calls and attach its gesture names. A second controller
+adds its own mapping and gesture table and reuses the rest. Nothing was
+abstracted ahead of that controller.
+
+## Implementation notes
+
+Details settled while building, where the sections above left room:
+
+- A second note added to a held step with a pitch encoder starts from the
+  default note, not from C3, so a chord is built from its root.
+- An inactive step that still holds notes shows its LED off. A tap brings
+  the notes back.
+- Bar navigation wraps around the bars the pattern has, not the loop, so a
+  bar past the loop can still be looked at.
+- The fill spreads pulse j onto step floor(j x 16 / pulses), which puts the
+  first hit on the downbeat, and rotate wraps around the bar.
+- The controller's text command takes 12 characters per field, so each
+  cheatsheet cell is a code such as `S+Pg^ Edit`. How many of those the 2x4
+  layout shows legibly needs the device.
+- The public reducer takes an optional clock so tests can time taps; the
+  session uses `performance.now()`.
 
 ## The issues
 
