@@ -303,6 +303,11 @@ the meters, where hardware carries its maker's name. It is `Logo` from
 sets its size and its dim grey. It is part of the console, not something a
 host passes in: every app that renders the console is a Blibliki app.
 
+Holding Shift on the controller shows a cheatsheet over the bands: the
+gestures that apply in the current mode, taken from the display state's
+`hints`. The `?` button in the header pins it open. The controller's own
+screen shows the first eight hints while Shift is held.
+
 The console is a faceplate, not a responsive page. It is laid out once at a
 fixed 1536px design width and then scaled as a whole to fit whatever stage it
 lands on — growing as well as shrinking — so an eight-encoder band stays an

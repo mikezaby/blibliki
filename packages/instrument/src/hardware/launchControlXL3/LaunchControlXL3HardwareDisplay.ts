@@ -6,9 +6,12 @@ const SYSEX_HEADER = [0xf0, 0x00, 0x20, 0x29, 0x02, 0x15];
 const OVERLAY_TARGET = 0x36;
 const CMD_CONFIGURE = 0x04;
 const CMD_SET_TEXT = 0x06;
+const CANCEL = 0x00;
 const ARRANGE_2_LINES = 0x01;
 const ARRANGE_3_LINES = 0x02;
+const ARRANGE_TITLE_AND_NAMES = 0x03;
 const TRIGGER = 0x7f;
+const CHEATSHEET_CELLS = 8;
 
 // Analog-control temp-display targets (faders 0x05-0x0C, encoders 0x0D-0x24).
 // Same indices as their CC numbers.
@@ -106,6 +109,32 @@ export function encoderDisplayEvents(
   }
 
   return null;
+}
+
+// The title plus 2x4 names layout: the mode, then one hint per cell.
+export function cheatsheetDisplayEvents(
+  displayState: InstrumentDisplayState,
+): MidiEvent[] | null {
+  const hints = displayState.hints ?? [];
+  if (hints.length === 0) {
+    return null;
+  }
+
+  const title =
+    displayState.header.mode === "seqEdit" ? "STEP EDIT" : "PERFORMANCE";
+
+  return [
+    configure(ARRANGE_TITLE_AND_NAMES),
+    setText(0, title),
+    ...hints
+      .slice(0, CHEATSHEET_CELLS)
+      .map((hint, index) => setText(index + 1, hint.oled)),
+    configure(TRIGGER),
+  ];
+}
+
+export function cancelOverlayEvents(): MidiEvent[] {
+  return [configure(CANCEL)];
 }
 
 export function navigationDisplayEvents(

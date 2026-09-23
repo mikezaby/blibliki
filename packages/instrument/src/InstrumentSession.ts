@@ -22,6 +22,8 @@ import {
   type LiveDisplayEngine,
 } from "@/display/LiveInstrumentDisplayState";
 import {
+  cancelOverlayEvents,
+  cheatsheetDisplayEvents,
   disableAnalogAutoDisplayEvents,
   encoderDisplayEvents,
   navigationDisplayEvents,
@@ -265,6 +267,14 @@ export class InstrumentSession implements InstrumentControllerSession {
     let didRuntimePatchChange =
       result.runtimePatch !== this.currentRuntimePatch;
     this.currentRuntimePatch = result.runtimePatch;
+
+    if (event.cc === SHIFT_CC) {
+      this.sendHardwareDisplayEvents(
+        event.ccValue === 127
+          ? cheatsheetDisplayEvents(this.getDisplayState())
+          : cancelOverlayEvents(),
+      );
+    }
 
     if (result.command.type === "persistence") {
       void this.persistenceFlow.requestAction(

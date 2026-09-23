@@ -5,6 +5,7 @@ import type {
   InstrumentDisplayNotice,
   InstrumentDisplayState,
 } from "@/display/InstrumentDisplayState";
+import { createLaunchControlXL3Hints } from "@/surfaces/launchControlXL3/LaunchControlXL3Hints";
 import { launchControlXL3SequencerEdit } from "@/surfaces/launchControlXL3/LaunchControlXL3SequencerEdit";
 
 type DisplayEngineModule = {
@@ -200,6 +201,8 @@ export function createLiveInstrumentDisplayState(
 ): InstrumentDisplayState {
   const runtimeState = Instrument.fromRuntimePatch(runtimePatch).runtimeState;
   const trackVolume = getActiveTrackVolume(engine, runtimePatch);
+  const hints = createLaunchControlXL3Hints(runtimePatch);
+  const { shiftPressed } = runtimePatch.runtime.navigation;
   if (runtimeState.navigation.mode === "seqEdit") {
     const seqEditDisplayState =
       launchControlXL3SequencerEdit.createDisplayState(runtimePatch);
@@ -207,9 +210,11 @@ export function createLiveInstrumentDisplayState(
       return {
         ...seqEditDisplayState,
         notice: options.notice,
+        hints,
         header: {
           ...seqEditDisplayState.header,
           trackVolume,
+          shiftPressed,
           transportState: engine.state ?? TransportState.stopped,
         },
       };
@@ -221,9 +226,11 @@ export function createLiveInstrumentDisplayState(
   return {
     ...staticDisplayState,
     notice: options.notice,
+    hints,
     header: {
       ...staticDisplayState.header,
       trackVolume,
+      shiftPressed,
       transportState: engine.state ?? TransportState.stopped,
     },
     globalBand: {

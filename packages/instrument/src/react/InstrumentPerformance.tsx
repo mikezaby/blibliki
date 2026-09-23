@@ -31,6 +31,7 @@ import type {
   BandSection,
   InstrumentDisplayState,
 } from "@/display/InstrumentDisplayState";
+import type { InstrumentHint } from "@/display/hints";
 import { createSavedInstrumentDocument } from "@/document/SavedInstrumentDocument";
 import type { InstrumentDocument } from "@/document/types";
 import EncoderGlyph from "./EncoderGlyph";
@@ -543,6 +544,41 @@ function PerformanceBand({
   );
 }
 
+// Covers the bands rather than pushing them down, so holding Shift to read
+// does not rescale the whole console.
+function CheatSheet({
+  title,
+  hints,
+}: {
+  title: string;
+  hints: InstrumentHint[];
+}) {
+  return (
+    <section
+      aria-label="Cheatsheet"
+      className="absolute inset-0 z-20 overflow-auto rounded-3xl bg-zinc-950/95 p-5 shadow-2xl"
+    >
+      <Text
+        asChild
+        size="xs"
+        className="font-mono uppercase tracking-[0.3em] text-zinc-500"
+      >
+        <h2>{title}</h2>
+      </Text>
+      <dl className="mt-4 grid grid-cols-2 gap-x-8 gap-y-3">
+        {hints.map((hint) => (
+          <div key={hint.action} className="flex items-baseline gap-3">
+            <dt className="shrink-0 font-mono text-sm uppercase tracking-[0.12em] text-lime-200">
+              {hint.gesture}
+            </dt>
+            <dd className="font-mono text-sm text-zinc-300">{hint.text}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
 function StatusLamp({ active, label }: { active: boolean; label: string }) {
   return (
     <div className="flex items-center gap-2">
@@ -599,6 +635,7 @@ export default function InstrumentPerformance({
   const [state, setState] = useState<PerformanceState>({
     status: "loading",
   });
+  const [cheatsheetPinned, setCheatsheetPinned] = useState(false);
   const fullscreen = useFullscreen(allowFullscreen);
   const documentRef = useRef(instrumentDocument);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -740,6 +777,10 @@ export default function InstrumentPerformance({
   const isTransportRunning =
     displayState?.header.transportState === TransportState.playing;
   const isSequencerEdit = displayState?.header.mode === "seqEdit";
+  const cheatsheetHints = displayState?.hints ?? [];
+  const showCheatsheet =
+    cheatsheetHints.length > 0 &&
+    (cheatsheetPinned || displayState?.header.shiftPressed === true);
 
   const sendControlChange = (cc: number, ccValue: number) => {
     const { controllerSession, engine } = state;
@@ -800,6 +841,19 @@ export default function InstrumentPerformance({
 
               <div className="flex flex-wrap items-center gap-3">
                 {backSlot}
+                <Button
+                  variant="outlined"
+                  color="neutral"
+                  size="icon"
+                  aria-label="Cheatsheet"
+                  aria-pressed={cheatsheetPinned}
+                  onClick={() => {
+                    setCheatsheetPinned((pinned) => !pinned);
+                  }}
+                  className="rounded-full border-zinc-600 font-mono text-lg text-zinc-200 hover:border-zinc-400 hover:bg-zinc-900"
+                >
+                  ?
+                </Button>
                 {/* Only where there is browser chrome to escape, and only
                     where the host asked for it. */}
                 {fullscreen.available ? (
@@ -895,6 +949,13 @@ export default function InstrumentPerformance({
 
               <div className="instrument-performance-display">
                 <div className="relative z-10">
+                  {showCheatsheet ? (
+                    <CheatSheet
+                      title={isSequencerEdit ? "Step Edit" : "Performance"}
+                      hints={cheatsheetHints}
+                    />
+                  ) : null}
+
                   {state.status === "loading" ? (
                     <div className="px-5 py-10">
                       <Text

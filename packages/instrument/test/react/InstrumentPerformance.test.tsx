@@ -124,6 +124,7 @@ describe("InstrumentPerformance", () => {
   // at a time, which the real Fixed8 tuples would not allow.
   type TestDisplayState = {
     header: Record<string, unknown>;
+    hints?: { action: string; gesture: string; text: string; oled: string }[];
     globalBand: { slots: unknown[] };
     upperBand: { title: string; sections: unknown[]; slots: unknown[] };
     lowerBand: { title: string; sections: unknown[]; slots: unknown[] };
@@ -287,6 +288,48 @@ describe("InstrumentPerformance", () => {
         .getByRole("button", { name: "Fullscreen" })
         .hasAttribute("disabled"),
     ).toBe(false);
+  });
+
+  it("shows the cheatsheet while Shift is held and pins it from the ? button", async () => {
+    displayState.hints = [
+      {
+        action: "enterStepEdit",
+        gesture: "Shift + Page ▲",
+        text: "Enter Step Edit",
+        oled: "S+Pg^ Edit",
+      },
+    ];
+    displayState.header.shiftPressed = true;
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    await screen.findByRole("region", { name: "Cheatsheet" });
+    expect(screen.getByText("Enter Step Edit")).toBeTruthy();
+    expect(screen.getByText("Shift + Page ▲")).toBeTruthy();
+
+    cleanup();
+    displayState.header.shiftPressed = false;
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    await screen.findByText("Instrument One");
+    expect(screen.queryByRole("region", { name: "Cheatsheet" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Cheatsheet" }));
+    expect(screen.getByRole("region", { name: "Cheatsheet" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Cheatsheet" }));
+    expect(screen.queryByRole("region", { name: "Cheatsheet" })).toBeNull();
   });
 
   it("toggles transport from the single start and stop button", async () => {
