@@ -71,6 +71,7 @@ export type InstrumentDisplayState = {
     midiChannel: number;
     transportState: TransportState;
     mode: InstrumentRuntimeMode;
+    heldSteps?: number[];
   };
   notice?: InstrumentDisplayNotice;
   globalBand: {

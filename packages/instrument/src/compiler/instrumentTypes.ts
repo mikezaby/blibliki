@@ -1,4 +1,9 @@
-import type { BPM, IEngineSerialize, TimeSignature } from "@blibliki/engine";
+import type {
+  BPM,
+  IEngineSerialize,
+  IStep,
+  TimeSignature,
+} from "@blibliki/engine";
 import type {
   EffectProfileId,
   InstrumentGlobalBlock,
@@ -38,13 +43,29 @@ export type CompiledInstrumentLaunchControlXL3PageSummary = {
 
 export type InstrumentRuntimeMode = "performance" | "seqEdit";
 
+// A step button that is down. `edited` flips once an encoder moves, so the
+// release knows whether it was a tap (toggle) or a hold (edit).
+export type HeldStep = {
+  stepIndex: number;
+  pressedAt: number;
+  edited: boolean;
+};
+
+export type StepDefaults = {
+  note: string;
+  velocity: number;
+  duration: IStep["duration"];
+  probability: number;
+};
+
 export type InstrumentNavigationState = {
   activeTrackIndex: number;
   activePage: TrackPageKey;
   mode: InstrumentRuntimeMode;
   shiftPressed: boolean;
   sequencerPageIndex: number;
-  selectedStepIndex: number;
+  heldSteps: HeldStep[];
+  stepDefaults: Record<string, Partial<StepDefaults>>;
 };
 
 export type CompiledInstrument = {

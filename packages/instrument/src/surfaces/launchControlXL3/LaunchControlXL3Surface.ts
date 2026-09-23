@@ -1,4 +1,4 @@
-import { MidiEvent, ModuleType } from "@blibliki/engine";
+import { type IUpdateModule, MidiEvent, ModuleType } from "@blibliki/engine";
 import { Instrument } from "@/Instrument";
 import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
 import type { InstrumentNavigationAction } from "@/core/InstrumentNavigation";
@@ -9,6 +9,8 @@ import {
   reduceMacroValue,
 } from "@/macros/macroMapping";
 import type { MacroEncoder } from "@/macros/types";
+import { STEP_HOLD_MS, toggleStepEntry } from "@/sequencer/stepEntry";
+import { applyLaunchControlXL3SequencerEncoderEvent } from "./LaunchControlXL3SequencerPatch";
 
 // A macro turn nudges each target's engine prop by `delta` (the change in the
 // macro's offset), leaving the base — the target's dedicated encoder value —
@@ -39,8 +41,12 @@ type LaunchControlXL3Command =
       action: "nextPage" | "previousPage";
     }
   | {
-      type: "seqEdit.step";
-      stepIndex: number;
+      type: "seqEdit.hold";
+    }
+  | {
+      type: "seqEdit.update";
+      update?: IUpdateModule<ModuleType.StepSequencer>;
+      cc?: number;
     }
   | {
       type: "persistence";
@@ -66,6 +72,8 @@ const TRACK_NEXT_CC = 102;
 const SHIFT_CC = 63;
 const STEP_BUTTON_CC_START = 37;
 const STEP_BUTTON_CC_END = 52;
+const ENCODER_CC_START = 13;
+const ENCODER_CC_END = 36;
 
 function createNoopResult(
   runtimePatch: CompiledInstrumentEnginePatch,
@@ -225,10 +233,94 @@ function applyMacroEncoderEvent(
   };
 }
 
+function isStepButton(cc: number) {
+  return cc >= STEP_BUTTON_CC_START && cc <= STEP_BUTTON_CC_END;
+}
+
+function isEncoder(cc: number) {
+  return cc >= ENCODER_CC_START && cc <= ENCODER_CC_END;
+}
+
+// Tap or hold is decided at release: a hold is any press that outlived
+// STEP_HOLD_MS or saw an encoder move, and only a tap toggles the step.
+function reduceStepEditEvent(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  cc: number,
+  ccValue: number,
+  now: number,
+): LaunchControlXL3Result | undefined {
+  const { heldSteps } = runtimePatch.runtime.navigation;
+
+  if (isStepButton(cc)) {
+    const stepIndex = cc - STEP_BUTTON_CC_START;
+
+    if (ccValue === 127) {
+      return {
+        runtimePatch: updateInstrumentNavigation(runtimePatch, {
+          heldSteps: [
+            ...heldSteps.filter((held) => held.stepIndex !== stepIndex),
+            { stepIndex, pressedAt: now, edited: false },
+          ],
+        }),
+        command: { type: "seqEdit.hold" },
+      };
+    }
+
+    if (ccValue !== 0) {
+      return createNoopResult(runtimePatch);
+    }
+
+    const held = heldSteps.find(
+      (candidate) => candidate.stepIndex === stepIndex,
+    );
+    if (!held) {
+      return createNoopResult(runtimePatch);
+    }
+
+    const released = updateInstrumentNavigation(runtimePatch, {
+      heldSteps: heldSteps.filter((candidate) => candidate !== held),
+    });
+    const isTap = !held.edited && now - held.pressedAt < STEP_HOLD_MS;
+    const toggled = isTap ? toggleStepEntry(released, stepIndex) : null;
+
+    return toggled
+      ? {
+          runtimePatch: toggled.runtimePatch,
+          command: { type: "seqEdit.update", update: toggled.update },
+        }
+      : { runtimePatch: released, command: { type: "seqEdit.hold" } };
+  }
+
+  if (isEncoder(cc)) {
+    const edit = applyLaunchControlXL3SequencerEncoderEvent(
+      runtimePatch,
+      cc,
+      ccValue,
+    );
+    if (!edit) {
+      return createNoopResult(runtimePatch);
+    }
+
+    const nextRuntimePatch = heldSteps.some((held) => !held.edited)
+      ? updateInstrumentNavigation(edit.runtimePatch, {
+          heldSteps: heldSteps.map((held) => ({ ...held, edited: true })),
+        })
+      : edit.runtimePatch;
+
+    return {
+      runtimePatch: nextRuntimePatch,
+      command: { type: "seqEdit.update", update: edit.update, cc },
+    };
+  }
+
+  return undefined;
+}
+
 export class LaunchControlXL3Surface {
   reduceEvent(
     runtimePatch: CompiledInstrumentEnginePatch,
     event: MidiEvent,
+    now = performance.now(),
   ): LaunchControlXL3Result {
     if (!event.isCC || event.cc === undefined || event.ccValue === undefined) {
       return createNoopResult(runtimePatch);
@@ -254,16 +346,28 @@ export class LaunchControlXL3Surface {
       return macroResult;
     }
 
-    if (event.ccValue !== 127) {
-      return createNoopResult(runtimePatch);
-    }
-
     const currentNavigation = runtimePatch.runtime.navigation;
     const activeTrack =
       runtimePatch.compiledInstrument.tracks[
         currentNavigation.activeTrackIndex
       ];
     const sequencerTrack = activeTrack?.noteSource === "stepSequencer";
+
+    if (currentNavigation.mode === "seqEdit" && sequencerTrack) {
+      const stepEditResult = reduceStepEditEvent(
+        runtimePatch,
+        event.cc,
+        event.ccValue,
+        now,
+      );
+      if (stepEditResult) {
+        return stepEditResult;
+      }
+    }
+
+    if (event.ccValue !== 127) {
+      return createNoopResult(runtimePatch);
+    }
 
     if (currentNavigation.shiftPressed && event.cc === TRACK_NEXT_CC) {
       return {
@@ -304,20 +408,6 @@ export class LaunchControlXL3Surface {
     }
 
     if (currentNavigation.mode === "seqEdit" && sequencerTrack) {
-      if (event.cc >= STEP_BUTTON_CC_START && event.cc <= STEP_BUTTON_CC_END) {
-        const stepIndex = event.cc - STEP_BUTTON_CC_START;
-
-        return {
-          runtimePatch: updateInstrumentNavigation(runtimePatch, {
-            selectedStepIndex: stepIndex,
-          }),
-          command: {
-            type: "seqEdit.step",
-            stepIndex,
-          },
-        };
-      }
-
       switch (event.cc) {
         case PAGE_UP_CC:
           return {

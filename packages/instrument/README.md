@@ -170,7 +170,7 @@ Use this class for domain runtime behavior that does not require live engine/dev
 
 `src/core/InstrumentNavigation.ts` owns active track/page/mode invariants. It keeps navigation behavior testable without a hardware device.
 
-Use it when changing track wrapping, page wrapping, performance mode, sequencer edit mode, shift state, selected sequencer page, or selected step.
+Use it when changing track wrapping, page wrapping, performance mode, sequencer edit mode, shift state, selected sequencer page, held steps, or the defaults a tapped step inherits.
 
 ### InstrumentRuntime
 
@@ -212,6 +212,7 @@ The package currently targets Launch Control XL3 as the controller surface.
 Important files:
 
 - `src/surfaces/launchControlXL3/LaunchControlXL3Surface.ts`: reduces raw MIDI events to domain commands.
+- `src/sequencer/stepEntry.ts`: the hardware-neutral half of Step Edit: held steps, the defaults a tapped step inherits, and how a relative control edits the held steps. A surface maps its own buttons and encoders onto it.
 - `src/surfaces/launchControlXL3/LaunchControlXL3SequencerEdit.ts`: sequencer edit facade for display, page sync, encoder edits, and LED sync.
 - `src/surfaces/launchControlXL3/LaunchControlXL3SequencerPatch.ts`: applies sequencer edit changes to runtime patch and engine updates.
 - `src/surfaces/launchControlXL3/LaunchControlXL3SequencerLeds.ts`: step-button LED sync.

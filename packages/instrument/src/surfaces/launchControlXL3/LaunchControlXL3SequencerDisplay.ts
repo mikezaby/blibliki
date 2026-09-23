@@ -2,15 +2,16 @@ import { TransportState } from "@blibliki/engine";
 import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
 import type { InstrumentDisplayState } from "@/display/InstrumentDisplayState";
 import {
-  DURATION_OPTIONS,
+  getActivePage,
+  getHeldStepIndices,
+  getStepDefaults,
+  getStepSequencerProps,
+} from "@/sequencer/stepEntry";
+import {
   PITCH_CCS,
   STEP_CONTROL_CCS,
   VELOCITY_CCS,
 } from "./LaunchControlXL3SequencerControls";
-import {
-  getActiveStep,
-  getStepSequencerProps,
-} from "./LaunchControlXL3SequencerState";
 
 function createBandSlot(
   cc: number,
@@ -32,6 +33,16 @@ function createBandSlot(
   };
 }
 
+function describeHeldSteps(heldSteps: number[]) {
+  if (heldSteps.length === 0) {
+    return "Defaults";
+  }
+
+  const numbers = heldSteps.map((stepIndex) => stepIndex + 1).join(", ");
+
+  return `${heldSteps.length > 1 ? "Steps" : "Step"} ${numbers}`;
+}
+
 export function createLaunchControlXL3SequencerDisplayState(
   runtimePatch: CompiledInstrumentEnginePatch,
 ): InstrumentDisplayState | null {
@@ -45,8 +56,15 @@ export function createLaunchControlXL3SequencerDisplayState(
   }
 
   const { props } = stepSequencer;
-  const { step } = getActiveStep(props, runtimePatch);
-  const notes = step?.notes ?? [];
+  const { page } = getActivePage(props, runtimePatch);
+  const heldSteps = getHeldStepIndices(runtimePatch);
+  const step =
+    heldSteps.length > 0 ? page?.steps[heldSteps[0] ?? -1] : undefined;
+  const defaults = getStepDefaults(runtimePatch, props);
+  const notes = step?.notes ?? [
+    { note: defaults.note, velocity: defaults.velocity },
+  ];
+  const sections = [{ label: describeHeldSteps(heldSteps), startIndex: 0 }];
 
   return {
     header: {
@@ -57,6 +75,7 @@ export function createLaunchControlXL3SequencerDisplayState(
       midiChannel: activeTrack.midiChannel,
       transportState: TransportState.stopped,
       mode: "seqEdit",
+      heldSteps,
     },
     globalBand: {
       slots: [
@@ -65,28 +84,30 @@ export function createLaunchControlXL3SequencerDisplayState(
           label: "Active",
           shortLabel: "ACT",
           cc: STEP_CONTROL_CCS[0],
-          valueText: step?.active ? "ON" : "OFF",
+          inactive: !step,
+          valueText: step ? (step.active ? "ON" : "OFF") : "--",
         },
         {
           key: "probability",
           label: "Probability",
           shortLabel: "PROB",
           cc: STEP_CONTROL_CCS[1],
-          valueText: `${step?.probability ?? 100}%`,
+          valueText: `${step?.probability ?? defaults.probability}%`,
         },
         {
           key: "duration",
           label: "Duration",
           shortLabel: "DUR",
           cc: STEP_CONTROL_CCS[2],
-          valueText: step?.duration ?? DURATION_OPTIONS[0] ?? "1/16",
+          valueText: step?.duration ?? defaults.duration,
         },
         {
           key: "microtime",
           label: "Microtime",
           shortLabel: "MICR",
           cc: STEP_CONTROL_CCS[3],
-          valueText: `${step?.microtimeOffset ?? 0}`,
+          inactive: !step,
+          valueText: step ? `${step.microtimeOffset}` : "--",
         },
         {
           key: "resolution",
@@ -122,7 +143,7 @@ export function createLaunchControlXL3SequencerDisplayState(
     upperBand: {
       position: "top",
       title: "VELOCITY",
-      sections: [{ label: "Velocity", startIndex: 0 }],
+      sections,
       slots: VELOCITY_CCS.map((cc, index) =>
         createBandSlot(
           cc,
@@ -137,7 +158,7 @@ export function createLaunchControlXL3SequencerDisplayState(
     lowerBand: {
       position: "bottom",
       title: "PITCH",
-      sections: [{ label: "Pitch", startIndex: 0 }],
+      sections,
       slots: PITCH_CCS.map((cc, index) =>
         createBandSlot(
           cc,

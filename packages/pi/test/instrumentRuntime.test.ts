@@ -53,7 +53,8 @@ describe("createInstrumentRuntimeState", () => {
           mode: "performance",
           shiftPressed: false,
           sequencerPageIndex: 0,
-          selectedStepIndex: 0,
+          heldSteps: [],
+          stepDefaults: {},
         },
         stepSequencerIds: {},
       },
@@ -74,7 +75,8 @@ describe("createInstrumentRuntimeState", () => {
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,
-      selectedStepIndex: 0,
+      heldSteps: [],
+      stepDefaults: {},
     });
 
     expect(runtime.activeTrack).toEqual(
@@ -139,7 +141,8 @@ describe("createInstrumentRuntimeState", () => {
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,
-      selectedStepIndex: 0,
+      heldSteps: [],
+      stepDefaults: {},
     });
     expect(createInstrumentRuntimeState(nextPage).activePage).toEqual({
       trackKey: "track-1",
@@ -157,7 +160,8 @@ describe("createInstrumentRuntimeState", () => {
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,
-      selectedStepIndex: 0,
+      heldSteps: [],
+      stepDefaults: {},
     });
 
     const wrappedTrackState = createInstrumentRuntimeState(wrappedTrack);
@@ -173,7 +177,8 @@ describe("createInstrumentRuntimeState", () => {
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,
-      selectedStepIndex: 0,
+      heldSteps: [],
+      stepDefaults: {},
     });
   });
 });

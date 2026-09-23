@@ -10,6 +10,7 @@ export type InstrumentControllerResult = LaunchControlXL3Result;
 export function reduceInstrumentControllerEvent(
   runtimePatch: CompiledInstrumentEnginePatch,
   event: MidiEvent,
+  now?: number,
 ): InstrumentControllerResult {
-  return launchControlXL3Surface.reduceEvent(runtimePatch, event);
+  return launchControlXL3Surface.reduceEvent(runtimePatch, event, now);
 }

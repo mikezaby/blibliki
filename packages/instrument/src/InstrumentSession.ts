@@ -26,9 +26,9 @@ import {
   encoderDisplayEvents,
   navigationDisplayEvents,
 } from "@/hardware/launchControlXL3/LaunchControlXL3HardwareDisplay";
+import { getActiveStepSequencerId } from "@/sequencer/stepEntry";
 import { syncLaunchControlXL3NavigationButtonLeds } from "@/surfaces/launchControlXL3/LaunchControlXL3NavigationLeds";
 import { launchControlXL3SequencerEdit } from "@/surfaces/launchControlXL3/LaunchControlXL3SequencerEdit";
-import { getActiveStepSequencerId } from "@/surfaces/launchControlXL3/LaunchControlXL3SequencerState";
 import { launchControlXL3Surface } from "@/surfaces/launchControlXL3/LaunchControlXL3Surface";
 
 const SHIFT_CC = 63;
@@ -304,7 +304,7 @@ export class InstrumentSession implements InstrumentControllerSession {
       const sequencerPageSync = launchControlXL3SequencerEdit.createPageSync(
         this.currentRuntimePatch,
       );
-      if (sequencerPageSync) {
+      if (sequencerPageSync?.update) {
         didRuntimePatchChange = true;
         this.currentRuntimePatch = sequencerPageSync.runtimePatch;
         this.engine.updateModule(sequencerPageSync.update);
@@ -345,23 +345,14 @@ export class InstrumentSession implements InstrumentControllerSession {
       });
     }
 
-    if (
-      result.command.type === "none" &&
-      this.currentRuntimePatch.runtime.navigation.mode === "seqEdit" &&
-      event.isCC &&
-      event.cc !== undefined &&
-      event.ccValue !== undefined
-    ) {
-      const seqEditUpdate = launchControlXL3SequencerEdit.applyEncoderEvent(
-        this.currentRuntimePatch,
-        event.cc,
-        event.ccValue,
-      );
-
-      if (seqEditUpdate) {
-        didRuntimePatchChange = true;
-        this.currentRuntimePatch = seqEditUpdate.runtimePatch;
-        this.engine.updateModule(seqEditUpdate.update);
+    if (result.command.type === "seqEdit.update") {
+      if (result.command.update) {
+        this.engine.updateModule(result.command.update);
+      }
+      if (result.command.cc !== undefined) {
+        this.sendHardwareDisplayEvents(
+          encoderDisplayEvents(this.getDisplayState(), result.command.cc),
+        );
       }
     }
 

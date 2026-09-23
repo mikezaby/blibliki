@@ -79,16 +79,26 @@ export function encoderDisplayEvents(
   displayState: InstrumentDisplayState,
   cc: number,
 ): MidiEvent[] | null {
+  // In Step Edit every row belongs to the held steps (or the defaults), which
+  // the band section names.
+  const stepEditFocus =
+    displayState.header.mode === "seqEdit"
+      ? displayState.upperBand.sections[0]?.label
+      : undefined;
   const globalSlot = displayState.globalBand.slots.find((s) => s.cc === cc);
   if (globalSlot) {
-    return overlayEvents("Global", globalSlot.label, globalSlot.valueText);
+    return overlayEvents(
+      stepEditFocus ?? "Global",
+      globalSlot.label,
+      globalSlot.valueText,
+    );
   }
 
   for (const band of [displayState.upperBand, displayState.lowerBand]) {
     const slot = band.slots.find((s) => s.kind === "slot" && s.cc === cc);
     if (slot?.kind === "slot") {
       return overlayEvents(
-        titleCase(slot.blockKey),
+        stepEditFocus ?? titleCase(slot.blockKey),
         slot.label,
         slot.valueText,
       );

@@ -82,7 +82,8 @@ describe("createInstrumentEnginePatch", () => {
         mode: "performance",
         shiftPressed: false,
         sequencerPageIndex: 0,
-        selectedStepIndex: 0,
+        heldSteps: [],
+        stepDefaults: {},
       },
       stepSequencerIds: {},
     });

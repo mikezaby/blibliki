@@ -51,7 +51,8 @@ describe("InstrumentRuntime", () => {
           mode: "performance",
           shiftPressed: false,
           sequencerPageIndex: 0,
-          selectedStepIndex: 0,
+          heldSteps: [],
+          stepDefaults: {},
         },
         stepSequencerIds: {},
       },
@@ -89,7 +90,8 @@ describe("InstrumentRuntime", () => {
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,
-      selectedStepIndex: 0,
+      heldSteps: [],
+      stepDefaults: {},
     });
 
     const wrappedTrack = navigateInstrumentRuntime(nextPage, "previousTrack");
@@ -99,7 +101,8 @@ describe("InstrumentRuntime", () => {
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,
-      selectedStepIndex: 0,
+      heldSteps: [],
+      stepDefaults: {},
     });
 
     // The master track (last) has only filterMod + fx, so previousPage -> fx.
@@ -110,7 +113,8 @@ describe("InstrumentRuntime", () => {
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,
-      selectedStepIndex: 0,
+      heldSteps: [],
+      stepDefaults: {},
     });
   });
 });

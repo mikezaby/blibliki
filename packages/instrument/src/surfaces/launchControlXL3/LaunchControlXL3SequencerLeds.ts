@@ -1,16 +1,17 @@
 import { MidiEvent, ModuleType } from "@blibliki/engine";
 import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
 import {
+  getActiveStepSequencerId,
+  getStepStates,
+  type StepState,
+} from "@/sequencer/stepEntry";
+import {
   STEP_BUTTON_CCS,
+  STEP_LED_HELD,
   STEP_LED_OFF,
   STEP_LED_PLAYHEAD,
   STEP_LED_PROGRAMMED,
-  STEP_LED_SELECTED,
 } from "./LaunchControlXL3SequencerControls";
-import {
-  getActiveStepSequencerId,
-  getStepSequencerProps,
-} from "./LaunchControlXL3SequencerState";
 
 export type LaunchControlXL3SequencerEditEngine = {
   findModule: (id: string) => {
@@ -22,37 +23,11 @@ export type LaunchControlXL3SequencerEditEngine = {
   };
 };
 
-function createStepLedValues(runtimePatch: CompiledInstrumentEnginePatch) {
-  if (runtimePatch.runtime.navigation.mode !== "seqEdit") {
-    return STEP_BUTTON_CCS.map(() => STEP_LED_OFF);
-  }
-
-  const stepSequencer = getStepSequencerProps(runtimePatch);
-  if (!stepSequencer) {
-    return STEP_BUTTON_CCS.map(() => STEP_LED_OFF);
-  }
-
-  const { props } = stepSequencer;
-  const pattern = props.patterns[props.activePatternNo] ?? props.patterns[0];
-  const page =
-    pattern?.pages[runtimePatch.runtime.navigation.sequencerPageIndex];
-  const steps = page?.steps ?? [];
-
-  return STEP_BUTTON_CCS.map((_, stepIndex) => {
-    if (stepIndex === runtimePatch.runtime.navigation.selectedStepIndex) {
-      return STEP_LED_SELECTED;
-    }
-
-    const step = steps[stepIndex];
-    if (!step) {
-      return STEP_LED_OFF;
-    }
-
-    return step.notes.length > 0 || step.ccMessages.length > 0
-      ? STEP_LED_PROGRAMMED
-      : STEP_LED_OFF;
-  });
-}
+const STEP_LED_VALUES: Record<StepState, number> = {
+  off: STEP_LED_OFF,
+  programmed: STEP_LED_PROGRAMMED,
+  held: STEP_LED_HELD,
+};
 
 export function syncLaunchControlXL3SequencerStepButtonLeds(
   engine: LaunchControlXL3SequencerEditEngine,
@@ -71,7 +46,9 @@ export function syncLaunchControlXL3SequencerStepButtonLeds(
     return;
   }
 
-  const ledValues = createStepLedValues(runtimePatch);
+  const ledValues = getStepStates(runtimePatch).map(
+    (state) => STEP_LED_VALUES[state],
+  );
   const stepSequencerId = getActiveStepSequencerId(runtimePatch);
   let currentStep: number | undefined;
 

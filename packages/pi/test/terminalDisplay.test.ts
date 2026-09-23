@@ -88,7 +88,8 @@ function createSeqEditDisplayState() {
         mode: "seqEdit",
         shiftPressed: false,
         sequencerPageIndex: 0,
-        selectedStepIndex: 0,
+        heldSteps: [{ stepIndex: 0, pressedAt: 0, edited: false }],
+        stepDefaults: {},
       },
     },
   );

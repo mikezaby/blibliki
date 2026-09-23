@@ -13,10 +13,6 @@ function wrapIndex(nextIndex: number, length: number) {
   return ((nextIndex % length) + length) % length;
 }
 
-function clampStepIndex(stepIndex: number) {
-  return Math.max(0, Math.min(stepIndex, 15));
-}
-
 function wrapSequencerPageIndex(pageIndex: number) {
   return wrapIndex(pageIndex, 4);
 }
@@ -58,17 +54,22 @@ function normalizeNavigation(
     throw new Error(`Track ${activeTrackIndex} has no pages`);
   }
   const sequencerTrack = isSequencerTrack(runtimePatch, activeTrackIndex);
+  const mode =
+    sequencerTrack && navigation.mode === "seqEdit" ? "seqEdit" : "performance";
 
   return {
     activeTrackIndex,
     activePage,
-    mode:
-      sequencerTrack && navigation.mode === "seqEdit"
-        ? "seqEdit"
-        : "performance",
+    mode,
     shiftPressed: navigation.shiftPressed,
     sequencerPageIndex: wrapSequencerPageIndex(navigation.sequencerPageIndex),
-    selectedStepIndex: clampStepIndex(navigation.selectedStepIndex),
+    heldSteps:
+      mode === "seqEdit"
+        ? navigation.heldSteps.filter(
+            (held) => held.stepIndex >= 0 && held.stepIndex < 16,
+          )
+        : [],
+    stepDefaults: navigation.stepDefaults,
   };
 }
 

@@ -252,7 +252,8 @@ describe("InstrumentSession", () => {
       {
         navigation: {
           mode: "seqEdit",
-          selectedStepIndex: 0,
+          heldSteps: [],
+          stepDefaults: {},
         },
       },
     );
@@ -352,6 +353,72 @@ describe("InstrumentSession", () => {
     });
 
     expect(ledEvents).toHaveLength(ledEventCount);
+  });
+
+  it("shows the held step's value on the OLED while an encoder edits it", () => {
+    const runtimePatch = createInstrumentEnginePatch(
+      createSequencedInstrumentDocument(),
+      { navigation: { mode: "seqEdit" } },
+    );
+    const inputDevice = createControllerInputDevice();
+    const updateCalls: IUpdateModule<ModuleType>[] = [];
+    const outputEvents: MidiEvent[] = [];
+    const modules = new Map<string, unknown>(
+      runtimePatch.patch.modules.map((module) => [module.id, module]),
+    );
+    const controllerOutputId = runtimePatch.runtime.controllerOutputId;
+    if (!controllerOutputId) {
+      throw new Error("Expected controller output module in runtime patch");
+    }
+    modules.set(controllerOutputId, {
+      ...(modules.get(controllerOutputId) ?? {}),
+      moduleType: ModuleType.MidiOutput,
+      onMidiEvent: (event: MidiEvent) => {
+        outputEvents.push(event);
+      },
+    });
+
+    new InstrumentSession(
+      {
+        findMidiInputDeviceByFuzzyName: () => ({
+          device: inputDevice,
+          score: 1,
+        }),
+        findModule: (id: string) => {
+          const module = modules.get(id);
+          if (!module) {
+            throw new Error(`Module ${id} not found`);
+          }
+
+          return module;
+        },
+        state: TransportState.stopped,
+        start: () => Promise.resolve(),
+        stop: () => undefined,
+        updateModule: <T extends ModuleType>(params: IUpdateModule<T>) => {
+          updateCalls.push(params);
+          return params;
+        },
+      },
+      runtimePatch,
+    );
+
+    inputDevice.emit(MidiEvent.fromCC(37, 127, 0));
+    inputDevice.emit(MidiEvent.fromCC(29, 65, 0));
+
+    expect(updateCalls.at(-1)?.id).toBe("track-1.runtime.stepSequencer");
+    const oledTexts = outputEvents
+      .filter((event) => !event.isCC)
+      .map((event) =>
+        String.fromCharCode(
+          ...Array.from(event.rawMessage.data).filter(
+            (byte) => byte >= 0x20 && byte <= 0x7e,
+          ),
+        ),
+      );
+    expect(oledTexts.some((text) => text.includes("Step 1"))).toBe(true);
+    expect(oledTexts.some((text) => text.includes("Pitch 1"))).toBe(true);
+    expect(oledTexts.some((text) => text.includes("C#3"))).toBe(true);
   });
 
   it("applies enabled macro encoder updates through the live engine", () => {

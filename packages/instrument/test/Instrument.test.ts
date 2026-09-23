@@ -40,7 +40,8 @@ describe("Instrument", () => {
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,
-      selectedStepIndex: 0,
+      heldSteps: [],
+      stepDefaults: {},
     });
     expect(instrument.runtimeState.activeTrack.key).toBe("track-1");
     expect(instrument.runtimeState.activePage.pageKey).toBe("sourceAmp");
@@ -84,7 +85,7 @@ describe("Instrument", () => {
     const instrument = Instrument.fromRuntimePatch(runtimePatch).withNavigation(
       {
         activeTrackIndex: -1,
-        selectedStepIndex: 99,
+        heldSteps: [{ stepIndex: 99, pressedAt: 0, edited: false }],
       },
     );
 
@@ -95,7 +96,8 @@ describe("Instrument", () => {
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,
-      selectedStepIndex: 15,
+      heldSteps: [],
+      stepDefaults: {},
     });
   });
 });
