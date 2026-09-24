@@ -671,6 +671,9 @@ This gives each sequenced track a practical `64-step` range without adding patte
 
 #### Seq Edit Mode
 
+> Superseded by `docs/plans/2026-09-23-xl3-step-entry-design.md`: a tap
+> toggles a step and holding it edits it. There is no selected step.
+
 Sequencer editing should not be folded into the normal `Source / Amp`, `Filter / Mod`, and `FX` performance pages. It should have its own temporary `Seq Edit` mode for tracks whose note source is `StepSequencer`.
 
 Entry and exit should use:

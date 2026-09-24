@@ -1,8 +1,8 @@
 # Step Entry on the Launch Control XL3
 
-Status: agreed 2026-09-23 and implemented the same day on branch
-`feat/step-edit-improvements`, one commit per increment, pending the device
-checks under "Open questions". Supersedes the "Seq Edit Mode" and "Seq Edit Encoder Layout"
+Status: agreed 2026-09-23, implemented on branch
+`feat/step-edit-improvements` and merged to main on 2026-09-24, pending the
+device checks under "Open questions". Supersedes the "Seq Edit Mode" and "Seq Edit Encoder Layout"
 sections of `docs/plans/2026-03-11-blibliki-pi-one-step-further-design.md`.
 The gesture survey behind it is `docs/research/step-entry-workflows.md` on
 branch `docs/step-entry-research`. Issues #66 to #70 refer to this as the
@@ -204,13 +204,25 @@ Details settled while building, where the sections above left room:
   layout shows legibly needs the device.
 - The public reducer takes an optional clock so tests can time taps; the
   session uses `performance.now()`.
+- The cheatsheet took several rounds with the user before it read as a
+  path. In Step Edit it opens with numbered steps for writing a pattern that
+  name the knob rows (bottom for the note, middle for velocity, top for
+  length, chance and timing), then groups the rest by context: steps, copy
+  and fill, bars, mode, save and help. Gestures name their controls in
+  brackets and the console draws each one as a key. The panel is opaque and
+  has to fit the display without scrolling. The controller's screen lists
+  the Shift combinations first, since it only shows while Shift is held.
+- The console's Transport and Step Edit lamps are gone. A Step Edit button
+  beside Start/Stop plays the hardware's gesture (Shift down, Page Up, Shift
+  up), and the back, cheatsheet and fullscreen buttons sit in a row above
+  the console frame.
 
 ## The issues
 
-- #66, the console: after increment 1 the console gets the Step Edit toggle
-  and a row of 16 cells that send the same CCs with the same tap and hold
-  meaning. The mouse question in that issue (how to hold a step with one
-  pointer) stands.
+- #66, the console: the Step Edit toggle is done, as a button beside
+  Start/Stop. The row of 16 cells that send the same CCs with the same tap
+  and hold meaning remains, and so does the mouse question in that issue
+  (how to hold a step with one pointer).
 - #67, whole pattern and playhead on screen: reads `heldSteps` and the bar
   from the display state.
 - #68, record played notes: step record is the natural follow-on. Record
