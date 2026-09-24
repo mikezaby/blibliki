@@ -42,7 +42,8 @@ describe("reduceInstrumentControllerEvent", () => {
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,
-      selectedStepIndex: 0,
+      heldSteps: [],
+      stepDefaults: {},
     });
 
     const midiMapper = result.runtimePatch.patch.modules.find(
@@ -76,7 +77,8 @@ describe("reduceInstrumentControllerEvent", () => {
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,
-      selectedStepIndex: 0,
+      heldSteps: [],
+      stepDefaults: {},
     });
 
     const midiMapper = result.runtimePatch.patch.modules.find(
@@ -175,7 +177,8 @@ describe("reduceInstrumentControllerEvent", () => {
       mode: "seqEdit",
       shiftPressed: true,
       sequencerPageIndex: 0,
-      selectedStepIndex: 0,
+      heldSteps: [],
+      stepDefaults: {},
     });
 
     const shiftReleased = reduceInstrumentControllerEvent(
@@ -197,29 +200,29 @@ describe("reduceInstrumentControllerEvent", () => {
       mode: "seqEdit",
       shiftPressed: false,
       sequencerPageIndex: 1,
-      selectedStepIndex: 0,
+      heldSteps: [],
+      stepDefaults: {},
     });
 
-    const selectedStep = reduceInstrumentControllerEvent(
+    const heldStep = reduceInstrumentControllerEvent(
       nextSequencerPage.runtimePatch,
       MidiEvent.fromCC(45, 127, 0),
+      0,
     );
 
-    expect(selectedStep.command).toEqual({
-      type: "seqEdit.step",
-      stepIndex: 8,
-    });
-    expect(selectedStep.runtimePatch.runtime.navigation).toEqual({
+    expect(heldStep.command).toEqual({ type: "seqEdit.hold" });
+    expect(heldStep.runtimePatch.runtime.navigation).toEqual({
       activeTrackIndex: 0,
       activePage: "sourceAmp",
       mode: "seqEdit",
       shiftPressed: false,
       sequencerPageIndex: 1,
-      selectedStepIndex: 8,
+      heldSteps: [{ stepIndex: 8, pressedAt: 0, edited: false }],
+      stepDefaults: {},
     });
 
     const previousSequencerPage = reduceInstrumentControllerEvent(
-      selectedStep.runtimePatch,
+      heldStep.runtimePatch,
       MidiEvent.fromCC(107, 127, 0),
     );
 
@@ -233,7 +236,8 @@ describe("reduceInstrumentControllerEvent", () => {
       mode: "seqEdit",
       shiftPressed: false,
       sequencerPageIndex: 0,
-      selectedStepIndex: 8,
+      heldSteps: [{ stepIndex: 8, pressedAt: 0, edited: false }],
+      stepDefaults: {},
     });
   });
 

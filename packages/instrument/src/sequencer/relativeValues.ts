@@ -1,18 +1,25 @@
 import { Note } from "@blibliki/engine";
-import {
-  DEFAULT_NEW_NOTE,
-  NOTE_NAMES,
-  PITCH_MAX_MIDI,
-  PITCH_MIN_MIDI,
-  RELATIVE_PIVOT,
-} from "./LaunchControlXL3SequencerControls";
+
+export const PITCH_MIN_MIDI = 24;
+export const PITCH_MAX_MIDI = 96;
+
+const NOTE_NAMES = [
+  "C",
+  "C#",
+  "D",
+  "D#",
+  "E",
+  "F",
+  "F#",
+  "G",
+  "G#",
+  "A",
+  "A#",
+  "B",
+] as const;
 
 function clampRelativeValue(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
-}
-
-export function getRelativeDelta(value: number) {
-  return value - RELATIVE_PIVOT;
 }
 
 export function mapRelativeBoolean(currentValue: boolean, delta: number) {
@@ -51,16 +58,19 @@ export function mapRelativeVelocity(currentValue: number, delta: number) {
   return clampRelativeValue(currentValue + delta, 0, 127);
 }
 
-function midiNumberToNoteName(midiNumber: number) {
+export function midiNumberToNoteName(midiNumber: number) {
   const noteName = NOTE_NAMES[midiNumber % 12] ?? NOTE_NAMES[0];
   const octave = Math.floor(midiNumber / 12) - 2;
 
   return `${noteName}${octave}`;
 }
 
+// An empty slot turned up lands on `newNote`; turned below the range it is
+// deleted, so one encoder both places and removes a note.
 export function mapRelativePitch(
   currentNote: string | null | undefined,
   delta: number,
+  newNote: string,
 ) {
   if (delta === 0) {
     return currentNote ?? null;
@@ -72,7 +82,7 @@ export function mapRelativePitch(
 
   const baseMidi = currentNote
     ? new Note(currentNote).midiNumber
-    : new Note(DEFAULT_NEW_NOTE).midiNumber - 1;
+    : new Note(newNote).midiNumber - 1;
   const nextMidi = baseMidi + delta;
 
   if (nextMidi < PITCH_MIN_MIDI) {

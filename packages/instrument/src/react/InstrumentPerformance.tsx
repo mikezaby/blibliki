@@ -4,7 +4,7 @@ import {
   ModuleType,
   TransportState,
 } from "@blibliki/engine";
-import { Button, Logo, Surface, Text, cn } from "@blibliki/ui";
+import { Button, IconButton, Logo, Surface, Text, cn } from "@blibliki/ui";
 import {
   ChevronLeft,
   ChevronRight,
@@ -14,6 +14,7 @@ import {
   Square,
 } from "lucide-react";
 import {
+  Fragment,
   useEffect,
   useRef,
   useState,
@@ -31,6 +32,7 @@ import type {
   BandSection,
   InstrumentDisplayState,
 } from "@/display/InstrumentDisplayState";
+import { STEP_BY_STEP_GROUPS, type InstrumentHint } from "@/display/hints";
 import { createSavedInstrumentDocument } from "@/document/SavedInstrumentDocument";
 import type { InstrumentDocument } from "@/document/types";
 import EncoderGlyph from "./EncoderGlyph";
@@ -98,8 +100,11 @@ const TRACK_PREV_CC = 103;
 const TRACK_NEXT_CC = 102;
 const PAGE_PREV_CC = 107;
 const PAGE_NEXT_CC = 106;
+const SHIFT_CC = 63;
 // Those buttons are momentary: the surface acts on the press, not the release.
+// Shift is the exception, so the screen sends its release too.
 const BUTTON_PRESS_VALUE = 127;
+const BUTTON_RELEASE_VALUE = 0;
 // Every encoder rendered in the bands is a relative (incDec) mapping, so a
 // gesture emits ticks around the pivot rather than an absolute position: 64
 // means "no change", above counts up, below counts down.
@@ -543,26 +548,92 @@ function PerformanceBand({
   );
 }
 
-function StatusLamp({ active, label }: { active: boolean; label: string }) {
+// Covers the bands rather than pushing them down, so holding Shift to read
+// does not rescale the whole console.
+function CheatSheet({
+  title,
+  hints,
+}: {
+  title: string;
+  hints: InstrumentHint[];
+}) {
   return (
-    <div className="flex items-center gap-2">
-      <span
-        className={cn(
-          "h-2.5 w-2.5 rounded-full border",
-          active
-            ? "border-lime-300/80 bg-lime-300 shadow-sm"
-            : "border-zinc-700 bg-zinc-900",
-        )}
-      />
+    <section
+      aria-label="Cheatsheet"
+      className="absolute inset-0 z-20 overflow-hidden rounded-3xl bg-zinc-950 p-5 shadow-2xl"
+    >
       <Text
         asChild
         size="xs"
-        className="font-mono uppercase tracking-[0.2em] text-zinc-500"
+        className="font-mono uppercase tracking-[0.3em] text-zinc-500"
       >
-        <span>{label}</span>
+        <h2>{title}</h2>
       </Text>
-    </div>
+      {/* Two balanced columns, each group kept whole. */}
+      <div className="mt-4 columns-2 gap-10">
+        {groupHints(hints).map(([group, groupHints]) => (
+          <section key={group} className="mb-5 break-inside-avoid">
+            <Text
+              asChild
+              size="xs"
+              className="font-mono uppercase tracking-[0.24em] text-zinc-400"
+            >
+              <h3>{group}</h3>
+            </Text>
+            {/* Gestures in one column, what they do in the next, so a group
+                reads as a table. */}
+            <dl className="mt-2 grid grid-cols-[max-content_1fr] items-baseline gap-x-6 gap-y-1.5">
+              {groupHints.map((hint, index) => (
+                <Fragment key={hint.action}>
+                  <dt className="text-sm leading-7 text-zinc-400">
+                    {STEP_BY_STEP_GROUPS.has(hint.group) ? (
+                      <span className="mr-2 font-mono text-zinc-500">
+                        {index + 1}
+                      </span>
+                    ) : null}
+                    <GestureKeys gesture={hint.gesture} />
+                  </dt>
+                  <dd className="text-base leading-7 text-zinc-100">
+                    {hint.text}
+                  </dd>
+                </Fragment>
+              ))}
+            </dl>
+          </section>
+        ))}
+      </div>
+    </section>
   );
+}
+
+// A gesture names its controls in brackets. Each control renders as a key,
+// the words between them stay plain text.
+function GestureKeys({ gesture }: { gesture: string }) {
+  return gesture
+    .split(/(\[[^\]]+\])/)
+    .filter(Boolean)
+    .map((part, index) =>
+      part.startsWith("[") ? (
+        <kbd
+          key={index}
+          className="inline-block rounded-md border border-zinc-600 bg-zinc-800 px-1.5 font-mono text-xs uppercase leading-5 text-lime-200"
+        >
+          {part.slice(1, -1)}
+        </kbd>
+      ) : (
+        part
+      ),
+    );
+}
+
+// Keeps the groups in the order the hints list them.
+function groupHints(hints: InstrumentHint[]) {
+  const groups = new Map<string, InstrumentHint[]>();
+  for (const hint of hints) {
+    groups.set(hint.group, [...(groups.get(hint.group) ?? []), hint]);
+  }
+
+  return [...groups];
 }
 
 function formatTrackVolume(volume?: number) {
@@ -599,7 +670,30 @@ export default function InstrumentPerformance({
   const [state, setState] = useState<PerformanceState>({
     status: "loading",
   });
+  const [cheatsheetPinned, setCheatsheetPinned] = useState(false);
   const fullscreen = useFullscreen(allowFullscreen);
+
+  // The ? key pins and unpins the cheatsheet, unless the performer is typing.
+  useEffect(() => {
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      const target = event.target;
+      const typing =
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
+      if (event.key !== "?" || typing) {
+        return;
+      }
+
+      event.preventDefault();
+      setCheatsheetPinned((pinned) => !pinned);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
   const documentRef = useRef(instrumentDocument);
   const stageRef = useRef<HTMLDivElement>(null);
   const faceplateRef = useRef<HTMLDivElement>(null);
@@ -740,6 +834,11 @@ export default function InstrumentPerformance({
   const isTransportRunning =
     displayState?.header.transportState === TransportState.playing;
   const isSequencerEdit = displayState?.header.mode === "seqEdit";
+  const isSequencerTrack = activeTrack?.noteSource === "stepSequencer";
+  const cheatsheetHints = displayState?.hints ?? [];
+  const showCheatsheet =
+    cheatsheetHints.length > 0 &&
+    (cheatsheetPinned || displayState?.header.shiftPressed === true);
 
   const sendControlChange = (cc: number, ccValue: number) => {
     const { controllerSession, engine } = state;
@@ -763,6 +862,14 @@ export default function InstrumentPerformance({
     sendControlChange(cc, BUTTON_PRESS_VALUE);
   };
 
+  // Step Edit is Shift + Page Up on the hardware; the screen plays the same
+  // three events so the surface toggles it the one way it knows.
+  const toggleStepEdit = () => {
+    sendControlChange(SHIFT_CC, BUTTON_PRESS_VALUE);
+    sendControlChange(PAGE_NEXT_CC, BUTTON_PRESS_VALUE);
+    sendControlChange(SHIFT_CC, BUTTON_RELEASE_VALUE);
+  };
+
   return (
     <Surface
       tone="canvas"
@@ -781,6 +888,50 @@ export default function InstrumentPerformance({
         className="absolute left-0 top-0"
         style={createFaceplateStyle(fit)}
       >
+        {/* The chrome, in a row above the frame: the way back, the cheatsheet
+            and fullscreen are not part of playing. */}
+        <div
+          role="group"
+          aria-label="Console"
+          className="mb-3 flex items-center justify-between px-1"
+        >
+          <div className="flex items-center gap-2">{backSlot}</div>
+          <div className="flex items-center gap-2">
+            <IconButton
+              variant="outlined"
+              color="neutral"
+              aria-label="Cheatsheet"
+              aria-pressed={cheatsheetPinned}
+              icon={<span className="font-mono text-base leading-none">?</span>}
+              onClick={() => {
+                setCheatsheetPinned((pinned) => !pinned);
+              }}
+              className="rounded-full border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-100"
+            />
+            {/* Only where there is browser chrome to escape, and only
+                  where the host asked for it. */}
+            {fullscreen.available ? (
+              <IconButton
+                variant="outlined"
+                color="neutral"
+                aria-label={
+                  fullscreen.isFullscreen ? "Exit Fullscreen" : "Fullscreen"
+                }
+                icon={
+                  fullscreen.isFullscreen ? (
+                    <Minimize2 className="h-4 w-4" />
+                  ) : (
+                    <Maximize2 className="h-4 w-4" />
+                  )
+                }
+                onClick={() => {
+                  void fullscreen.toggle();
+                }}
+                className="rounded-full border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-100"
+              />
+            ) : null}
+          </div>
+        </div>
         <div className="rounded-3xl bg-zinc-900/90 p-5 shadow-2xl">
           <div className="instrument-performance-faceplate rounded-3xl p-6">
             <div className="flex flex-row items-start justify-between gap-6">
@@ -792,33 +943,28 @@ export default function InstrumentPerformance({
                 >
                   <h1>{name}</h1>
                 </Text>
-                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-                  <StatusLamp active={isTransportRunning} label="Transport" />
-                  <StatusLamp active={isSequencerEdit} label="Step Edit" />
-                </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                {backSlot}
-                {/* Only where there is browser chrome to escape, and only
-                    where the host asked for it. */}
-                {fullscreen.available ? (
-                  <Button
-                    variant="outlined"
-                    color="neutral"
-                    onClick={() => {
-                      void fullscreen.toggle();
-                    }}
-                    className="rounded-full border-zinc-600 px-5 font-mono uppercase tracking-[0.14em] text-zinc-200 hover:border-zinc-400 hover:bg-zinc-900"
-                  >
-                    {fullscreen.isFullscreen ? (
-                      <Minimize2 className="h-4 w-4" />
-                    ) : (
-                      <Maximize2 className="h-4 w-4" />
-                    )}
-                    {fullscreen.isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-                  </Button>
-                ) : null}
+              <div
+                role="group"
+                aria-label="Instrument"
+                className="flex flex-wrap items-center gap-3"
+              >
+                <Button
+                  variant="outlined"
+                  color="neutral"
+                  aria-pressed={isSequencerEdit}
+                  disabled={state.status !== "ready" || !isSequencerTrack}
+                  onClick={toggleStepEdit}
+                  className={cn(
+                    "rounded-full px-5 font-mono uppercase tracking-[0.14em]",
+                    isSequencerEdit
+                      ? "border-lime-300/80 bg-lime-300 text-zinc-950"
+                      : "border-zinc-600 text-zinc-200 hover:border-zinc-400",
+                  )}
+                >
+                  Step Edit
+                </Button>
                 <Button
                   color="neutral"
                   disabled={state.status !== "ready" || !state.engine}
@@ -895,6 +1041,13 @@ export default function InstrumentPerformance({
 
               <div className="instrument-performance-display">
                 <div className="relative z-10">
+                  {showCheatsheet ? (
+                    <CheatSheet
+                      title={isSequencerEdit ? "Step Edit" : "Performance"}
+                      hints={cheatsheetHints}
+                    />
+                  ) : null}
+
                   {state.status === "loading" ? (
                     <div className="px-5 py-10">
                       <Text

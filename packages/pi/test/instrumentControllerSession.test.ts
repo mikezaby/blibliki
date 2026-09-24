@@ -271,7 +271,8 @@ describe("createInstrumentControllerSession", () => {
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,
-      selectedStepIndex: 0,
+      heldSteps: [],
+      stepDefaults: {},
     });
     const firstUpdate = updateCalls[0];
     expect(firstUpdate?.id).toBe(runtimePatch.runtime.midiMapperId);
@@ -449,6 +450,7 @@ describe("createInstrumentControllerSession", () => {
     inputDevice.emit(MidiEvent.fromCC(63, 127, 0));
     inputDevice.emit(MidiEvent.fromCC(106, 127, 0));
     inputDevice.emit(MidiEvent.fromCC(63, 0, 0));
+    inputDevice.emit(MidiEvent.fromCC(37, 127, 0));
     inputDevice.emit(MidiEvent.fromCC(13, 65, 0));
     inputDevice.emit(MidiEvent.fromCC(14, 63, 0));
     inputDevice.emit(MidiEvent.fromCC(20, 66, 0));
@@ -615,6 +617,7 @@ describe("createInstrumentControllerSession", () => {
     inputDevice.emit(MidiEvent.fromCC(63, 127, 0));
     inputDevice.emit(MidiEvent.fromCC(106, 127, 0));
     inputDevice.emit(MidiEvent.fromCC(63, 0, 0));
+    inputDevice.emit(MidiEvent.fromCC(37, 127, 0));
     inputDevice.emit(MidiEvent.fromCC(21, 84, 0));
     inputDevice.emit(MidiEvent.fromCC(29, 65, 0));
     inputDevice.emit(MidiEvent.fromCC(30, 65, 0));
@@ -644,7 +647,7 @@ describe("createInstrumentControllerSession", () => {
         velocity: 100,
       },
       {
-        note: "C3",
+        note: "C#3",
         velocity: 110,
       },
     ]);
@@ -665,7 +668,7 @@ describe("createInstrumentControllerSession", () => {
     );
     expect(session.getDisplayState().lowerBand.slots[1]).toEqual(
       expect.objectContaining({
-        valueText: "C3",
+        valueText: "C#3",
       }),
     );
   });
@@ -720,6 +723,7 @@ describe("createInstrumentControllerSession", () => {
     inputDevice.emit(MidiEvent.fromCC(63, 127, 0));
     inputDevice.emit(MidiEvent.fromCC(106, 127, 0));
     inputDevice.emit(MidiEvent.fromCC(63, 0, 0));
+    inputDevice.emit(MidiEvent.fromCC(37, 127, 0));
     inputDevice.emit(MidiEvent.fromCC(29, 0, 0));
 
     const stepSequencerModule = modules.get("track-1.runtime.stepSequencer");
@@ -904,7 +908,7 @@ describe("createInstrumentControllerSession", () => {
     );
   });
 
-  it("syncs seq edit step-button LEDs for selected, programmed, and playhead states", () => {
+  it("syncs seq edit step-button LEDs for held, programmed, and playhead states", () => {
     const runtimePatch = createInstrumentEnginePatch(
       createSequencedInstrumentDocument(),
       {
@@ -914,7 +918,8 @@ describe("createInstrumentControllerSession", () => {
           mode: "seqEdit",
           shiftPressed: false,
           sequencerPageIndex: 0,
-          selectedStepIndex: 0,
+          heldSteps: [],
+          stepDefaults: {},
         },
       },
     );
@@ -988,15 +993,18 @@ describe("createInstrumentControllerSession", () => {
     const getLedValue = (cc: number) =>
       ledEvents.filter((event) => event.cc === cc).at(-1)?.ccValue;
 
-    expect(getLedValue(37)).toBe(127);
+    expect(getLedValue(37)).toBe(0);
     expect(getLedValue(38)).toBe(96);
     expect(getLedValue(39)).toBe(0);
 
     inputDevice.emit(MidiEvent.fromCC(38, 127, 0));
 
-    expect(session.getRuntimePatch().runtime.navigation.selectedStepIndex).toBe(
-      1,
-    );
+    const heldSteps = () =>
+      session
+        .getRuntimePatch()
+        .runtime.navigation.heldSteps.map((held) => held.stepIndex);
+
+    expect(heldSteps()).toEqual([1]);
     expect(getLedValue(38)).toBe(96);
 
     liveStepSequencer.state = {
@@ -1010,10 +1018,8 @@ describe("createInstrumentControllerSession", () => {
 
     inputDevice.emit(MidiEvent.fromCC(45, 127, 0));
 
-    expect(session.getRuntimePatch().runtime.navigation.selectedStepIndex).toBe(
-      8,
-    );
-    expect(getLedValue(37)).toBe(64);
+    expect(heldSteps()).toEqual([1, 8]);
+    expect(getLedValue(37)).toBe(0);
     expect(getLedValue(42)).toBe(96);
     expect(getLedValue(45)).toBe(127);
   });

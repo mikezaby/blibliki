@@ -47,14 +47,14 @@ function createStepSequencerInstrumentDocument(): InstrumentDocument {
 }
 
 describe("LaunchControlXL3SequencerEdit", () => {
-  it("creates a sequencer edit display for the active step", () => {
+  it("creates a sequencer edit display for the held step", () => {
     const sequencerEdit = new LaunchControlXL3SequencerEdit();
     const runtimePatch = createInstrumentEnginePatch(
       createStepSequencerInstrumentDocument(),
       {
         navigation: {
           mode: "seqEdit",
-          selectedStepIndex: 0,
+          heldSteps: [{ stepIndex: 0, pressedAt: 0, edited: false }],
         },
       },
     );
@@ -62,6 +62,8 @@ describe("LaunchControlXL3SequencerEdit", () => {
     const displayState = sequencerEdit.createDisplayState(runtimePatch);
 
     expect(displayState?.header.mode).toBe("seqEdit");
+    expect(displayState?.header.heldSteps).toEqual([0]);
+    expect(displayState?.upperBand.sections[0]?.label).toBe("Step 1");
     expect(displayState?.globalBand.slots[0]).toEqual(
       expect.objectContaining({
         key: "active",
@@ -82,22 +84,166 @@ describe("LaunchControlXL3SequencerEdit", () => {
     );
   });
 
-  it("applies encoder events to the active sequencer step", () => {
+  it("shows the defaults when nothing is held", () => {
     const sequencerEdit = new LaunchControlXL3SequencerEdit();
     const runtimePatch = createInstrumentEnginePatch(
       createStepSequencerInstrumentDocument(),
       {
         navigation: {
           mode: "seqEdit",
-          selectedStepIndex: 0,
+          stepDefaults: { "track-1": { probability: 60 } },
+        },
+      },
+    );
+
+    const displayState = sequencerEdit.createDisplayState(runtimePatch);
+
+    expect(displayState?.header.heldSteps).toEqual([]);
+    expect(displayState?.upperBand.sections[0]?.label).toBe("Defaults");
+    expect(displayState?.globalBand.slots[0]).toEqual(
+      expect.objectContaining({
+        key: "active",
+        valueText: "--",
+        inactive: true,
+      }),
+    );
+    expect(displayState?.globalBand.slots[1]).toEqual(
+      expect.objectContaining({ key: "probability", valueText: "60%" }),
+    );
+    expect(displayState?.upperBand.slots[0]).toEqual(
+      expect.objectContaining({ slotKey: "velocity-1", valueText: "80" }),
+    );
+    expect(displayState?.upperBand.slots[1]).toEqual(
+      expect.objectContaining({ slotKey: "velocity-2", inactive: true }),
+    );
+    expect(displayState?.lowerBand.slots[0]).toEqual(
+      expect.objectContaining({ slotKey: "pitch-1", valueText: "C3" }),
+    );
+  });
+
+  it("lights held steps fully, active steps dim and inactive steps off", () => {
+    const sequencerEdit = new LaunchControlXL3SequencerEdit();
+    const document = createStepSequencerInstrumentDocument();
+    const page = document.tracks[0]!.sequencer.pages[0]!;
+    page.steps[1] = {
+      ...page.steps[1]!,
+      active: false,
+      notes: [{ note: "D3", velocity: 80 }],
+    };
+    const runtimePatch = createInstrumentEnginePatch(document, {
+      navigation: {
+        mode: "seqEdit",
+        heldSteps: [{ stepIndex: 3, pressedAt: 0, edited: false }],
+      },
+    });
+    const ledValues = new Map<number, number>();
+
+    sequencerEdit.syncStepButtonLeds(
+      {
+        findModule: () => ({
+          moduleType: ModuleType.MidiOutput,
+          onMidiEvent: (event) => {
+            ledValues.set(event.cc!, event.ccValue!);
+          },
+        }),
+      },
+      runtimePatch,
+    );
+
+    expect([37, 38, 39, 40].map((cc) => ledValues.get(cc))).toEqual([
+      64, 0, 0, 127,
+    ]);
+  });
+
+  it("lights the copy source fully", () => {
+    const sequencerEdit = new LaunchControlXL3SequencerEdit();
+    const runtimePatch = createInstrumentEnginePatch(
+      createStepSequencerInstrumentDocument(),
+      {
+        navigation: { mode: "seqEdit", shiftPressed: true, copySource: 2 },
+      },
+    );
+    const ledValues = new Map<number, number>();
+
+    sequencerEdit.syncStepButtonLeds(
+      {
+        findModule: () => ({
+          moduleType: ModuleType.MidiOutput,
+          onMidiEvent: (event) => {
+            ledValues.set(event.cc!, event.ccValue!);
+          },
+        }),
+      },
+      runtimePatch,
+    );
+
+    expect(ledValues.get(39)).toBe(127);
+  });
+
+  it("previews the fill on the LEDs and labels the fill encoders while shift is held", () => {
+    const sequencerEdit = new LaunchControlXL3SequencerEdit();
+    const runtimePatch = createInstrumentEnginePatch(
+      createStepSequencerInstrumentDocument(),
+      {
+        navigation: {
+          mode: "seqEdit",
+          shiftPressed: true,
+          fill: { pulses: 4, rotate: 1 },
+        },
+      },
+    );
+    const ledValues = new Map<number, number>();
+
+    sequencerEdit.syncStepButtonLeds(
+      {
+        findModule: () => ({
+          moduleType: ModuleType.MidiOutput,
+          onMidiEvent: (event) => {
+            ledValues.set(event.cc!, event.ccValue!);
+          },
+        }),
+      },
+      runtimePatch,
+    );
+
+    expect([37, 38, 42, 46, 50].map((cc) => ledValues.get(cc))).toEqual([
+      0, 127, 127, 127, 127,
+    ]);
+
+    const displayState = sequencerEdit.createDisplayState(runtimePatch);
+
+    expect(displayState?.globalBand.slots[0]).toEqual(
+      expect.objectContaining({
+        key: "pulses",
+        label: "Pulses",
+        valueText: "4",
+      }),
+    );
+    expect(displayState?.globalBand.slots[1]).toEqual(
+      expect.objectContaining({
+        key: "rotate",
+        label: "Rotate",
+        valueText: "1",
+      }),
+    );
+  });
+
+  it("applies encoder events to the held sequencer step", () => {
+    const sequencerEdit = new LaunchControlXL3SequencerEdit();
+    const runtimePatch = createInstrumentEnginePatch(
+      createStepSequencerInstrumentDocument(),
+      {
+        navigation: {
+          mode: "seqEdit",
+          heldSteps: [{ stepIndex: 0, pressedAt: 0, edited: false }],
         },
       },
     );
 
     const result = sequencerEdit.applyEncoderEvent(runtimePatch, 21, 66);
 
-    expect(result?.update.id).toBe("track-1.runtime.stepSequencer");
-    expect(result?.update.moduleType).toBe(ModuleType.StepSequencer);
+    expect(result?.update?.id).toBe("track-1.runtime.stepSequencer");
+    expect(result?.update?.moduleType).toBe(ModuleType.StepSequencer);
     const stepSequencer = result?.runtimePatch.patch.modules.find(
       (module) => module.id === "track-1.runtime.stepSequencer",
     );

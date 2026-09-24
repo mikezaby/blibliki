@@ -6,6 +6,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
@@ -114,7 +115,8 @@ describe("InstrumentPerformance", () => {
         mode: "performance",
         shiftPressed: false,
         sequencerPageIndex: 0,
-        selectedStepIndex: 0,
+        heldSteps: [],
+        stepDefaults: {},
       },
     },
     compiledInstrument: { tracks: [] },
@@ -123,6 +125,13 @@ describe("InstrumentPerformance", () => {
   // at a time, which the real Fixed8 tuples would not allow.
   type TestDisplayState = {
     header: Record<string, unknown>;
+    hints?: {
+      action: string;
+      group: string;
+      gesture: string;
+      text: string;
+      oled: string;
+    }[];
     globalBand: { slots: unknown[] };
     upperBand: { title: string; sections: unknown[]; slots: unknown[] };
     lowerBand: { title: string; sections: unknown[]; slots: unknown[] };
@@ -256,7 +265,9 @@ describe("InstrumentPerformance", () => {
     expect(screen.getByText("Page Bank")).toBeTruthy();
     expect(screen.getByText("SOURCE / AMP")).toBeTruthy();
     expect(screen.queryByText("Mode")).toBeNull();
-    expect(screen.getAllByText("Transport").length).toBe(1);
+    // No lamps: Start/Stop shows the transport, the Step Edit button its mode.
+    expect(screen.queryByText("Transport")).toBeNull();
+    expect(screen.getByRole("button", { name: "Step Edit" })).toBeTruthy();
     expect(screen.queryByText("Runtime")).toBeNull();
     expect(
       container
@@ -286,6 +297,208 @@ describe("InstrumentPerformance", () => {
         .getByRole("button", { name: "Fullscreen" })
         .hasAttribute("disabled"),
     ).toBe(false);
+  });
+
+  it("shows the cheatsheet while Shift is held and pins it from the ? button", async () => {
+    displayState.hints = [
+      {
+        action: "tapStep",
+        group: "Write a pattern",
+        gesture: "Tap [Step]",
+        text: "Turn a step on or off",
+        oled: "Tap Toggle",
+      },
+      {
+        action: "editNote",
+        group: "Write a pattern",
+        gesture: "Hold [Step], turn [Bottom row]",
+        text: "Set its note",
+        oled: "Hold+R3 Note",
+      },
+      {
+        action: "saveDraft",
+        group: "Save",
+        gesture: "[Shift] + [Track ▶] twice",
+        text: "Save the instrument",
+        oled: "S+Tr> Save",
+      },
+    ];
+    displayState.header.shiftPressed = true;
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    const panel = await screen.findByRole("region", { name: "Cheatsheet" });
+
+    // Controls render as keys, the words between them as plain text.
+    expect(
+      within(panel)
+        .getAllByText("Step")
+        .map((key) => key.tagName),
+    ).toEqual(["KBD", "KBD"]);
+    expect(within(panel).getByText("Bottom row").tagName).toBe("KBD");
+
+    // One titled section per group, each hint under its own group.
+    const patternSection = within(panel)
+      .getByRole("heading", { name: "Write a pattern" })
+      .closest("section")!;
+    const saveSection = within(panel)
+      .getByRole("heading", { name: "Save" })
+      .closest("section")!;
+    expect(within(saveSection).getByText("Save the instrument")).toBeTruthy();
+    expect(
+      within(patternSection).queryByText("Save the instrument"),
+    ).toBeNull();
+
+    // A group of steps to follow is numbered; the others are not.
+    expect(within(patternSection).getByText("1")).toBeTruthy();
+    expect(within(patternSection).getByText("2")).toBeTruthy();
+    expect(within(saveSection).queryByText("1")).toBeNull();
+
+    cleanup();
+    displayState.header.shiftPressed = false;
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    await screen.findByText("Instrument One");
+    expect(screen.queryByRole("region", { name: "Cheatsheet" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Cheatsheet" }));
+    expect(screen.getByRole("region", { name: "Cheatsheet" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Cheatsheet" }));
+    expect(screen.queryByRole("region", { name: "Cheatsheet" })).toBeNull();
+
+    // The ? key does the same as the button.
+    fireEvent.keyDown(window, { key: "?" });
+    expect(screen.getByRole("region", { name: "Cheatsheet" })).toBeTruthy();
+
+    fireEvent.keyDown(window, { key: "?" });
+    expect(screen.queryByRole("region", { name: "Cheatsheet" })).toBeNull();
+  });
+
+  it("enters and leaves Step Edit from the on-screen button, on sequencer tracks only", async () => {
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    // The mocked instrument has no tracks, so nothing here can be sequenced.
+    const disabledButton = await screen.findByRole("button", {
+      name: "Step Edit",
+    });
+    expect(disabledButton.hasAttribute("disabled")).toBe(true);
+
+    cleanup();
+    const sequencedRuntimePatch = {
+      ...runtimePatch,
+      compiledInstrument: {
+        tracks: [
+          {
+            key: "track-1",
+            noteSource: "stepSequencer",
+            audioSource: { type: "internal" },
+          },
+        ],
+      },
+    };
+    createInstrumentControllerSessionMock.mockImplementation(() => ({
+      getDisplayState: () => displayState,
+      getRuntimePatch: () => sequencedRuntimePatch,
+      sendControlEvent: sendControlEventMock,
+      dispose: vi.fn(),
+    }));
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    const button = await screen.findByRole("button", { name: "Step Edit" });
+    await waitFor(() => {
+      expect(button.hasAttribute("disabled")).toBe(false);
+    });
+    expect(button.getAttribute("aria-pressed")).toBe("false");
+
+    // The hardware's own gesture: Shift down, Page Up, Shift up.
+    fireEvent.click(button);
+    const sent = sendControlEventMock.mock.calls.slice(-3).map((call) => {
+      const [event] = call as [{ cc?: number; ccValue?: number }];
+      return [event.cc, event.ccValue];
+    });
+    expect(sent).toEqual([
+      [63, 127],
+      [106, 127],
+      [63, 0],
+    ]);
+
+    cleanup();
+    displayState.header.mode = "seqEdit";
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    const pressedButton = await screen.findByRole("button", {
+      name: "Step Edit",
+    });
+    expect(pressedButton.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("keeps the console's own controls apart from the general buttons", async () => {
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+        backSlot={<a href="/">Back</a>}
+      />,
+    );
+
+    const instrument = await screen.findByRole("group", { name: "Instrument" });
+    const general = screen.getByRole("group", { name: "Console" });
+
+    expect(
+      within(instrument).getByRole("button", { name: "Step Edit" }),
+    ).toBeTruthy();
+    expect(
+      within(instrument).getByRole("button", { name: "Start" }),
+    ).toBeTruthy();
+    expect(within(general).getByRole("link", { name: "Back" })).toBeTruthy();
+    expect(
+      within(general).getByRole("button", { name: "Cheatsheet" }),
+    ).toBeTruthy();
+    expect(
+      within(general).getByRole("button", { name: "Fullscreen" }),
+    ).toBeTruthy();
+
+    // Playing controls sit on the faceplate; the chrome sits in a row above
+    // the whole frame, so neither the rim nor the faceplate changes.
+    const faceplate = instrument.closest(".instrument-performance-faceplate");
+    expect(faceplate).toBeTruthy();
+    expect(faceplate?.parentElement?.contains(general)).toBe(false);
+
+    // Outlined circles with the pills' height, icon only.
+    for (const name of ["Cheatsheet", "Fullscreen"]) {
+      const className = within(general).getByRole("button", { name }).className;
+      expect(className).toContain("ui-icon-button--size-md");
+      expect(className).toContain("ui-button--variant-outlined");
+    }
   });
 
   it("toggles transport from the single start and stop button", async () => {

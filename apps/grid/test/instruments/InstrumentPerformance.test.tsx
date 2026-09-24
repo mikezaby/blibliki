@@ -27,16 +27,23 @@ vi.mock("@blibliki/instrument/react", () => ({
 }));
 
 vi.mock("@tanstack/react-router", () => ({
+  // The back link is icon-only, so its accessible name rides on aria-label,
+  // which the real Link forwards to the anchor.
   Link: ({
     children,
     to,
     params,
+    "aria-label": ariaLabel,
   }: {
     children: ReactNode;
     to: string;
     params?: Record<string, string>;
+    "aria-label"?: string;
   }) => (
-    <a href={to.replace("$instrumentId", params?.instrumentId ?? "")}>
+    <a
+      href={to.replace("$instrumentId", params?.instrumentId ?? "")}
+      aria-label={ariaLabel}
+    >
       {children}
     </a>
   ),

@@ -6,9 +6,12 @@ const SYSEX_HEADER = [0xf0, 0x00, 0x20, 0x29, 0x02, 0x15];
 const OVERLAY_TARGET = 0x36;
 const CMD_CONFIGURE = 0x04;
 const CMD_SET_TEXT = 0x06;
+const CANCEL = 0x00;
 const ARRANGE_2_LINES = 0x01;
 const ARRANGE_3_LINES = 0x02;
+const ARRANGE_TITLE_AND_NAMES = 0x03;
 const TRIGGER = 0x7f;
+const CHEATSHEET_CELLS = 8;
 
 // Analog-control temp-display targets (faders 0x05-0x0C, encoders 0x0D-0x24).
 // Same indices as their CC numbers.
@@ -79,16 +82,26 @@ export function encoderDisplayEvents(
   displayState: InstrumentDisplayState,
   cc: number,
 ): MidiEvent[] | null {
+  // In Step Edit every row belongs to the held steps (or the defaults), which
+  // the band section names.
+  const stepEditFocus =
+    displayState.header.mode === "seqEdit"
+      ? displayState.upperBand.sections[0]?.label
+      : undefined;
   const globalSlot = displayState.globalBand.slots.find((s) => s.cc === cc);
   if (globalSlot) {
-    return overlayEvents("Global", globalSlot.label, globalSlot.valueText);
+    return overlayEvents(
+      stepEditFocus ?? "Global",
+      globalSlot.label,
+      globalSlot.valueText,
+    );
   }
 
   for (const band of [displayState.upperBand, displayState.lowerBand]) {
     const slot = band.slots.find((s) => s.kind === "slot" && s.cc === cc);
     if (slot?.kind === "slot") {
       return overlayEvents(
-        titleCase(slot.blockKey),
+        stepEditFocus ?? titleCase(slot.blockKey),
         slot.label,
         slot.valueText,
       );
@@ -96,6 +109,36 @@ export function encoderDisplayEvents(
   }
 
   return null;
+}
+
+// The title plus 2x4 names layout: the mode, then one hint per cell.
+export function cheatsheetDisplayEvents(
+  displayState: InstrumentDisplayState,
+): MidiEvent[] | null {
+  // Shown while Shift is held, so the Shift combinations come first.
+  const isShiftCombo = (gesture: string) => gesture.startsWith("[Shift] +");
+  const hints = [...(displayState.hints ?? [])].sort(
+    (a, b) => Number(isShiftCombo(b.gesture)) - Number(isShiftCombo(a.gesture)),
+  );
+  if (hints.length === 0) {
+    return null;
+  }
+
+  const title =
+    displayState.header.mode === "seqEdit" ? "STEP EDIT" : "PERFORMANCE";
+
+  return [
+    configure(ARRANGE_TITLE_AND_NAMES),
+    setText(0, title),
+    ...hints
+      .slice(0, CHEATSHEET_CELLS)
+      .map((hint, index) => setText(index + 1, hint.oled)),
+    configure(TRIGGER),
+  ];
+}
+
+export function cancelOverlayEvents(): MidiEvent[] {
+  return [configure(CANCEL)];
 }
 
 export function navigationDisplayEvents(

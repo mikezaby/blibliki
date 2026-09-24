@@ -47,7 +47,7 @@ function createStepSequencerInstrumentDocument(): InstrumentDocument {
 }
 
 describe("InstrumentNavigation", () => {
-  it("normalizes track, page, mode, sequencer page, and selected step invariants", () => {
+  it("normalizes track, page, mode, sequencer page, and held step invariants", () => {
     const runtimePatch = createInstrumentEnginePatch(
       createSeededInstrumentDocument(),
     );
@@ -60,18 +60,20 @@ describe("InstrumentNavigation", () => {
       mode: "seqEdit",
       shiftPressed: true,
       sequencerPageIndex: 5,
-      selectedStepIndex: 99,
+      heldSteps: [{ stepIndex: 99, pressedAt: 0, edited: false }],
     });
 
     // Index -1 wraps to the last track, which is the master track. It has no
-    // sourceAmp page, so the page falls back to its first page (filterMod).
+    // sourceAmp page, so the page falls back to its first page (filterMod),
+    // and no sequencer, so the bar index wraps to 0.
     expect(navigation.serialize()).toEqual({
       activeTrackIndex: 7,
       activePage: "filterMod",
       mode: "performance",
       shiftPressed: true,
-      sequencerPageIndex: 1,
-      selectedStepIndex: 15,
+      sequencerPageIndex: 0,
+      heldSteps: [],
+      stepDefaults: {},
     });
     expect(navigation.activeTrack.key).toBe("master");
     expect(navigation.activePage.pageKey).toBe("filterMod");
@@ -92,7 +94,8 @@ describe("InstrumentNavigation", () => {
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,
-      selectedStepIndex: 0,
+      heldSteps: [],
+      stepDefaults: {},
     });
 
     // Wrapping backwards lands on the master track (last track), which keeps
@@ -104,7 +107,8 @@ describe("InstrumentNavigation", () => {
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,
-      selectedStepIndex: 0,
+      heldSteps: [],
+      stepDefaults: {},
     });
 
     // The master track has only filterMod + fx, so previousPage wraps to fx.
@@ -115,7 +119,8 @@ describe("InstrumentNavigation", () => {
       mode: "performance",
       shiftPressed: false,
       sequencerPageIndex: 0,
-      selectedStepIndex: 0,
+      heldSteps: [],
+      stepDefaults: {},
     });
   });
 
@@ -231,7 +236,7 @@ describe("InstrumentNavigation", () => {
     expect(navigation.navigate("previousTrack").serialize()).toMatchObject({
       activeTrackIndex: 7,
       mode: "performance",
-      sequencerPageIndex: 3,
+      sequencerPageIndex: 0,
     });
   });
 });

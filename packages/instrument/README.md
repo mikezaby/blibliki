@@ -170,7 +170,7 @@ Use this class for domain runtime behavior that does not require live engine/dev
 
 `src/core/InstrumentNavigation.ts` owns active track/page/mode invariants. It keeps navigation behavior testable without a hardware device.
 
-Use it when changing track wrapping, page wrapping, performance mode, sequencer edit mode, shift state, selected sequencer page, or selected step.
+Use it when changing track wrapping, page wrapping, performance mode, sequencer edit mode, shift state, selected sequencer page, held steps, or the defaults a tapped step inherits.
 
 ### InstrumentRuntime
 
@@ -212,6 +212,7 @@ The package currently targets Launch Control XL3 as the controller surface.
 Important files:
 
 - `src/surfaces/launchControlXL3/LaunchControlXL3Surface.ts`: reduces raw MIDI events to domain commands.
+- `src/sequencer/stepEntry.ts`: the hardware-neutral half of Step Edit: held steps, the defaults a tapped step inherits, and how a relative control edits the held steps. A surface maps its own buttons and encoders onto it.
 - `src/surfaces/launchControlXL3/LaunchControlXL3SequencerEdit.ts`: sequencer edit facade for display, page sync, encoder edits, and LED sync.
 - `src/surfaces/launchControlXL3/LaunchControlXL3SequencerPatch.ts`: applies sequencer edit changes to runtime patch and engine updates.
 - `src/surfaces/launchControlXL3/LaunchControlXL3SequencerLeds.ts`: step-button LED sync.
@@ -301,6 +302,13 @@ the meters, where hardware carries its maker's name. It is `Logo` from
 `@blibliki/ui` with its wordmark, which fixes the lettering; the console only
 sets its size and its dim grey. It is part of the console, not something a
 host passes in: every app that renders the console is a Blibliki app.
+
+Holding Shift on the controller shows a cheatsheet over the bands: the
+gestures that apply in the current mode, taken from the display state's
+`hints`. In Step Edit it starts with numbered steps for writing a pattern,
+then groups the rest by context: steps, copy and fill, bars, mode, saving
+and help. The `?` key, or the `?` button in the header, pins it open. The
+controller's own screen shows the first eight hints while Shift is held.
 
 The console is a faceplate, not a responsive page. It is laid out once at a
 fixed 1536px design width and then scaled as a whole to fit whatever stage it

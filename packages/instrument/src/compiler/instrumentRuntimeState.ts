@@ -118,7 +118,10 @@ export function normalizeInstrumentNavigation(
         : "performance",
     shiftPressed: options.navigation?.shiftPressed ?? false,
     sequencerPageIndex: options.navigation?.sequencerPageIndex ?? 0,
-    selectedStepIndex: options.navigation?.selectedStepIndex ?? 0,
+    heldSteps: options.navigation?.heldSteps ?? [],
+    stepDefaults: options.navigation?.stepDefaults ?? {},
+    copySource: options.navigation?.copySource,
+    fill: options.navigation?.fill,
   };
 }
 

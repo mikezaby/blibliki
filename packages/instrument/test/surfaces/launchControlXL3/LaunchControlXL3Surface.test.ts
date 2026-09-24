@@ -113,7 +113,7 @@ describe("LaunchControlXL3Surface", () => {
     });
   });
 
-  it("maps seq edit step buttons to selected step changes", () => {
+  it("maps seq edit step buttons to held steps", () => {
     const surface = new LaunchControlXL3Surface();
     const runtimePatch = createInstrumentEnginePatch(
       createStepSequencerInstrumentDocument(),
@@ -127,8 +127,12 @@ describe("LaunchControlXL3Surface", () => {
       shifted.runtimePatch,
       MidiEvent.fromCC(106, 127, 0),
     );
-    const result = surface.reduceEvent(
+    const unshifted = surface.reduceEvent(
       seqEdit.runtimePatch,
+      MidiEvent.fromCC(63, 0, 0),
+    );
+    const result = surface.reduceEvent(
+      unshifted.runtimePatch,
       MidiEvent.fromCC(40, 127, 0),
     );
 
@@ -136,11 +140,12 @@ describe("LaunchControlXL3Surface", () => {
       type: "seqEdit.toggle",
       enabled: true,
     });
-    expect(result.command).toEqual({
-      type: "seqEdit.step",
-      stepIndex: 3,
-    });
-    expect(result.runtimePatch.runtime.navigation.selectedStepIndex).toBe(3);
+    expect(result.command).toEqual({ type: "seqEdit.hold" });
+    expect(
+      result.runtimePatch.runtime.navigation.heldSteps.map(
+        (held) => held.stepIndex,
+      ),
+    ).toEqual([3]);
   });
 
   it("maps enabled macro movement to an offset delta on the target prop", () => {

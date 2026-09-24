@@ -20,6 +20,27 @@ function createSeededInstrumentDocument() {
 }
 
 describe("LiveInstrumentDisplayState", () => {
+  it("carries the hints for the current mode and mirrors the shift state", () => {
+    const document = createSeededInstrumentDocument();
+    document.tracks[0] = {
+      ...document.tracks[0]!,
+      noteSource: "stepSequencer",
+    };
+    const runtimePatch = createInstrumentEnginePatch(document, {
+      navigation: { shiftPressed: true },
+    });
+
+    const displayState = createLiveInstrumentDisplayState(
+      { state: TransportState.stopped, findModule: () => ({}) },
+      runtimePatch,
+    );
+
+    expect(displayState.header.shiftPressed).toBe(true);
+    expect(displayState.hints?.map((hint) => hint.action)).toContain(
+      "enterStepEdit",
+    );
+  });
+
   it("resolves visible values from the live engine module props", () => {
     const runtimePatch = createInstrumentEnginePatch(
       createSeededInstrumentDocument(),

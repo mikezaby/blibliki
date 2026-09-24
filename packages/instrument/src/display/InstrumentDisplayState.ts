@@ -1,6 +1,7 @@
 import { TransportState } from "@blibliki/engine";
 import type { InstrumentRuntimeMode } from "@/compiler/instrumentTypes";
 import type { CompiledLaunchControlXL3Page } from "@/compiler/types";
+import type { InstrumentHint } from "@/display/hints";
 import type { InstrumentGlobalBlock } from "@/document/types";
 import {
   getGlobalControlValueSpec,
@@ -71,8 +72,11 @@ export type InstrumentDisplayState = {
     midiChannel: number;
     transportState: TransportState;
     mode: InstrumentRuntimeMode;
+    heldSteps?: number[];
+    shiftPressed?: boolean;
   };
   notice?: InstrumentDisplayNotice;
+  hints?: InstrumentHint[];
   globalBand: {
     slots: Fixed8<GlobalDisplaySlotState>;
   };

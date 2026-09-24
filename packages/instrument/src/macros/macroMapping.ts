@@ -1,5 +1,5 @@
 import { moduleSchemas, ModuleType, type NumberProp } from "@blibliki/engine";
-import { getRelativeDelta } from "@/surfaces/launchControlXL3/LaunchControlXL3RelativeEncoder";
+import { getRelativeDelta } from "@/surfaces/launchControlXL3/LaunchControlXL3SequencerControls";
 import type { MacroEncoder, MacroMapping, MacroPolarity } from "./types";
 
 const MACRO_ENCODER_STEP = 0.01;
