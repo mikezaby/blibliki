@@ -136,3 +136,11 @@ the next run. The value read is the curve one step early, so the gain is
 being read before the automation has landed rather than computed wrongly.
 Have the test wait on the context's time, or read the gain through a
 rendered buffer, instead of reading `gain.value` right after `setMix`.
+
+## The XL3 DAW v1 doc describes the track buttons wrongly
+
+`docs/launch-control-xl3-daw-v1.md` says the Track buttons are page
+aliases. In `packages/instrument/src/surfaces/launchControlXL3/LaunchControlXL3Surface.ts`
+they change the active track, and with Shift they save or discard the
+draft. Rewrite that table from the surface's CC constants, or delete the
+doc in favour of the surface as the source of truth.
