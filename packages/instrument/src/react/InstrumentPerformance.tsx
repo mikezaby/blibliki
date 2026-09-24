@@ -581,14 +581,19 @@ function CheatSheet({
             </Text>
             {/* Gestures in one column, what they do in the next, so a group
                 reads as a table. */}
-            <dl className="mt-2 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2">
+            <dl className="mt-3 grid grid-cols-[max-content_1fr] items-baseline gap-x-6 gap-y-3">
               {groupHints.map((hint) => (
                 <Fragment key={hint.action}>
-                  <dt className="font-mono text-sm uppercase tracking-[0.12em] text-lime-200">
-                    {hint.gesture}
+                  <dt className="text-sm leading-7 text-zinc-400">
+                    <GestureKeys gesture={hint.gesture} />
                   </dt>
-                  <dd className="font-mono text-sm text-zinc-300">
+                  <dd className="text-base leading-7 text-zinc-100">
                     {hint.text}
+                    {hint.detail ? (
+                      <span className="block text-sm leading-5 text-zinc-500">
+                        {hint.detail}
+                      </span>
+                    ) : null}
                   </dd>
                 </Fragment>
               ))}
@@ -598,6 +603,26 @@ function CheatSheet({
       </div>
     </section>
   );
+}
+
+// A gesture names its controls in brackets. Each control renders as a key,
+// the words between them stay plain text.
+function GestureKeys({ gesture }: { gesture: string }) {
+  return gesture
+    .split(/(\[[^\]]+\])/)
+    .filter(Boolean)
+    .map((part, index) =>
+      part.startsWith("[") ? (
+        <kbd
+          key={index}
+          className="inline-block rounded-md border border-zinc-600 bg-zinc-800 px-1.5 font-mono text-xs uppercase leading-5 text-lime-200"
+        >
+          {part.slice(1, -1)}
+        </kbd>
+      ) : (
+        part
+      ),
+    );
 }
 
 // Keeps the groups in the order the hints list them.

@@ -27,6 +27,34 @@ function groupsOf(hints: { action: string; group: string }[]) {
 }
 
 describe("createLaunchControlXL3Hints", () => {
+  it("names a control in every gesture and keeps each description to one short idea", () => {
+    const everyHint = [
+      createLaunchControlXL3Hints(createPatch({})),
+      createLaunchControlXL3Hints(createPatch({ mode: "seqEdit" })),
+      createLaunchControlXL3Hints(
+        createPatch({
+          mode: "seqEdit",
+          heldSteps: [{ stepIndex: 0, pressedAt: 0, edited: false }],
+        }),
+      ),
+    ].flat();
+
+    for (const hint of everyHint) {
+      expect(hint.gesture, hint.action).toMatch(/\[[^\]]+\]/);
+      expect(hint.text.length, hint.action).toBeLessThanOrEqual(30);
+      expect(hint.text, hint.action).not.toContain(";");
+    }
+  });
+
+  it("calls the fill knobs by the labels the screen gives them", () => {
+    const hints = createLaunchControlXL3Hints(createPatch({ mode: "seqEdit" }));
+
+    expect(hints.find((hint) => hint.action === "fillBar")).toMatchObject({
+      gesture: "[Shift] + turn [Pulses] [Rotate]",
+      text: "Fill the bar with a rhythm",
+    });
+  });
+
   it("lists save, discard and Step Edit entry on a sequencer track in performance mode", () => {
     const hints = createLaunchControlXL3Hints(createPatch({}));
 
@@ -39,12 +67,18 @@ describe("createLaunchControlXL3Hints", () => {
       "showCheatsheet",
     ]);
     expect(hints[0]).toMatchObject({
-      gesture: "Shift + Page ▲",
+      gesture: "[Shift] + [Page ▲]",
       text: "Enter Step Edit",
     });
     expect(hints.at(-1)).toMatchObject({
-      gesture: "Hold Shift",
-      text: "Show this list; on screen the ? key or button pins it",
+      gesture: "Hold [Shift]",
+      text: "Show this list",
+      detail: "On screen, the ? key or button keeps it open",
+    });
+    // Saving asks first, which the performer has to know to get it done.
+    expect(hints[1]).toMatchObject({
+      text: "Save the instrument",
+      detail: "Press twice: the first press asks",
     });
     expect(groupsOf(hints)).toEqual({
       enterStepEdit: "Mode",

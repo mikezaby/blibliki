@@ -41,32 +41,69 @@ export type InstrumentHintEntry = {
 };
 
 export type InstrumentHint = InstrumentHintEntry & {
+  // Controls in brackets, as in "Hold [Step], turn [Knob]". The console
+  // renders each one as a key and the words between them as plain text.
   gesture: string;
+  // One short idea. A second one goes in `detail`.
   text: string;
+  detail?: string;
   // At most 12 characters: one cell of the controller's screen.
   oled: string;
 };
 
-const HINT_TEXT: Record<InstrumentHintAction, string> = {
-  enterStepEdit: "Enter Step Edit",
-  leaveStepEdit: "Leave Step Edit",
-  saveDraft: "Save the draft",
-  discardDraft: "Discard the draft and reload the saved instrument",
-  switchTrack: "Previous or next track",
-  switchPage: "Previous or next page of controls",
-  switchBar: "Previous or next bar",
-  growLoop: "Add bars to the loop; a new bar copies the one before it",
-  duplicateBar: "Copy this bar onto the next one and go there",
-  copyStep: "Copy the first step tapped onto the ones tapped after it",
-  fillBar: "Fill the bar with the default note: pulses, then rotate",
-  octave: "Move the pitch an octave per tick",
-  tapStep: "Toggle the step; a new one takes the defaults",
-  holdStep: "Edit that step with the encoders",
-  holdSeveral: "Edit the held steps together",
-  setDefaults: "Set the defaults a new step inherits",
-  editHeld: "Edit the held steps",
-  releaseHeld: "Keep the edit; a quick tap would have toggled",
-  showCheatsheet: "Show this list; on screen the ? key or button pins it",
+const HINT_TEXT: Record<
+  InstrumentHintAction,
+  { text: string; detail?: string }
+> = {
+  enterStepEdit: { text: "Enter Step Edit" },
+  leaveStepEdit: { text: "Leave Step Edit" },
+  saveDraft: {
+    text: "Save the instrument",
+    detail: "Press twice: the first press asks",
+  },
+  discardDraft: {
+    text: "Discard changes",
+    detail: "Reloads the saved instrument. Press twice.",
+  },
+  switchTrack: { text: "Previous or next track" },
+  switchPage: { text: "Previous or next control page" },
+  switchBar: { text: "Previous or next bar" },
+  growLoop: {
+    text: "Set how many bars loop",
+    detail: "A new bar starts as a copy of the one before",
+  },
+  duplicateBar: {
+    text: "Copy this bar to the next",
+    detail: "Then moves there, so repeat it to fill the loop",
+  },
+  copyStep: {
+    text: "Copy a step onto others",
+    detail: "The first step tapped is the one copied",
+  },
+  fillBar: {
+    text: "Fill the bar with a rhythm",
+    detail: "Uses the default note. Written when you let go of Shift.",
+  },
+  octave: { text: "Move the pitch by octaves" },
+  tapStep: {
+    text: "Turn a step on or off",
+    detail: "A new step gets the default note",
+  },
+  holdStep: { text: "Edit that step" },
+  holdSeveral: { text: "Edit several steps together" },
+  setDefaults: {
+    text: "Set what new steps get",
+    detail: "Note, velocity, length and probability",
+  },
+  editHeld: { text: "Edit the held steps" },
+  releaseHeld: {
+    text: "Finish the edit",
+    detail: "A quick tap would toggle the step instead",
+  },
+  showCheatsheet: {
+    text: "Show this list",
+    detail: "On screen, the ? key or button keeps it open",
+  },
 };
 
 export function describeInstrumentHint(action: InstrumentHintAction) {

@@ -130,6 +130,7 @@ describe("InstrumentPerformance", () => {
       group: string;
       gesture: string;
       text: string;
+      detail?: string;
       oled: string;
     }[];
     globalBand: { slots: unknown[] };
@@ -304,15 +305,16 @@ describe("InstrumentPerformance", () => {
       {
         action: "enterStepEdit",
         group: "Mode",
-        gesture: "Shift + Page ▲",
+        gesture: "[Shift] + [Page ▲]",
         text: "Enter Step Edit",
         oled: "S+Pg^ Edit",
       },
       {
         action: "saveDraft",
         group: "Save",
-        gesture: "Shift + Track ▶",
+        gesture: "[Shift] + [Track ▶]",
         text: "Save the draft",
+        detail: "Press twice: the first press asks",
         oled: "S+Tr> Save",
       },
     ];
@@ -327,7 +329,18 @@ describe("InstrumentPerformance", () => {
 
     const panel = await screen.findByRole("region", { name: "Cheatsheet" });
     expect(screen.getByText("Enter Step Edit")).toBeTruthy();
-    expect(screen.getByText("Shift + Page ▲")).toBeTruthy();
+
+    // Controls render as keys, the words between them as plain text.
+    expect(
+      within(panel)
+        .getAllByText("Shift")
+        .map((key) => key.tagName),
+    ).toEqual(["KBD", "KBD"]);
+    expect(within(panel).getByText("Page ▲").tagName).toBe("KBD");
+    expect(within(panel).getAllByText("+")).toHaveLength(2);
+    expect(
+      within(panel).getByText("Press twice: the first press asks"),
+    ).toBeTruthy();
 
     // One titled section per group, each hint under its own group.
     const modeSection = within(panel)
