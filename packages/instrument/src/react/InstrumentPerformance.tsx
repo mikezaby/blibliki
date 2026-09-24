@@ -4,7 +4,7 @@ import {
   ModuleType,
   TransportState,
 } from "@blibliki/engine";
-import { Button, Logo, Surface, Text, cn } from "@blibliki/ui";
+import { Button, IconButton, Logo, Surface, Text, cn } from "@blibliki/ui";
 import {
   ChevronLeft,
   ChevronRight,
@@ -834,6 +834,50 @@ export default function InstrumentPerformance({
         className="absolute left-0 top-0"
         style={createFaceplateStyle(fit)}
       >
+        {/* The chrome, in a row above the frame: the way back, the cheatsheet
+            and fullscreen are not part of playing. */}
+        <div
+          role="group"
+          aria-label="Console"
+          className="mb-3 flex items-center justify-between px-1"
+        >
+          <div className="flex items-center gap-2">{backSlot}</div>
+          <div className="flex items-center gap-2">
+            <IconButton
+              variant="outlined"
+              color="neutral"
+              aria-label="Cheatsheet"
+              aria-pressed={cheatsheetPinned}
+              icon={<span className="font-mono text-base leading-none">?</span>}
+              onClick={() => {
+                setCheatsheetPinned((pinned) => !pinned);
+              }}
+              className="rounded-full border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-100"
+            />
+            {/* Only where there is browser chrome to escape, and only
+                  where the host asked for it. */}
+            {fullscreen.available ? (
+              <IconButton
+                variant="outlined"
+                color="neutral"
+                aria-label={
+                  fullscreen.isFullscreen ? "Exit Fullscreen" : "Fullscreen"
+                }
+                icon={
+                  fullscreen.isFullscreen ? (
+                    <Minimize2 className="h-4 w-4" />
+                  ) : (
+                    <Maximize2 className="h-4 w-4" />
+                  )
+                }
+                onClick={() => {
+                  void fullscreen.toggle();
+                }}
+                className="rounded-full border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-100"
+              />
+            ) : null}
+          </div>
+        </div>
         <div className="rounded-3xl bg-zinc-900/90 p-5 shadow-2xl">
           <div className="instrument-performance-faceplate rounded-3xl p-6">
             <div className="flex flex-row items-start justify-between gap-6">
@@ -847,40 +891,11 @@ export default function InstrumentPerformance({
                 </Text>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                {backSlot}
-                <Button
-                  variant="outlined"
-                  color="neutral"
-                  size="icon"
-                  aria-label="Cheatsheet"
-                  aria-pressed={cheatsheetPinned}
-                  onClick={() => {
-                    setCheatsheetPinned((pinned) => !pinned);
-                  }}
-                  className="rounded-full border-zinc-600 font-mono text-lg text-zinc-200 hover:border-zinc-400 hover:bg-zinc-900"
-                >
-                  ?
-                </Button>
-                {/* Only where there is browser chrome to escape, and only
-                    where the host asked for it. */}
-                {fullscreen.available ? (
-                  <Button
-                    variant="outlined"
-                    color="neutral"
-                    onClick={() => {
-                      void fullscreen.toggle();
-                    }}
-                    className="rounded-full border-zinc-600 px-5 font-mono uppercase tracking-[0.14em] text-zinc-200 hover:border-zinc-400 hover:bg-zinc-900"
-                  >
-                    {fullscreen.isFullscreen ? (
-                      <Minimize2 className="h-4 w-4" />
-                    ) : (
-                      <Maximize2 className="h-4 w-4" />
-                    )}
-                    {fullscreen.isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-                  </Button>
-                ) : null}
+              <div
+                role="group"
+                aria-label="Instrument"
+                className="flex flex-wrap items-center gap-3"
+              >
                 <Button
                   variant="outlined"
                   color="neutral"

@@ -6,6 +6,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDefaultInstrumentDocument } from "@/document/defaultDocument";
@@ -414,6 +415,46 @@ describe("InstrumentPerformance", () => {
       name: "Step Edit",
     });
     expect(pressedButton.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("keeps the console's own controls apart from the general buttons", async () => {
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+        backSlot={<a href="/">Back</a>}
+      />,
+    );
+
+    const instrument = await screen.findByRole("group", { name: "Instrument" });
+    const general = screen.getByRole("group", { name: "Console" });
+
+    expect(
+      within(instrument).getByRole("button", { name: "Step Edit" }),
+    ).toBeTruthy();
+    expect(
+      within(instrument).getByRole("button", { name: "Start" }),
+    ).toBeTruthy();
+    expect(within(general).getByRole("link", { name: "Back" })).toBeTruthy();
+    expect(
+      within(general).getByRole("button", { name: "Cheatsheet" }),
+    ).toBeTruthy();
+    expect(
+      within(general).getByRole("button", { name: "Fullscreen" }),
+    ).toBeTruthy();
+
+    // Playing controls sit on the faceplate; the chrome sits in a row above
+    // the whole frame, so neither the rim nor the faceplate changes.
+    const faceplate = instrument.closest(".instrument-performance-faceplate");
+    expect(faceplate).toBeTruthy();
+    expect(faceplate?.parentElement?.contains(general)).toBe(false);
+
+    // Outlined circles with the pills' height, icon only.
+    for (const name of ["Cheatsheet", "Fullscreen"]) {
+      const className = within(general).getByRole("button", { name }).className;
+      expect(className).toContain("ui-icon-button--size-md");
+      expect(className).toContain("ui-button--variant-outlined");
+    }
   });
 
   it("toggles transport from the single start and stop button", async () => {

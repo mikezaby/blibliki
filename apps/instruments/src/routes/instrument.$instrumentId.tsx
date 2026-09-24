@@ -51,13 +51,14 @@ function InstrumentPage() {
         <>
           <Button
             asChild
-            variant="text"
+            variant="outlined"
             color="neutral"
-            className={HEADER_PILL_CLASS}
+            size="icon"
+            aria-label="Instruments"
+            className="rounded-full border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-100"
           >
             <Link to="/">
               <ArrowLeft className="h-4 w-4" />
-              Instruments
             </Link>
           </Button>
           {isRecipeInstrumentId(instrument.id) ? (
