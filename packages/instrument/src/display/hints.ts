@@ -3,37 +3,49 @@ import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
 // What the performer can do from where they are. The list is neutral; a
 // surface attaches its own gesture names to each action.
 export type InstrumentHintAction =
+  | "switchTrack"
+  | "switchPage"
   | "enterStepEdit"
   | "leaveStepEdit"
   | "saveDraft"
   | "discardDraft"
-  | "switchTrack"
-  | "switchPage"
+  | "tapStep"
+  | "editNote"
+  | "editVelocity"
+  | "editSettings"
   | "switchBar"
-  | "growLoop"
-  | "duplicateBar"
   | "copyStep"
   | "fillBar"
-  | "octave"
-  | "tapStep"
-  | "holdStep"
+  | "duplicateBar"
+  | "addChordNotes"
   | "holdSeveral"
   | "setDefaults"
-  | "editHeld"
+  | "growLoop"
+  | "heldNote"
+  | "heldVelocity"
+  | "heldSettings"
+  | "holdAnother"
   | "releaseHeld"
+  | "octave"
   | "showCheatsheet";
 
-// Where the performer is when a gesture matters, which is how the cheatsheet
-// sorts its entries.
+// How the cheatsheet sorts its entries: in Step Edit a path to follow first,
+// then everything else by context.
 export type InstrumentHintGroup =
+  | "Write a pattern"
   | "Steps"
   | "Held steps"
   | "Copy and fill"
   | "Bars"
-  | "Mode"
   | "Navigate"
+  | "Mode"
   | "Save"
   | "Help";
+
+// Steps to follow in order, which the console numbers.
+export const STEP_BY_STEP_GROUPS: ReadonlySet<InstrumentHintGroup> = new Set([
+  "Write a pattern",
+]);
 
 export type InstrumentHintEntry = {
   action: InstrumentHintAction;
@@ -41,69 +53,41 @@ export type InstrumentHintEntry = {
 };
 
 export type InstrumentHint = InstrumentHintEntry & {
-  // Controls in brackets, as in "Hold [Step], turn [Knob]". The console
+  // Controls in brackets, as in "Hold [Step], turn [Bottom row]". The console
   // renders each one as a key and the words between them as plain text.
   gesture: string;
-  // One short idea. A second one goes in `detail`.
+  // One short idea.
   text: string;
-  detail?: string;
   // At most 12 characters: one cell of the controller's screen.
   oled: string;
 };
 
-const HINT_TEXT: Record<
-  InstrumentHintAction,
-  { text: string; detail?: string }
-> = {
-  enterStepEdit: { text: "Enter Step Edit" },
-  leaveStepEdit: { text: "Leave Step Edit" },
-  saveDraft: {
-    text: "Save the instrument",
-    detail: "Press twice: the first press asks",
-  },
-  discardDraft: {
-    text: "Discard changes",
-    detail: "Reloads the saved instrument. Press twice.",
-  },
-  switchTrack: { text: "Previous or next track" },
-  switchPage: { text: "Previous or next control page" },
-  switchBar: { text: "Previous or next bar" },
-  growLoop: {
-    text: "Set how many bars loop",
-    detail: "A new bar starts as a copy of the one before",
-  },
-  duplicateBar: {
-    text: "Copy this bar to the next",
-    detail: "Then moves there, so repeat it to fill the loop",
-  },
-  copyStep: {
-    text: "Copy a step onto others",
-    detail: "The first step tapped is the one copied",
-  },
-  fillBar: {
-    text: "Fill the bar with a rhythm",
-    detail: "Uses the default note. Written when you let go of Shift.",
-  },
-  octave: { text: "Move the pitch by octaves" },
-  tapStep: {
-    text: "Turn a step on or off",
-    detail: "A new step gets the default note",
-  },
-  holdStep: { text: "Edit that step" },
-  holdSeveral: { text: "Edit several steps together" },
-  setDefaults: {
-    text: "Set what new steps get",
-    detail: "Note, velocity, length and probability",
-  },
-  editHeld: { text: "Edit the held steps" },
-  releaseHeld: {
-    text: "Finish the edit",
-    detail: "A quick tap would toggle the step instead",
-  },
-  showCheatsheet: {
-    text: "Show this list",
-    detail: "On screen, the ? key or button keeps it open",
-  },
+const HINT_TEXT: Record<InstrumentHintAction, string> = {
+  switchTrack: "Previous or next track",
+  switchPage: "Previous or next control page",
+  enterStepEdit: "Enter Step Edit",
+  leaveStepEdit: "Leave Step Edit",
+  saveDraft: "Save the instrument",
+  discardDraft: "Discard your changes",
+  tapStep: "Turn a step on or off",
+  editNote: "Set its note",
+  editVelocity: "Set its velocity",
+  editSettings: "Set length, chance, timing",
+  switchBar: "Next or previous bar",
+  copyStep: "Copy it onto the others",
+  fillBar: "Fill the bar with a rhythm",
+  duplicateBar: "Copy this bar to the next",
+  addChordNotes: "Add notes to make a chord",
+  holdSeveral: "Edit several steps at once",
+  setDefaults: "Set what new steps get",
+  growLoop: "Set how many bars loop",
+  heldNote: "Set the note",
+  heldVelocity: "Set the velocity",
+  heldSettings: "Set length, chance, timing",
+  holdAnother: "Edit that one too",
+  releaseHeld: "Finish the edit",
+  octave: "Move the note by octaves",
+  showCheatsheet: "Show or pin this list",
 };
 
 export function describeInstrumentHint(action: InstrumentHintAction) {
@@ -131,26 +115,28 @@ export function listInstrumentHints(
     if (navigation.heldSteps.length > 0) {
       return [
         ...entries("Held steps", [
-          "editHeld",
-          "holdSeveral",
-          "releaseHeld",
+          "heldNote",
+          "heldVelocity",
+          "heldSettings",
           "octave",
+          "holdAnother",
+          "releaseHeld",
         ]),
-        ...entries("Bars", ["switchBar"]),
-        ...entries("Mode", ["leaveStepEdit"]),
         ...entries("Help", ["showCheatsheet"]),
       ];
     }
 
     return [
-      ...entries("Steps", [
+      ...entries("Write a pattern", [
         "tapStep",
-        "holdStep",
-        "holdSeveral",
-        "setDefaults",
+        "editNote",
+        "editVelocity",
+        "editSettings",
+        "switchBar",
       ]),
+      ...entries("Steps", ["holdSeveral", "addChordNotes", "setDefaults"]),
       ...entries("Copy and fill", ["copyStep", "fillBar"]),
-      ...entries("Bars", ["switchBar", "growLoop", "duplicateBar"]),
+      ...entries("Bars", ["growLoop", "duplicateBar"]),
       ...entries("Mode", ["leaveStepEdit"]),
       ...entries("Save", ["saveDraft", "discardDraft"]),
       ...entries("Help", ["showCheatsheet"]),
@@ -158,9 +144,9 @@ export function listInstrumentHints(
   }
 
   return [
+    ...entries("Navigate", ["switchTrack", "switchPage"]),
     ...entries("Mode", sequencerTrack ? ["enterStepEdit"] : []),
     ...entries("Save", ["saveDraft", "discardDraft"]),
-    ...entries("Navigate", ["switchTrack", "switchPage"]),
     ...entries("Help", ["showCheatsheet"]),
   ];
 }

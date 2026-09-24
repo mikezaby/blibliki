@@ -115,7 +115,11 @@ export function encoderDisplayEvents(
 export function cheatsheetDisplayEvents(
   displayState: InstrumentDisplayState,
 ): MidiEvent[] | null {
-  const hints = displayState.hints ?? [];
+  // Shown while Shift is held, so the Shift combinations come first.
+  const isShiftCombo = (gesture: string) => gesture.startsWith("[Shift] +");
+  const hints = [...(displayState.hints ?? [])].sort(
+    (a, b) => Number(isShiftCombo(b.gesture)) - Number(isShiftCombo(a.gesture)),
+  );
   if (hints.length === 0) {
     return null;
   }

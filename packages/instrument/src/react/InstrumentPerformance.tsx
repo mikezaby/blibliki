@@ -32,7 +32,7 @@ import type {
   BandSection,
   InstrumentDisplayState,
 } from "@/display/InstrumentDisplayState";
-import type { InstrumentHint } from "@/display/hints";
+import { STEP_BY_STEP_GROUPS, type InstrumentHint } from "@/display/hints";
 import { createSavedInstrumentDocument } from "@/document/SavedInstrumentDocument";
 import type { InstrumentDocument } from "@/document/types";
 import EncoderGlyph from "./EncoderGlyph";
@@ -560,7 +560,7 @@ function CheatSheet({
   return (
     <section
       aria-label="Cheatsheet"
-      className="absolute inset-0 z-20 overflow-auto rounded-3xl bg-zinc-950/95 p-5 shadow-2xl"
+      className="absolute inset-0 z-20 overflow-hidden rounded-3xl bg-zinc-950 p-5 shadow-2xl"
     >
       <Text
         asChild
@@ -569,9 +569,10 @@ function CheatSheet({
       >
         <h2>{title}</h2>
       </Text>
-      <div className="mt-4 grid grid-cols-2 gap-x-10 gap-y-6">
+      {/* Two balanced columns, each group kept whole. */}
+      <div className="mt-4 columns-2 gap-10">
         {groupHints(hints).map(([group, groupHints]) => (
-          <section key={group}>
+          <section key={group} className="mb-5 break-inside-avoid">
             <Text
               asChild
               size="xs"
@@ -581,19 +582,19 @@ function CheatSheet({
             </Text>
             {/* Gestures in one column, what they do in the next, so a group
                 reads as a table. */}
-            <dl className="mt-3 grid grid-cols-[max-content_1fr] items-baseline gap-x-6 gap-y-3">
-              {groupHints.map((hint) => (
+            <dl className="mt-2 grid grid-cols-[max-content_1fr] items-baseline gap-x-6 gap-y-1.5">
+              {groupHints.map((hint, index) => (
                 <Fragment key={hint.action}>
                   <dt className="text-sm leading-7 text-zinc-400">
+                    {STEP_BY_STEP_GROUPS.has(hint.group) ? (
+                      <span className="mr-2 font-mono text-zinc-500">
+                        {index + 1}
+                      </span>
+                    ) : null}
                     <GestureKeys gesture={hint.gesture} />
                   </dt>
                   <dd className="text-base leading-7 text-zinc-100">
                     {hint.text}
-                    {hint.detail ? (
-                      <span className="block text-sm leading-5 text-zinc-500">
-                        {hint.detail}
-                      </span>
-                    ) : null}
                   </dd>
                 </Fragment>
               ))}

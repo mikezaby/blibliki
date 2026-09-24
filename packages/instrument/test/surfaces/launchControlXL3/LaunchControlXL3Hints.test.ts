@@ -18,12 +18,10 @@ function createPatch(
   return createInstrumentEnginePatch(document, { navigation });
 }
 
-function actionsOf(hints: { action: string }[]) {
-  return hints.map((hint) => hint.action);
-}
+const held = [{ stepIndex: 2, pressedAt: 0, edited: false }];
 
-function groupsOf(hints: { action: string; group: string }[]) {
-  return Object.fromEntries(hints.map((hint) => [hint.action, hint.group]));
+function outline(hints: { action: string; group: string }[]) {
+  return hints.map((hint) => `${hint.group}: ${hint.action}`);
 }
 
 describe("createLaunchControlXL3Hints", () => {
@@ -32,10 +30,7 @@ describe("createLaunchControlXL3Hints", () => {
       createLaunchControlXL3Hints(createPatch({})),
       createLaunchControlXL3Hints(createPatch({ mode: "seqEdit" })),
       createLaunchControlXL3Hints(
-        createPatch({
-          mode: "seqEdit",
-          heldSteps: [{ stepIndex: 0, pressedAt: 0, edited: false }],
-        }),
+        createPatch({ mode: "seqEdit", heldSteps: held }),
       ),
     ].flat();
 
@@ -43,113 +38,83 @@ describe("createLaunchControlXL3Hints", () => {
       expect(hint.gesture, hint.action).toMatch(/\[[^\]]+\]/);
       expect(hint.text.length, hint.action).toBeLessThanOrEqual(30);
       expect(hint.text, hint.action).not.toContain(";");
+      expect(hint.oled.length, hint.action).toBeLessThanOrEqual(12);
     }
   });
 
-  it("calls the fill knobs by the labels the screen gives them", () => {
+  it("in performance mode groups the gestures by context", () => {
+    const hints = createLaunchControlXL3Hints(createPatch({}));
+
+    expect(outline(hints)).toEqual([
+      "Navigate: switchTrack",
+      "Navigate: switchPage",
+      "Mode: enterStepEdit",
+      "Save: saveDraft",
+      "Save: discardDraft",
+      "Help: showCheatsheet",
+    ]);
+    expect(hints[2]).toMatchObject({
+      gesture: "[Shift] + [Page ▲]",
+      text: "Enter Step Edit",
+    });
+    // Saving asks first, which the performer has to know to get it done.
+    expect(hints[3]).toMatchObject({
+      gesture: "[Shift] + [Track ▶] twice",
+      text: "Save the instrument",
+    });
+  });
+
+  it("leaves Step Edit out on a track without a step sequencer", () => {
+    const hints = createLaunchControlXL3Hints(createPatch({}, false));
+
+    expect(hints.map((hint) => hint.action)).not.toContain("enterStepEdit");
+  });
+
+  it("in Step Edit starts with how to write a pattern, then groups the rest by context", () => {
     const hints = createLaunchControlXL3Hints(createPatch({ mode: "seqEdit" }));
 
+    expect(outline(hints)).toEqual([
+      "Write a pattern: tapStep",
+      "Write a pattern: editNote",
+      "Write a pattern: editVelocity",
+      "Write a pattern: editSettings",
+      "Write a pattern: switchBar",
+      "Steps: holdSeveral",
+      "Steps: addChordNotes",
+      "Steps: setDefaults",
+      "Copy and fill: copyStep",
+      "Copy and fill: fillBar",
+      "Bars: growLoop",
+      "Bars: duplicateBar",
+      "Mode: leaveStepEdit",
+      "Save: saveDraft",
+      "Save: discardDraft",
+      "Help: showCheatsheet",
+    ]);
+    expect(hints.slice(1, 4).map((hint) => [hint.gesture, hint.text])).toEqual([
+      ["Hold [Step], turn [Bottom row]", "Set its note"],
+      ["Hold [Step], turn [Middle row]", "Set its velocity"],
+      ["Hold [Step], turn [Top row]", "Set length, chance, timing"],
+    ]);
     expect(hints.find((hint) => hint.action === "fillBar")).toMatchObject({
       gesture: "[Shift] + turn [Pulses] [Rotate]",
       text: "Fill the bar with a rhythm",
     });
   });
 
-  it("lists save, discard and Step Edit entry on a sequencer track in performance mode", () => {
-    const hints = createLaunchControlXL3Hints(createPatch({}));
-
-    expect(actionsOf(hints)).toEqual([
-      "enterStepEdit",
-      "saveDraft",
-      "discardDraft",
-      "switchTrack",
-      "switchPage",
-      "showCheatsheet",
-    ]);
-    expect(hints[0]).toMatchObject({
-      gesture: "[Shift] + [Page ▲]",
-      text: "Enter Step Edit",
-    });
-    expect(hints.at(-1)).toMatchObject({
-      gesture: "Hold [Shift]",
-      text: "Show this list",
-      detail: "On screen, the ? key or button keeps it open",
-    });
-    // Saving asks first, which the performer has to know to get it done.
-    expect(hints[1]).toMatchObject({
-      text: "Save the instrument",
-      detail: "Press twice: the first press asks",
-    });
-    expect(groupsOf(hints)).toEqual({
-      enterStepEdit: "Mode",
-      saveDraft: "Save",
-      discardDraft: "Save",
-      switchTrack: "Navigate",
-      switchPage: "Navigate",
-      showCheatsheet: "Help",
-    });
-    expect(hints.every((hint) => hint.oled.length <= 12)).toBe(true);
-  });
-
-  it("leaves Step Edit out on a track without a step sequencer", () => {
-    const hints = createLaunchControlXL3Hints(createPatch({}, false));
-
-    expect(actionsOf(hints)).not.toContain("enterStepEdit");
-  });
-
-  it("explains tap, hold and defaults in Step Edit with nothing held", () => {
-    const hints = createLaunchControlXL3Hints(createPatch({ mode: "seqEdit" }));
-
-    // Grouped by context, in the order the groups read.
-    expect(actionsOf(hints)).toEqual([
-      "tapStep",
-      "holdStep",
-      "holdSeveral",
-      "setDefaults",
-      "copyStep",
-      "fillBar",
-      "switchBar",
-      "growLoop",
-      "duplicateBar",
-      "leaveStepEdit",
-      "saveDraft",
-      "discardDraft",
-      "showCheatsheet",
-    ]);
-    expect(groupsOf(hints)).toMatchObject({
-      tapStep: "Steps",
-      setDefaults: "Steps",
-      copyStep: "Copy and fill",
-      fillBar: "Copy and fill",
-      switchBar: "Bars",
-      duplicateBar: "Bars",
-      leaveStepEdit: "Mode",
-    });
-  });
-
-  it("narrows to the hold gestures while steps are held", () => {
+  it("while steps are held says what each knob row does to them", () => {
     const hints = createLaunchControlXL3Hints(
-      createPatch({
-        mode: "seqEdit",
-        heldSteps: [{ stepIndex: 2, pressedAt: 0, edited: false }],
-      }),
+      createPatch({ mode: "seqEdit", heldSteps: held }),
     );
 
-    expect(actionsOf(hints)).toEqual([
-      "editHeld",
-      "holdSeveral",
-      "releaseHeld",
-      "octave",
-      "switchBar",
-      "leaveStepEdit",
-      "showCheatsheet",
+    expect(outline(hints)).toEqual([
+      "Held steps: heldNote",
+      "Held steps: heldVelocity",
+      "Held steps: heldSettings",
+      "Held steps: octave",
+      "Held steps: holdAnother",
+      "Held steps: releaseHeld",
+      "Help: showCheatsheet",
     ]);
-    // Holding more steps belongs with the held steps here, not with tapping.
-    expect(groupsOf(hints)).toMatchObject({
-      editHeld: "Held steps",
-      holdSeveral: "Held steps",
-      octave: "Held steps",
-      switchBar: "Bars",
-    });
   });
 });

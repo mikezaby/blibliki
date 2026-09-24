@@ -304,8 +304,10 @@ sets its size and its dim grey. It is part of the console, not something a
 host passes in: every app that renders the console is a Blibliki app.
 
 Holding Shift on the controller shows a cheatsheet over the bands: the
-gestures that apply in the current mode, grouped by context (steps, bars,
-saving and so on), taken from the display state's `hints`. The `?` key, or the `?` button in the header, pins it open. The
+gestures that apply in the current mode, taken from the display state's
+`hints`. In Step Edit it starts with numbered steps for writing a pattern,
+then groups the rest by context: steps, copy and fill, bars, mode, saving
+and help. The `?` key, or the `?` button in the header, pins it open. The
 controller's own screen shows the first eight hints while Shift is held.
 
 The console is a faceplate, not a responsive page. It is laid out once at a

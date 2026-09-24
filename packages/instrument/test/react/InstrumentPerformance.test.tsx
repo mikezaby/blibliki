@@ -130,7 +130,6 @@ describe("InstrumentPerformance", () => {
       group: string;
       gesture: string;
       text: string;
-      detail?: string;
       oled: string;
     }[];
     globalBand: { slots: unknown[] };
@@ -303,18 +302,24 @@ describe("InstrumentPerformance", () => {
   it("shows the cheatsheet while Shift is held and pins it from the ? button", async () => {
     displayState.hints = [
       {
-        action: "enterStepEdit",
-        group: "Mode",
-        gesture: "[Shift] + [Page ▲]",
-        text: "Enter Step Edit",
-        oled: "S+Pg^ Edit",
+        action: "tapStep",
+        group: "Write a pattern",
+        gesture: "Tap [Step]",
+        text: "Turn a step on or off",
+        oled: "Tap Toggle",
+      },
+      {
+        action: "editNote",
+        group: "Write a pattern",
+        gesture: "Hold [Step], turn [Bottom row]",
+        text: "Set its note",
+        oled: "Hold+R3 Note",
       },
       {
         action: "saveDraft",
         group: "Save",
-        gesture: "[Shift] + [Track ▶]",
-        text: "Save the draft",
-        detail: "Press twice: the first press asks",
+        gesture: "[Shift] + [Track ▶] twice",
+        text: "Save the instrument",
         oled: "S+Tr> Save",
       },
     ];
@@ -328,30 +333,31 @@ describe("InstrumentPerformance", () => {
     );
 
     const panel = await screen.findByRole("region", { name: "Cheatsheet" });
-    expect(screen.getByText("Enter Step Edit")).toBeTruthy();
 
     // Controls render as keys, the words between them as plain text.
     expect(
       within(panel)
-        .getAllByText("Shift")
+        .getAllByText("Step")
         .map((key) => key.tagName),
     ).toEqual(["KBD", "KBD"]);
-    expect(within(panel).getByText("Page ▲").tagName).toBe("KBD");
-    expect(within(panel).getAllByText("+")).toHaveLength(2);
-    expect(
-      within(panel).getByText("Press twice: the first press asks"),
-    ).toBeTruthy();
+    expect(within(panel).getByText("Bottom row").tagName).toBe("KBD");
 
     // One titled section per group, each hint under its own group.
-    const modeSection = within(panel)
-      .getByRole("heading", { name: "Mode" })
-      .closest("section");
+    const patternSection = within(panel)
+      .getByRole("heading", { name: "Write a pattern" })
+      .closest("section")!;
     const saveSection = within(panel)
       .getByRole("heading", { name: "Save" })
-      .closest("section");
-    expect(within(modeSection!).getByText("Enter Step Edit")).toBeTruthy();
-    expect(within(saveSection!).getByText("Save the draft")).toBeTruthy();
-    expect(within(modeSection!).queryByText("Save the draft")).toBeNull();
+      .closest("section")!;
+    expect(within(saveSection).getByText("Save the instrument")).toBeTruthy();
+    expect(
+      within(patternSection).queryByText("Save the instrument"),
+    ).toBeNull();
+
+    // A group of steps to follow is numbered; the others are not.
+    expect(within(patternSection).getByText("1")).toBeTruthy();
+    expect(within(patternSection).getByText("2")).toBeTruthy();
+    expect(within(saveSection).queryByText("1")).toBeNull();
 
     cleanup();
     displayState.header.shiftPressed = false;
