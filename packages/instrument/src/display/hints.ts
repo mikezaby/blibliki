@@ -23,8 +23,24 @@ export type InstrumentHintAction =
   | "releaseHeld"
   | "showCheatsheet";
 
-export type InstrumentHint = {
+// Where the performer is when a gesture matters, which is how the cheatsheet
+// sorts its entries.
+export type InstrumentHintGroup =
+  | "Steps"
+  | "Held steps"
+  | "Copy and fill"
+  | "Bars"
+  | "Mode"
+  | "Navigate"
+  | "Save"
+  | "Help";
+
+export type InstrumentHintEntry = {
   action: InstrumentHintAction;
+  group: InstrumentHintGroup;
+};
+
+export type InstrumentHint = InstrumentHintEntry & {
   gesture: string;
   text: string;
   // At most 12 characters: one cell of the controller's screen.
@@ -57,9 +73,18 @@ export function describeInstrumentHint(action: InstrumentHintAction) {
   return HINT_TEXT[action];
 }
 
-export function listInstrumentHintActions(
+function entries(
+  group: InstrumentHintGroup,
+  actions: InstrumentHintAction[],
+): InstrumentHintEntry[] {
+  return actions.map((action) => ({ action, group }));
+}
+
+// The order here is the order the cheatsheet reads: groups first to last,
+// then gestures within a group.
+export function listInstrumentHints(
   runtimePatch: CompiledInstrumentEnginePatch,
-): InstrumentHintAction[] {
+): InstrumentHintEntry[] {
   const { navigation } = runtimePatch.runtime;
   const activeTrack =
     runtimePatch.compiledInstrument.tracks[navigation.activeTrackIndex];
@@ -68,39 +93,37 @@ export function listInstrumentHintActions(
   if (navigation.mode === "seqEdit") {
     if (navigation.heldSteps.length > 0) {
       return [
-        "editHeld",
-        "holdSeveral",
-        "releaseHeld",
-        "octave",
-        "switchBar",
-        "leaveStepEdit",
-        "showCheatsheet",
+        ...entries("Held steps", [
+          "editHeld",
+          "holdSeveral",
+          "releaseHeld",
+          "octave",
+        ]),
+        ...entries("Bars", ["switchBar"]),
+        ...entries("Mode", ["leaveStepEdit"]),
+        ...entries("Help", ["showCheatsheet"]),
       ];
     }
 
     return [
-      "tapStep",
-      "holdStep",
-      "holdSeveral",
-      "setDefaults",
-      "switchBar",
-      "growLoop",
-      "duplicateBar",
-      "copyStep",
-      "fillBar",
-      "leaveStepEdit",
-      "saveDraft",
-      "discardDraft",
-      "showCheatsheet",
+      ...entries("Steps", [
+        "tapStep",
+        "holdStep",
+        "holdSeveral",
+        "setDefaults",
+      ]),
+      ...entries("Copy and fill", ["copyStep", "fillBar"]),
+      ...entries("Bars", ["switchBar", "growLoop", "duplicateBar"]),
+      ...entries("Mode", ["leaveStepEdit"]),
+      ...entries("Save", ["saveDraft", "discardDraft"]),
+      ...entries("Help", ["showCheatsheet"]),
     ];
   }
 
   return [
-    ...(sequencerTrack ? (["enterStepEdit"] as const) : []),
-    "saveDraft",
-    "discardDraft",
-    "switchTrack",
-    "switchPage",
-    "showCheatsheet",
+    ...entries("Mode", sequencerTrack ? ["enterStepEdit"] : []),
+    ...entries("Save", ["saveDraft", "discardDraft"]),
+    ...entries("Navigate", ["switchTrack", "switchPage"]),
+    ...entries("Help", ["showCheatsheet"]),
   ];
 }

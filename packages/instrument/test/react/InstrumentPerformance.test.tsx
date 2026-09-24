@@ -125,7 +125,13 @@ describe("InstrumentPerformance", () => {
   // at a time, which the real Fixed8 tuples would not allow.
   type TestDisplayState = {
     header: Record<string, unknown>;
-    hints?: { action: string; gesture: string; text: string; oled: string }[];
+    hints?: {
+      action: string;
+      group: string;
+      gesture: string;
+      text: string;
+      oled: string;
+    }[];
     globalBand: { slots: unknown[] };
     upperBand: { title: string; sections: unknown[]; slots: unknown[] };
     lowerBand: { title: string; sections: unknown[]; slots: unknown[] };
@@ -297,9 +303,17 @@ describe("InstrumentPerformance", () => {
     displayState.hints = [
       {
         action: "enterStepEdit",
+        group: "Mode",
         gesture: "Shift + Page ▲",
         text: "Enter Step Edit",
         oled: "S+Pg^ Edit",
+      },
+      {
+        action: "saveDraft",
+        group: "Save",
+        gesture: "Shift + Track ▶",
+        text: "Save the draft",
+        oled: "S+Tr> Save",
       },
     ];
     displayState.header.shiftPressed = true;
@@ -311,9 +325,20 @@ describe("InstrumentPerformance", () => {
       />,
     );
 
-    await screen.findByRole("region", { name: "Cheatsheet" });
+    const panel = await screen.findByRole("region", { name: "Cheatsheet" });
     expect(screen.getByText("Enter Step Edit")).toBeTruthy();
     expect(screen.getByText("Shift + Page ▲")).toBeTruthy();
+
+    // One titled section per group, each hint under its own group.
+    const modeSection = within(panel)
+      .getByRole("heading", { name: "Mode" })
+      .closest("section");
+    const saveSection = within(panel)
+      .getByRole("heading", { name: "Save" })
+      .closest("section");
+    expect(within(modeSection!).getByText("Enter Step Edit")).toBeTruthy();
+    expect(within(saveSection!).getByText("Save the draft")).toBeTruthy();
+    expect(within(modeSection!).queryByText("Save the draft")).toBeNull();
 
     cleanup();
     displayState.header.shiftPressed = false;

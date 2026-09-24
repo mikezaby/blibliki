@@ -160,7 +160,11 @@ export type {
   InstrumentDisplayState,
 } from "./display/InstrumentDisplayState";
 export { createLiveInstrumentDisplayState } from "./display/LiveInstrumentDisplayState";
-export type { InstrumentHint, InstrumentHintAction } from "./display/hints";
+export type {
+  InstrumentHint,
+  InstrumentHintAction,
+  InstrumentHintGroup,
+} from "./display/hints";
 export type { LiveDisplayEngine } from "./display/LiveInstrumentDisplayState";
 export {
   createInstrumentRuntimeState,

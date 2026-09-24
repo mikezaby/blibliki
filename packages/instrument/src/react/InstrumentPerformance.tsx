@@ -14,6 +14,7 @@ import {
   Square,
 } from "lucide-react";
 import {
+  Fragment,
   useEffect,
   useRef,
   useState,
@@ -568,18 +569,45 @@ function CheatSheet({
       >
         <h2>{title}</h2>
       </Text>
-      <dl className="mt-4 grid grid-cols-2 gap-x-8 gap-y-3">
-        {hints.map((hint) => (
-          <div key={hint.action} className="flex items-baseline gap-3">
-            <dt className="shrink-0 font-mono text-sm uppercase tracking-[0.12em] text-lime-200">
-              {hint.gesture}
-            </dt>
-            <dd className="font-mono text-sm text-zinc-300">{hint.text}</dd>
-          </div>
+      <div className="mt-4 grid grid-cols-2 gap-x-10 gap-y-6">
+        {groupHints(hints).map(([group, groupHints]) => (
+          <section key={group}>
+            <Text
+              asChild
+              size="xs"
+              className="font-mono uppercase tracking-[0.24em] text-zinc-400"
+            >
+              <h3>{group}</h3>
+            </Text>
+            {/* Gestures in one column, what they do in the next, so a group
+                reads as a table. */}
+            <dl className="mt-2 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2">
+              {groupHints.map((hint) => (
+                <Fragment key={hint.action}>
+                  <dt className="font-mono text-sm uppercase tracking-[0.12em] text-lime-200">
+                    {hint.gesture}
+                  </dt>
+                  <dd className="font-mono text-sm text-zinc-300">
+                    {hint.text}
+                  </dd>
+                </Fragment>
+              ))}
+            </dl>
+          </section>
         ))}
-      </dl>
+      </div>
     </section>
   );
+}
+
+// Keeps the groups in the order the hints list them.
+function groupHints(hints: InstrumentHint[]) {
+  const groups = new Map<string, InstrumentHint[]>();
+  for (const hint of hints) {
+    groups.set(hint.group, [...(groups.get(hint.group) ?? []), hint]);
+  }
+
+  return [...groups];
 }
 
 function formatTrackVolume(volume?: number) {

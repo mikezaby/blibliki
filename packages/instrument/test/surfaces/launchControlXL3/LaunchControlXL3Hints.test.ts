@@ -22,6 +22,10 @@ function actionsOf(hints: { action: string }[]) {
   return hints.map((hint) => hint.action);
 }
 
+function groupsOf(hints: { action: string; group: string }[]) {
+  return Object.fromEntries(hints.map((hint) => [hint.action, hint.group]));
+}
+
 describe("createLaunchControlXL3Hints", () => {
   it("lists save, discard and Step Edit entry on a sequencer track in performance mode", () => {
     const hints = createLaunchControlXL3Hints(createPatch({}));
@@ -42,6 +46,14 @@ describe("createLaunchControlXL3Hints", () => {
       gesture: "Hold Shift",
       text: "Show this list; on screen the ? key or button pins it",
     });
+    expect(groupsOf(hints)).toEqual({
+      enterStepEdit: "Mode",
+      saveDraft: "Save",
+      discardDraft: "Save",
+      switchTrack: "Navigate",
+      switchPage: "Navigate",
+      showCheatsheet: "Help",
+    });
     expect(hints.every((hint) => hint.oled.length <= 12)).toBe(true);
   });
 
@@ -54,21 +66,31 @@ describe("createLaunchControlXL3Hints", () => {
   it("explains tap, hold and defaults in Step Edit with nothing held", () => {
     const hints = createLaunchControlXL3Hints(createPatch({ mode: "seqEdit" }));
 
+    // Grouped by context, in the order the groups read.
     expect(actionsOf(hints)).toEqual([
       "tapStep",
       "holdStep",
       "holdSeveral",
       "setDefaults",
+      "copyStep",
+      "fillBar",
       "switchBar",
       "growLoop",
       "duplicateBar",
-      "copyStep",
-      "fillBar",
       "leaveStepEdit",
       "saveDraft",
       "discardDraft",
       "showCheatsheet",
     ]);
+    expect(groupsOf(hints)).toMatchObject({
+      tapStep: "Steps",
+      setDefaults: "Steps",
+      copyStep: "Copy and fill",
+      fillBar: "Copy and fill",
+      switchBar: "Bars",
+      duplicateBar: "Bars",
+      leaveStepEdit: "Mode",
+    });
   });
 
   it("narrows to the hold gestures while steps are held", () => {
@@ -88,5 +110,12 @@ describe("createLaunchControlXL3Hints", () => {
       "leaveStepEdit",
       "showCheatsheet",
     ]);
+    // Holding more steps belongs with the held steps here, not with tapping.
+    expect(groupsOf(hints)).toMatchObject({
+      editHeld: "Held steps",
+      holdSeveral: "Held steps",
+      octave: "Held steps",
+      switchBar: "Bars",
+    });
   });
 });

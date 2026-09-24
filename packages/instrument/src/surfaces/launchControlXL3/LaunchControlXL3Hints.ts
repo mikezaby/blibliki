@@ -1,7 +1,7 @@
 import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
 import {
   describeInstrumentHint,
-  listInstrumentHintActions,
+  listInstrumentHints,
   type InstrumentHint,
   type InstrumentHintAction,
 } from "@/display/hints";
@@ -36,8 +36,9 @@ const GESTURES: Record<
 export function createLaunchControlXL3Hints(
   runtimePatch: CompiledInstrumentEnginePatch,
 ): InstrumentHint[] {
-  return listInstrumentHintActions(runtimePatch).map((action) => ({
+  return listInstrumentHints(runtimePatch).map(({ action, group }) => ({
     action,
+    group,
     ...GESTURES[action],
     text: describeInstrumentHint(action),
   }));
