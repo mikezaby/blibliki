@@ -99,8 +99,11 @@ const TRACK_PREV_CC = 103;
 const TRACK_NEXT_CC = 102;
 const PAGE_PREV_CC = 107;
 const PAGE_NEXT_CC = 106;
+const SHIFT_CC = 63;
 // Those buttons are momentary: the surface acts on the press, not the release.
+// Shift is the exception, so the screen sends its release too.
 const BUTTON_PRESS_VALUE = 127;
+const BUTTON_RELEASE_VALUE = 0;
 // Every encoder rendered in the bands is a relative (incDec) mapping, so a
 // gesture emits ticks around the pivot rather than an absolute position: 64
 // means "no change", above counts up, below counts down.
@@ -579,28 +582,6 @@ function CheatSheet({
   );
 }
 
-function StatusLamp({ active, label }: { active: boolean; label: string }) {
-  return (
-    <div className="flex items-center gap-2">
-      <span
-        className={cn(
-          "h-2.5 w-2.5 rounded-full border",
-          active
-            ? "border-lime-300/80 bg-lime-300 shadow-sm"
-            : "border-zinc-700 bg-zinc-900",
-        )}
-      />
-      <Text
-        asChild
-        size="xs"
-        className="font-mono uppercase tracking-[0.2em] text-zinc-500"
-      >
-        <span>{label}</span>
-      </Text>
-    </div>
-  );
-}
-
 function formatTrackVolume(volume?: number) {
   return volume === undefined ? "--" : `${volume.toFixed(1)} dB`;
 }
@@ -799,6 +780,7 @@ export default function InstrumentPerformance({
   const isTransportRunning =
     displayState?.header.transportState === TransportState.playing;
   const isSequencerEdit = displayState?.header.mode === "seqEdit";
+  const isSequencerTrack = activeTrack?.noteSource === "stepSequencer";
   const cheatsheetHints = displayState?.hints ?? [];
   const showCheatsheet =
     cheatsheetHints.length > 0 &&
@@ -824,6 +806,14 @@ export default function InstrumentPerformance({
 
   const pressButton = (cc: number) => () => {
     sendControlChange(cc, BUTTON_PRESS_VALUE);
+  };
+
+  // Step Edit is Shift + Page Up on the hardware; the screen plays the same
+  // three events so the surface toggles it the one way it knows.
+  const toggleStepEdit = () => {
+    sendControlChange(SHIFT_CC, BUTTON_PRESS_VALUE);
+    sendControlChange(PAGE_NEXT_CC, BUTTON_PRESS_VALUE);
+    sendControlChange(SHIFT_CC, BUTTON_RELEASE_VALUE);
   };
 
   return (
@@ -855,10 +845,6 @@ export default function InstrumentPerformance({
                 >
                   <h1>{name}</h1>
                 </Text>
-                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-                  <StatusLamp active={isTransportRunning} label="Transport" />
-                  <StatusLamp active={isSequencerEdit} label="Step Edit" />
-                </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
@@ -895,6 +881,21 @@ export default function InstrumentPerformance({
                     {fullscreen.isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
                   </Button>
                 ) : null}
+                <Button
+                  variant="outlined"
+                  color="neutral"
+                  aria-pressed={isSequencerEdit}
+                  disabled={state.status !== "ready" || !isSequencerTrack}
+                  onClick={toggleStepEdit}
+                  className={cn(
+                    "rounded-full px-5 font-mono uppercase tracking-[0.14em]",
+                    isSequencerEdit
+                      ? "border-lime-300/80 bg-lime-300 text-zinc-950"
+                      : "border-zinc-600 text-zinc-200 hover:border-zinc-400",
+                  )}
+                >
+                  Step Edit
+                </Button>
                 <Button
                   color="neutral"
                   disabled={state.status !== "ready" || !state.engine}

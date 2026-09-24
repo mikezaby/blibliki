@@ -258,7 +258,9 @@ describe("InstrumentPerformance", () => {
     expect(screen.getByText("Page Bank")).toBeTruthy();
     expect(screen.getByText("SOURCE / AMP")).toBeTruthy();
     expect(screen.queryByText("Mode")).toBeNull();
-    expect(screen.getAllByText("Transport").length).toBe(1);
+    // No lamps: Start/Stop shows the transport, the Step Edit button its mode.
+    expect(screen.queryByText("Transport")).toBeNull();
+    expect(screen.getByRole("button", { name: "Step Edit" })).toBeTruthy();
     expect(screen.queryByText("Runtime")).toBeNull();
     expect(
       container
@@ -337,6 +339,81 @@ describe("InstrumentPerformance", () => {
 
     fireEvent.keyDown(window, { key: "?" });
     expect(screen.queryByRole("region", { name: "Cheatsheet" })).toBeNull();
+  });
+
+  it("enters and leaves Step Edit from the on-screen button, on sequencer tracks only", async () => {
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    // The mocked instrument has no tracks, so nothing here can be sequenced.
+    const disabledButton = await screen.findByRole("button", {
+      name: "Step Edit",
+    });
+    expect(disabledButton.hasAttribute("disabled")).toBe(true);
+
+    cleanup();
+    const sequencedRuntimePatch = {
+      ...runtimePatch,
+      compiledInstrument: {
+        tracks: [
+          {
+            key: "track-1",
+            noteSource: "stepSequencer",
+            audioSource: { type: "internal" },
+          },
+        ],
+      },
+    };
+    createInstrumentControllerSessionMock.mockImplementation(() => ({
+      getDisplayState: () => displayState,
+      getRuntimePatch: () => sequencedRuntimePatch,
+      sendControlEvent: sendControlEventMock,
+      dispose: vi.fn(),
+    }));
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    const button = await screen.findByRole("button", { name: "Step Edit" });
+    await waitFor(() => {
+      expect(button.hasAttribute("disabled")).toBe(false);
+    });
+    expect(button.getAttribute("aria-pressed")).toBe("false");
+
+    // The hardware's own gesture: Shift down, Page Up, Shift up.
+    fireEvent.click(button);
+    const sent = sendControlEventMock.mock.calls.slice(-3).map((call) => {
+      const [event] = call as [{ cc?: number; ccValue?: number }];
+      return [event.cc, event.ccValue];
+    });
+    expect(sent).toEqual([
+      [63, 127],
+      [106, 127],
+      [63, 0],
+    ]);
+
+    cleanup();
+    displayState.header.mode = "seqEdit";
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    const pressedButton = await screen.findByRole("button", {
+      name: "Step Edit",
+    });
+    expect(pressedButton.getAttribute("aria-pressed")).toBe("true");
   });
 
   it("toggles transport from the single start and stop button", async () => {
