@@ -20,7 +20,8 @@ export type InstrumentHintAction =
   | "holdSeveral"
   | "setDefaults"
   | "editHeld"
-  | "releaseHeld";
+  | "releaseHeld"
+  | "showCheatsheet";
 
 export type InstrumentHint = {
   action: InstrumentHintAction;
@@ -49,6 +50,7 @@ const HINT_TEXT: Record<InstrumentHintAction, string> = {
   setDefaults: "Set the defaults a new step inherits",
   editHeld: "Edit the held steps",
   releaseHeld: "Keep the edit; a quick tap would have toggled",
+  showCheatsheet: "Show this list; on screen the ? key or button pins it",
 };
 
 export function describeInstrumentHint(action: InstrumentHintAction) {
@@ -72,6 +74,7 @@ export function listInstrumentHintActions(
         "octave",
         "switchBar",
         "leaveStepEdit",
+        "showCheatsheet",
       ];
     }
 
@@ -88,6 +91,7 @@ export function listInstrumentHintActions(
       "leaveStepEdit",
       "saveDraft",
       "discardDraft",
+      "showCheatsheet",
     ];
   }
 
@@ -97,5 +101,6 @@ export function listInstrumentHintActions(
     "discardDraft",
     "switchTrack",
     "switchPage",
+    "showCheatsheet",
   ];
 }

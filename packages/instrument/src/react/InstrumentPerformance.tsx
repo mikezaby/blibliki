@@ -637,6 +637,28 @@ export default function InstrumentPerformance({
   });
   const [cheatsheetPinned, setCheatsheetPinned] = useState(false);
   const fullscreen = useFullscreen(allowFullscreen);
+
+  // The ? key pins and unpins the cheatsheet, unless the performer is typing.
+  useEffect(() => {
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      const target = event.target;
+      const typing =
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
+      if (event.key !== "?" || typing) {
+        return;
+      }
+
+      event.preventDefault();
+      setCheatsheetPinned((pinned) => !pinned);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
   const documentRef = useRef(instrumentDocument);
   const stageRef = useRef<HTMLDivElement>(null);
   const faceplateRef = useRef<HTMLDivElement>(null);

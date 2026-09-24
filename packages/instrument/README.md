@@ -305,8 +305,8 @@ host passes in: every app that renders the console is a Blibliki app.
 
 Holding Shift on the controller shows a cheatsheet over the bands: the
 gestures that apply in the current mode, taken from the display state's
-`hints`. The `?` button in the header pins it open. The controller's own
-screen shows the first eight hints while Shift is held.
+`hints`. The `?` key, or the `?` button in the header, pins it open. The
+controller's own screen shows the first eight hints while Shift is held.
 
 The console is a faceplate, not a responsive page. It is laid out once at a
 fixed 1536px design width and then scaled as a whole to fit whatever stage it

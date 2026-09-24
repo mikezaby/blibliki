@@ -330,6 +330,13 @@ describe("InstrumentPerformance", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Cheatsheet" }));
     expect(screen.queryByRole("region", { name: "Cheatsheet" })).toBeNull();
+
+    // The ? key does the same as the button.
+    fireEvent.keyDown(window, { key: "?" });
+    expect(screen.getByRole("region", { name: "Cheatsheet" })).toBeTruthy();
+
+    fireEvent.keyDown(window, { key: "?" });
+    expect(screen.queryByRole("region", { name: "Cheatsheet" })).toBeNull();
   });
 
   it("toggles transport from the single start and stop button", async () => {

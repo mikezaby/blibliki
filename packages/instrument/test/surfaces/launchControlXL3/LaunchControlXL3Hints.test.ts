@@ -32,10 +32,15 @@ describe("createLaunchControlXL3Hints", () => {
       "discardDraft",
       "switchTrack",
       "switchPage",
+      "showCheatsheet",
     ]);
     expect(hints[0]).toMatchObject({
       gesture: "Shift + Page ▲",
       text: "Enter Step Edit",
+    });
+    expect(hints.at(-1)).toMatchObject({
+      gesture: "Hold Shift",
+      text: "Show this list; on screen the ? key or button pins it",
     });
     expect(hints.every((hint) => hint.oled.length <= 12)).toBe(true);
   });
@@ -62,6 +67,7 @@ describe("createLaunchControlXL3Hints", () => {
       "leaveStepEdit",
       "saveDraft",
       "discardDraft",
+      "showCheatsheet",
     ]);
   });
 
@@ -80,6 +86,7 @@ describe("createLaunchControlXL3Hints", () => {
       "octave",
       "switchBar",
       "leaveStepEdit",
+      "showCheatsheet",
     ]);
   });
 });

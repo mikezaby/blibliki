@@ -30,6 +30,7 @@ const GESTURES: Record<
   setDefaults: { gesture: "Turn, nothing held", oled: "Turn Dflt" },
   editHeld: { gesture: "Turn an encoder", oled: "Turn Edit" },
   releaseHeld: { gesture: "Release", oled: "Rel. Keep" },
+  showCheatsheet: { gesture: "Hold Shift", oled: "Shift Help" },
 };
 
 export function createLaunchControlXL3Hints(
