@@ -71,9 +71,9 @@ The three rows keep their meaning. What changes is what they act on.
 - The defaults are runtime state per track. They are seeded from the first
   note of the first active step in the pattern (so a drum recipe that opens
   with a kick defaults to the kick) and otherwise from C3 at velocity 100.
-  Every value set through an encoder becomes the new default. Notes
-  received on the track's MIDI input updating the default, the KeyStep Pro
-  and Pyramid rule, is a follow-up.
+  Every value set through an encoder becomes the new default, and so does
+  the last note played on the track's MIDI input (the KeyStep Pro and
+  Pyramid rule, added with #68).
 - Pitch stays one semitone per tick. Shift + a pitch encoder moves an
   octave per tick. Stepping through a scale instead is deferred until the
   scale has a home (see open questions).

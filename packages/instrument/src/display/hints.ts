@@ -19,11 +19,15 @@ export type InstrumentHintAction =
   | "duplicateBar"
   | "addChordNotes"
   | "holdSeveral"
+  | "playIntoStep"
+  | "stampChord"
+  | "playDefault"
   | "setDefaults"
   | "growLoop"
   | "heldNote"
   | "heldVelocity"
   | "heldSettings"
+  | "heldPlay"
   | "holdAnother"
   | "releaseHeld"
   | "octave"
@@ -79,11 +83,15 @@ const HINT_TEXT: Record<InstrumentHintAction, string> = {
   duplicateBar: "Copy this bar to the next",
   addChordNotes: "Add notes to make a chord",
   holdSeveral: "Edit several steps at once",
+  playIntoStep: "Play its note or chord",
+  stampChord: "Put the held chord on it",
+  playDefault: "Played note becomes default",
   setDefaults: "Set what new steps get",
   growLoop: "Set how many bars loop",
   heldNote: "Set the note",
   heldVelocity: "Set the velocity",
   heldSettings: "Set length, chance, timing",
+  heldPlay: "Play its note or chord",
   holdAnother: "Edit that one too",
   releaseHeld: "Finish the edit",
   octave: "Move the note by octaves",
@@ -118,6 +126,7 @@ export function listInstrumentHints(
           "heldNote",
           "heldVelocity",
           "heldSettings",
+          "heldPlay",
           "octave",
           "holdAnother",
           "releaseHeld",
@@ -134,7 +143,14 @@ export function listInstrumentHints(
         "editSettings",
         "switchBar",
       ]),
-      ...entries("Steps", ["holdSeveral", "addChordNotes", "setDefaults"]),
+      ...entries("Steps", [
+        "holdSeveral",
+        "addChordNotes",
+        "playIntoStep",
+        "stampChord",
+        "playDefault",
+        "setDefaults",
+      ]),
       ...entries("Copy and fill", ["copyStep", "fillBar"]),
       ...entries("Bars", ["growLoop", "duplicateBar"]),
       ...entries("Mode", ["leaveStepEdit"]),

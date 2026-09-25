@@ -120,6 +120,7 @@ export function normalizeInstrumentNavigation(
     sequencerPageIndex: options.navigation?.sequencerPageIndex ?? 0,
     heldSteps: options.navigation?.heldSteps ?? [],
     stepDefaults: options.navigation?.stepDefaults ?? {},
+    heldNotes: options.navigation?.heldNotes,
     copySource: options.navigation?.copySource,
     fill: options.navigation?.fill,
   };

@@ -91,6 +91,10 @@ function normalizeNavigation(
           )
         : [],
     stepDefaults: navigation.stepDefaults,
+    heldNotes:
+      mode === "seqEdit" && navigation.heldNotes?.length
+        ? navigation.heldNotes
+        : undefined,
     copySource:
       mode === "seqEdit" &&
       navigation.shiftPressed &&

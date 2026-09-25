@@ -2,6 +2,7 @@ import {
   type IStepSequencerProps,
   MidiEvent,
   ModuleType,
+  Note,
 } from "@blibliki/engine";
 import { describe, expect, it } from "vitest";
 import { createInstrumentEnginePatch } from "@/compiler/createInstrumentEnginePatch";
@@ -123,6 +124,26 @@ function turn(
   return surface.reduceEvent(
     runtimePatch,
     MidiEvent.fromCC(cc, 64 + delta, 0),
+    now,
+  );
+}
+
+// A key on the note input, which sends on channel 1 as the computer keyboard
+// and a keyboard at its default do.
+function play(
+  surface: LaunchControlXL3Surface,
+  runtimePatch: CompiledInstrumentEnginePatch,
+  noteName: string,
+  velocity = 100,
+  noteOn = true,
+  now = 0,
+) {
+  const note = new Note(noteName);
+  note.velocity = velocity / 127;
+
+  return surface.reduceEvent(
+    runtimePatch,
+    MidiEvent.fromNote(note, noteOn, 0),
     now,
   );
 }
@@ -695,5 +716,150 @@ describe("LaunchControlXL3Surface step entry on a drum machine track", () => {
     expect(displayState?.lowerBand.slots[0]).toMatchObject({
       valueText: "Kick",
     });
+  });
+});
+
+describe("LaunchControlXL3Surface played notes", () => {
+  it("a note played into a held step replaces its notes, and the release does not toggle", () => {
+    const surface = new LaunchControlXL3Surface();
+    const held = press(surface, createStepEditPatch(), STEP_4, 0);
+    const played = play(surface, held.runtimePatch, "D4", 90);
+
+    expect(played.command.type).toBe("seqEdit.update");
+    expect(getSteps(played.runtimePatch)[3]).toMatchObject({
+      active: true,
+      notes: [{ note: "D4", velocity: 90 }],
+    });
+    expect(played.runtimePatch.runtime.navigation.heldSteps[0]).toMatchObject({
+      edited: true,
+      played: true,
+    });
+
+    const released = release(surface, played.runtimePatch, STEP_4, 100);
+
+    expect(released.command).toEqual({ type: "seqEdit.hold" });
+    expect(getSteps(released.runtimePatch)[3]?.active).toBe(true);
+  });
+
+  it("later notes join the chord at the first note's velocity, up to eight", () => {
+    const surface = new LaunchControlXL3Surface();
+    let result = press(surface, createStepEditPatch(), STEP_4, 0);
+    const notes = ["C3", "E3", "G3", "B3", "D4", "F4", "A4", "C5", "E5"];
+
+    notes.forEach((note, index) => {
+      result = play(surface, result.runtimePatch, note, index === 0 ? 100 : 40);
+    });
+
+    expect(getSteps(result.runtimePatch)[3]?.notes).toEqual(
+      notes.slice(0, 8).map((note) => ({ note, velocity: 100 })),
+    );
+  });
+
+  it("the first note keeps the step's length, chance and timing", () => {
+    const surface = new LaunchControlXL3Surface();
+    const runtimePatch = createStepEditPatch({
+      3: {
+        active: true,
+        notes: [{ note: "C3", velocity: 80 }],
+        probability: 50,
+        duration: "1/8",
+        microtimeOffset: 7,
+      },
+    });
+    const held = press(surface, runtimePatch, STEP_4, 0);
+    const played = play(surface, held.runtimePatch, "F3", 100);
+
+    expect(getSteps(played.runtimePatch)[3]).toMatchObject({
+      notes: [{ note: "F3", velocity: 100 }],
+      probability: 50,
+      duration: "1/8",
+      microtimeOffset: 7,
+    });
+  });
+
+  it("keys held while a step is tapped stamp their chord onto it", () => {
+    const surface = new LaunchControlXL3Surface();
+    const first = play(surface, createStepEditPatch(), "C3", 100);
+    const second = play(surface, first.runtimePatch, "E3", 60);
+
+    expect(second.runtimePatch.runtime.navigation.heldNotes).toEqual([
+      { note: "C3", velocity: 100 },
+      { note: "E3", velocity: 60 },
+    ]);
+
+    const held = press(surface, second.runtimePatch, STEP_5, 0);
+    const tapped = release(surface, held.runtimePatch, STEP_5, 100);
+
+    expect(tapped.command.type).toBe("seqEdit.update");
+    expect(getSteps(tapped.runtimePatch)[4]).toMatchObject({
+      active: true,
+      notes: [
+        { note: "C3", velocity: 100 },
+        { note: "E3", velocity: 100 },
+      ],
+    });
+
+    const lifted = play(
+      surface,
+      play(surface, tapped.runtimePatch, "C3", 0, false).runtimePatch,
+      "E3",
+      0,
+      false,
+    );
+
+    expect(lifted.runtimePatch.runtime.navigation.heldNotes).toBeUndefined();
+
+    // With the keys up a tap toggles again, and the last note played is now
+    // what a new step gets.
+    const toggled = release(
+      surface,
+      press(surface, lifted.runtimePatch, STEP_7, 200).runtimePatch,
+      STEP_7,
+      300,
+    );
+
+    expect(getSteps(toggled.runtimePatch)[6]?.notes).toEqual([
+      { note: "E3", velocity: 100 },
+    ]);
+  });
+
+  it("the last note played becomes the default note for new steps", () => {
+    const surface = new LaunchControlXL3Surface();
+    const played = play(
+      surface,
+      play(surface, createStepEditPatch(), "D4", 50).runtimePatch,
+      "D4",
+      0,
+      false,
+    );
+
+    expect(played.command).toEqual({ type: "none" });
+    expect(
+      played.runtimePatch.runtime.navigation.stepDefaults["track-1"],
+    ).toEqual({ note: "D4" });
+
+    const tapped = release(
+      surface,
+      press(surface, played.runtimePatch, STEP_1, 0).runtimePatch,
+      STEP_1,
+      100,
+    );
+
+    expect(getSteps(tapped.runtimePatch)[0]?.notes).toEqual([
+      { note: "D4", velocity: 100 },
+    ]);
+  });
+
+  it("ignores notes on another channel and outside Step Edit", () => {
+    const surface = new LaunchControlXL3Surface();
+    const document = createStepEditDocument();
+    document.tracks[0] = { ...document.tracks[0]!, midiChannel: 2 };
+    const otherChannel = createInstrumentEnginePatch(document, {
+      navigation: { mode: "seqEdit" },
+    });
+    const performance = createInstrumentEnginePatch(createStepEditDocument());
+
+    expect(play(surface, otherChannel, "C3").runtimePatch).toBe(otherChannel);
+    expect(play(surface, performance, "C3").runtimePatch).toBe(performance);
   });
 });

@@ -637,4 +637,67 @@ describe("InstrumentSession", () => {
 
     expect(forwarded).toHaveLength(forwardedBeforeDispose);
   });
+
+  it("hears the note input's outgoing MIDI and lets go of it on dispose", () => {
+    const runtimePatch = createInstrumentEnginePatch(
+      createSequencedInstrumentDocument(),
+      { navigation: { mode: "seqEdit" } },
+    );
+    const noteInputId = runtimePatch.runtime.noteInputId;
+    if (!noteInputId) {
+      throw new Error("Expected the runtime patch to name a note input");
+    }
+
+    const modules = new Map(
+      runtimePatch.patch.modules.map((module) => [module.id, module]),
+    );
+    let noteListener: ((event: MidiEvent) => void) | undefined;
+    let stopped = false;
+
+    const session = new InstrumentSession(
+      {
+        findMidiInputDeviceByFuzzyName: () => null,
+        findModule: (id) => {
+          const module = modules.get(id);
+          if (!module) {
+            throw new Error(`Module ${id} not found`);
+          }
+
+          return module;
+        },
+        findIO: (moduleId, ioName) => {
+          if (moduleId !== noteInputId || ioName !== "midi out") {
+            throw new Error(`Unexpected IO ${moduleId}.${ioName}`);
+          }
+
+          return {
+            name: ioName,
+            listen: (listener) => {
+              noteListener = listener;
+              return () => {
+                stopped = true;
+              };
+            },
+          };
+        },
+        state: TransportState.stopped,
+        start: () => Promise.resolve(),
+        stop: () => undefined,
+        updateModule: (params) => params,
+      },
+      runtimePatch,
+    );
+
+    expect(noteListener).toBeTypeOf("function");
+
+    noteListener?.(MidiEvent.fromNote("D4", true, 0));
+
+    expect(
+      session.getRuntimePatch().runtime.navigation.stepDefaults["track-1"],
+    ).toEqual({ note: "D4" });
+
+    session.dispose();
+
+    expect(stopped).toBe(true);
+  });
 });

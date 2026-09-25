@@ -46,12 +46,21 @@ export type CompiledInstrumentLaunchControlXL3PageSummary = {
 
 export type InstrumentRuntimeMode = "performance" | "seqEdit";
 
-// A step button that is down. `edited` flips once an encoder moves, so the
-// release knows whether it was a tap (toggle) or a hold (edit).
+// A step button that is down. `edited` flips once an encoder moves or a note
+// is played, so the release knows whether it was a tap (toggle) or a hold
+// (edit). `played` flips on the first note: that one replaces the step's
+// notes, later ones join the chord.
 export type HeldStep = {
   stepIndex: number;
   pressedAt: number;
   edited: boolean;
+  played?: boolean;
+};
+
+// A key that is down on the active track's channel.
+export type HeldNote = {
+  note: string;
+  velocity: number;
 };
 
 export type StepDefaults = {
@@ -69,6 +78,9 @@ export type InstrumentNavigationState = {
   sequencerPageIndex: number;
   heldSteps: HeldStep[];
   stepDefaults: Record<string, Partial<StepDefaults>>;
+  // Keys down on the active track's channel, in press order; a step tapped
+  // while they are down gets them as its chord.
+  heldNotes?: HeldNote[];
   // The step tapped first while Shift is held; later taps paste it.
   copySource?: number;
   // A euclidean fill being previewed while Shift is held; written on release.

@@ -1,4 +1,9 @@
-import { type IUpdateModule, MidiEvent, ModuleType } from "@blibliki/engine";
+import {
+  type IUpdateModule,
+  MidiEvent,
+  MidiEventType,
+  ModuleType,
+} from "@blibliki/engine";
 import { Instrument } from "@/Instrument";
 import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
 import type { InstrumentNavigationAction } from "@/core/InstrumentNavigation";
@@ -15,9 +20,12 @@ import {
   copyStep,
   countDefaultNoteSteps,
   duplicateBar,
+  playNoteIntoSteps,
+  stampChordOnStep,
   STEP_HOLD_MS,
   STEPS_PER_PAGE,
   toggleStepEntry,
+  withStepDefaults,
 } from "@/sequencer/stepEntry";
 import {
   getRelativeDelta,
@@ -327,12 +335,18 @@ function reduceStepEditEvent(
       heldSteps: heldSteps.filter((candidate) => candidate !== held),
     });
     const isTap = !held.edited && now - held.pressedAt < STEP_HOLD_MS;
-    const toggled = isTap ? toggleStepEntry(released, stepIndex) : null;
+    // Keys down while a step is tapped stamp their chord onto it.
+    const chord = runtimePatch.runtime.navigation.heldNotes;
+    const tapped = !isTap
+      ? null
+      : chord?.length
+        ? stampChordOnStep(released, stepIndex, chord)
+        : toggleStepEntry(released, stepIndex);
 
-    return toggled
+    return tapped
       ? {
-          runtimePatch: toggled.runtimePatch,
-          command: { type: "seqEdit.update", update: toggled.update },
+          runtimePatch: tapped.runtimePatch,
+          command: { type: "seqEdit.update", update: tapped.update },
         }
       : { runtimePatch: released, command: { type: "seqEdit.hold" } };
   }
@@ -403,12 +417,80 @@ function reduceStepEditEvent(
   return undefined;
 }
 
+// A note on the active track's channel, in Step Edit: it is played into the
+// held steps, kept while the key is down so a tap can stamp it, and becomes
+// the default note for new steps.
+function reduceNoteEvent(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  event: MidiEvent,
+): LaunchControlXL3Result {
+  const navigation = runtimePatch.runtime.navigation;
+  const activeTrack =
+    runtimePatch.compiledInstrument.tracks[navigation.activeTrackIndex];
+  const note = event.note;
+  if (
+    !note ||
+    !activeTrack ||
+    event.channel !== activeTrack.midiChannel - 1 ||
+    navigation.mode !== "seqEdit" ||
+    activeTrack.noteSource !== "stepSequencer"
+  ) {
+    return createNoopResult(runtimePatch);
+  }
+
+  const name = note.fullName;
+  const velocity = Math.round(note.velocity * 127);
+  const heldNotes = (navigation.heldNotes ?? []).filter(
+    (held) => held.note !== name,
+  );
+
+  if (event.type !== MidiEventType.noteOn || velocity === 0) {
+    return {
+      runtimePatch: updateInstrumentNavigation(runtimePatch, { heldNotes }),
+      command: { type: "none" },
+    };
+  }
+
+  const played = { note: name, velocity };
+  const { heldSteps } = navigation;
+  const edit = playNoteIntoSteps(
+    runtimePatch,
+    heldSteps.map((held) => ({
+      stepIndex: held.stepIndex,
+      replace: !held.played,
+    })),
+    played,
+  );
+  const nextRuntimePatch = updateInstrumentNavigation(
+    withStepDefaults(edit?.runtimePatch ?? runtimePatch, { note: name }),
+    {
+      heldNotes: [...heldNotes, played],
+      heldSteps: heldSteps.map((held) => ({
+        ...held,
+        edited: true,
+        played: true,
+      })),
+    },
+  );
+
+  return {
+    runtimePatch: nextRuntimePatch,
+    command: edit
+      ? { type: "seqEdit.update", update: edit.update }
+      : { type: "none" },
+  };
+}
+
 export class LaunchControlXL3Surface {
   reduceEvent(
     runtimePatch: CompiledInstrumentEnginePatch,
     event: MidiEvent,
     now = performance.now(),
   ): LaunchControlXL3Result {
+    if (event.isNote) {
+      return reduceNoteEvent(runtimePatch, event);
+    }
+
     if (!event.isCC || event.cc === undefined || event.ccValue === undefined) {
       return createNoopResult(runtimePatch);
     }

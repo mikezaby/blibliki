@@ -94,12 +94,26 @@ type EngineSessionRecorder = {
   sessionRecorderId?: string;
 };
 
+// A MIDI output can be observed without a route; `listen` returns the
+// unsubscribe. Audio IOs have no `listen`.
+type EngineIOLookup = {
+  findIO?: (
+    moduleId: string,
+    ioName: string,
+    type: "input" | "output",
+  ) => {
+    name: string;
+    listen?: (listener: (event: MidiEvent) => void) => () => void;
+  };
+};
+
 export type InstrumentControllerEngine = MidiInputLookup &
   EngineModuleUpdater &
   EngineTransportController &
   EnginePropsObserver &
   EngineStateObserver &
   EngineSessionRecorder &
+  EngineIOLookup &
   LiveDisplayEngine;
 
 export type CreateInstrumentControllerSessionOptions = {
@@ -132,11 +146,32 @@ function createDisplayState(
   });
 }
 
+// The note input's outgoing MIDI, so played notes reach the surface on the
+// same path as controller events. A missing module or output means no tap.
+function tapNoteInput(
+  engine: EngineIOLookup,
+  noteInputId: string | undefined,
+  listener: (event: MidiEvent) => void,
+): (() => void) | undefined {
+  if (!noteInputId) {
+    return;
+  }
+
+  try {
+    return engine
+      .findIO?.(noteInputId, "midi out", "output")
+      .listen?.(listener);
+  } catch {
+    return;
+  }
+}
+
 export class InstrumentSession implements InstrumentControllerSession {
   private currentRuntimePatch: CompiledInstrumentEnginePatch;
   private currentNotice: InstrumentDisplayNotice | undefined;
   private disposed = false;
   private readonly controllerInput: ControllerInputDevice | undefined;
+  private readonly stopNoteTap: (() => void) | undefined;
   private readonly persistenceFlow: InstrumentSessionPersistenceFlow;
 
   constructor(
@@ -178,6 +213,11 @@ export class InstrumentSession implements InstrumentControllerSession {
     engine.onStateUpdate?.(this.onEngineStateUpdate);
 
     this.controllerInput?.addEventListener(this.onMidiEvent);
+    this.stopNoteTap = tapNoteInput(
+      engine,
+      runtimePatch.runtime.noteInputId,
+      this.onMidiEvent,
+    );
     this.sendHardwareDisplayEvents(disableAnalogAutoDisplayEvents());
     this.emitState();
   }
@@ -216,6 +256,7 @@ export class InstrumentSession implements InstrumentControllerSession {
     this.disposed = true;
     this.engine.removeStateUpdateCallback?.(this.onEngineStateUpdate);
     this.controllerInput?.removeEventListener(this.onMidiEvent);
+    this.stopNoteTap?.();
   }
 
   private emitState() {
