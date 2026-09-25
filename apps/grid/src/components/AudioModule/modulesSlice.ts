@@ -56,6 +56,11 @@ export const AvailableModules: Record<
   Optional<ModuleInterface, "props">
 > = {
   [ModuleType.Master]: { name: "Master", moduleType: ModuleType.Master },
+  [ModuleType.Metronome]: {
+    name: "Metronome",
+    moduleType: ModuleType.Metronome,
+    props: { enabled: true },
+  },
   [ModuleType.Oscillator]: {
     name: "Oscillator",
     moduleType: ModuleType.Oscillator,

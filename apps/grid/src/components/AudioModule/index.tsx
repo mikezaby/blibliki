@@ -15,6 +15,7 @@ import Inspector from "./Inspector";
 import Keyboard from "./Keyboard";
 import LFO from "./LFO";
 import Master from "./Master";
+import Metronome from "./Metronome";
 import MidiChannelFilter from "./MidiChannelFilter";
 import MidiInput from "./MidiInput";
 import MidiMapper from "./MidiMapper";
@@ -69,6 +70,7 @@ const COMPONENT_MAPPING: {
   [ModuleType.Envelope]: Envelope,
   [ModuleType.MidiInput]: MidiInput,
   [ModuleType.MidiChannelFilter]: MidiChannelFilter,
+  [ModuleType.Metronome]: Metronome,
   [ModuleType.MidiOutput]: MidiOutput,
   [ModuleType.MidiMapper]: MidiMapper,
   [ModuleType.VirtualMidi]: Keyboard,
