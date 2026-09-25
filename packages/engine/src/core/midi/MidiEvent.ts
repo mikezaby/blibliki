@@ -14,14 +14,18 @@ export default class MidiEvent {
   readonly triggeredAt: ContextTime;
   private message: Message;
 
+  // `channel` is zero based, as `MidiEvent.channel` reads it.
   static fromNote(
     noteName: string | Note | Omit<INote, "frequency">,
     noteOn = true,
     triggeredAt: ContextTime,
+    channel = 0,
   ): MidiEvent {
     const note = noteName instanceof Note ? noteName : new Note(noteName);
+    const data = note.midiData(noteOn);
+    data[0] = ((data[0] ?? 0) & 0xf0) | (channel & 0x0f);
 
-    return new MidiEvent(new Message(note.midiData(noteOn)), triggeredAt);
+    return new MidiEvent(new Message(data), triggeredAt);
   }
 
   static fromCC(
