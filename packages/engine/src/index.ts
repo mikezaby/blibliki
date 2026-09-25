@@ -86,6 +86,7 @@ export {
   Resolution,
   PlaybackMode,
   stepPropSchema,
+  drumMachineMidiSchema,
   NoiseType,
   DelayTimeMode,
   ReverbType,

@@ -310,6 +310,7 @@ export type {
   IStepCC,
 } from "./StepSequencer";
 export { Resolution, PlaybackMode, stepPropSchema } from "./StepSequencer";
+export { drumMachineMidiSchema } from "./DrumMachine";
 export type {
   IMidiMapper,
   IMidiMapperProps,

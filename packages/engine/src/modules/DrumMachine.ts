@@ -47,7 +47,7 @@ const OUTPUT_NAMES: Record<DrumVoice, string> = {
   closedHat: "closed hat out",
 };
 
-const drumMachineMidiSchema = {
+export const drumMachineMidiSchema = {
   kind: "mapped",
   notes: [
     { key: "kick", note: "C1", label: "Kick" },
