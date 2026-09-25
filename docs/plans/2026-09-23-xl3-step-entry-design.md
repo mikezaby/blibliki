@@ -225,9 +225,9 @@ Details settled while building, where the sections above left room:
   (how to hold a step with one pointer).
 - #67, whole pattern and playhead on screen: reads `heldSteps` and the bar
   from the display state.
-- #68, record played notes: step record is the natural follow-on. Record
-  alone starts the WAV recording at the engine level, so the research's
-  candidate is Shift + Record.
+- #68, record played notes: built, see
+  `2026-09-26-midi-recording-design.md`. Step record arms on Shift +
+  Record, real-time record on Shift + Play.
 - #69 and #70 are unaffected; the cheatsheet lists save and discard.
 
 ## Open questions
@@ -263,6 +263,6 @@ One branch and one review each, in this order.
 
 ## Not decided here
 
-The console's own step row (#66), step and live record (#68), drum lanes
-picked by column (TR-REC), generators beyond the euclidean fill, and
-pattern chaining (#70).
+The console's own step row (#66), drum lanes picked by column (TR-REC),
+generators beyond the euclidean fill, and pattern chaining (#70). Step and
+live record (#68) have their own document.

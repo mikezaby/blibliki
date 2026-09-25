@@ -152,3 +152,21 @@ doc in favour of the surface as the source of truth.
 asks for typed note names. Pass the active track's schema: build the track
 with `createTrackFromDocument` and read its source block's `"midi in"`
 schema, as `compileInstrument` does for `noteSchema`.
+
+## The step type describes microtime wrongly
+
+`IStep.microtimeOffset` in
+`packages/transport/src/sources/StepSequencerSource.ts` says "-50 to +50
+ticks offset". The schema allows -100 to 100 and `StepSequencer.triggerStep`
+plays one unit as 1/384 of a beat (40 ticks), so the range is about a
+sixteenth either way. Fix the comment, or better, name the unit in the
+type.
+
+## Step LED sync re-sends all 16 LEDs on every emit
+
+`syncLaunchControlXL3SequencerStepButtonLeds` in
+`packages/instrument/src/surfaces/launchControlXL3/LaunchControlXL3SequencerLeds.ts`
+sends a CC per step button whether or not the value changed, and the
+session emits on every played note in Step Edit and on every sequencer
+step. Keep the last sent values per controller output and send only the
+differences.
