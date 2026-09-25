@@ -15,12 +15,14 @@ import InstrumentPerformance from "@/react/InstrumentPerformance";
 const {
   loadEngineMock,
   sendControlEventMock,
+  setRecordingSettingsMock,
   createInstrumentEnginePatchMock,
   createInstrumentControllerSessionMock,
   createSavedInstrumentDocumentMock,
 } = vi.hoisted(() => ({
   loadEngineMock: vi.fn(),
   sendControlEventMock: vi.fn(),
+  setRecordingSettingsMock: vi.fn(),
   createInstrumentEnginePatchMock: vi.fn(),
   createInstrumentControllerSessionMock: vi.fn(),
   createSavedInstrumentDocumentMock: vi.fn(),
@@ -218,6 +220,8 @@ describe("InstrumentPerformance", () => {
     createInstrumentControllerSessionMock.mockReset();
     createSavedInstrumentDocumentMock.mockReset();
     sendControlEventMock.mockReset();
+    setRecordingSettingsMock.mockReset();
+    localStorage.clear();
 
     loadEngineMock.mockResolvedValue(engine);
     createInstrumentEnginePatchMock.mockReturnValue(runtimePatch);
@@ -228,6 +232,7 @@ describe("InstrumentPerformance", () => {
       getDisplayState: () => displayState,
       getRuntimePatch: () => runtimePatch,
       sendControlEvent: sendControlEventMock,
+      setRecordingSettings: setRecordingSettingsMock,
       dispose: vi.fn(),
     }));
   });
@@ -417,6 +422,7 @@ describe("InstrumentPerformance", () => {
       getDisplayState: () => displayState,
       getRuntimePatch: () => sequencedRuntimePatch,
       sendControlEvent: sendControlEventMock,
+      setRecordingSettings: setRecordingSettingsMock,
       dispose: vi.fn(),
     }));
 
@@ -459,6 +465,153 @@ describe("InstrumentPerformance", () => {
       name: "Step Edit",
     });
     expect(pressedButton.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("opens the settings from the console chrome and keeps MIDI recording in the browser", async () => {
+    localStorage.setItem(
+      "blibliki.midiRecording",
+      JSON.stringify({ metronome: true, mode: "oneShot" }),
+    );
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    // The stored settings, over the defaults, reach the session as it starts.
+    await waitFor(() => {
+      expect(setRecordingSettingsMock).toHaveBeenCalledWith({
+        metronome: true,
+        precount: false,
+        quantize: "1/16",
+        mode: "oneShot",
+        overdub: true,
+      });
+    });
+
+    const general = screen.getByRole("group", { name: "Console" });
+    fireEvent.click(within(general).getByRole("button", { name: "Settings" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Settings" });
+    expect(
+      within(dialog).getByRole("heading", { name: "MIDI recording" }),
+    ).toBeTruthy();
+
+    fireEvent.click(within(dialog).getByRole("switch", { name: "Pre-count" }));
+
+    await waitFor(() => {
+      expect(setRecordingSettingsMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ metronome: true, precount: true }),
+      );
+    });
+    expect(
+      JSON.parse(localStorage.getItem("blibliki.midiRecording") ?? "{}"),
+    ).toMatchObject({ metronome: true, precount: true, mode: "oneShot" });
+  });
+
+  it("arms real-time record from the Record button and erases while Erase is held", async () => {
+    const sequencedRuntimePatch = {
+      ...runtimePatch,
+      compiledInstrument: {
+        tracks: [
+          {
+            key: "track-1",
+            noteSource: "stepSequencer",
+            audioSource: { type: "internal" },
+          },
+        ],
+      },
+    };
+    createInstrumentControllerSessionMock.mockImplementation(() => ({
+      getDisplayState: () => displayState,
+      getRuntimePatch: () => sequencedRuntimePatch,
+      sendControlEvent: sendControlEventMock,
+      setRecordingSettings: setRecordingSettingsMock,
+      dispose: vi.fn(),
+    }));
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    const record = await screen.findByRole("button", { name: "Record" });
+    await waitFor(() => {
+      expect(record.hasAttribute("disabled")).toBe(false);
+    });
+    expect(record.getAttribute("aria-pressed")).toBe("false");
+    expect(screen.queryByRole("button", { name: "Erase" })).toBeNull();
+
+    // The hardware's gesture: Shift down, Play, Shift up.
+    fireEvent.click(record);
+    const sentEvents = () =>
+      sendControlEventMock.mock.calls.map((call) => {
+        const [event] = call as [{ cc?: number; ccValue?: number }];
+        return [event.cc, event.ccValue];
+      });
+    expect(sentEvents().slice(-3)).toEqual([
+      [63, 127],
+      [116, 127],
+      [63, 0],
+    ]);
+
+    cleanup();
+    displayState.header.liveRecord = { erasing: false };
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    const armed = await screen.findByRole("button", { name: "Record" });
+    expect(armed.getAttribute("aria-pressed")).toBe("true");
+
+    // Erase holds Shift + Page Down for as long as the pointer is down.
+    sendControlEventMock.mockClear();
+    const erase = screen.getByRole("button", { name: "Erase" });
+    fireEvent.pointerDown(erase);
+    expect(sentEvents()).toEqual([
+      [63, 127],
+      [107, 127],
+    ]);
+
+    cleanup();
+    displayState.header.liveRecord = { erasing: true };
+    displayState.header.shiftPressed = true;
+    displayState.hints = [
+      {
+        action: "eraseSteps",
+        group: "Record",
+        gesture: "Hold [Shift] + [Page ▼]",
+        text: "Erase as the playhead passes",
+        oled: "S+Pgv Erase",
+      },
+    ];
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    const erasing = await screen.findByRole("button", { name: "Erase" });
+    expect(erasing.getAttribute("aria-pressed")).toBe("true");
+    // Shift is down for the erase, not for reading the cheatsheet.
+    expect(screen.queryByRole("region", { name: "Cheatsheet" })).toBeNull();
+
+    sendControlEventMock.mockClear();
+    fireEvent.pointerUp(erasing);
+    expect(sentEvents()).toEqual([
+      [107, 0],
+      [63, 0],
+    ]);
   });
 
   it("keeps the console's own controls apart from the general buttons", async () => {
