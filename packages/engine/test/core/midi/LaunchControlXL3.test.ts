@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import MidiEvent from "@/core/midi/MidiEvent";
 import MidiInputDevice from "@/core/midi/MidiInputDevice";
 import MidiOutputDevice from "@/core/midi/MidiOutputDevice";
@@ -67,6 +67,41 @@ describe("LaunchControlXL3", () => {
     await ctx.engine.start();
 
     expect(sent).toContainEqual([176, 116, 16]);
+
+    controller.dispose();
+    input.disconnect();
+    output.disconnect();
+  });
+
+  it("leaves the transport and the recording alone on the shifted Play and Record", async (ctx) => {
+    const sent: number[][] = [];
+    const inputPort = createInputPort();
+    const input = new MidiInputDevice(inputPort.port, ctx.context);
+    const output = new MidiOutputDevice(createOutputPort(sent));
+    const controller = new LaunchControlXL3(ctx.engine.id, {
+      input,
+      output,
+    });
+
+    await waitForMicrotasks();
+    const start = vi.spyOn(ctx.engine, "start").mockResolvedValue();
+    const toggleRecording = vi
+      .spyOn(ctx.engine, "toggleSessionRecording")
+      .mockReturnValue();
+
+    inputPort.emit([0xb0, 63, 127]);
+    inputPort.emit([0xb0, 116, 127]);
+    inputPort.emit([0xb0, 118, 127]);
+
+    expect(start).not.toHaveBeenCalled();
+    expect(toggleRecording).not.toHaveBeenCalled();
+
+    inputPort.emit([0xb0, 63, 0]);
+    inputPort.emit([0xb0, 116, 127]);
+    inputPort.emit([0xb0, 118, 127]);
+
+    expect(start).toHaveBeenCalledTimes(1);
+    expect(toggleRecording).toHaveBeenCalledTimes(1);
 
     controller.dispose();
     input.disconnect();

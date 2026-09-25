@@ -103,6 +103,7 @@ const ENCODER_CHANNEL_STATUS = 0xbf;
 const RELATIVE_ENCODER_OFFSET = 64;
 const PLAY_CC: number = Control.Play;
 const RECORD_CC: number = Control.Record;
+const SHIFT_CC: number = Control.Shift;
 const RELATIVE_ENCODER_ROW_ENABLE_CCS = [69, 72, 73] as const;
 
 const VALUE_COLOR_RAMP = [
@@ -166,18 +167,26 @@ export class LaunchControlXL3 extends BaseController {
     this.updateTransportColors();
   }
 
+  // Shift + Play and Shift + Record belong to the instrument's surface, so
+  // the shifted press leaves the transport and the session recording alone.
+  private shiftHeld = false;
+
   protected onMidiEvent = (event: MidiEvent) => {
     if (event.cc === undefined || event.ccValue === undefined) return;
 
+    if (event.cc === SHIFT_CC) {
+      this.shiftHeld = event.ccValue === 127;
+    }
+
     switch (event.cc) {
       case PLAY_CC: {
-        if (event.ccValue === 127) {
+        if (event.ccValue === 127 && !this.shiftHeld) {
           this.toggle();
         }
         break;
       }
       case RECORD_CC:
-        if (event.ccValue === 127) {
+        if (event.ccValue === 127 && !this.shiftHeld) {
           this.toggleRecord();
           this.updateTransportColors();
         }
