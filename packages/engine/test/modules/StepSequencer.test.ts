@@ -4,6 +4,7 @@ import { ModuleType } from "@/modules";
 import StepSequencer, {
   IStep,
   IStepSequencerProps,
+  microtimeOffsetForTicks,
   PlaybackMode,
   Resolution,
 } from "@/modules/StepSequencer";
@@ -74,6 +75,7 @@ const createRunningSequencer = (
   return {
     midiEvents,
     startTime,
+    stepSequencer,
     stop: () => {
       const stopTime = ctx.context.currentTime;
       ctx.engine.transport.stop(stopTime);
@@ -106,6 +108,44 @@ const baseProps = (steps: IStep[]): IStepSequencerProps => ({
 });
 
 describe("StepSequencer", () => {
+  it("places a moment on the nearest step of the playing pattern", (ctx) => {
+    const run = createRunningSequencer(
+      ctx,
+      baseProps(Array.from({ length: 16 }, createInactiveStep)),
+    );
+    const { stepSequencer } = run;
+    const stepTicks = 3840;
+    // The context time at which a step position is heard.
+    const heardAt = (steps: number) =>
+      ctx.engine.transport.getContextTimeAtTicks(steps * stepTicks);
+
+    try {
+      const early = stepSequencer.positionAt(heardAt(1.5));
+
+      expect(early).toMatchObject({
+        patternNo: 0,
+        pageNo: 0,
+        stepNo: 2,
+        absoluteStep: 2,
+        stepTicks,
+      });
+      // The tempo maps seconds to ticks through floats: a tick either way.
+      expect(early?.offsetTicks).toBeCloseTo(-1920, -1);
+
+      // The second lap of a one page loop lands on the same page.
+      const late = stepSequencer.positionAt(heardAt(17.25));
+
+      expect(late).toMatchObject({ pageNo: 0, stepNo: 1, absoluteStep: 17 });
+      expect(late?.offsetTicks).toBeCloseTo(960, -1);
+      expect(microtimeOffsetForTicks(-1920)).toBe(-48);
+      expect(microtimeOffsetForTicks(960)).toBe(24);
+    } finally {
+      run.stop();
+    }
+
+    expect(stepSequencer.positionAt(run.startTime)).toBeUndefined();
+  });
+
   it("emits immediate state updates during transport playback", async (ctx) => {
     const stateUpdates: {
       id: string;

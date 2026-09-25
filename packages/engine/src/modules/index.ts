@@ -38,6 +38,7 @@ import LegacyEnvelope, {
   IEnvelopeProps as ILegacyEnvelopeProps,
 } from "./LegacyEnvelope";
 import Master, { IMasterProps, masterPropSchema } from "./Master";
+import Metronome, { IMetronomeProps, metronomePropSchema } from "./Metronome";
 import MidiChannelFilter, {
   IMidiChannelFilterProps,
   midiChannelFilterPropSchema,
@@ -118,6 +119,7 @@ export enum ModuleType {
   VoiceScheduler = "VoiceScheduler",
   LFO = "LFO",
   Noise = "Noise",
+  Metronome = "Metronome",
   Reverb = "Reverb",
   DrumMachine = "DrumMachine",
   AudioRecorder = "AudioRecorder",
@@ -153,6 +155,7 @@ export type ModuleTypeToPropsMapping = {
   [ModuleType.VoiceScheduler]: IVoiceSchedulerProps;
   [ModuleType.LFO]: ILFOProps;
   [ModuleType.Noise]: INoiseProps;
+  [ModuleType.Metronome]: IMetronomeProps;
   [ModuleType.Reverb]: IReverbProps;
   [ModuleType.DrumMachine]: IDrumMachineProps;
   [ModuleType.AudioRecorder]: IAudioRecorderProps;
@@ -185,6 +188,7 @@ export type ModuleTypeToStateMapping = {
   [ModuleType.TransportControl]: never;
   [ModuleType.VirtualMidi]: never;
   [ModuleType.StepSequencer]: IStepSequencerState;
+  [ModuleType.Metronome]: never;
   [ModuleType.VoiceScheduler]: never;
   [ModuleType.LFO]: never;
   [ModuleType.Noise]: never;
@@ -220,6 +224,7 @@ export type ModuleTypeToModuleMapping = {
   [ModuleType.TransportControl]: TransportControl;
   [ModuleType.VirtualMidi]: VirtualMidi;
   [ModuleType.StepSequencer]: StepSequencer;
+  [ModuleType.Metronome]: Metronome;
   [ModuleType.VoiceScheduler]: VoiceScheduler;
   [ModuleType.LFO]: LFO;
   [ModuleType.Noise]: Noise;
@@ -255,6 +260,7 @@ export const moduleSchemas = {
   [ModuleType.TransportControl]: transportControlPropSchema,
   [ModuleType.VirtualMidi]: virtualMidiPropSchema,
   [ModuleType.StepSequencer]: stepSequencerPropSchema,
+  [ModuleType.Metronome]: metronomePropSchema,
   [ModuleType.VoiceScheduler]: voiceSchedulerPropSchema,
   [ModuleType.LFO]: lfoPropSchema,
   [ModuleType.Noise]: noisePropSchema,
@@ -308,8 +314,16 @@ export type {
   IPattern,
   IStepNote,
   IStepCC,
+  StepSequencerPosition,
 } from "./StepSequencer";
-export { Resolution, PlaybackMode, stepPropSchema } from "./StepSequencer";
+export {
+  Resolution,
+  PlaybackMode,
+  stepPropSchema,
+  microtimeOffsetForTicks,
+} from "./StepSequencer";
+export type { IMetronome, IMetronomeProps } from "./Metronome";
+export { metronomePropSchema } from "./Metronome";
 export { drumMachineMidiSchema } from "./DrumMachine";
 export type {
   IMidiMapper,
@@ -428,6 +442,8 @@ export function createModule(
       return VirtualMidi.create(VirtualMidi, engineId, params);
     case ModuleType.StepSequencer:
       return StepSequencer.create(StepSequencer, engineId, params);
+    case ModuleType.Metronome:
+      return Metronome.create(Metronome, engineId, params);
     case ModuleType.VoiceScheduler:
       return VoiceScheduler.create(VoiceScheduler, engineId, params);
     case ModuleType.LFO:

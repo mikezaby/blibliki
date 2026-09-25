@@ -86,6 +86,8 @@ export {
   Resolution,
   PlaybackMode,
   stepPropSchema,
+  microtimeOffsetForTicks,
+  metronomePropSchema,
   drumMachineMidiSchema,
   NoiseType,
   DelayTimeMode,
@@ -102,7 +104,11 @@ export {
   WAVETABLE_PRESETS,
 } from "./modules";
 export { default as StepSequencer } from "./modules/StepSequencer";
+export { default as Metronome } from "./modules/Metronome";
 export type {
+  IMetronome,
+  IMetronomeProps,
+  StepSequencerPosition,
   IOscillator,
   IGain,
   IVolume,

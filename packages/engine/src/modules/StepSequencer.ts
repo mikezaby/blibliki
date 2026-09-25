@@ -5,6 +5,7 @@ import {
   TPB,
   StepSequencerSource,
   StepSequencerSourceEvent,
+  StepSequencerPosition,
   Resolution,
   PlaybackMode,
   IStep,
@@ -28,7 +29,14 @@ import { ICreateModule, ModuleType } from ".";
 export type IStepSequencer = IModule<ModuleType.StepSequencer>;
 
 // Re-export types from transport for backward compatibility
-export type { IStep, IStepNote, IStepCC, IPage, IPattern };
+export type {
+  IStep,
+  IStepNote,
+  IStepCC,
+  IPage,
+  IPattern,
+  StepSequencerPosition,
+};
 export { Resolution, PlaybackMode };
 
 // Module props (serialized)
@@ -53,6 +61,17 @@ export type IStepSequencerState = {
 };
 
 const MICROTIMING_STEP = TPB / 4 / 10;
+
+// One microtime unit plays as 1/MICROTIMING_STEP of a beat (see triggerStep),
+// so this is the inverse for a distance measured in ticks.
+export function microtimeOffsetForTicks(ticks: number) {
+  const { min, max } = stepPropSchema.microtimeOffset;
+
+  return Math.max(
+    min,
+    Math.min(max, Math.round((ticks * MICROTIMING_STEP) / TPB)),
+  );
+}
 
 export const stepSequencerPropSchema: ModulePropSchema<
   Pick<
@@ -371,6 +390,16 @@ export default class StepSequencer
     });
 
     this.engine.transport.addSource(this.source);
+  }
+
+  // Where a moment falls in the playing pattern, snapped to the nearest
+  // step, so a played note can be written where it was heard.
+  positionAt(contextTime: ContextTime): StepSequencerPosition | undefined {
+    if (!this.state.isRunning) return;
+
+    return this.source?.positionAt(
+      this.engine.transport.getTicksAtContextTime(contextTime),
+    );
   }
 
   private handleStepEvent = (event: StepSequencerSourceEvent) => {

@@ -197,10 +197,11 @@ export class Engine {
     );
   }
 
-  async start() {
+  // `actionAt` lets a caller line the start up with something already
+  // scheduled, such as a metronome count-in.
+  async start(actionAt?: ContextTime) {
     await this.resume();
-    const actionAt = this.context.currentTime;
-    this.transport.start(actionAt);
+    this.transport.start(actionAt ?? this.context.currentTime);
   }
 
   stop() {

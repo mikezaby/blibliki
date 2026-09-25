@@ -27,9 +27,12 @@ export {
 } from "./sources/StepSequencerSource";
 export type {
   StepSequencerSourceEvent,
+  StepSequencerPosition,
   IStep,
   IStepNote,
   IStepCC,
   IPage,
   IPattern,
 } from "./sources/StepSequencerSource";
+export { MetronomeSource } from "./sources/MetronomeSource";
+export type { MetronomeSourceEvent } from "./sources/MetronomeSource";
