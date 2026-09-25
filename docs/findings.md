@@ -144,3 +144,11 @@ aliases. In `packages/instrument/src/surfaces/launchControlXL3/LaunchControlXL3S
 they change the active track, and with Shift they save or discard the
 draft. Rewrite that table from the surface's CC constants, or delete the
 doc in favour of the surface as the source of truth.
+
+## Grid instrument editor ignores the drum names
+
+`apps/grid/src/components/Instruments/InstrumentEditor.tsx` renders
+`StepSequencerEditor` without `noteSchema`, so a drum machine track still
+asks for typed note names. Pass the active track's schema: build the track
+with `createTrackFromDocument` and read its source block's `"midi in"`
+schema, as `compileInstrument` does for `noteSchema`.

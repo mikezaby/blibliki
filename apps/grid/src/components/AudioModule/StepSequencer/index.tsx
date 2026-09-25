@@ -8,10 +8,11 @@ import {
 } from "@blibliki/engine";
 import { Stack } from "@blibliki/ui";
 import { useCallback } from "react";
-import { useModuleState } from "@/hooks";
+import { useAppSelector, useModuleState } from "@/hooks";
 import { ModuleComponent } from "..";
 import PatternSelector from "./PatternSelector";
 import StepSequencerEditor from "./StepSequencerEditor";
+import { selectSequencerNoteSchema } from "./noteSchema";
 
 // Helper to create default step
 const createDefaultStep = (): IStep => ({
@@ -38,6 +39,9 @@ const createDefaultPattern = (name: string): IPattern => ({
 const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
   const { id, updateProp, props: sequencerProps } = props;
   const sequencerState = useModuleState(id, ModuleType.StepSequencer);
+  const noteSchema = useAppSelector((state) =>
+    selectSequencerNoteSchema(state, id),
+  );
 
   // Get the module instance
   const getModuleInstance = useCallback((): StepSequencerModule | undefined => {
@@ -212,6 +216,7 @@ const StepSequencer: ModuleComponent<ModuleType.StepSequencer> = (props) => {
           updateProp("activePageNo")(index);
         }}
         onStepChange={updateStep}
+        noteSchema={noteSchema}
         onPagesChange={updatePages}
         onAddPage={addPage}
         onDeletePage={deletePage}

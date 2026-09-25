@@ -1,6 +1,7 @@
 # MIDI Input Schema
 
-Status: agreed 2026-09-25, not implemented yet.
+Status: agreed 2026-09-25, implemented on branch `feat/midi-input-schema`.
+The grid's instrument editor still takes typed notes; see `docs/findings.md`.
 
 ## Why
 
@@ -108,7 +109,9 @@ Each is committed with its tests before the next starts.
 2. **Instruments step entry**: mapped pitch cycling, labels on the XL3
    display and the screen, the default note for a new step.
 3. **Grid NoteEditor**: in mapped mode, a select of labels from
-   `@blibliki/ui` in place of the free-text input.
+   `@blibliki/ui` in place of the free-text input, and note chips show their
+   label. The StepSequencer module reads the schema by following its `"midi"`
+   edges to the target input in the store.
 
 ## Not doing
 

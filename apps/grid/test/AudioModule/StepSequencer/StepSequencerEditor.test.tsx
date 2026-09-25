@@ -1,5 +1,10 @@
 // @vitest-environment jsdom
-import { PlaybackMode, Resolution, type IPage } from "@blibliki/engine";
+import {
+  drumMachineMidiSchema,
+  PlaybackMode,
+  Resolution,
+  type IPage,
+} from "@blibliki/engine";
 import {
   cleanup,
   fireEvent,
@@ -333,5 +338,44 @@ describe("StepSequencerEditor", () => {
 
     expect(handled).toBe(false);
     expect(setData).not.toHaveBeenCalled();
+  });
+
+  it("names mapped notes and adds them from a list", () => {
+    const pages = createPages();
+    pages[0]!.steps[1]!.notes = [{ note: "D1", velocity: 90 }];
+    const onStepChange = vi.fn();
+
+    render(
+      <StepSequencerEditor
+        pages={pages}
+        activePageNo={0}
+        stepsPerPage={16}
+        resolution={Resolution.sixteenth}
+        playbackMode={PlaybackMode.loop}
+        noteSchema={drumMachineMidiSchema}
+        onPageChange={vi.fn()}
+        onStepChange={onStepChange}
+        onResolutionChange={vi.fn()}
+        onPlaybackModeChange={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Step 2" }));
+
+    expect(screen.getByText("Snare")).toBeDefined();
+    expect(screen.queryByPlaceholderText(/Add note/)).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Note" }));
+
+    expect(onStepChange).toHaveBeenCalledWith(
+      0,
+      1,
+      expect.objectContaining({
+        notes: [
+          { note: "D1", velocity: 90 },
+          { note: "C1", velocity: 100 },
+        ],
+      }),
+    );
   });
 });

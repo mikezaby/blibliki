@@ -1,4 +1,4 @@
-import { IStep, stepPropSchema } from "@blibliki/engine";
+import { IStep, MidiInputSchema, stepPropSchema } from "@blibliki/engine";
 import {
   Badge,
   Button,
@@ -17,7 +17,10 @@ type StepEditorProps = {
   stepIndex: number;
   onUpdate: (updates: Partial<IStep>) => void;
   showCcMessages?: boolean;
+  noteSchema?: MidiInputSchema;
 };
+
+const FREE_SCHEMA: MidiInputSchema = { kind: "free" };
 
 const DURATION_MARKS: MarkProps[] = stepPropSchema.duration.options.map(
   (duration, i) => {
@@ -30,6 +33,7 @@ export default function StepEditor({
   stepIndex,
   onUpdate,
   showCcMessages = true,
+  noteSchema = FREE_SCHEMA,
 }: StepEditorProps) {
   if (!step) {
     return (
@@ -44,6 +48,11 @@ export default function StepEditor({
     );
   }
 
+  const noteLabels = new Map(
+    noteSchema.kind === "mapped"
+      ? noteSchema.notes.map(({ note, label }) => [note, label])
+      : [],
+  );
   const hasNotes = step.notes.length > 0;
   const hasCC = showCcMessages && step.ccMessages.length > 0;
   const statusTone = step.active ? "success" : "neutral";
@@ -168,6 +177,7 @@ export default function StepEditor({
         <Stack direction="row" gap={3} align="center" className="flex-wrap">
           <NoteEditor
             notes={step.notes}
+            noteSchema={noteSchema}
             onChange={(notes) => {
               onUpdate({ notes });
             }}
@@ -203,7 +213,7 @@ export default function StepEditor({
                 <div className="flex items-center gap-2 min-w-[60px] pt-2">
                   <div className="w-2 h-2 rounded-full bg-brand" />
                   <span className="font-mono text-sm font-semibold">
-                    {note.note}
+                    {noteLabels.get(note.note) ?? note.note}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
