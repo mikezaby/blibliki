@@ -10,6 +10,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import StepSequencer from "../../../src/components/AudioModule/StepSequencer";
 
 vi.mock("../../../src/hooks", () => ({
+  useAppSelector: () => ({ kind: "free" }),
   useModuleState: () => ({
     currentStep: 3,
     isRunning: false,

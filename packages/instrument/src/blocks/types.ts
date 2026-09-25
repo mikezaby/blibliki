@@ -1,4 +1,8 @@
-import type { ICreateModule, ModuleType } from "@blibliki/engine";
+import type {
+  ICreateModule,
+  MidiInputSchema,
+  ModuleType,
+} from "@blibliki/engine";
 import type { AnyBaseSlot } from "@/slots/BaseSlot";
 
 export type BlockPlug = {
@@ -22,6 +26,8 @@ export type BlockIO = {
   ioName: string;
   kind: BlockIOKind;
   plugs: BlockPlug[];
+  // What the plugged MIDI input accepts; absent means free.
+  schema?: MidiInputSchema;
 };
 
 export type BlockModule<T extends ModuleType = ModuleType> =

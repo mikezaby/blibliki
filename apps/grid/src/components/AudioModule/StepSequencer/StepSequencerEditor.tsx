@@ -1,6 +1,7 @@
 import {
   type IPage,
   type IStep,
+  type MidiInputSchema,
   PlaybackMode,
   Resolution,
 } from "@blibliki/engine";
@@ -34,6 +35,7 @@ type StepSequencerEditorProps = {
   currentStep?: number;
   isRunning?: boolean;
   showCcMessages?: boolean;
+  noteSchema?: MidiInputSchema;
   onPageChange: (index: number) => void;
   onStepChange: (pageIndex: number, stepIndex: number, step: IStep) => void;
   onPagesChange?: (pages: IPage[]) => void;
@@ -71,6 +73,7 @@ export default function StepSequencerEditor({
   currentStep = -1,
   isRunning = false,
   showCcMessages = true,
+  noteSchema,
   onPageChange,
   onStepChange,
   onPagesChange,
@@ -307,6 +310,7 @@ export default function StepSequencerEditor({
             updateStep(selectedStep, updates);
           }}
           showCcMessages={showCcMessages}
+          noteSchema={noteSchema}
         />
       </Stack>
     </div>

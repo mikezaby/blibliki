@@ -23,6 +23,7 @@ describe("compileInstrument", () => {
     );
 
     expect(compiled.tracks).toHaveLength(8);
+    expect(compiled.tracks[0]?.noteSchema).toEqual({ kind: "free" });
     expect(
       compiled.tracks.map(
         ({
@@ -265,6 +266,12 @@ describe("compileInstrument", () => {
 
     expect(compiledTrack?.sourceProfileId).toBe("drumMachine");
     expect(sourceModule?.moduleType).toBe(ModuleType.DrumMachine);
+    const noteSchema = compiledTrack?.noteSchema;
+    expect(noteSchema?.kind === "mapped" && noteSchema.notes[0]).toEqual({
+      key: "kick",
+      note: "C1",
+      label: "Kick",
+    });
     const topSlotKeys = sourceAmpPage?.regions[0]?.slots.map((slot) =>
       slot.kind === "slot" ? slot.slotKey : "empty",
     );

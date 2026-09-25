@@ -11,6 +11,7 @@ import type {
   InstrumentDocument,
   InstrumentSequencerStep,
 } from "@/document/types";
+import { createLaunchControlXL3SequencerDisplayState } from "@/surfaces/launchControlXL3/LaunchControlXL3SequencerDisplay";
 import { LaunchControlXL3Surface } from "@/surfaces/launchControlXL3/LaunchControlXL3Surface";
 
 const SHIFT = 63;
@@ -61,6 +62,20 @@ function createStepEditPatch(
   seededSteps: Record<number, Partial<InstrumentSequencerStep>> = {},
 ) {
   return createInstrumentEnginePatch(createStepEditDocument(seededSteps), {
+    navigation: { mode: "seqEdit" },
+  });
+}
+
+function createDrumStepEditPatch(
+  seededSteps: Record<number, Partial<InstrumentSequencerStep>> = {},
+) {
+  const document = createStepEditDocument(seededSteps);
+  document.tracks[0] = {
+    ...document.tracks[0]!,
+    sourceProfileId: "drumMachine",
+  };
+
+  return createInstrumentEnginePatch(document, {
     navigation: { mode: "seqEdit" },
   });
 }
@@ -633,5 +648,52 @@ describe("LaunchControlXL3Surface fill", () => {
     const octaveUp = turn(surface, shifted.runtimePatch, PITCH_1, 1, 10);
 
     expect(getSteps(octaveUp.runtimePatch)[0]?.notes[0]?.note).toBe("C4");
+  });
+});
+
+describe("LaunchControlXL3Surface step entry on a drum machine track", () => {
+  it("a tap places the first drum part", () => {
+    const surface = new LaunchControlXL3Surface();
+    const held = press(surface, createDrumStepEditPatch(), STEP_4, 0);
+    const tapped = release(surface, held.runtimePatch, STEP_4, 100);
+
+    expect(getSteps(tapped.runtimePatch)[3]?.notes).toEqual([
+      { note: "C1", velocity: 100 },
+    ]);
+  });
+
+  it("the pitch encoder steps through the drum parts", () => {
+    const surface = new LaunchControlXL3Surface();
+    const runtimePatch = createDrumStepEditPatch({
+      0: { active: true, notes: [{ note: "C1", velocity: 100 }] },
+    });
+    const held = press(surface, runtimePatch, STEP_1, 0);
+
+    const snare = turn(surface, held.runtimePatch, PITCH_1, 1, 10);
+    expect(getSteps(snare.runtimePatch)[0]?.notes[0]?.note).toBe("D1");
+
+    const closedHat = turn(surface, snare.runtimePatch, PITCH_1, 2, 20);
+    expect(getSteps(closedHat.runtimePatch)[0]?.notes[0]?.note).toBe("F#1");
+  });
+
+  it("with nothing held the pitch encoder picks the default drum part", () => {
+    const surface = new LaunchControlXL3Surface();
+
+    const pitched = turn(surface, createDrumStepEditPatch(), PITCH_1, 1);
+
+    expect(pitched.runtimePatch.runtime.navigation.stepDefaults).toEqual({
+      "track-1": { note: "D1" },
+    });
+  });
+
+  it("the display names the drum part", () => {
+    const runtimePatch = createDrumStepEditPatch();
+
+    const displayState =
+      createLaunchControlXL3SequencerDisplayState(runtimePatch);
+
+    expect(displayState?.lowerBand.slots[0]).toMatchObject({
+      valueText: "Kick",
+    });
   });
 });

@@ -3,6 +3,7 @@ import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
 import type { InstrumentDisplayState } from "@/display/InstrumentDisplayState";
 import {
   countDefaultNoteSteps,
+  describeStepNote,
   getActivePage,
   getHeldStepIndices,
   getStepDefaults,
@@ -188,7 +189,9 @@ export function createLaunchControlXL3SequencerDisplayState(
           `pitch-${index + 1}`,
           `Pitch ${index + 1}`,
           `N${index + 1}`,
-          notes[index]?.note ?? "--",
+          notes[index]
+            ? describeStepNote(runtimePatch, notes[index].note)
+            : "--",
           !notes[index],
         ),
       ) as InstrumentDisplayState["lowerBand"]["slots"],

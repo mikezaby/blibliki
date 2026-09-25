@@ -2,6 +2,7 @@ import type {
   BPM,
   IEngineSerialize,
   IStep,
+  MidiInputSchema,
   TimeSignature,
 } from "@blibliki/engine";
 import type {
@@ -24,6 +25,8 @@ export type CompiledInstrumentTrack = {
   noteSource: InstrumentNoteSource;
   audioSource: InstrumentTrackAudioSource;
   sourceProfileId: SourceProfileId;
+  // What the track's source accepts, read from its "midi in".
+  noteSchema: MidiInputSchema;
   fxChain: [EffectProfileId, EffectProfileId, EffectProfileId, EffectProfileId];
   compiledTrack: CompiledTrack;
 };

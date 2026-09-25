@@ -1,4 +1,4 @@
-import { ModuleType } from "@blibliki/engine";
+import { drumMachineMidiSchema, ModuleType } from "@blibliki/engine";
 import BaseBlock from "@/blocks/BaseBlock";
 import { createModuleId } from "@/blocks/helpers";
 
@@ -47,6 +47,7 @@ export default class DrumMachineBlock extends BaseBlock {
       ioName: "midi in",
       kind: "midi",
       plugs: [{ moduleId, ioName: "midi in" }],
+      schema: drumMachineMidiSchema,
     });
 
     this.addOutput({
