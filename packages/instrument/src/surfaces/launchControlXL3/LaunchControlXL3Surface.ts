@@ -81,6 +81,10 @@ type LaunchControlXL3Command =
       action: "saveDraft" | "discardDraft";
     }
   | {
+      type: "liveRecord.toggle";
+      enabled: boolean;
+    }
+  | {
       type: "macro";
       cc: number;
       adjustments: MacroPropAdjustment[];
@@ -575,11 +579,13 @@ export class LaunchControlXL3Surface {
 
     if (event.cc === SHIFT_CC) {
       const pressed = event.ccValue === 127;
-      const fill = pressed ? undefined : runtimePatch.runtime.navigation.fill;
+      const { fill: heldFill, liveRecord } = runtimePatch.runtime.navigation;
+      const fill = pressed ? undefined : heldFill;
       const nextRuntimePatch = updateInstrumentNavigation(runtimePatch, {
         shiftPressed: pressed,
         copySource: undefined,
         fill: undefined,
+        liveRecord: liveRecord ? { erasing: false } : undefined,
       });
       // A fill previewed while Shift was down is written as it goes up.
       const written = fill ? applyFill(nextRuntimePatch, fill) : null;
@@ -608,6 +614,20 @@ export class LaunchControlXL3Surface {
       ];
     const sequencerTrack = activeTrack?.noteSource === "stepSequencer";
 
+    // Letting go of Page Down ends the erase; Shift's release does too.
+    if (
+      event.cc === PAGE_DOWN_CC &&
+      event.ccValue === 0 &&
+      currentNavigation.liveRecord?.erasing
+    ) {
+      return {
+        runtimePatch: updateInstrumentNavigation(runtimePatch, {
+          liveRecord: { erasing: false },
+        }),
+        command: { type: "none" },
+      };
+    }
+
     if (currentNavigation.mode === "seqEdit" && sequencerTrack) {
       const stepEditResult = reduceStepEditEvent(
         runtimePatch,
@@ -625,20 +645,56 @@ export class LaunchControlXL3Surface {
     }
 
     // Record alone is the engine's WAV recording, so step record arms on
-    // the shifted press.
+    // the shifted press. Step and real-time record never run together.
     if (
       currentNavigation.shiftPressed &&
       event.cc === RECORD_CC &&
       currentNavigation.mode === "seqEdit" &&
       sequencerTrack
     ) {
+      const armed = currentNavigation.stepRecord !== undefined;
+
       return {
         runtimePatch: updateInstrumentNavigation(runtimePatch, {
-          stepRecord: currentNavigation.stepRecord
-            ? undefined
-            : { cursor: 0, written: false },
+          stepRecord: armed ? undefined : { cursor: 0, written: false },
+          liveRecord: undefined,
         }),
-        command: { type: "seqEdit.hold" },
+        command: armed
+          ? { type: "seqEdit.hold" }
+          : { type: "liveRecord.toggle", enabled: false },
+      };
+    }
+
+    // Play alone is the engine's transport, so real-time record arms on
+    // the shifted press, in either mode.
+    if (
+      currentNavigation.shiftPressed &&
+      event.cc === PLAY_CC &&
+      sequencerTrack
+    ) {
+      const enabled = currentNavigation.liveRecord === undefined;
+
+      return {
+        runtimePatch: updateInstrumentNavigation(runtimePatch, {
+          liveRecord: enabled ? { erasing: false } : undefined,
+          stepRecord: undefined,
+        }),
+        command: { type: "liveRecord.toggle", enabled },
+      };
+    }
+
+    // While recording, holding Shift + Page Down erases what the playhead
+    // passes. It outranks the bar copy that sits on the same combo.
+    if (
+      currentNavigation.shiftPressed &&
+      event.cc === PAGE_DOWN_CC &&
+      currentNavigation.liveRecord
+    ) {
+      return {
+        runtimePatch: updateInstrumentNavigation(runtimePatch, {
+          liveRecord: { erasing: true },
+        }),
+        command: { type: "none" },
       };
     }
 

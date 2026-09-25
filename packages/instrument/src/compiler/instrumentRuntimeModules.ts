@@ -145,3 +145,15 @@ export function createSessionRecorderModule(
     props: { quantize: "bar" },
   };
 }
+
+export function createMetronomeModule(
+  id: string,
+  name: string,
+): RuntimeModule<ModuleType.Metronome> {
+  return {
+    id,
+    name,
+    moduleType: EngineModuleType.Metronome,
+    props: { enabled: false },
+  };
+}

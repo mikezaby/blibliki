@@ -1,4 +1,9 @@
-import { type MidiEvent, ModuleType, TransportState } from "@blibliki/engine";
+import {
+  type MidiEvent,
+  ModuleType,
+  type StepSequencerPosition,
+  TransportState,
+} from "@blibliki/engine";
 import { Instrument } from "@/Instrument";
 import type { CompiledInstrumentEnginePatch } from "@/compiler/instrumentTypes";
 import type {
@@ -14,6 +19,10 @@ type DisplayEngineModule = {
   state?: Record<string, unknown>;
   onMidiEvent?: (event: MidiEvent) => unknown;
   sendMidi?: (event: MidiEvent) => unknown;
+  // A step sequencer: where a context time falls in its playing pattern.
+  positionAt?: (contextTime: number) => StepSequencerPosition | undefined;
+  // A metronome: clicks `bars` in and returns when they end.
+  countIn?: (bars: number) => number;
 };
 
 export type LiveDisplayEngine = {
@@ -202,7 +211,7 @@ export function createLiveInstrumentDisplayState(
   const runtimeState = Instrument.fromRuntimePatch(runtimePatch).runtimeState;
   const trackVolume = getActiveTrackVolume(engine, runtimePatch);
   const hints = createLaunchControlXL3Hints(runtimePatch);
-  const { shiftPressed } = runtimePatch.runtime.navigation;
+  const { shiftPressed, liveRecord } = runtimePatch.runtime.navigation;
   if (runtimeState.navigation.mode === "seqEdit") {
     const seqEditDisplayState =
       launchControlXL3SequencerEdit.createDisplayState(runtimePatch);
@@ -215,6 +224,7 @@ export function createLiveInstrumentDisplayState(
           ...seqEditDisplayState.header,
           trackVolume,
           shiftPressed,
+          liveRecord,
           transportState: engine.state ?? TransportState.stopped,
         },
       };
@@ -231,6 +241,7 @@ export function createLiveInstrumentDisplayState(
       ...staticDisplayState.header,
       trackVolume,
       shiftPressed,
+      liveRecord,
       transportState: engine.state ?? TransportState.stopped,
     },
     globalBand: {

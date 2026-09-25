@@ -55,6 +55,7 @@ describe("createLaunchControlXL3Hints", () => {
       "Navigate: switchTrack",
       "Navigate: switchPage",
       "Mode: enterStepEdit",
+      "Record: liveRecord",
       "Save: saveDraft",
       "Save: discardDraft",
       "Help: showCheatsheet",
@@ -64,16 +65,31 @@ describe("createLaunchControlXL3Hints", () => {
       text: "Enter Step Edit",
     });
     // Saving asks first, which the performer has to know to get it done.
-    expect(hints[3]).toMatchObject({
+    expect(hints[4]).toMatchObject({
       gesture: "[Shift] + [Track ▶] twice",
       text: "Save the instrument",
     });
   });
 
-  it("leaves Step Edit out on a track without a step sequencer", () => {
+  it("leaves Step Edit and recording out on a track without a step sequencer", () => {
     const hints = createLaunchControlXL3Hints(createPatch({}, false));
 
     expect(hints.map((hint) => hint.action)).not.toContain("enterStepEdit");
+    expect(hints.map((hint) => hint.action)).not.toContain("liveRecord");
+  });
+
+  it("while recording says how to stop and how to erase", () => {
+    const hints = createLaunchControlXL3Hints(
+      createPatch({ liveRecord: { erasing: false } }),
+    );
+
+    expect(outline(hints)).toContain("Record: stopLiveRecord");
+    expect(outline(hints)).toContain("Record: eraseSteps");
+    expect(outline(hints)).not.toContain("Record: liveRecord");
+    expect(hints.find((hint) => hint.action === "eraseSteps")).toMatchObject({
+      gesture: "Hold [Shift] + [Page ▼]",
+      text: "Erase as the playhead passes",
+    });
   });
 
   it("in Step Edit starts with how to write a pattern, then groups the rest by context", () => {
@@ -97,6 +113,7 @@ describe("createLaunchControlXL3Hints", () => {
       "Bars: duplicateBar",
       "Mode: enterStepRecord",
       "Mode: leaveStepEdit",
+      "Record: liveRecord",
       "Save: saveDraft",
       "Save: discardDraft",
       "Help: showCheatsheet",

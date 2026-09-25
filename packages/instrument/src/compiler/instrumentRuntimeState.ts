@@ -122,6 +122,7 @@ export function normalizeInstrumentNavigation(
     stepDefaults: options.navigation?.stepDefaults ?? {},
     heldNotes: options.navigation?.heldNotes,
     stepRecord: options.navigation?.stepRecord,
+    liveRecord: options.navigation?.liveRecord,
     copySource: options.navigation?.copySource,
     fill: options.navigation?.fill,
   };
@@ -154,6 +155,7 @@ export function createInstrumentRuntimeState(options: {
         ? undefined
         : (masterOptions.id ?? createInstrumentRuntimeModuleId("master")),
     sessionRecorderId: createInstrumentRuntimeModuleId("sessionRecorder"),
+    metronomeId: createInstrumentRuntimeModuleId("metronome"),
     ...globalMappingRuntimeIds,
     midiMapperId:
       createOptions.midiMapper?.id ??

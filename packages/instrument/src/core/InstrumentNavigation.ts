@@ -102,6 +102,7 @@ function normalizeNavigation(
             cursor: wrapIndex(navigation.stepRecord.cursor, 16),
           }
         : undefined,
+    liveRecord: sequencerTrack ? navigation.liveRecord : undefined,
     copySource:
       mode === "seqEdit" &&
       navigation.shiftPressed &&

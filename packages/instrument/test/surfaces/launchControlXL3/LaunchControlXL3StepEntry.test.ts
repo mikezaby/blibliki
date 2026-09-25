@@ -1046,3 +1046,90 @@ describe("LaunchControlXL3Surface step record", () => {
     expect(getStepStates(moved.runtimePatch)[0]).toBe("off");
   });
 });
+
+const PLAY = 116;
+
+describe("LaunchControlXL3Surface real-time record", () => {
+  function armLive(
+    surface: LaunchControlXL3Surface,
+    runtimePatch: CompiledInstrumentEnginePatch,
+  ) {
+    const shifted = press(surface, runtimePatch, SHIFT, 0);
+    const toggled = press(surface, shifted.runtimePatch, PLAY, 0);
+    const released = release(surface, toggled.runtimePatch, SHIFT, 0);
+
+    return { command: toggled.command, runtimePatch: released.runtimePatch };
+  }
+
+  it("Shift + Play arms in performance mode and again disarms", () => {
+    const surface = new LaunchControlXL3Surface();
+    const performance = createInstrumentEnginePatch(createStepEditDocument());
+    const armed = armLive(surface, performance);
+
+    expect(armed.command).toEqual({ type: "liveRecord.toggle", enabled: true });
+    expect(armed.runtimePatch.runtime.navigation.liveRecord).toEqual({
+      erasing: false,
+    });
+
+    const disarmed = armLive(surface, armed.runtimePatch);
+
+    expect(disarmed.command).toEqual({
+      type: "liveRecord.toggle",
+      enabled: false,
+    });
+    expect(disarmed.runtimePatch.runtime.navigation.liveRecord).toBeUndefined();
+  });
+
+  it("holding Shift + Page Down while recording erases, and letting go of either stops", () => {
+    const surface = new LaunchControlXL3Surface();
+    const armed = armLive(surface, createStepEditPatch());
+    const shifted = press(surface, armed.runtimePatch, SHIFT, 0);
+    const erasing = press(surface, shifted.runtimePatch, PAGE_DOWN, 0);
+
+    // The bar copy that shares the combo stays out of it.
+    expect(erasing.command).toEqual({ type: "none" });
+    expect(erasing.runtimePatch.runtime.navigation.liveRecord).toEqual({
+      erasing: true,
+    });
+
+    const lifted = release(surface, erasing.runtimePatch, PAGE_DOWN, 0);
+
+    expect(lifted.runtimePatch.runtime.navigation.liveRecord).toEqual({
+      erasing: false,
+    });
+
+    const again = press(surface, lifted.runtimePatch, PAGE_DOWN, 0);
+    const unshifted = release(surface, again.runtimePatch, SHIFT, 0);
+
+    expect(unshifted.runtimePatch.runtime.navigation.liveRecord).toEqual({
+      erasing: false,
+    });
+  });
+
+  it("step record and real-time record never run together", () => {
+    const surface = new LaunchControlXL3Surface();
+    const live = armLive(surface, createStepEditPatch());
+    const step = arm(surface, live.runtimePatch);
+
+    expect(step.runtimePatch.runtime.navigation.stepRecord).toBeDefined();
+    expect(step.runtimePatch.runtime.navigation.liveRecord).toBeUndefined();
+
+    const liveAgain = armLive(surface, step.runtimePatch);
+
+    expect(liveAgain.runtimePatch.runtime.navigation.liveRecord).toBeDefined();
+    expect(
+      liveAgain.runtimePatch.runtime.navigation.stepRecord,
+    ).toBeUndefined();
+  });
+
+  it("only a track with a step sequencer can record", () => {
+    const surface = new LaunchControlXL3Surface();
+    const document = createStepEditDocument();
+    document.tracks[0] = { ...document.tracks[0]!, noteSource: "externalMidi" };
+    const runtimePatch = createInstrumentEnginePatch(document);
+    const attempt = armLive(surface, runtimePatch);
+
+    expect(attempt.command).toEqual({ type: "none" });
+    expect(attempt.runtimePatch.runtime.navigation.liveRecord).toBeUndefined();
+  });
+});

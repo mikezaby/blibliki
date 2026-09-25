@@ -237,7 +237,7 @@ export function withStepDefaults(
   });
 }
 
-function updateStepSequencerProps(
+export function updateStepSequencerProps(
   runtimePatch: CompiledInstrumentEnginePatch,
   moduleId: string,
   changes: Partial<IStepSequencerProps>,
@@ -292,7 +292,7 @@ export function createStepEntryPageSync(
   });
 }
 
-function updateSteps(
+export function updateSteps(
   props: IStepSequencerProps,
   pageIndex: number,
   stepIndices: readonly number[],

@@ -90,6 +90,9 @@ export type InstrumentNavigationState = {
   // while they are down gets them as its chord.
   heldNotes?: HeldNote[];
   stepRecord?: StepRecordState;
+  // Real-time record is armed. `erasing` while the clear gesture is held:
+  // the playhead then erases the steps it passes.
+  liveRecord?: { erasing: boolean };
   // The step tapped first while Shift is held; later taps paste it.
   copySource?: number;
   // A euclidean fill being previewed while Shift is held; written on release.
@@ -148,6 +151,7 @@ export type CompiledInstrumentEnginePatch = {
     masterId?: string;
     transportControlId: string;
     sessionRecorderId: string;
+    metronomeId: string;
     midiMapperId: string;
     noteInputId?: string;
     controllerInputId?: string;

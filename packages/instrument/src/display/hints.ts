@@ -37,6 +37,9 @@ export type InstrumentHintAction =
   | "recordRest"
   | "recordBack"
   | "recordCursor"
+  | "liveRecord"
+  | "stopLiveRecord"
+  | "eraseSteps"
   | "showCheatsheet";
 
 // How the cheatsheet sorts its entries: in Step Edit a path to follow first,
@@ -50,6 +53,7 @@ export type InstrumentHintGroup =
   | "Bars"
   | "Navigate"
   | "Mode"
+  | "Record"
   | "Save"
   | "Help";
 
@@ -108,8 +112,22 @@ const HINT_TEXT: Record<InstrumentHintAction, string> = {
   recordRest: "Leave a rest and move on",
   recordBack: "Go back a step",
   recordCursor: "Move to that step",
+  liveRecord: "Record what you play",
+  stopLiveRecord: "Stop recording",
+  eraseSteps: "Erase as the playhead passes",
   showCheatsheet: "Show or pin this list",
 };
+
+function recordEntries(
+  runtimePatch: CompiledInstrumentEnginePatch,
+): InstrumentHintEntry[] {
+  const { liveRecord } = runtimePatch.runtime.navigation;
+
+  return entries(
+    "Record",
+    liveRecord ? ["stopLiveRecord", "eraseSteps"] : ["liveRecord"],
+  );
+}
 
 export function describeInstrumentHint(action: InstrumentHintAction) {
   return HINT_TEXT[action];
@@ -180,6 +198,7 @@ export function listInstrumentHints(
       ...entries("Copy and fill", ["copyStep", "fillBar"]),
       ...entries("Bars", ["growLoop", "duplicateBar"]),
       ...entries("Mode", ["enterStepRecord", "leaveStepEdit"]),
+      ...recordEntries(runtimePatch),
       ...entries("Save", ["saveDraft", "discardDraft"]),
       ...entries("Help", ["showCheatsheet"]),
     ];
@@ -188,6 +207,7 @@ export function listInstrumentHints(
   return [
     ...entries("Navigate", ["switchTrack", "switchPage"]),
     ...entries("Mode", sequencerTrack ? ["enterStepEdit"] : []),
+    ...(sequencerTrack ? recordEntries(runtimePatch) : []),
     ...entries("Save", ["saveDraft", "discardDraft"]),
     ...entries("Help", ["showCheatsheet"]),
   ];

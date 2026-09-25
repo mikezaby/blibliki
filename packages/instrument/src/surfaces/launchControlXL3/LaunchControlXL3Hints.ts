@@ -57,6 +57,9 @@ const GESTURES: Record<
   recordRest: { gesture: "[Track ▶]", oled: "Tr> Rest" },
   recordBack: { gesture: "[Track ◀]", oled: "Tr< Back" },
   recordCursor: { gesture: "Tap [Step]", oled: "Step Cursor" },
+  liveRecord: { gesture: "[Shift] + [Play]", oled: "S+Play Rec" },
+  stopLiveRecord: { gesture: "[Shift] + [Play]", oled: "S+Play Stop" },
+  eraseSteps: { gesture: "Hold [Shift] + [Page ▼]", oled: "S+Pgv Erase" },
   showCheatsheet: {
     gesture: "Hold [Shift], or [?] on screen",
     oled: "Shift Help",
