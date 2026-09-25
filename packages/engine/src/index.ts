@@ -45,8 +45,13 @@ export {
   MidiEventType,
 } from "./core";
 
-export { TransportState } from "@blibliki/transport";
-export type { BPM, TimeSignature, Position } from "@blibliki/transport";
+export { TransportState, TPB, divisionToTicks } from "@blibliki/transport";
+export type {
+  BPM,
+  TimeSignature,
+  Position,
+  Division,
+} from "@blibliki/transport";
 
 // The MIDI seam: platform entries wire an adapter, apps on platforms without
 // Web MIDI (Capacitor/iOS) replace it before creating an engine.
