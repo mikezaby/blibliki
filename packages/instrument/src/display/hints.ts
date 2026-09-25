@@ -31,6 +31,12 @@ export type InstrumentHintAction =
   | "holdAnother"
   | "releaseHeld"
   | "octave"
+  | "enterStepRecord"
+  | "leaveStepRecord"
+  | "recordNote"
+  | "recordRest"
+  | "recordBack"
+  | "recordCursor"
   | "showCheatsheet";
 
 // How the cheatsheet sorts its entries: in Step Edit a path to follow first,
@@ -39,6 +45,7 @@ export type InstrumentHintGroup =
   | "Write a pattern"
   | "Steps"
   | "Held steps"
+  | "Step record"
   | "Copy and fill"
   | "Bars"
   | "Navigate"
@@ -95,6 +102,12 @@ const HINT_TEXT: Record<InstrumentHintAction, string> = {
   holdAnother: "Edit that one too",
   releaseHeld: "Finish the edit",
   octave: "Move the note by octaves",
+  enterStepRecord: "Enter step record",
+  leaveStepRecord: "Leave step record",
+  recordNote: "Write the step and move on",
+  recordRest: "Leave a rest and move on",
+  recordBack: "Go back a step",
+  recordCursor: "Move to that step",
   showCheatsheet: "Show or pin this list",
 };
 
@@ -120,6 +133,19 @@ export function listInstrumentHints(
   const sequencerTrack = activeTrack?.noteSource === "stepSequencer";
 
   if (navigation.mode === "seqEdit") {
+    if (navigation.stepRecord) {
+      return [
+        ...entries("Step record", [
+          "recordNote",
+          "recordRest",
+          "recordBack",
+          "recordCursor",
+        ]),
+        ...entries("Mode", ["leaveStepRecord"]),
+        ...entries("Help", ["showCheatsheet"]),
+      ];
+    }
+
     if (navigation.heldSteps.length > 0) {
       return [
         ...entries("Held steps", [
@@ -153,7 +179,7 @@ export function listInstrumentHints(
       ]),
       ...entries("Copy and fill", ["copyStep", "fillBar"]),
       ...entries("Bars", ["growLoop", "duplicateBar"]),
-      ...entries("Mode", ["leaveStepEdit"]),
+      ...entries("Mode", ["enterStepRecord", "leaveStepEdit"]),
       ...entries("Save", ["saveDraft", "discardDraft"]),
       ...entries("Help", ["showCheatsheet"]),
     ];

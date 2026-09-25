@@ -95,6 +95,13 @@ function normalizeNavigation(
       mode === "seqEdit" && navigation.heldNotes?.length
         ? navigation.heldNotes
         : undefined,
+    stepRecord:
+      mode === "seqEdit" && navigation.stepRecord
+        ? {
+            ...navigation.stepRecord,
+            cursor: wrapIndex(navigation.stepRecord.cursor, 16),
+          }
+        : undefined,
     copySource:
       mode === "seqEdit" &&
       navigation.shiftPressed &&

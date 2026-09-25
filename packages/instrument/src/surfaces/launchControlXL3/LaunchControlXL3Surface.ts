@@ -1,4 +1,5 @@
 import {
+  type IStepSequencerProps,
   type IUpdateModule,
   MidiEvent,
   MidiEventType,
@@ -20,12 +21,15 @@ import {
   copyStep,
   countDefaultNoteSteps,
   duplicateBar,
+  moveStepRecordCursor,
   playNoteIntoSteps,
+  restStepRecord,
   stampChordOnStep,
   STEP_HOLD_MS,
   STEPS_PER_PAGE,
   toggleStepEntry,
   withStepDefaults,
+  writeStepRecordNote,
 } from "@/sequencer/stepEntry";
 import {
   getRelativeDelta,
@@ -264,6 +268,39 @@ function isStepButton(cc: number) {
   return cc >= STEP_BUTTON_CC_START && cc <= STEP_BUTTON_CC_END;
 }
 
+// Two edits made in a row on the same sequencer, sent as one update.
+function mergeSequencerUpdates(
+  ...updates: (IUpdateModule<ModuleType.StepSequencer> | undefined)[]
+): IUpdateModule<ModuleType.StepSequencer> | undefined {
+  const present = updates.filter((update) => update !== undefined);
+  const first = present[0];
+  if (!first) {
+    return undefined;
+  }
+
+  return {
+    ...first,
+    changes: {
+      props: present.reduce<Partial<IStepSequencerProps>>(
+        (merged, update) => ({ ...merged, ...update.changes.props }),
+        {},
+      ),
+    },
+  };
+}
+
+function stepRecordResult(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  update: IUpdateModule<ModuleType.StepSequencer> | undefined,
+): LaunchControlXL3Result {
+  return {
+    runtimePatch,
+    command: update
+      ? { type: "seqEdit.update", update }
+      : { type: "seqEdit.hold" },
+  };
+}
+
 function isEncoder(cc: number) {
   return cc >= ENCODER_CC_START && cc <= ENCODER_CC_END;
 }
@@ -276,7 +313,7 @@ function reduceStepEditEvent(
   ccValue: number,
   now: number,
 ): LaunchControlXL3Result | undefined {
-  const { heldSteps, shiftPressed, copySource, fill } =
+  const { heldSteps, shiftPressed, copySource, fill, stepRecord } =
     runtimePatch.runtime.navigation;
 
   if (isStepButton(cc)) {
@@ -304,6 +341,18 @@ function reduceStepEditEvent(
         ? {
             runtimePatch: pasted.runtimePatch,
             command: { type: "seqEdit.update", update: pasted.update },
+          }
+        : createNoopResult(runtimePatch);
+    }
+
+    // In step record a step button only moves the cursor.
+    if (stepRecord) {
+      return ccValue === 127
+        ? {
+            runtimePatch: updateInstrumentNavigation(runtimePatch, {
+              stepRecord: { cursor: stepIndex, written: false },
+            }),
+            command: { type: "seqEdit.hold" },
           }
         : createNoopResult(runtimePatch);
     }
@@ -445,14 +494,43 @@ function reduceNoteEvent(
   );
 
   if (event.type !== MidiEventType.noteOn || velocity === 0) {
-    return {
-      runtimePatch: updateInstrumentNavigation(runtimePatch, { heldNotes }),
-      command: { type: "none" },
-    };
+    const lifted = updateInstrumentNavigation(runtimePatch, { heldNotes });
+    // Releasing the last key ends the chord and advances the cursor.
+    const advance =
+      heldNotes.length === 0 && navigation.stepRecord?.written
+        ? moveStepRecordCursor(lifted, 1)
+        : null;
+
+    return advance
+      ? stepRecordResult(advance.runtimePatch, advance.update)
+      : { runtimePatch: lifted, command: { type: "none" } };
   }
 
   const played = { note: name, velocity };
-  const { heldSteps } = navigation;
+  const { heldSteps, stepRecord } = navigation;
+
+  if (stepRecord) {
+    // A key pressed while others are down joins the chord at the cursor.
+    const written = writeStepRecordNote(
+      runtimePatch,
+      played,
+      heldNotes.length > 0,
+    );
+
+    return stepRecordResult(
+      updateInstrumentNavigation(
+        withStepDefaults(written?.runtimePatch ?? runtimePatch, {
+          note: name,
+        }),
+        {
+          heldNotes: [...heldNotes, played],
+          stepRecord: { ...stepRecord, written: true },
+        },
+      ),
+      written?.update,
+    );
+  }
+
   const edit = playNoteIntoSteps(
     runtimePatch,
     heldSteps.map((held) => ({
@@ -546,6 +624,24 @@ export class LaunchControlXL3Surface {
       return createNoopResult(runtimePatch);
     }
 
+    // Record alone is the engine's WAV recording, so step record arms on
+    // the shifted press.
+    if (
+      currentNavigation.shiftPressed &&
+      event.cc === RECORD_CC &&
+      currentNavigation.mode === "seqEdit" &&
+      sequencerTrack
+    ) {
+      return {
+        runtimePatch: updateInstrumentNavigation(runtimePatch, {
+          stepRecord: currentNavigation.stepRecord
+            ? undefined
+            : { cursor: 0, written: false },
+        }),
+        command: { type: "seqEdit.hold" },
+      };
+    }
+
     if (currentNavigation.shiftPressed && event.cc === TRACK_NEXT_CC) {
       return {
         runtimePatch,
@@ -605,6 +701,34 @@ export class LaunchControlXL3Surface {
 
     if (currentNavigation.mode === "seqEdit" && sequencerTrack) {
       switch (event.cc) {
+        // In step record the track buttons walk the cursor: right leaves a
+        // rest and moves on, left goes back.
+        case TRACK_NEXT_CC: {
+          if (!currentNavigation.stepRecord) {
+            break;
+          }
+          const rested = restStepRecord(runtimePatch);
+          const moved = moveStepRecordCursor(
+            rested?.runtimePatch ?? runtimePatch,
+            1,
+          );
+
+          return stepRecordResult(
+            moved?.runtimePatch ?? rested?.runtimePatch ?? runtimePatch,
+            mergeSequencerUpdates(rested?.update, moved?.update),
+          );
+        }
+        case TRACK_PREV_CC: {
+          if (!currentNavigation.stepRecord) {
+            break;
+          }
+          const moved = moveStepRecordCursor(runtimePatch, -1);
+
+          return stepRecordResult(
+            moved?.runtimePatch ?? runtimePatch,
+            moved?.update,
+          );
+        }
         case PAGE_UP_CC:
           return {
             runtimePatch: navigateInstrument(runtimePatch, "nextPage"),

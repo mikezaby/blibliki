@@ -198,6 +198,26 @@ export function getStepDefaults(
   };
 }
 
+// Navigation fields that need no re-normalization: the active track and
+// mode are untouched, so the midi mapper stays as it is.
+function withNavigationFields(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  changes: Partial<
+    Pick<
+      CompiledInstrumentEnginePatch["runtime"]["navigation"],
+      "stepDefaults" | "sequencerPageIndex" | "stepRecord"
+    >
+  >,
+): CompiledInstrumentEnginePatch {
+  return {
+    ...runtimePatch,
+    runtime: {
+      ...runtimePatch.runtime,
+      navigation: { ...runtimePatch.runtime.navigation, ...changes },
+    },
+  };
+}
+
 export function withStepDefaults(
   runtimePatch: CompiledInstrumentEnginePatch,
   change: Partial<StepDefaults>,
@@ -207,24 +227,14 @@ export function withStepDefaults(
     return runtimePatch;
   }
 
-  const { navigation } = runtimePatch.runtime;
+  const { stepDefaults } = runtimePatch.runtime.navigation;
 
-  return {
-    ...runtimePatch,
-    runtime: {
-      ...runtimePatch.runtime,
-      navigation: {
-        ...navigation,
-        stepDefaults: {
-          ...navigation.stepDefaults,
-          [trackKey]: {
-            ...navigation.stepDefaults[trackKey],
-            ...change,
-          },
-        },
-      },
+  return withNavigationFields(runtimePatch, {
+    stepDefaults: {
+      ...stepDefaults,
+      [trackKey]: { ...stepDefaults[trackKey], ...change },
     },
-  };
+  });
 }
 
 function updateStepSequencerProps(
@@ -488,6 +498,79 @@ export function stampChordOnStep(
       (step) => withPlayedNotes(step, chord, defaults),
     ),
   });
+}
+
+// Step record: a note played with no other key down starts a new chord at
+// the cursor, replacing what the step had; a key pressed while others are
+// down joins it.
+export function writeStepRecordNote(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  played: HeldNote,
+  joinsChord: boolean,
+): StepEntryUpdate | null {
+  const { stepRecord } = runtimePatch.runtime.navigation;
+  if (!stepRecord) {
+    return null;
+  }
+
+  return playNoteIntoSteps(
+    runtimePatch,
+    [{ stepIndex: stepRecord.cursor, replace: !joinsChord }],
+    played,
+  );
+}
+
+// A rest turns the cursor step off and keeps its notes, as a tap does.
+export function restStepRecord(
+  runtimePatch: CompiledInstrumentEnginePatch,
+): StepEntryUpdate | null {
+  const stepSequencer = getStepSequencerProps(runtimePatch);
+  const { stepRecord, sequencerPageIndex } = runtimePatch.runtime.navigation;
+  if (!stepSequencer || !stepRecord) {
+    return null;
+  }
+
+  return updateStepSequencerProps(runtimePatch, stepSequencer.moduleId, {
+    patterns: updateSteps(
+      stepSequencer.props,
+      sequencerPageIndex,
+      [stepRecord.cursor],
+      (step) => ({ ...step, active: false }),
+    ),
+  });
+}
+
+// Moves the cursor by `delta` steps, wrapping around the bars of the loop.
+// A bar change is written as the sequencer's active page, as bar navigation
+// is, so the update is only present when the bar changed.
+export function moveStepRecordCursor(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  delta: number,
+): StepEntryUpdate | null {
+  const stepSequencer = getStepSequencerProps(runtimePatch);
+  const { stepRecord, sequencerPageIndex } = runtimePatch.runtime.navigation;
+  if (!stepSequencer || !stepRecord) {
+    return null;
+  }
+
+  const { moduleId, props } = stepSequencer;
+  const pageCount = props.patterns[props.activePatternNo]?.pages.length ?? 1;
+  const bars = Math.max(1, Math.min(props.loopLength, pageCount));
+  const total = bars * STEPS_PER_PAGE;
+  const position =
+    (((sequencerPageIndex * STEPS_PER_PAGE + stepRecord.cursor + delta) %
+      total) +
+      total) %
+    total;
+  const pageIndex = Math.floor(position / STEPS_PER_PAGE);
+  const moved = withNavigationFields(runtimePatch, {
+    sequencerPageIndex: pageIndex,
+    stepRecord: { cursor: position % STEPS_PER_PAGE, written: false },
+  });
+
+  return pageIndex === sequencerPageIndex
+    ? { runtimePatch: moved }
+    : updateStepSequencerProps(moved, moduleId, { activePageNo: pageIndex });
 }
 
 function createStepUpdater(
@@ -966,7 +1049,7 @@ export function getStepStates(
 
   const { page } = getActivePage(stepSequencer.props, runtimePatch);
   const heldSteps = new Set(getHeldStepIndices(runtimePatch));
-  const { copySource, fill } = runtimePatch.runtime.navigation;
+  const { copySource, fill, stepRecord } = runtimePatch.runtime.navigation;
   const preview = fill ? previewFill(runtimePatch, fill) : null;
   const onsets = fill
     ? euclideanOnsets(fill.pulses, STEPS_PER_PAGE, fill.rotate)
@@ -977,7 +1060,7 @@ export function getStepStates(
       return "source";
     }
 
-    if (heldSteps.has(stepIndex)) {
+    if (heldSteps.has(stepIndex) || stepIndex === stepRecord?.cursor) {
       return "held";
     }
 

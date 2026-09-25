@@ -51,6 +51,12 @@ const GESTURES: Record<
   holdAnother: { gesture: "Hold another [Step]", oled: "Hold+ Step" },
   releaseHeld: { gesture: "Let go of [Step]", oled: "Rel. Done" },
   octave: { gesture: "[Shift] + turn [Bottom row]", oled: "S+R3 Octave" },
+  enterStepRecord: { gesture: "[Shift] + [Record]", oled: "S+Rec StepRc" },
+  leaveStepRecord: { gesture: "[Shift] + [Record]", oled: "S+Rec Leave" },
+  recordNote: { gesture: "Play [Keys]", oled: "Keys Write" },
+  recordRest: { gesture: "[Track ▶]", oled: "Tr> Rest" },
+  recordBack: { gesture: "[Track ◀]", oled: "Tr< Back" },
+  recordCursor: { gesture: "Tap [Step]", oled: "Step Cursor" },
   showCheatsheet: {
     gesture: "Hold [Shift], or [?] on screen",
     oled: "Shift Help",

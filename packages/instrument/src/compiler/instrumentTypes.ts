@@ -63,6 +63,14 @@ export type HeldNote = {
   velocity: number;
 };
 
+// Step record is armed: `cursor` is the step on the current bar the next
+// note writes to, and `written` says a chord is there since the cursor last
+// moved, so releasing every key advances.
+export type StepRecordState = {
+  cursor: number;
+  written: boolean;
+};
+
 export type StepDefaults = {
   note: string;
   velocity: number;
@@ -81,6 +89,7 @@ export type InstrumentNavigationState = {
   // Keys down on the active track's channel, in press order; a step tapped
   // while they are down gets them as its chord.
   heldNotes?: HeldNote[];
+  stepRecord?: StepRecordState;
   // The step tapped first while Shift is held; later taps paste it.
   copySource?: number;
   // A euclidean fill being previewed while Shift is held; written on release.

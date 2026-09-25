@@ -32,6 +32,12 @@ describe("createLaunchControlXL3Hints", () => {
       createLaunchControlXL3Hints(
         createPatch({ mode: "seqEdit", heldSteps: held }),
       ),
+      createLaunchControlXL3Hints(
+        createPatch({
+          mode: "seqEdit",
+          stepRecord: { cursor: 0, written: false },
+        }),
+      ),
     ].flat();
 
     for (const hint of everyHint) {
@@ -89,6 +95,7 @@ describe("createLaunchControlXL3Hints", () => {
       "Copy and fill: fillBar",
       "Bars: growLoop",
       "Bars: duplicateBar",
+      "Mode: enterStepRecord",
       "Mode: leaveStepEdit",
       "Save: saveDraft",
       "Save: discardDraft",
@@ -120,5 +127,27 @@ describe("createLaunchControlXL3Hints", () => {
       "Held steps: releaseHeld",
       "Help: showCheatsheet",
     ]);
+  });
+
+  it("in step record lists how the cursor moves and how to leave", () => {
+    const hints = createLaunchControlXL3Hints(
+      createPatch({
+        mode: "seqEdit",
+        stepRecord: { cursor: 3, written: false },
+      }),
+    );
+
+    expect(outline(hints)).toEqual([
+      "Step record: recordNote",
+      "Step record: recordRest",
+      "Step record: recordBack",
+      "Step record: recordCursor",
+      "Mode: leaveStepRecord",
+      "Help: showCheatsheet",
+    ]);
+    expect(hints[4]).toMatchObject({
+      gesture: "[Shift] + [Record]",
+      text: "Leave step record",
+    });
   });
 });

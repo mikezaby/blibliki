@@ -114,6 +114,7 @@ export function createLaunchControlXL3SequencerDisplayState(
       transportState: TransportState.stopped,
       mode: "seqEdit",
       heldSteps,
+      stepRecordCursor: runtimePatch.runtime.navigation.stepRecord?.cursor,
     },
     globalBand: {
       slots: [
