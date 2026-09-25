@@ -614,6 +614,93 @@ describe("InstrumentPerformance", () => {
     ]);
   });
 
+  it("plays the active track from on-screen keys and the computer keyboard, on its channel", async () => {
+    const sendMidi = vi.fn();
+    const playableRuntimePatch = {
+      ...runtimePatch,
+      runtime: { ...runtimePatch.runtime, noteInputId: "note-input" },
+      compiledInstrument: {
+        tracks: [
+          {
+            key: "track-1",
+            midiChannel: 3,
+            noteSource: "externalMidi",
+            noteSchema: { kind: "free" },
+            audioSource: { type: "internal" },
+          },
+        ],
+      },
+    };
+    loadEngineMock.mockResolvedValue({
+      ...engine,
+      findModule: (id: string) => {
+        expect(id).toBe("note-input");
+        return { moduleType: "MidiInput", sendMidi };
+      },
+    });
+    createInstrumentControllerSessionMock.mockImplementation(() => ({
+      getDisplayState: () => displayState,
+      getRuntimePatch: () => playableRuntimePatch,
+      sendControlEvent: sendControlEventMock,
+      setRecordingSettings: setRecordingSettingsMock,
+      dispose: vi.fn(),
+    }));
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    const keys = await screen.findByRole("group", { name: "Keys" });
+    const sent = () =>
+      sendMidi.mock.calls.map((call) => {
+        const [event] = call as [
+          { note?: { fullName: string }; type: string; channel?: number },
+        ];
+        return [event.note?.fullName, event.type, event.channel];
+      });
+
+    fireEvent.pointerDown(within(keys).getByRole("button", { name: "E3" }));
+    fireEvent.pointerUp(within(keys).getByRole("button", { name: "E3" }));
+
+    expect(sent()).toEqual([
+      ["E3", "noteon", 2],
+      ["E3", "noteoff", 2],
+    ]);
+
+    // The home row is the engine's keyboard mapping; typing is left alone.
+    sendMidi.mockClear();
+    fireEvent.keyDown(window, { key: "a" });
+    fireEvent.keyDown(window, { key: "a", repeat: true });
+    fireEvent.keyUp(window, { key: "a" });
+
+    expect(sent()).toEqual([
+      ["C3", "noteon", 2],
+      ["C3", "noteoff", 2],
+    ]);
+
+    cleanup();
+    sendMidi.mockClear();
+    playableRuntimePatch.compiledInstrument.tracks[0]!.noteSchema = {
+      kind: "mapped",
+      notes: [{ key: "kick", note: "C1", label: "Kick" }],
+    } as never;
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    const pads = await screen.findByRole("group", { name: "Keys" });
+    fireEvent.pointerDown(within(pads).getByRole("button", { name: "Kick" }));
+
+    expect(sent()).toEqual([["C1", "noteon", 2]]);
+  });
+
   it("keeps the console's own controls apart from the general buttons", async () => {
     render(
       <InstrumentPerformance

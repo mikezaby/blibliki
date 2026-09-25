@@ -31,6 +31,7 @@ import {
 } from "@/InstrumentSession";
 import type { InstrumentPersistenceAction } from "@/InstrumentSessionPersistence";
 import { createInstrumentEnginePatch } from "@/compiler/createInstrumentEnginePatch";
+import { isAudioBusTrack } from "@/compiler/instrumentRuntimeState";
 import type {
   BandSection,
   InstrumentDisplayState,
@@ -40,6 +41,7 @@ import { createSavedInstrumentDocument } from "@/document/SavedInstrumentDocumen
 import type { InstrumentDocument } from "@/document/types";
 import ConsoleSettings from "./ConsoleSettings";
 import EncoderGlyph from "./EncoderGlyph";
+import NoteKeys from "./NoteKeys";
 import {
   getCellCc,
   getCellKey,
@@ -856,6 +858,13 @@ export default function InstrumentPerformance({
   const isSequencerEdit = displayState?.header.mode === "seqEdit";
   const isSequencerTrack = activeTrack?.noteSource === "stepSequencer";
   const liveRecord = displayState?.header.liveRecord;
+  // The on-screen keys play a track that makes sound, through the note
+  // input, so the session hears them as it would a keyboard.
+  const noteInputId = runtimePatch?.runtime.noteInputId;
+  const playableTrack =
+    activeTrack && noteInputId && !isAudioBusTrack(activeTrack.audioSource)
+      ? activeTrack
+      : undefined;
   const cheatsheetHints = displayState?.hints ?? [];
   // Erasing holds Shift, and the display is what the performer is watching.
   const showCheatsheet =
@@ -891,6 +900,27 @@ export default function InstrumentPerformance({
     sendControlChange(SHIFT_CC, BUTTON_PRESS_VALUE);
     sendControlChange(PAGE_NEXT_CC, BUTTON_PRESS_VALUE);
     sendControlChange(SHIFT_CC, BUTTON_RELEASE_VALUE);
+  };
+
+  const playNote = (note: string, on: boolean) => {
+    const { engine } = state;
+    if (!engine || !noteInputId || !playableTrack) {
+      return;
+    }
+
+    const noteInput = engine.findModule(noteInputId);
+    if (noteInput.moduleType !== ModuleType.MidiInput) {
+      return;
+    }
+
+    noteInput.sendMidi(
+      MidiEvent.fromNote(
+        note,
+        on,
+        engine.context.currentTime,
+        playableTrack.midiChannel - 1,
+      ),
+    );
   };
 
   // Real-time record is Shift + Play on the hardware.
@@ -1228,6 +1258,12 @@ export default function InstrumentPerformance({
                         slots={displayState.lowerBand.slots}
                         onEncoderTick={sendEncoderTick}
                       />
+                      {playableTrack ? (
+                        <NoteKeys
+                          schema={playableTrack.noteSchema}
+                          onNote={playNote}
+                        />
+                      ) : null}
                     </div>
                   ) : null}
                 </div>
