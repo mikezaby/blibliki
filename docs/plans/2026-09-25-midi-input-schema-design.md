@@ -80,8 +80,10 @@ There is no generic resolver that follows routes through pass-through
 modules. Each consumer already knows what it is driving:
 
 - **Instruments**: the step sequencer reaches the source through the track's
-  VoiceScheduler, but the track knows its source block. Step entry reads the
-  schema of the source module's `"midi in"`.
+  VoiceScheduler, but the track knows its source block. Step entry works on
+  the compiled patch without an engine, so the source block's `"midi in"`
+  carries the module's exported schema (`drumMachineMidiSchema`) and the
+  compiler copies it onto the track as `noteSchema`.
 - **Grid**: the sequencer's `"midi"` output route names the destination
   input. The editor reads that input's schema.
 

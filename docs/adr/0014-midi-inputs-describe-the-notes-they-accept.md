@@ -25,8 +25,10 @@ drift apart. A mapped schema describes the notes, it does not filter them.
 
 Consumers read the schema of the input they already know they drive. The
 grid follows the sequencer's route to its destination input. An instrument
-asks its track's source module, since the track's Voice Scheduler sits
-between the sequencer and the source.
+reads its track's source block, since the track's Voice Scheduler sits
+between the sequencer and the source. Step entry works on the compiled patch
+without an engine, so the source block's `"midi in"` points at the module's
+exported schema and the compiler copies it onto the track as `noteSchema`.
 
 ## Alternatives rejected
 

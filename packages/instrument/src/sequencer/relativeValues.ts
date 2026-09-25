@@ -1,4 +1,4 @@
-import { Note } from "@blibliki/engine";
+import { type MidiNoteMapping, Note } from "@blibliki/engine";
 
 export const PITCH_MIN_MIDI = 24;
 export const PITCH_MAX_MIDI = 96;
@@ -92,4 +92,33 @@ export function mapRelativePitch(
   return midiNumberToNoteName(
     clampRelativeValue(nextMidi, PITCH_MIN_MIDI, PITCH_MAX_MIDI),
   );
+}
+
+// mapRelativePitch for a mapped input: it steps through the named notes in
+// order. A note outside the map sits before the first one.
+export function mapRelativeMappedNote(
+  currentNote: string | null | undefined,
+  delta: number,
+  newNote: string,
+  notes: readonly MidiNoteMapping[],
+) {
+  if (delta === 0) {
+    return currentNote ?? null;
+  }
+
+  if (!currentNote && delta < 0) {
+    return null;
+  }
+
+  const names = notes.map(({ note }) => note);
+  const baseIndex = currentNote
+    ? names.indexOf(currentNote)
+    : Math.max(names.indexOf(newNote), 0) - 1;
+  const nextIndex = baseIndex + delta;
+
+  if (nextIndex < 0) {
+    return null;
+  }
+
+  return names[Math.min(nextIndex, names.length - 1)] ?? null;
 }

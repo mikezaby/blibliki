@@ -4,6 +4,7 @@ import {
   type IStep,
   type IStepSequencerProps,
   type IUpdateModule,
+  type MidiInputSchema,
   ModuleType,
   PlaybackMode,
   Resolution,
@@ -17,6 +18,7 @@ import type {
 import {
   mapRelativeBoolean,
   mapRelativeEnum,
+  mapRelativeMappedNote,
   mapRelativeNumber,
   mapRelativePitch,
   mapRelativeVelocity,
@@ -67,6 +69,41 @@ export function getActiveTrackKey(runtimePatch: CompiledInstrumentEnginePatch) {
   return runtimePatch.compiledInstrument.tracks[
     runtimePatch.runtime.navigation.activeTrackIndex
   ]?.key;
+}
+
+export function getActiveNoteSchema(
+  runtimePatch: CompiledInstrumentEnginePatch,
+): MidiInputSchema {
+  return (
+    runtimePatch.compiledInstrument.tracks[
+      runtimePatch.runtime.navigation.activeTrackIndex
+    ]?.noteSchema ?? { kind: "free" }
+  );
+}
+
+// A mapped source names its notes ("Kick"); any other note shows as itself.
+export function describeStepNote(
+  runtimePatch: CompiledInstrumentEnginePatch,
+  note: string,
+) {
+  const schema = getActiveNoteSchema(runtimePatch);
+  const mapping =
+    schema.kind === "mapped"
+      ? schema.notes.find((candidate) => candidate.note === note)
+      : undefined;
+
+  return mapping?.label ?? note;
+}
+
+function mapStepPitch(
+  schema: MidiInputSchema,
+  currentNote: string | null | undefined,
+  delta: number,
+  newNote: string,
+) {
+  return schema.kind === "mapped"
+    ? mapRelativeMappedNote(currentNote, delta, newNote, schema.notes)
+    : mapRelativePitch(currentNote, delta, newNote);
 }
 
 export function getActiveStepSequencerId(
@@ -142,9 +179,14 @@ export function getStepDefaults(
   const seed = findSeedStep(props);
   const seedNote = seed?.notes[0];
   const trackKey = getActiveTrackKey(runtimePatch);
+  const schema = getActiveNoteSchema(runtimePatch);
+  const defaultNote =
+    schema.kind === "mapped"
+      ? (schema.notes[0]?.note ?? DEFAULT_STEP_NOTE)
+      : DEFAULT_STEP_NOTE;
 
   return {
-    note: seedNote?.note ?? DEFAULT_STEP_NOTE,
+    note: seedNote?.note ?? defaultNote,
     velocity: seedNote?.velocity ?? DEFAULT_STEP_VELOCITY,
     duration: seed?.duration ?? DEFAULT_STEP_DURATION,
     probability: seed?.probability ?? 100,
@@ -361,6 +403,7 @@ function createStepUpdater(
   control: StepEntryControl,
   delta: number,
   defaults: StepDefaults,
+  schema: MidiInputSchema,
 ): (step: IStep) => IStep {
   switch (control.kind) {
     case "velocity":
@@ -382,7 +425,8 @@ function createStepUpdater(
           step,
           control.slot,
           {
-            note: mapRelativePitch(
+            note: mapStepPitch(
+              schema,
               step.notes[control.slot]?.note,
               delta,
               defaults.note,
@@ -429,6 +473,7 @@ function changeDefaults(
   control: StepEntryControl,
   delta: number,
   defaults: StepDefaults,
+  schema: MidiInputSchema,
 ): Partial<StepDefaults> | null {
   switch (control.kind) {
     case "probability":
@@ -452,7 +497,7 @@ function changeDefaults(
       if (control.slot !== 0) {
         return null;
       }
-      const note = mapRelativePitch(defaults.note, delta, defaults.note);
+      const note = mapStepPitch(schema, defaults.note, delta, defaults.note);
 
       return note ? { note } : null;
     }
@@ -528,9 +573,10 @@ export function applyStepEntryControl(
   }
 
   const defaults = getStepDefaults(runtimePatch, props);
+  const schema = getActiveNoteSchema(runtimePatch);
   const heldSteps = getHeldStepIndices(runtimePatch);
   if (heldSteps.length === 0) {
-    const change = changeDefaults(control, delta, defaults);
+    const change = changeDefaults(control, delta, defaults, schema);
 
     return change
       ? { runtimePatch: withStepDefaults(runtimePatch, change) }
@@ -542,7 +588,7 @@ export function applyStepEntryControl(
     props,
     pageIndex,
     heldSteps,
-    createStepUpdater(control, delta, defaults),
+    createStepUpdater(control, delta, defaults, schema),
   );
   const edit = updateStepSequencerProps(runtimePatch, moduleId, { patterns });
   const firstHeld =
