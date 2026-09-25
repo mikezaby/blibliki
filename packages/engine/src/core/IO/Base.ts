@@ -1,5 +1,6 @@
 import { deterministicId } from "@blibliki/utils";
 import { ModuleType } from "@/modules";
+import { MidiInputSchema } from "../midiSchema";
 import { Module } from "../module";
 import { PolyModule } from "../module/PolyModule";
 import { AudioInput, AudioOutput } from "./AudioIO";
@@ -14,6 +15,7 @@ export type IOProps = {
 export type IIOSerialize = IOProps & {
   id: string;
   moduleId: string;
+  schema?: MidiInputSchema;
 };
 
 export enum IOType {

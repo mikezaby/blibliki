@@ -1,14 +1,16 @@
 import { ModuleType } from "@/modules";
 import MidiEvent from "../midi/MidiEvent";
+import { FREE_MIDI_INPUT_SCHEMA, MidiInputSchema } from "../midiSchema";
 import { Module } from "../module";
 import { PolyModule } from "../module/PolyModule";
-import IO, { IOProps, IOType } from "./Base";
+import IO, { IIOSerialize, IOProps, IOType } from "./Base";
 
 export type MidiIO = MidiInput | MidiOutput;
 
 export type MidiInputProps = IOProps & {
   ioType: IOType.MidiInput;
   onMidiEvent: (event: MidiEvent) => void;
+  schema?: MidiInputSchema;
 };
 
 export type MidiOutputProps = IOProps & {
@@ -18,6 +20,7 @@ export type MidiOutputProps = IOProps & {
 export class MidiInput extends IO<MidiOutput> implements MidiInputProps {
   declare ioType: IOType.MidiInput;
   onMidiEvent: MidiInputProps["onMidiEvent"];
+  schema: MidiInputSchema;
 
   constructor(
     module: Module<ModuleType> | PolyModule<ModuleType>,
@@ -25,6 +28,11 @@ export class MidiInput extends IO<MidiOutput> implements MidiInputProps {
   ) {
     super(module, props);
     this.onMidiEvent = props.onMidiEvent;
+    this.schema = props.schema ?? FREE_MIDI_INPUT_SCHEMA;
+  }
+
+  serialize(): IIOSerialize {
+    return { ...super.serialize(), schema: this.schema };
   }
 }
 

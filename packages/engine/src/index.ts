@@ -25,6 +25,8 @@ export type {
   BooleanProp,
   ArrayProp,
   INote,
+  MidiInputSchema,
+  MidiNoteMapping,
   SetterHooks,
   StateSetterHooks,
   ControllerMatcherDefinition,

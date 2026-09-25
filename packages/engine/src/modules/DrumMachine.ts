@@ -5,7 +5,7 @@ import {
   GainNode,
   OscillatorNode,
 } from "@blibliki/utils/web-audio-api";
-import { IModule, Module, SetterHooks } from "@/core";
+import { IModule, MidiInputSchema, Module, SetterHooks } from "@/core";
 import Note from "@/core/Note";
 import { ModulePropSchema } from "@/core/schema";
 import { ICreateModule, ModuleType } from ".";
@@ -47,16 +47,26 @@ const OUTPUT_NAMES: Record<DrumVoice, string> = {
   closedHat: "closed hat out",
 };
 
-const NOTE_TO_VOICE: Record<number, DrumVoice> = {
-  36: "kick",
-  38: "snare",
-  39: "clap",
-  42: "closedHat",
-  45: "tom",
-  46: "openHat",
-  49: "cymbal",
-  56: "cowbell",
-};
+const drumMachineMidiSchema = {
+  kind: "mapped",
+  notes: [
+    { key: "kick", note: "C1", label: "Kick" },
+    { key: "snare", note: "D1", label: "Snare" },
+    { key: "clap", note: "D#1", label: "Clap" },
+    { key: "closedHat", note: "F#1", label: "Closed Hat" },
+    { key: "tom", note: "A1", label: "Tom" },
+    { key: "openHat", note: "A#1", label: "Open Hat" },
+    { key: "cymbal", note: "C#2", label: "Cymbal" },
+    { key: "cowbell", note: "G#2", label: "Cowbell" },
+  ],
+} as const satisfies MidiInputSchema;
+
+const VOICE_BY_MIDI_NUMBER: Record<number, DrumVoice> = Object.fromEntries(
+  drumMachineMidiSchema.notes.map(({ key, note }) => [
+    new Note(note).midiNumber,
+    key,
+  ]),
+);
 
 const VOICE_PROP_KEYS = {
   kick: { level: "kickLevel", decay: "kickDecay", tone: "kickTone" },
@@ -323,7 +333,7 @@ export default class DrumMachine
   triggerAttack(note: Note, triggeredAt: ContextTime): void {
     super.triggerAttack(note, triggeredAt);
 
-    const voice = NOTE_TO_VOICE[note.midiNumber];
+    const voice = VOICE_BY_MIDI_NUMBER[note.midiNumber];
     if (!voice) return;
 
     this.playVoice(voice, note.velocity, triggeredAt);
@@ -352,6 +362,7 @@ export default class DrumMachine
   private registerIOs() {
     this.registerMidiInput({
       name: "midi in",
+      schema: drumMachineMidiSchema,
       onMidiEvent: this.onMidiEvent,
     });
 

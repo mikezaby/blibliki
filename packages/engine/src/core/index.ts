@@ -59,5 +59,7 @@ export type {
   ArrayProp,
 } from "./schema";
 
+export type { MidiInputSchema, MidiNoteMapping } from "./midiSchema";
+
 export { default as Note } from "./Note";
 export type { INote } from "./Note";
