@@ -718,6 +718,15 @@ export default function InstrumentPerformance({
     };
   }, []);
   const documentRef = useRef(instrumentDocument);
+  // The host passes these inline, so any of its renders (the signed-in user
+  // resolving, for one) hands over a new function. Rebuilding the engine for
+  // that also cycles the hardware out of and back into DAW mode.
+  const onPersistRef = useRef(onPersist);
+  const nameRef = useRef(name);
+  useEffect(() => {
+    onPersistRef.current = onPersist;
+    nameRef.current = name;
+  }, [onPersist, name]);
   const stageRef = useRef<HTMLDivElement>(null);
   const faceplateRef = useRef<HTMLDivElement>(null);
   const fit = useFitToScreen(stageRef, faceplateRef);
@@ -765,7 +774,10 @@ export default function InstrumentPerformance({
               );
               documentRef.current = savedDocument;
 
-              const result = await onPersist?.(action, savedDocument);
+              const result = await onPersistRef.current?.(
+                action,
+                savedDocument,
+              );
               if (!result?.document) {
                 return result?.notice;
               }
@@ -791,7 +803,7 @@ export default function InstrumentPerformance({
           const recorder = engine.findModule(engine.sessionRecorderId);
           if (recorder.moduleType === ModuleType.AudioRecorder) {
             recorder.onRecordingComplete = (blob) => {
-              downloadWav(blob, name);
+              downloadWav(blob, nameRef.current);
             };
           }
         }
@@ -829,7 +841,7 @@ export default function InstrumentPerformance({
       engineInstance?.dispose();
       void engineInstance?.context.close();
     };
-  }, [sessionSource, name, onPersist]);
+  }, [sessionSource]);
 
   const displayState = state.displayState;
   // Source outputs to meter, derived from the live runtime patch so the track
