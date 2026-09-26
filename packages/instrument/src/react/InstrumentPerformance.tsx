@@ -235,6 +235,14 @@ const METER_W = 240;
 const METER_BAR_H = 9;
 const METER_BAR_GAP = 6;
 const METER_H = METER_BAR_H * 2 + METER_BAR_GAP;
+// A readout is at most 8 monospace glyphs (0.6em each) plus 0.12em of
+// tracking per glyph, 5.76em. A fixed 6em box, right aligned, keeps its edge
+// still as the value changes. Inline, so no host's CSS build can drop it.
+const METER_VALUE_STYLE = {
+  display: "inline-block",
+  width: "6em",
+  textAlign: "right",
+} as const;
 
 function levelToDb(level: number) {
   return level > 0 ? 20 * Math.log10(level) : -Infinity;
@@ -387,20 +395,19 @@ function PerformanceMeter({
         <span className="font-mono text-xs uppercase tracking-[0.24em] text-zinc-500">
           {label}
         </span>
-        {/* The longest reading is 8 glyphs, and the tracking adds 0.12em to
-            each, so a box of 10 monospace glyphs holds every value without
-            its edge moving. */}
         <span className="font-mono text-xs uppercase tracking-[0.12em]">
           <span
             ref={maxRef}
-            className="inline-block w-[10ch] text-right text-zinc-500"
+            className="text-zinc-500"
+            style={METER_VALUE_STYLE}
             title="Peak since the track was selected"
           >
             -∞ dB
           </span>
           <span
             ref={readoutRef}
-            className="ml-5 inline-block w-[10ch] text-right text-zinc-300"
+            className="text-zinc-300"
+            style={{ ...METER_VALUE_STYLE, marginLeft: "1.25rem" }}
           >
             -∞ dB
           </span>
