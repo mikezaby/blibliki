@@ -290,11 +290,11 @@ function drawMeter(
       ctx.fillStyle = "#fafafa";
       ctx.fillRect(Math.min(peakX, METER_W - 2), y, 2, METER_BAR_H);
     }
-  });
 
-  // The 0 dB mark, across both bars and the gap between them.
-  ctx.fillStyle = "#d4d4d8";
-  ctx.fillRect(Math.round(red * METER_W), 0, 1, METER_H);
+    // The 0 dB mark, on the bar only.
+    ctx.fillStyle = "#d4d4d8";
+    ctx.fillRect(Math.round(red * METER_W), y, 1, METER_BAR_H);
+  });
 }
 
 function PerformanceMeter({
