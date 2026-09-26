@@ -485,6 +485,7 @@ describe("InstrumentPerformance", () => {
     await waitFor(() => {
       expect(setRecordingSettingsMock).toHaveBeenCalledWith({
         metronome: true,
+        metronomeOnlyWhileRecording: false,
         precount: false,
         quantize: "1/16",
         mode: "oneShot",

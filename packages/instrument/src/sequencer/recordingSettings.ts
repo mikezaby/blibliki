@@ -4,6 +4,8 @@ import { Resolution } from "@blibliki/engine";
 // hardware keeps these global to the device too.
 export type MidiRecordingSettings = {
   metronome: boolean;
+  // The click plays only while a live recording runs.
+  metronomeOnlyWhileRecording: boolean;
   // One bar of clicks before the transport starts.
   precount: boolean;
   // Notes snap to this grid, or keep their timing as microtime when off. A
@@ -17,6 +19,7 @@ export type MidiRecordingSettings = {
 
 export const DEFAULT_MIDI_RECORDING_SETTINGS: MidiRecordingSettings = {
   metronome: false,
+  metronomeOnlyWhileRecording: false,
   precount: false,
   quantize: Resolution.sixteenth,
   mode: "loop",
@@ -36,11 +39,13 @@ export function normalizeMidiRecordingSettings(
       ? (value as Partial<Record<keyof MidiRecordingSettings, unknown>>)
       : {};
   const defaults = DEFAULT_MIDI_RECORDING_SETTINGS;
-  const bool = (key: "metronome" | "precount" | "overdub") =>
-    typeof candidate[key] === "boolean" ? candidate[key] : defaults[key];
+  const bool = (
+    key: "metronome" | "metronomeOnlyWhileRecording" | "precount" | "overdub",
+  ) => (typeof candidate[key] === "boolean" ? candidate[key] : defaults[key]);
 
   return {
     metronome: bool("metronome"),
+    metronomeOnlyWhileRecording: bool("metronomeOnlyWhileRecording"),
     precount: bool("precount"),
     overdub: bool("overdub"),
     quantize: QUANTIZE_OPTIONS.includes(

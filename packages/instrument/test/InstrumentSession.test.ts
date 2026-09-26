@@ -703,6 +703,71 @@ describe("InstrumentSession", () => {
     expect(stopped).toBe(true);
   });
 
+  it("clicks only while a live recording runs when asked to", () => {
+    const runtimePatch = createInstrumentEnginePatch(
+      createSequencedInstrumentDocument(),
+    );
+    const { metronomeId } = runtimePatch.runtime;
+    const modules = new Map<string, unknown>(
+      runtimePatch.patch.modules.map((module) => [module.id, module]),
+    );
+    const metronomeStates: boolean[] = [];
+    let transportState = TransportState.stopped;
+
+    const session = new InstrumentSession(
+      {
+        findMidiInputDeviceByFuzzyName: () => null,
+        findModule: (id) => {
+          const module = modules.get(id);
+          if (!module) {
+            throw new Error(`Module ${id} not found`);
+          }
+
+          return module;
+        },
+        findIO: () => ({ name: "midi out", listen: () => () => undefined }),
+        get state() {
+          return transportState;
+        },
+        start: () => {
+          transportState = TransportState.playing;
+        },
+        stop: () => undefined,
+        updateModule: (params) => {
+          if (params.id === metronomeId) {
+            metronomeStates.push(
+              (params.changes.props as unknown as { enabled: boolean }).enabled,
+            );
+          }
+          return params;
+        },
+      },
+      runtimePatch,
+    );
+
+    session.setRecordingSettings({
+      metronome: true,
+      metronomeOnlyWhileRecording: true,
+      precount: false,
+      quantize: Resolution.sixteenth,
+      mode: "loop",
+      overdub: true,
+    });
+    expect(metronomeStates).toEqual([false]);
+
+    // Shift + Play arms and starts the transport; the click comes with it.
+    session.sendControlEvent(MidiEvent.fromCC(63, 127, 0));
+    session.sendControlEvent(MidiEvent.fromCC(116, 127, 0));
+    session.sendControlEvent(MidiEvent.fromCC(63, 0, 0));
+    expect(metronomeStates).toEqual([false, true]);
+
+    // Shift + Play again disarms; the click goes with it.
+    session.sendControlEvent(MidiEvent.fromCC(63, 127, 0));
+    session.sendControlEvent(MidiEvent.fromCC(116, 127, 0));
+    session.sendControlEvent(MidiEvent.fromCC(63, 0, 0));
+    expect(metronomeStates).toEqual([false, true, false]);
+  });
+
   it("records a played phrase into the pattern, one pass with a count-in", () => {
     const runtimePatch = createInstrumentEnginePatch(
       createSequencedInstrumentDocument(),
@@ -781,6 +846,7 @@ describe("InstrumentSession", () => {
 
     session.setRecordingSettings({
       metronome: true,
+      metronomeOnlyWhileRecording: false,
       precount: true,
       quantize: Resolution.sixteenth,
       mode: "oneShot",

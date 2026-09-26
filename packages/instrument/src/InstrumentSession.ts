@@ -314,10 +314,23 @@ export class InstrumentSession implements InstrumentControllerSession {
 
   setRecordingSettings(settings: MidiRecordingSettings) {
     this.recordingSettings = settings;
+    this.applyMetronome();
+  }
+
+  // The click follows the metronome setting, or only a running live record
+  // when the performer asked for that.
+  private applyMetronome() {
+    const { metronome, metronomeOnlyWhileRecording } = this.recordingSettings;
     this.engine.updateModule({
       id: this.currentRuntimePatch.runtime.metronomeId,
       moduleType: ModuleType.Metronome,
-      changes: { props: { enabled: settings.metronome } },
+      changes: {
+        props: {
+          enabled:
+            metronome &&
+            (!metronomeOnlyWhileRecording || this.liveRun !== undefined),
+        },
+      },
     });
   }
 
@@ -367,11 +380,15 @@ export class InstrumentSession implements InstrumentControllerSession {
   private setLiveRecord(enabled: boolean) {
     const { navigation } = this.currentRuntimePatch.runtime;
     if (!enabled) {
+      const wasRecording = this.liveRun !== undefined;
       this.liveRun = undefined;
       if (navigation.liveRecord) {
         this.currentRuntimePatch = withNavigation(this.currentRuntimePatch, {
           liveRecord: undefined,
         });
+      }
+      if (wasRecording && this.recordingSettings.metronomeOnlyWhileRecording) {
+        this.applyMetronome();
       }
       return;
     }
@@ -391,6 +408,9 @@ export class InstrumentSession implements InstrumentControllerSession {
       writtenSteps: new Set(),
       pendingNotes: new Map(),
     };
+    if (this.recordingSettings.metronomeOnlyWhileRecording) {
+      this.applyMetronome();
+    }
 
     if (!playing) {
       const startAt = this.recordingSettings.precount

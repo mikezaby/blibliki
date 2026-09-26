@@ -109,6 +109,20 @@ export default function ConsoleSettings({
               }
             />
             <SettingRow
+              label="Only while recording"
+              hint="The click plays only while a live recording runs."
+              controlId={`${id}-metronome-recording`}
+              control={
+                <Switch
+                  id={`${id}-metronome-recording`}
+                  checked={settings.metronomeOnlyWhileRecording}
+                  onCheckedChange={(metronomeOnlyWhileRecording) => {
+                    change({ metronomeOnlyWhileRecording });
+                  }}
+                />
+              }
+            />
+            <SettingRow
               label="Pre-count"
               hint="One bar of clicks before a recording starts the transport."
               controlId={`${id}-precount`}
