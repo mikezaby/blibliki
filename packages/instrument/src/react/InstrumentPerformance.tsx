@@ -387,17 +387,20 @@ function PerformanceMeter({
         <span className="font-mono text-xs uppercase tracking-[0.24em] text-zinc-500">
           {label}
         </span>
+        {/* The longest reading is 8 glyphs, and the tracking adds 0.12em to
+            each, so a box of 10 monospace glyphs holds every value without
+            its edge moving. */}
         <span className="font-mono text-xs uppercase tracking-[0.12em]">
           <span
             ref={maxRef}
-            className="inline-block w-[8ch] text-right text-zinc-500"
+            className="inline-block w-[10ch] text-right text-zinc-500"
             title="Peak since the track was selected"
           >
             -∞ dB
           </span>
           <span
             ref={readoutRef}
-            className="ml-5 inline-block w-[8ch] text-right text-zinc-300"
+            className="ml-5 inline-block w-[10ch] text-right text-zinc-300"
           >
             -∞ dB
           </span>
