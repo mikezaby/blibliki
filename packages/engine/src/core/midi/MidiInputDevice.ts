@@ -15,7 +15,10 @@ export type EventListerCallback = (event: MidiEvent) => void;
 
 export default class MidiInputDevice extends BaseMidiDevice<IMidiInputPort> {
   eventListerCallbacks: EventListerCallback[] = [];
-  eventDataMutator?: (event: number[] | Uint8Array) => number[] | Uint8Array;
+  // Returning null drops the message.
+  eventDataMutator?: (
+    event: number[] | Uint8Array,
+  ) => number[] | Uint8Array | null;
 
   private context: Readonly<Context>;
   private messageHandler: ((event: IMidiMessageEvent) => void) | null = null;
@@ -53,6 +56,7 @@ export default class MidiInputDevice extends BaseMidiDevice<IMidiInputPort> {
     const mutatedData = this.eventDataMutator
       ? this.eventDataMutator(event.data)
       : event.data;
+    if (!mutatedData) return;
     const message = new Message(
       mutatedData instanceof Uint8Array
         ? mutatedData

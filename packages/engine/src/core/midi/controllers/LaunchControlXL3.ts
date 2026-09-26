@@ -98,6 +98,7 @@ const CHANNEL_BUTTON_PLAYHEAD_COLOR = 16;
 const CHANNEL_BUTTON_SELECTED_COLOR = 9;
 const RELATIVE_MODE_ENABLED = 127;
 const RELATIVE_MODE_DISABLED = 0;
+const BUTTON_CHANNEL_STATUS = 0xb0;
 const DAW_CONTROL_CHANNEL_STATUS = 0xb6;
 const ENCODER_CHANNEL_STATUS = 0xbf;
 const RELATIVE_ENCODER_OFFSET = 64;
@@ -125,24 +126,37 @@ function normalizeRelativeEncoderControl(cc: number): number {
 }
 
 export class LaunchControlXL3 extends BaseController {
+  // In DAW mode the surface sends encoders and faders on channel 16, buttons
+  // on channel 1 and Shift on channel 7. The device also confirms feature
+  // changes and reports its mode on channel 7, and sends touch on and off on
+  // channel 15, reusing the encoder and fader CC numbers. Those are dropped:
+  // the mapper matches on the CC number alone and would read them as turns.
   protected inputEventDataMutator = (
     data: number[] | Uint8Array,
-  ): number[] | Uint8Array => {
+  ): number[] | Uint8Array | null => {
     const [status, cc, value] = data;
     if (status === undefined || cc === undefined || value === undefined) {
       return data;
     }
 
-    if (status !== ENCODER_CHANNEL_STATUS) {
+    if ((status & 0xf0) !== BUTTON_CHANNEL_STATUS) {
       return data;
     }
 
-    const normalizedCc = normalizeRelativeEncoderControl(cc);
-    if (normalizedCc === cc) {
+    if (status === ENCODER_CHANNEL_STATUS) {
+      const normalizedCc = normalizeRelativeEncoderControl(cc);
+      return normalizedCc === cc ? data : [status, normalizedCc, value];
+    }
+
+    if (status === BUTTON_CHANNEL_STATUS) {
       return data;
     }
 
-    return [status, normalizedCc, value];
+    if (status === DAW_CONTROL_CHANNEL_STATUS && cc === SHIFT_CC) {
+      return data;
+    }
+
+    return null;
   };
 
   constructor(engineId: string, ports: MatchedControllerPorts) {
