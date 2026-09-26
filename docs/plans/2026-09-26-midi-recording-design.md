@@ -94,11 +94,17 @@ step.
 
 ### 7. Keys on the console
 
-A row of keys under the display, or pads named after a drum machine's parts,
-plays the active track through the note input on its own channel, so the
-session records them like any keyboard. The computer keyboard plays the
-same notes with the engine's mapping (home row, sharps above) whenever
-nothing is being typed.
+A piano under the display (white keys in a row, black keys over the gaps),
+or pads named after a drum machine's parts, plays the active track through
+the note input on its own channel, so the session records them like any
+keyboard. The computer keyboard plays the same notes with the engine's
+mapping (home row, sharps above) whenever nothing is being typed; pads walk
+the home row first. Each pad also names the MIDI note that plays it, so a
+controller can drive the drum machine without guessing.
+
+The keys light while their note sounds, from any source: the console
+listens to the track's channel filter and its sequencer. The sequencer
+schedules ahead, so a note lights when it plays, not when it is sent.
 
 The engine's own keyboard device stays excluded from the instrument's note
 input. The history records no reason for the exclusion, but there is one:
@@ -108,16 +114,16 @@ keys use it. No arrow key conflict was found: the device maps letters only.
 
 ## Gestures
 
-| Gesture                            | Where             | Does                                  |
-| ---------------------------------- | ----------------- | ------------------------------------- |
-| Hold [Step], play [Keys]           | Step Edit         | The step gets the note, then a chord  |
-| Hold [Keys], tap [Step]            | Step Edit         | The step gets the chord               |
-| Play [Keys], tap [Step]            | Step Edit         | New steps get the last note played    |
-| [Shift] + [Record]                 | Step Edit         | Step record on and off                |
-| Play [Keys] / [Track ▶] / [Track ◀] | Step record       | Write and move on / rest / back       |
-| Tap [Step]                         | Step record       | Move the cursor                       |
-| [Shift] + [Play]                   | Sequencer track   | Real-time record on and off           |
-| Hold [Shift] + [Page ▼]            | Recording         | Erase as the playhead passes          |
+| Gesture                             | Where           | Does                                 |
+| ----------------------------------- | --------------- | ------------------------------------ |
+| Hold [Step], play [Keys]            | Step Edit       | The step gets the note, then a chord |
+| Hold [Keys], tap [Step]             | Step Edit       | The step gets the chord              |
+| Play [Keys], tap [Step]             | Step Edit       | New steps get the last note played   |
+| [Shift] + [Record]                  | Step Edit       | Step record on and off               |
+| Play [Keys] / [Track ▶] / [Track ◀] | Step record     | Write and move on / rest / back      |
+| Tap [Step]                          | Step record     | Move the cursor                      |
+| [Shift] + [Play]                    | Sequencer track | Real-time record on and off          |
+| Hold [Shift] + [Page ▼]             | Recording       | Erase as the playhead passes         |
 
 The console's Record and Erase buttons play the same events, as the Step
 Edit button does. The cheatsheet lists every gesture in context.

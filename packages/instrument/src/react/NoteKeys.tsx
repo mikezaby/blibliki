@@ -1,5 +1,5 @@
 import type { MidiInputSchema } from "@blibliki/engine";
-import { Button, Text, cn } from "@blibliki/ui";
+import { Button, Text } from "@blibliki/ui";
 import { useEffect, useRef } from "react";
 
 // The computer keyboard's note row, the one the engine's keyboard device
@@ -23,6 +23,15 @@ const KEY_NOTES: readonly { key: string; note: string }[] = [
   { key: "p", note: "D#4" },
 ];
 
+// Pads walk the home row first, then the row above it.
+const PAD_KEYS = [
+  ...KEY_NOTES.filter((entry) => !entry.note.includes("#")),
+  ...KEY_NOTES.filter((entry) => entry.note.includes("#")),
+].map((entry) => entry.key);
+
+// A black key's share of the white key it sits after.
+const BLACK_KEY_WIDTH = 0.6;
+
 type NoteKey = {
   key?: string;
   note: string;
@@ -33,7 +42,7 @@ type NoteKey = {
 function keysFor(schema: MidiInputSchema): NoteKey[] {
   if (schema.kind === "mapped") {
     return schema.notes.map((mapping, index) => ({
-      key: KEY_NOTES[index]?.key,
+      key: PAD_KEYS[index],
       note: mapping.note,
       label: mapping.label,
       sharp: false,
@@ -58,12 +67,20 @@ function isTyping(target: EventTarget | null) {
 export type NoteKeysProps = {
   schema: MidiInputSchema;
   onNote: (note: string, on: boolean) => void;
+  // Notes sounding on the track right now, from any source; they light up.
+  sounding?: ReadonlySet<string>;
 };
+
+const NO_NOTES: ReadonlySet<string> = new Set();
 
 // Keys or pads for the active track, so a sound can be tried with no MIDI
 // hardware. The computer keyboard plays the same notes while nothing is
 // being typed.
-export default function NoteKeys({ schema, onNote }: NoteKeysProps) {
+export default function NoteKeys({
+  schema,
+  onNote,
+  sounding = NO_NOTES,
+}: NoteKeysProps) {
   const keys = keysFor(schema);
   const onNoteRef = useRef(onNote);
   const pointerHeld = useRef(new Set<string>());
@@ -130,41 +147,72 @@ export default function NoteKeys({ schema, onNote }: NoteKeysProps) {
     onNote(note, false);
   };
 
+  const handlers = (note: string) => ({
+    onPointerDown: () => {
+      press(note);
+    },
+    onPointerUp: () => {
+      release(note);
+    },
+    onPointerLeave: () => {
+      release(note);
+    },
+    onPointerCancel: () => {
+      release(note);
+    },
+  });
+
+  if (schema.kind === "mapped") {
+    // Pads, each naming the MIDI note that plays it from a controller.
+    return (
+      <div
+        role="group"
+        aria-label="Keys"
+        className="grid grid-cols-4 gap-1 sm:grid-cols-8"
+      >
+        {keys.map((entry) => (
+          <Button
+            key={entry.note}
+            variant={sounding.has(entry.note) ? "contained" : "outlined"}
+            color={sounding.has(entry.note) ? "success" : "neutral"}
+            aria-label={entry.label}
+            data-active={sounding.has(entry.note)}
+            {...handlers(entry.note)}
+            className="h-auto select-none flex-col gap-1 px-1 py-2 font-mono text-xs uppercase"
+          >
+            <span className="truncate">{entry.label}</span>
+            <Text asChild size="xs" tone="muted">
+              <span>
+                {entry.note}
+                {entry.key ? ` · ${entry.key}` : ""}
+              </span>
+            </Text>
+          </Button>
+        ))}
+      </div>
+    );
+  }
+
+  const whites = keys.filter((entry) => !entry.sharp);
+  const whiteWidth = 100 / whites.length;
+
   return (
     <div
       role="group"
       aria-label="Keys"
-      className={cn(
-        "grid gap-1",
-        schema.kind === "mapped"
-          ? "grid-cols-4 sm:grid-cols-8"
-          : "grid-cols-8 sm:grid-cols-16",
-      )}
+      className="relative flex h-24 select-none gap-px"
     >
-      {keys.map((entry) => (
+      {whites.map((entry) => (
         <Button
           key={entry.note}
-          variant="outlined"
-          color="neutral"
+          variant={sounding.has(entry.note) ? "contained" : "outlined"}
+          color={sounding.has(entry.note) ? "success" : "neutral"}
           aria-label={entry.label}
-          onPointerDown={() => {
-            press(entry.note);
-          }}
-          onPointerUp={() => {
-            release(entry.note);
-          }}
-          onPointerLeave={() => {
-            release(entry.note);
-          }}
-          onPointerCancel={() => {
-            release(entry.note);
-          }}
-          className={cn(
-            "h-auto select-none flex-col gap-1 px-1 py-2 font-mono text-xs uppercase",
-            entry.sharp && "opacity-60",
-          )}
+          data-active={sounding.has(entry.note)}
+          {...handlers(entry.note)}
+          className="h-full min-w-0 flex-1 flex-col justify-end gap-0.5 px-0 font-mono text-xs"
         >
-          <span className="truncate">{entry.label}</span>
+          <span>{entry.label}</span>
           {entry.key ? (
             <Text asChild size="xs" tone="muted">
               <kbd>{entry.key}</kbd>
@@ -172,6 +220,39 @@ export default function NoteKeys({ schema, onNote }: NoteKeysProps) {
           ) : null}
         </Button>
       ))}
+      {keys.map((entry, index) => {
+        if (!entry.sharp) {
+          return null;
+        }
+        // A black key straddles the line after the white key before it.
+        const whiteIndex = whites.findIndex(
+          (white) => white.note === keys[index - 1]?.note,
+        );
+
+        return (
+          <Button
+            key={entry.note}
+            variant="contained"
+            color={sounding.has(entry.note) ? "success" : "neutral"}
+            aria-label={entry.label}
+            data-active={sounding.has(entry.note)}
+            {...handlers(entry.note)}
+            style={{
+              left: `${String((whiteIndex + 1 - BLACK_KEY_WIDTH / 2) * whiteWidth)}%`,
+              width: `${String(BLACK_KEY_WIDTH * whiteWidth)}%`,
+              height: "60%",
+            }}
+            className="absolute top-0 z-10 flex-col justify-end gap-0.5 px-0 font-mono text-xs"
+          >
+            <span>{entry.label}</span>
+            {entry.key ? (
+              <Text asChild size="xs" tone="muted">
+                <kbd>{entry.key}</kbd>
+              </Text>
+            ) : null}
+          </Button>
+        );
+      })}
     </div>
   );
 }

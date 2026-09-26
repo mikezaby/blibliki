@@ -58,6 +58,7 @@ import {
   loadMidiRecordingSettings,
   saveMidiRecordingSettings,
 } from "./recordingSettingsStore";
+import { useSoundingNotes } from "./soundingNotes";
 
 export type InstrumentPersistenceResult = {
   // Shown on the performance display once the action settles.
@@ -865,6 +866,24 @@ export default function InstrumentPerformance({
     activeTrack && noteInputId && !isAudioBusTrack(activeTrack.audioSource)
       ? activeTrack
       : undefined;
+  // What reaches the track's voices: its channel filter and its sequencer.
+  const stepSequencerId = playableTrack
+    ? runtimePatch?.runtime.stepSequencerIds[playableTrack.key]
+    : undefined;
+  const soundingNotes = useSoundingNotes(
+    state.engine,
+    playableTrack
+      ? [
+          {
+            moduleId: `${playableTrack.key}.runtime.midiChannelFilter`,
+            ioName: "midi out",
+          },
+          ...(stepSequencerId
+            ? [{ moduleId: stepSequencerId, ioName: "midi" }]
+            : []),
+        ]
+      : [],
+  );
   const cheatsheetHints = displayState?.hints ?? [];
   // Erasing holds Shift, and the display is what the performer is watching.
   const showCheatsheet =
@@ -1262,6 +1281,7 @@ export default function InstrumentPerformance({
                         <NoteKeys
                           schema={playableTrack.noteSchema}
                           onNote={playNote}
+                          sounding={soundingNotes}
                         />
                       ) : null}
                     </div>

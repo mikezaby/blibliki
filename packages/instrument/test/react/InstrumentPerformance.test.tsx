@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { MidiEvent } from "@blibliki/engine";
 import {
   act,
   cleanup,
@@ -616,9 +617,14 @@ describe("InstrumentPerformance", () => {
 
   it("plays the active track from on-screen keys and the computer keyboard, on its channel", async () => {
     const sendMidi = vi.fn();
+    const listeners = new Map<string, (event: unknown) => void>();
     const playableRuntimePatch = {
       ...runtimePatch,
-      runtime: { ...runtimePatch.runtime, noteInputId: "note-input" },
+      runtime: {
+        ...runtimePatch.runtime,
+        noteInputId: "note-input",
+        stepSequencerIds: { "track-1": "track-1.runtime.stepSequencer" },
+      },
       compiledInstrument: {
         tracks: [
           {
@@ -637,6 +643,17 @@ describe("InstrumentPerformance", () => {
         expect(id).toBe("note-input");
         return { moduleType: "MidiInput", sendMidi };
       },
+      // The keys light from what reaches the track: its channel filter and
+      // its sequencer.
+      findIO: (moduleId: string, ioName: string) => ({
+        name: ioName,
+        listen: (listener: (event: unknown) => void) => {
+          listeners.set(`${moduleId}.${ioName}`, listener);
+          return () => {
+            listeners.delete(`${moduleId}.${ioName}`);
+          };
+        },
+      }),
     });
     createInstrumentControllerSessionMock.mockImplementation(() => ({
       getDisplayState: () => displayState,
@@ -680,6 +697,27 @@ describe("InstrumentPerformance", () => {
       ["C3", "noteon", 2],
       ["C3", "noteoff", 2],
     ]);
+
+    // A note the sequencer plays lights its key while it sounds.
+    expect([...listeners.keys()].sort()).toEqual([
+      "track-1.runtime.midiChannelFilter.midi out",
+      "track-1.runtime.stepSequencer.midi",
+    ]);
+    const sequencerListener = listeners.get(
+      "track-1.runtime.stepSequencer.midi",
+    );
+    act(() => {
+      sequencerListener?.(MidiEvent.fromNote("G3", true, 0));
+    });
+    expect(
+      within(keys).getByRole("button", { name: "G3" }).dataset.active,
+    ).toBe("true");
+    act(() => {
+      sequencerListener?.(MidiEvent.fromNote("G3", false, 0));
+    });
+    expect(
+      within(keys).getByRole("button", { name: "G3" }).dataset.active,
+    ).toBe("false");
 
     cleanup();
     sendMidi.mockClear();
