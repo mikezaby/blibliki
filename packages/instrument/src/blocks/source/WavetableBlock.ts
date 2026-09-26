@@ -9,7 +9,7 @@ const DEFAULT_PROPS = {
   fine: 0,
   coarse: 0,
   octave: 0,
-  lowGain: false,
+  lowGain: true,
 } as const;
 
 export default class WavetableBlock extends BaseBlock {
