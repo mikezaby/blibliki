@@ -247,8 +247,9 @@ function dbToFrac(db: number) {
   );
 }
 
+// Below the bar's floor there is nothing to show, so the readout says so.
 function formatDb(db: number) {
-  return Number.isFinite(db) ? `${db.toFixed(1)} dB` : "-∞ dB";
+  return db > METER_MIN_DB ? `${db.toFixed(1)} dB` : "-∞ dB";
 }
 
 // Rewrites the text only when it changes, so the DOM rests between peaks.
