@@ -918,6 +918,9 @@ export default function InstrumentPerformance({
   const isTransportRunning =
     displayState?.header.transportState === TransportState.playing;
   const isSequencerEdit = displayState?.header.mode === "seqEdit";
+  // Step record is a chord on the hardware with no button of its own, so the
+  // mode button and the cheatsheet title say when it is on.
+  const isStepRecord = displayState?.header.stepRecordCursor !== undefined;
   const isSequencerTrack = activeTrack?.noteSource === "stepSequencer";
   const liveRecord = displayState?.header.liveRecord;
   // The on-screen keys play a track that makes sound, through the note
@@ -1133,7 +1136,7 @@ export default function InstrumentPerformance({
                       : "border-zinc-600 text-zinc-200 hover:border-zinc-400",
                   )}
                 >
-                  Step Edit
+                  {isStepRecord ? "Step Record" : "Step Edit"}
                 </Button>
                 <Button
                   variant="outlined"
@@ -1249,7 +1252,13 @@ export default function InstrumentPerformance({
                 <div className="relative z-10">
                   {showCheatsheet ? (
                     <CheatSheet
-                      title={isSequencerEdit ? "Step Edit" : "Performance"}
+                      title={
+                        isStepRecord
+                          ? "Step Record"
+                          : isSequencerEdit
+                            ? "Step Edit"
+                            : "Performance"
+                      }
                       hints={cheatsheetHints}
                     />
                   ) : null}
