@@ -390,12 +390,15 @@ function PerformanceMeter({
         <span className="font-mono text-xs uppercase tracking-[0.12em]">
           <span
             ref={maxRef}
-            className="text-zinc-500"
+            className="inline-block w-[8ch] text-right text-zinc-500"
             title="Peak since the track was selected"
           >
             -∞ dB
           </span>
-          <span ref={readoutRef} className="ml-5 text-zinc-300">
+          <span
+            ref={readoutRef}
+            className="ml-5 inline-block w-[8ch] text-right text-zinc-300"
+          >
             -∞ dB
           </span>
         </span>
