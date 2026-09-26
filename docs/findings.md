@@ -170,3 +170,40 @@ sends a CC per step button whether or not the value changed, and the
 session emits on every played note in Step Edit and on every sequencer
 step. Keep the last sent values per controller output and send only the
 differences.
+
+## The note input still listens to the controller port
+
+`excludeControllerFromAllNoteInputs` in
+`packages/instrument/src/core/midiPortSelection.ts` excludes the controller
+by its configured name, `LCXL3 DAW In`, but the port resolves by fuzzy match
+to `LCXL3 1 DAW Out`, so the all-ins note input attaches to it anyway. Every
+Launch Control event then also runs through each track's channel filter, and
+`InstrumentSession` handles it twice: once from its own device listener and
+once from the note tap. Exclude the device the controller input actually
+resolved to, not the name it was asked for.
+
+## A disposed engine keeps parsing MIDI
+
+`MidiDeviceManager.dispose` in
+`packages/engine/src/core/midi/MidiDeviceManager.ts` disposes the
+controllers but never disconnects the input device wrappers, so their Web
+MIDI listeners stay attached for the life of the page. Each engine built
+on a page adds another set. Disconnect the inputs in `dispose`.
+
+## The console meters throw when their engine goes away
+
+The meter loop in `packages/instrument/src/react/InstrumentPerformance.tsx`
+runs on animation frames and looks its meter up with `engine.findModule`,
+which throws once the engine is disposed. A session restart (discard draft)
+still rebuilds the engine, so the two uncaught "module ... is not exists"
+errors from the sustain investigation come back on that path. Stop the loop
+before the engine is disposed, or look the module up through a guarded
+lookup.
+
+## The XL3 doc names a debug flag that nothing reads
+
+`docs/launch-control-xl3-daw-v1.md` says debug logs can be enabled with
+`globalThis.__BLIBLIKI_MIDI_DEBUG__`. No code reads that flag. Remove the
+line, or add the logging in `MidiInputDevice.processEvent`, which is where
+a capture of what a device sends would have saved most of this
+investigation.
