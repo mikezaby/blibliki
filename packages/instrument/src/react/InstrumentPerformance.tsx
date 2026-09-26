@@ -363,7 +363,7 @@ function PerformanceMeter({
           readoutRef.current,
           formatDb(levelToDb(Math.max(held[0].level, held[1].level))),
         );
-        setText(maxRef.current, `max ${formatDb(levelToDb(max))}`);
+        setText(maxRef.current, formatDb(levelToDb(max)));
       }
 
       requestAnimationFrame(render);
@@ -388,10 +388,14 @@ function PerformanceMeter({
           {label}
         </span>
         <span className="font-mono text-xs uppercase tracking-[0.12em]">
-          <span ref={maxRef} className="text-zinc-500">
-            max -∞ dB
+          <span
+            ref={maxRef}
+            className="text-zinc-500"
+            title="Peak since the track was selected"
+          >
+            -∞ dB
           </span>
-          <span ref={readoutRef} className="ml-3 text-zinc-300">
+          <span ref={readoutRef} className="ml-5 text-zinc-300">
             -∞ dB
           </span>
         </span>
