@@ -43,6 +43,18 @@ export type IPattern = {
   pages: IPage[];
 };
 
+// A moment in the playing pattern, snapped to the nearest step.
+export type StepSequencerPosition = {
+  patternNo: number;
+  pageNo: number;
+  stepNo: number;
+  // Steps since the source started, across pages and laps.
+  absoluteStep: number;
+  // Signed distance from that step, in ticks.
+  offsetTicks: Ticks;
+  stepTicks: Ticks;
+};
+
 export enum Resolution {
   thirtysecond = "1/32",
   sixteenth = "1/16",
@@ -242,6 +254,26 @@ export class StepSequencerSource extends BaseSource<StepSequencerSourceEvent> {
     const ticksSinceStart = ticks - this.startedAt;
     const ticksIntoPage = ticksSinceStart % this.ticksPerPage;
     return Math.floor(ticksIntoPage / this.stepResolution);
+  }
+
+  positionAt(ticks: Ticks): StepSequencerPosition | undefined {
+    if (this.startedAt === undefined || ticks < this.startedAt) return;
+
+    const stepTicks = this.stepResolution;
+    const sinceStart = ticks - this.startedAt;
+    const absoluteStep = Math.round(sinceStart / stepTicks);
+    const { patternNo, pageNo } = this.getPatternAndPageFromAbsolutePage(
+      Math.floor(absoluteStep / this.props.stepsPerPage),
+    );
+
+    return {
+      patternNo,
+      pageNo,
+      stepNo: absoluteStep % this.props.stepsPerPage,
+      absoluteStep,
+      offsetTicks: sinceStart - absoluteStep * stepTicks,
+      stepTicks,
+    };
   }
 
   /**

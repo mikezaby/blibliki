@@ -1,8 +1,10 @@
 import {
   type IMidiMapperProps,
+  type IStepSequencerProps,
   type IUpdateModule,
   MidiEvent,
   ModuleType,
+  Resolution,
   TransportState,
 } from "@blibliki/engine";
 import { describe, expect, it } from "vitest";
@@ -636,5 +638,221 @@ describe("InstrumentSession", () => {
     session.sendControlEvent(MidiEvent.fromCC(106, 127, 0));
 
     expect(forwarded).toHaveLength(forwardedBeforeDispose);
+  });
+
+  it("hears the note input's outgoing MIDI and lets go of it on dispose", () => {
+    const runtimePatch = createInstrumentEnginePatch(
+      createSequencedInstrumentDocument(),
+      { navigation: { mode: "seqEdit" } },
+    );
+    const noteInputId = runtimePatch.runtime.noteInputId;
+    if (!noteInputId) {
+      throw new Error("Expected the runtime patch to name a note input");
+    }
+
+    const modules = new Map(
+      runtimePatch.patch.modules.map((module) => [module.id, module]),
+    );
+    let noteListener: ((event: MidiEvent) => void) | undefined;
+    let stopped = false;
+
+    const session = new InstrumentSession(
+      {
+        findMidiInputDeviceByFuzzyName: () => null,
+        findModule: (id) => {
+          const module = modules.get(id);
+          if (!module) {
+            throw new Error(`Module ${id} not found`);
+          }
+
+          return module;
+        },
+        findIO: (moduleId, ioName) => {
+          if (moduleId !== noteInputId || ioName !== "midi out") {
+            throw new Error(`Unexpected IO ${moduleId}.${ioName}`);
+          }
+
+          return {
+            name: ioName,
+            listen: (listener) => {
+              noteListener = listener;
+              return () => {
+                stopped = true;
+              };
+            },
+          };
+        },
+        state: TransportState.stopped,
+        start: () => Promise.resolve(),
+        stop: () => undefined,
+        updateModule: (params) => params,
+      },
+      runtimePatch,
+    );
+
+    expect(noteListener).toBeTypeOf("function");
+
+    noteListener?.(MidiEvent.fromNote("D4", true, 0));
+
+    expect(
+      session.getRuntimePatch().runtime.navigation.stepDefaults["track-1"],
+    ).toEqual({ note: "D4" });
+
+    session.dispose();
+
+    expect(stopped).toBe(true);
+  });
+
+  it("records a played phrase into the pattern, one pass with a count-in", () => {
+    const runtimePatch = createInstrumentEnginePatch(
+      createSequencedInstrumentDocument(),
+    );
+    const { noteInputId, metronomeId } = runtimePatch.runtime;
+    const stepSequencerId = runtimePatch.runtime.stepSequencerIds["track-1"];
+    if (!noteInputId || !stepSequencerId) {
+      throw new Error("Expected a note input and a sequencer");
+    }
+
+    const modules = new Map<string, unknown>(
+      runtimePatch.patch.modules.map((module) => [module.id, module]),
+    );
+    const updateCalls: IUpdateModule<ModuleType>[] = [];
+    const starts: (number | undefined)[] = [];
+    let noteListener: ((event: MidiEvent) => void) | undefined;
+    let stateUpdate: ((params: StateUpdate) => void) | undefined;
+    let transportState = TransportState.stopped;
+    // Where the sequencer says a moment falls; the test moves it by hand.
+    let absoluteStep = 0;
+    let offsetTicks = 0;
+    type StateUpdate = { id: string; moduleType: ModuleType; state?: unknown };
+
+    modules.set(metronomeId, {
+      ...(modules.get(metronomeId) ?? {}),
+      countIn: (bars: number) => 2 * bars,
+    });
+    modules.set(stepSequencerId, {
+      ...(modules.get(stepSequencerId) ?? {}),
+      positionAt: () => ({
+        patternNo: 0,
+        pageNo: 0,
+        stepNo: absoluteStep % 16,
+        absoluteStep,
+        offsetTicks,
+        stepTicks: 3840,
+      }),
+    });
+
+    const session = new InstrumentSession(
+      {
+        findMidiInputDeviceByFuzzyName: () => null,
+        findModule: (id) => {
+          const module = modules.get(id);
+          if (!module) {
+            throw new Error(`Module ${id} not found`);
+          }
+
+          return module;
+        },
+        findIO: () => ({
+          name: "midi out",
+          listen: (listener) => {
+            noteListener = listener;
+            return () => undefined;
+          },
+        }),
+        get state() {
+          return transportState;
+        },
+        start: (actionAt) => {
+          starts.push(actionAt);
+          transportState = TransportState.playing;
+        },
+        stop: () => undefined,
+        onStateUpdate: (callback) => {
+          stateUpdate = callback;
+        },
+        updateModule: (params) => {
+          updateCalls.push(params);
+          return params;
+        },
+      },
+      runtimePatch,
+    );
+
+    session.setRecordingSettings({
+      metronome: true,
+      precount: true,
+      quantize: Resolution.sixteenth,
+      mode: "oneShot",
+      overdub: true,
+    });
+
+    expect(updateCalls.at(-1)).toMatchObject({
+      id: metronomeId,
+      changes: { props: { enabled: true } },
+    });
+
+    // Shift + Play arms: the transport starts after the count-in.
+    session.sendControlEvent(MidiEvent.fromCC(63, 127, 0));
+    session.sendControlEvent(MidiEvent.fromCC(116, 127, 0));
+    session.sendControlEvent(MidiEvent.fromCC(63, 0, 0));
+
+    expect(starts).toEqual([2]);
+    expect(session.getDisplayState().header.liveRecord).toEqual({
+      erasing: false,
+    });
+
+    const step = (currentStep: number) => {
+      stateUpdate?.({
+        id: stepSequencerId,
+        moduleType: ModuleType.StepSequencer,
+        state: { currentStep },
+      });
+    };
+    const steps = () => {
+      const module = session
+        .getRuntimePatch()
+        .patch.modules.find((candidate) => candidate.id === stepSequencerId);
+
+      return (module?.props as IStepSequencerProps).patterns[0]!.pages[0]!
+        .steps;
+    };
+
+    step(0);
+    absoluteStep = 2;
+    offsetTicks = 500;
+    noteListener?.(MidiEvent.fromNote("D4", true, 0));
+
+    expect(steps()[2]).toMatchObject({
+      active: true,
+      notes: [{ note: "D4", velocity: 127 }],
+      microtimeOffset: 0,
+    });
+    expect(updateCalls.at(-1)?.id).toBe(stepSequencerId);
+
+    // Released two steps later: an eighth.
+    absoluteStep = 4;
+    offsetTicks = 500;
+    noteListener?.(MidiEvent.fromNote("D4", false, 0));
+
+    expect(steps()[2]?.duration).toBe("1/8");
+
+    // The pass ends when the playhead wraps, and so does the recording.
+    for (let index = 1; index < 16; index += 1) {
+      step(index);
+    }
+    expect(session.getRuntimePatch().runtime.navigation.liveRecord).toEqual({
+      erasing: false,
+    });
+    step(0);
+
+    expect(session.getRuntimePatch().runtime.navigation.liveRecord).toBe(
+      undefined,
+    );
+
+    absoluteStep = 20;
+    noteListener?.(MidiEvent.fromNote("E4", true, 0));
+
+    expect(steps()[4]?.active).toBe(false);
   });
 });

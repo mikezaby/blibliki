@@ -8,9 +8,12 @@ import { Button, IconButton, Logo, Surface, Text, cn } from "@blibliki/ui";
 import {
   ChevronLeft,
   ChevronRight,
+  Circle,
+  Eraser,
   Maximize2,
   Minimize2,
   Play,
+  Settings,
   Square,
 } from "lucide-react";
 import {
@@ -28,6 +31,7 @@ import {
 } from "@/InstrumentSession";
 import type { InstrumentPersistenceAction } from "@/InstrumentSessionPersistence";
 import { createInstrumentEnginePatch } from "@/compiler/createInstrumentEnginePatch";
+import { isAudioBusTrack } from "@/compiler/instrumentRuntimeState";
 import type {
   BandSection,
   InstrumentDisplayState,
@@ -35,7 +39,9 @@ import type {
 import { STEP_BY_STEP_GROUPS, type InstrumentHint } from "@/display/hints";
 import { createSavedInstrumentDocument } from "@/document/SavedInstrumentDocument";
 import type { InstrumentDocument } from "@/document/types";
+import ConsoleSettings from "./ConsoleSettings";
 import EncoderGlyph from "./EncoderGlyph";
+import NoteKeys from "./NoteKeys";
 import {
   getCellCc,
   getCellKey,
@@ -48,6 +54,11 @@ import {
 } from "./bandCell";
 import { createFaceplateStyle, useFitToScreen } from "./faceplateFit";
 import { useFullscreen } from "./fullscreen";
+import {
+  loadMidiRecordingSettings,
+  saveMidiRecordingSettings,
+} from "./recordingSettingsStore";
+import { useSoundingNotes } from "./soundingNotes";
 
 export type InstrumentPersistenceResult = {
   // Shown on the performance display once the action settles.
@@ -100,6 +111,7 @@ const TRACK_PREV_CC = 103;
 const TRACK_NEXT_CC = 102;
 const PAGE_PREV_CC = 107;
 const PAGE_NEXT_CC = 106;
+const PLAY_CC = 116;
 const SHIFT_CC = 63;
 // Those buttons are momentary: the surface acts on the press, not the release.
 // Shift is the exception, so the screen sends its release too.
@@ -671,7 +683,18 @@ export default function InstrumentPerformance({
     status: "loading",
   });
   const [cheatsheetPinned, setCheatsheetPinned] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [recordingSettings, setRecordingSettings] = useState(
+    loadMidiRecordingSettings,
+  );
   const fullscreen = useFullscreen(allowFullscreen);
+
+  // The session records the way the settings say, and a change outlives the
+  // page: the settings are the performer's, not the instrument's.
+  useEffect(() => {
+    state.controllerSession?.setRecordingSettings(recordingSettings);
+    saveMidiRecordingSettings(recordingSettings);
+  }, [state.controllerSession, recordingSettings]);
 
   // The ? key pins and unpins the cheatsheet, unless the performer is typing.
   useEffect(() => {
@@ -835,9 +858,37 @@ export default function InstrumentPerformance({
     displayState?.header.transportState === TransportState.playing;
   const isSequencerEdit = displayState?.header.mode === "seqEdit";
   const isSequencerTrack = activeTrack?.noteSource === "stepSequencer";
+  const liveRecord = displayState?.header.liveRecord;
+  // The on-screen keys play a track that makes sound, through the note
+  // input, so the session hears them as it would a keyboard.
+  const noteInputId = runtimePatch?.runtime.noteInputId;
+  const playableTrack =
+    activeTrack && noteInputId && !isAudioBusTrack(activeTrack.audioSource)
+      ? activeTrack
+      : undefined;
+  // What reaches the track's voices: its channel filter and its sequencer.
+  const stepSequencerId = playableTrack
+    ? runtimePatch?.runtime.stepSequencerIds[playableTrack.key]
+    : undefined;
+  const soundingNotes = useSoundingNotes(
+    state.engine,
+    playableTrack
+      ? [
+          {
+            moduleId: `${playableTrack.key}.runtime.midiChannelFilter`,
+            ioName: "midi out",
+          },
+          ...(stepSequencerId
+            ? [{ moduleId: stepSequencerId, ioName: "midi" }]
+            : []),
+        ]
+      : [],
+  );
   const cheatsheetHints = displayState?.hints ?? [];
+  // Erasing holds Shift, and the display is what the performer is watching.
   const showCheatsheet =
     cheatsheetHints.length > 0 &&
+    !liveRecord?.erasing &&
     (cheatsheetPinned || displayState?.header.shiftPressed === true);
 
   const sendControlChange = (cc: number, ccValue: number) => {
@@ -870,6 +921,48 @@ export default function InstrumentPerformance({
     sendControlChange(SHIFT_CC, BUTTON_RELEASE_VALUE);
   };
 
+  const playNote = (note: string, on: boolean) => {
+    const { engine } = state;
+    if (!engine || !noteInputId || !playableTrack) {
+      return;
+    }
+
+    const noteInput = engine.findModule(noteInputId);
+    if (noteInput.moduleType !== ModuleType.MidiInput) {
+      return;
+    }
+
+    noteInput.sendMidi(
+      MidiEvent.fromNote(
+        note,
+        on,
+        engine.context.currentTime,
+        playableTrack.midiChannel - 1,
+      ),
+    );
+  };
+
+  // Real-time record is Shift + Play on the hardware.
+  const toggleLiveRecord = () => {
+    sendControlChange(SHIFT_CC, BUTTON_PRESS_VALUE);
+    sendControlChange(PLAY_CC, BUTTON_PRESS_VALUE);
+    sendControlChange(SHIFT_CC, BUTTON_RELEASE_VALUE);
+  };
+
+  // Erase is a hold: Shift + Page Down stay down as long as the pointer does.
+  const startErase = () => {
+    sendControlChange(SHIFT_CC, BUTTON_PRESS_VALUE);
+    sendControlChange(PAGE_PREV_CC, BUTTON_PRESS_VALUE);
+  };
+  const stopErase = () => {
+    if (!liveRecord?.erasing) {
+      return;
+    }
+
+    sendControlChange(PAGE_PREV_CC, BUTTON_RELEASE_VALUE);
+    sendControlChange(SHIFT_CC, BUTTON_RELEASE_VALUE);
+  };
+
   return (
     <Surface
       tone="canvas"
@@ -897,6 +990,22 @@ export default function InstrumentPerformance({
         >
           <div className="flex items-center gap-2">{backSlot}</div>
           <div className="flex items-center gap-2">
+            <IconButton
+              variant="outlined"
+              color="neutral"
+              aria-label="Settings"
+              icon={<Settings className="h-4 w-4" />}
+              onClick={() => {
+                setSettingsOpen(true);
+              }}
+              className="rounded-full border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-100"
+            />
+            <ConsoleSettings
+              open={settingsOpen}
+              onOpenChange={setSettingsOpen}
+              settings={recordingSettings}
+              onChange={setRecordingSettings}
+            />
             <IconButton
               variant="outlined"
               color="neutral"
@@ -965,6 +1074,42 @@ export default function InstrumentPerformance({
                 >
                   Step Edit
                 </Button>
+                <Button
+                  variant="outlined"
+                  color="neutral"
+                  aria-pressed={liveRecord !== undefined}
+                  disabled={state.status !== "ready" || !isSequencerTrack}
+                  onClick={toggleLiveRecord}
+                  className={cn(
+                    "rounded-full px-5 font-mono uppercase tracking-[0.14em]",
+                    liveRecord
+                      ? "border-red-400/80 bg-red-500 text-zinc-50"
+                      : "border-zinc-600 text-zinc-200 hover:border-zinc-400",
+                  )}
+                >
+                  <Circle className="h-3.5 w-3.5 fill-current" />
+                  Record
+                </Button>
+                {liveRecord ? (
+                  <Button
+                    variant="outlined"
+                    color="neutral"
+                    aria-pressed={liveRecord.erasing}
+                    onPointerDown={startErase}
+                    onPointerUp={stopErase}
+                    onPointerLeave={stopErase}
+                    onPointerCancel={stopErase}
+                    className={cn(
+                      "rounded-full px-5 font-mono uppercase tracking-[0.14em]",
+                      liveRecord.erasing
+                        ? "border-amber-300/80 bg-amber-300 text-zinc-950"
+                        : "border-zinc-600 text-zinc-200 hover:border-zinc-400",
+                    )}
+                  >
+                    <Eraser className="h-4 w-4" />
+                    Erase
+                  </Button>
+                ) : null}
                 <Button
                   color="neutral"
                   disabled={state.status !== "ready" || !state.engine}
@@ -1132,6 +1277,20 @@ export default function InstrumentPerformance({
                         slots={displayState.lowerBand.slots}
                         onEncoderTick={sendEncoderTick}
                       />
+                      {playableTrack ? (
+                        <NoteKeys
+                          schema={playableTrack.noteSchema}
+                          onNote={playNote}
+                          sounding={soundingNotes}
+                        />
+                      ) : (
+                        // The same space, empty, so the display holds still
+                        // on a track that has no keys.
+                        <div
+                          className="instrument-performance-keys"
+                          aria-hidden="true"
+                        />
+                      )}
                     </div>
                   ) : null}
                 </div>

@@ -6,6 +6,7 @@ import type {
 import { createInstrumentMidiMapperProps } from "./createInstrumentMidiMapperProps";
 import {
   createMasterModule,
+  createMetronomeModule,
   createSessionRecorderModule,
   createMidiInputModule,
   createMidiMapperModule,
@@ -62,6 +63,7 @@ export function createInstrumentRuntimeModules(options: {
       runtime.sessionRecorderId,
       "Instrument Session Recorder",
     ),
+    createMetronomeModule(runtime.metronomeId, "Instrument Metronome"),
     ...(noteInputSelection === false || !runtime.noteInputId
       ? []
       : [

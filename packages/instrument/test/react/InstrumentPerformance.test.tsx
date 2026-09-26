@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { MidiEvent } from "@blibliki/engine";
 import {
   act,
   cleanup,
@@ -15,12 +16,14 @@ import InstrumentPerformance from "@/react/InstrumentPerformance";
 const {
   loadEngineMock,
   sendControlEventMock,
+  setRecordingSettingsMock,
   createInstrumentEnginePatchMock,
   createInstrumentControllerSessionMock,
   createSavedInstrumentDocumentMock,
 } = vi.hoisted(() => ({
   loadEngineMock: vi.fn(),
   sendControlEventMock: vi.fn(),
+  setRecordingSettingsMock: vi.fn(),
   createInstrumentEnginePatchMock: vi.fn(),
   createInstrumentControllerSessionMock: vi.fn(),
   createSavedInstrumentDocumentMock: vi.fn(),
@@ -218,6 +221,8 @@ describe("InstrumentPerformance", () => {
     createInstrumentControllerSessionMock.mockReset();
     createSavedInstrumentDocumentMock.mockReset();
     sendControlEventMock.mockReset();
+    setRecordingSettingsMock.mockReset();
+    localStorage.clear();
 
     loadEngineMock.mockResolvedValue(engine);
     createInstrumentEnginePatchMock.mockReturnValue(runtimePatch);
@@ -228,6 +233,7 @@ describe("InstrumentPerformance", () => {
       getDisplayState: () => displayState,
       getRuntimePatch: () => runtimePatch,
       sendControlEvent: sendControlEventMock,
+      setRecordingSettings: setRecordingSettingsMock,
       dispose: vi.fn(),
     }));
   });
@@ -417,6 +423,7 @@ describe("InstrumentPerformance", () => {
       getDisplayState: () => displayState,
       getRuntimePatch: () => sequencedRuntimePatch,
       sendControlEvent: sendControlEventMock,
+      setRecordingSettings: setRecordingSettingsMock,
       dispose: vi.fn(),
     }));
 
@@ -459,6 +466,315 @@ describe("InstrumentPerformance", () => {
       name: "Step Edit",
     });
     expect(pressedButton.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("opens the settings from the console chrome and keeps MIDI recording in the browser", async () => {
+    localStorage.setItem(
+      "blibliki.midiRecording",
+      JSON.stringify({ metronome: true, mode: "oneShot" }),
+    );
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    // The stored settings, over the defaults, reach the session as it starts.
+    await waitFor(() => {
+      expect(setRecordingSettingsMock).toHaveBeenCalledWith({
+        metronome: true,
+        precount: false,
+        quantize: "1/16",
+        mode: "oneShot",
+        overdub: true,
+      });
+    });
+
+    const general = screen.getByRole("group", { name: "Console" });
+    fireEvent.click(within(general).getByRole("button", { name: "Settings" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Settings" });
+    expect(
+      within(dialog).getByRole("heading", { name: "MIDI recording" }),
+    ).toBeTruthy();
+
+    fireEvent.click(within(dialog).getByRole("switch", { name: "Pre-count" }));
+
+    await waitFor(() => {
+      expect(setRecordingSettingsMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ metronome: true, precount: true }),
+      );
+    });
+    expect(
+      JSON.parse(localStorage.getItem("blibliki.midiRecording") ?? "{}"),
+    ).toMatchObject({ metronome: true, precount: true, mode: "oneShot" });
+  });
+
+  it("arms real-time record from the Record button and erases while Erase is held", async () => {
+    const sequencedRuntimePatch = {
+      ...runtimePatch,
+      compiledInstrument: {
+        tracks: [
+          {
+            key: "track-1",
+            noteSource: "stepSequencer",
+            audioSource: { type: "internal" },
+          },
+        ],
+      },
+    };
+    createInstrumentControllerSessionMock.mockImplementation(() => ({
+      getDisplayState: () => displayState,
+      getRuntimePatch: () => sequencedRuntimePatch,
+      sendControlEvent: sendControlEventMock,
+      setRecordingSettings: setRecordingSettingsMock,
+      dispose: vi.fn(),
+    }));
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    const record = await screen.findByRole("button", { name: "Record" });
+    await waitFor(() => {
+      expect(record.hasAttribute("disabled")).toBe(false);
+    });
+    expect(record.getAttribute("aria-pressed")).toBe("false");
+    expect(screen.queryByRole("button", { name: "Erase" })).toBeNull();
+
+    // The hardware's gesture: Shift down, Play, Shift up.
+    fireEvent.click(record);
+    const sentEvents = () =>
+      sendControlEventMock.mock.calls.map((call) => {
+        const [event] = call as [{ cc?: number; ccValue?: number }];
+        return [event.cc, event.ccValue];
+      });
+    expect(sentEvents().slice(-3)).toEqual([
+      [63, 127],
+      [116, 127],
+      [63, 0],
+    ]);
+
+    cleanup();
+    displayState.header.liveRecord = { erasing: false };
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    const armed = await screen.findByRole("button", { name: "Record" });
+    expect(armed.getAttribute("aria-pressed")).toBe("true");
+
+    // Erase holds Shift + Page Down for as long as the pointer is down.
+    sendControlEventMock.mockClear();
+    const erase = screen.getByRole("button", { name: "Erase" });
+    fireEvent.pointerDown(erase);
+    expect(sentEvents()).toEqual([
+      [63, 127],
+      [107, 127],
+    ]);
+
+    cleanup();
+    displayState.header.liveRecord = { erasing: true };
+    displayState.header.shiftPressed = true;
+    displayState.hints = [
+      {
+        action: "eraseSteps",
+        group: "Record",
+        gesture: "Hold [Shift] + [Page ▼]",
+        text: "Erase as the playhead passes",
+        oled: "S+Pgv Erase",
+      },
+    ];
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    const erasing = await screen.findByRole("button", { name: "Erase" });
+    expect(erasing.getAttribute("aria-pressed")).toBe("true");
+    // Shift is down for the erase, not for reading the cheatsheet.
+    expect(screen.queryByRole("region", { name: "Cheatsheet" })).toBeNull();
+
+    sendControlEventMock.mockClear();
+    fireEvent.pointerUp(erasing);
+    expect(sentEvents()).toEqual([
+      [107, 0],
+      [63, 0],
+    ]);
+  });
+
+  it("plays the active track from on-screen keys and the computer keyboard, on its channel", async () => {
+    const sendMidi = vi.fn();
+    const listeners = new Map<string, (event: unknown) => void>();
+    const playableRuntimePatch = {
+      ...runtimePatch,
+      runtime: {
+        ...runtimePatch.runtime,
+        noteInputId: "note-input",
+        stepSequencerIds: { "track-1": "track-1.runtime.stepSequencer" },
+      },
+      compiledInstrument: {
+        tracks: [
+          {
+            key: "track-1",
+            midiChannel: 3,
+            noteSource: "externalMidi",
+            noteSchema: { kind: "free" },
+            audioSource: { type: "internal" },
+          },
+        ],
+      },
+    };
+    loadEngineMock.mockResolvedValue({
+      ...engine,
+      findModule: (id: string) => {
+        expect(id).toBe("note-input");
+        return { moduleType: "MidiInput", sendMidi };
+      },
+      // The keys light from what reaches the track: its channel filter and
+      // its sequencer.
+      findIO: (moduleId: string, ioName: string) => ({
+        name: ioName,
+        listen: (listener: (event: unknown) => void) => {
+          listeners.set(`${moduleId}.${ioName}`, listener);
+          return () => {
+            listeners.delete(`${moduleId}.${ioName}`);
+          };
+        },
+      }),
+    });
+    createInstrumentControllerSessionMock.mockImplementation(() => ({
+      getDisplayState: () => displayState,
+      getRuntimePatch: () => playableRuntimePatch,
+      sendControlEvent: sendControlEventMock,
+      setRecordingSettings: setRecordingSettingsMock,
+      dispose: vi.fn(),
+    }));
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    const keys = await screen.findByRole("group", { name: "Keys" });
+    const sent = () =>
+      sendMidi.mock.calls.map((call) => {
+        const [event] = call as [
+          { note?: { fullName: string }; type: string; channel?: number },
+        ];
+        return [event.note?.fullName, event.type, event.channel];
+      });
+
+    fireEvent.pointerDown(within(keys).getByRole("button", { name: "E3" }));
+    fireEvent.pointerUp(within(keys).getByRole("button", { name: "E3" }));
+
+    expect(sent()).toEqual([
+      ["E3", "noteon", 2],
+      ["E3", "noteoff", 2],
+    ]);
+
+    // The home row is the engine's keyboard mapping; typing is left alone.
+    sendMidi.mockClear();
+    fireEvent.keyDown(window, { key: "a" });
+    fireEvent.keyDown(window, { key: "a", repeat: true });
+    fireEvent.keyUp(window, { key: "a" });
+
+    expect(sent()).toEqual([
+      ["C3", "noteon", 2],
+      ["C3", "noteoff", 2],
+    ]);
+
+    // A note the sequencer plays lights its key while it sounds.
+    expect([...listeners.keys()].sort()).toEqual([
+      "track-1.runtime.midiChannelFilter.midi out",
+      "track-1.runtime.stepSequencer.midi",
+    ]);
+    const sequencerListener = listeners.get(
+      "track-1.runtime.stepSequencer.midi",
+    );
+    act(() => {
+      sequencerListener?.(MidiEvent.fromNote("G3", true, 0));
+    });
+    expect(
+      within(keys).getByRole("button", { name: "G3" }).dataset.active,
+    ).toBe("true");
+    act(() => {
+      sequencerListener?.(MidiEvent.fromNote("G3", false, 0));
+    });
+    expect(
+      within(keys).getByRole("button", { name: "G3" }).dataset.active,
+    ).toBe("false");
+
+    cleanup();
+    sendMidi.mockClear();
+    playableRuntimePatch.compiledInstrument.tracks[0]!.noteSchema = {
+      kind: "mapped",
+      notes: [{ key: "kick", note: "C1", label: "Kick" }],
+    } as never;
+
+    render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    const pads = await screen.findByRole("group", { name: "Keys" });
+    fireEvent.pointerDown(within(pads).getByRole("button", { name: "Kick" }));
+
+    expect(sent()).toEqual([["C1", "noteon", 2]]);
+  });
+
+  it("keeps the keys' space on a track that has none, so the display holds still", async () => {
+    const busRuntimePatch = {
+      ...runtimePatch,
+      runtime: { ...runtimePatch.runtime, noteInputId: "note-input" },
+      compiledInstrument: {
+        tracks: [
+          {
+            key: "master",
+            midiChannel: 1,
+            noteSource: "externalMidi",
+            noteSchema: { kind: "free" },
+            audioSource: { type: "master" },
+          },
+        ],
+      },
+    };
+    createInstrumentControllerSessionMock.mockImplementation(() => ({
+      getDisplayState: () => displayState,
+      getRuntimePatch: () => busRuntimePatch,
+      sendControlEvent: sendControlEventMock,
+      setRecordingSettings: setRecordingSettingsMock,
+      dispose: vi.fn(),
+    }));
+
+    const { container } = render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    await screen.findByRole("button", { name: "Start" });
+    expect(screen.queryByRole("group", { name: "Keys" })).toBeNull();
+    expect(
+      container.querySelector(".instrument-performance-keys[aria-hidden]"),
+    ).toBeTruthy();
   });
 
   it("keeps the console's own controls apart from the general buttons", async () => {

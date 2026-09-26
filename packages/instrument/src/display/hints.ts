@@ -19,14 +19,27 @@ export type InstrumentHintAction =
   | "duplicateBar"
   | "addChordNotes"
   | "holdSeveral"
+  | "playIntoStep"
+  | "stampChord"
+  | "playDefault"
   | "setDefaults"
   | "growLoop"
   | "heldNote"
   | "heldVelocity"
   | "heldSettings"
+  | "heldPlay"
   | "holdAnother"
   | "releaseHeld"
   | "octave"
+  | "enterStepRecord"
+  | "leaveStepRecord"
+  | "recordNote"
+  | "recordRest"
+  | "recordBack"
+  | "recordCursor"
+  | "liveRecord"
+  | "stopLiveRecord"
+  | "eraseSteps"
   | "showCheatsheet";
 
 // How the cheatsheet sorts its entries: in Step Edit a path to follow first,
@@ -35,10 +48,12 @@ export type InstrumentHintGroup =
   | "Write a pattern"
   | "Steps"
   | "Held steps"
+  | "Step record"
   | "Copy and fill"
   | "Bars"
   | "Navigate"
   | "Mode"
+  | "Record"
   | "Save"
   | "Help";
 
@@ -79,16 +94,40 @@ const HINT_TEXT: Record<InstrumentHintAction, string> = {
   duplicateBar: "Copy this bar to the next",
   addChordNotes: "Add notes to make a chord",
   holdSeveral: "Edit several steps at once",
+  playIntoStep: "Play its note or chord",
+  stampChord: "Put the held chord on it",
+  playDefault: "Played note becomes default",
   setDefaults: "Set what new steps get",
   growLoop: "Set how many bars loop",
   heldNote: "Set the note",
   heldVelocity: "Set the velocity",
   heldSettings: "Set length, chance, timing",
+  heldPlay: "Play its note or chord",
   holdAnother: "Edit that one too",
   releaseHeld: "Finish the edit",
   octave: "Move the note by octaves",
+  enterStepRecord: "Enter step record",
+  leaveStepRecord: "Leave step record",
+  recordNote: "Write the step and move on",
+  recordRest: "Leave a rest and move on",
+  recordBack: "Go back a step",
+  recordCursor: "Move to that step",
+  liveRecord: "Record what you play",
+  stopLiveRecord: "Stop recording",
+  eraseSteps: "Erase as the playhead passes",
   showCheatsheet: "Show or pin this list",
 };
+
+function recordEntries(
+  runtimePatch: CompiledInstrumentEnginePatch,
+): InstrumentHintEntry[] {
+  const { liveRecord } = runtimePatch.runtime.navigation;
+
+  return entries(
+    "Record",
+    liveRecord ? ["stopLiveRecord", "eraseSteps"] : ["liveRecord"],
+  );
+}
 
 export function describeInstrumentHint(action: InstrumentHintAction) {
   return HINT_TEXT[action];
@@ -112,12 +151,26 @@ export function listInstrumentHints(
   const sequencerTrack = activeTrack?.noteSource === "stepSequencer";
 
   if (navigation.mode === "seqEdit") {
+    if (navigation.stepRecord) {
+      return [
+        ...entries("Step record", [
+          "recordNote",
+          "recordRest",
+          "recordBack",
+          "recordCursor",
+        ]),
+        ...entries("Mode", ["leaveStepRecord"]),
+        ...entries("Help", ["showCheatsheet"]),
+      ];
+    }
+
     if (navigation.heldSteps.length > 0) {
       return [
         ...entries("Held steps", [
           "heldNote",
           "heldVelocity",
           "heldSettings",
+          "heldPlay",
           "octave",
           "holdAnother",
           "releaseHeld",
@@ -134,10 +187,18 @@ export function listInstrumentHints(
         "editSettings",
         "switchBar",
       ]),
-      ...entries("Steps", ["holdSeveral", "addChordNotes", "setDefaults"]),
+      ...entries("Steps", [
+        "holdSeveral",
+        "addChordNotes",
+        "playIntoStep",
+        "stampChord",
+        "playDefault",
+        "setDefaults",
+      ]),
       ...entries("Copy and fill", ["copyStep", "fillBar"]),
       ...entries("Bars", ["growLoop", "duplicateBar"]),
-      ...entries("Mode", ["leaveStepEdit"]),
+      ...entries("Mode", ["enterStepRecord", "leaveStepEdit"]),
+      ...recordEntries(runtimePatch),
       ...entries("Save", ["saveDraft", "discardDraft"]),
       ...entries("Help", ["showCheatsheet"]),
     ];
@@ -146,6 +207,7 @@ export function listInstrumentHints(
   return [
     ...entries("Navigate", ["switchTrack", "switchPage"]),
     ...entries("Mode", sequencerTrack ? ["enterStepEdit"] : []),
+    ...(sequencerTrack ? recordEntries(runtimePatch) : []),
     ...entries("Save", ["saveDraft", "discardDraft"]),
     ...entries("Help", ["showCheatsheet"]),
   ];

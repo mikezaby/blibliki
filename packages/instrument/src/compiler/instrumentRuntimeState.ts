@@ -120,6 +120,9 @@ export function normalizeInstrumentNavigation(
     sequencerPageIndex: options.navigation?.sequencerPageIndex ?? 0,
     heldSteps: options.navigation?.heldSteps ?? [],
     stepDefaults: options.navigation?.stepDefaults ?? {},
+    heldNotes: options.navigation?.heldNotes,
+    stepRecord: options.navigation?.stepRecord,
+    liveRecord: options.navigation?.liveRecord,
     copySource: options.navigation?.copySource,
     fill: options.navigation?.fill,
   };
@@ -152,6 +155,7 @@ export function createInstrumentRuntimeState(options: {
         ? undefined
         : (masterOptions.id ?? createInstrumentRuntimeModuleId("master")),
     sessionRecorderId: createInstrumentRuntimeModuleId("sessionRecorder"),
+    metronomeId: createInstrumentRuntimeModuleId("metronome"),
     ...globalMappingRuntimeIds,
     midiMapperId:
       createOptions.midiMapper?.id ??

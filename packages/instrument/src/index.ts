@@ -150,6 +150,12 @@ export type {
   InstrumentControllerEngine,
   InstrumentControllerSession,
 } from "./InstrumentSession";
+export {
+  DEFAULT_MIDI_RECORDING_SETTINGS,
+  normalizeMidiRecordingSettings,
+  QUANTIZE_OPTIONS,
+} from "./sequencer/recordingSettings";
+export type { MidiRecordingSettings } from "./sequencer/recordingSettings";
 export { createInstrumentDisplayState } from "./display/InstrumentDisplayState";
 export type {
   BandSection,

@@ -45,8 +45,13 @@ export {
   MidiEventType,
 } from "./core";
 
-export { TransportState } from "@blibliki/transport";
-export type { BPM, TimeSignature, Position } from "@blibliki/transport";
+export { TransportState, TPB, divisionToTicks } from "@blibliki/transport";
+export type {
+  BPM,
+  TimeSignature,
+  Position,
+  Division,
+} from "@blibliki/transport";
 
 // The MIDI seam: platform entries wire an adapter, apps on platforms without
 // Web MIDI (Capacitor/iOS) replace it before creating an engine.
@@ -86,6 +91,8 @@ export {
   Resolution,
   PlaybackMode,
   stepPropSchema,
+  microtimeOffsetForTicks,
+  metronomePropSchema,
   drumMachineMidiSchema,
   NoiseType,
   DelayTimeMode,
@@ -102,7 +109,11 @@ export {
   WAVETABLE_PRESETS,
 } from "./modules";
 export { default as StepSequencer } from "./modules/StepSequencer";
+export { default as Metronome } from "./modules/Metronome";
 export type {
+  IMetronome,
+  IMetronomeProps,
+  StepSequencerPosition,
   IOscillator,
   IGain,
   IVolume,

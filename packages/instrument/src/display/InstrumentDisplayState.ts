@@ -74,6 +74,10 @@ export type InstrumentDisplayState = {
     mode: InstrumentRuntimeMode;
     heldSteps?: number[];
     shiftPressed?: boolean;
+    // Set while step record is armed: the step the next note writes to.
+    stepRecordCursor?: number;
+    // Set while real-time record is armed.
+    liveRecord?: { erasing: boolean };
   };
   notice?: InstrumentDisplayNotice;
   hints?: InstrumentHint[];

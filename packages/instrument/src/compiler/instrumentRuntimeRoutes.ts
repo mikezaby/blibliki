@@ -85,7 +85,7 @@ export function createMasterRoutes(
   tracks: readonly BaseTrack[],
   runtime: Pick<
     CompiledInstrumentEnginePatch["runtime"],
-    "masterId" | "sessionRecorderId"
+    "masterId" | "sessionRecorderId" | "metronomeId"
   >,
 ): IRoute[] {
   const masterTrack = findMasterTrack(trackDocuments, tracks);
@@ -95,6 +95,10 @@ export function createMasterRoutes(
     masterTrack.findOutput("audio out"),
     "output",
   ).plugs;
+  const metronomeOutput = {
+    moduleId: runtime.metronomeId,
+    ioName: "out",
+  };
 
   return [
     ...createInstrumentAudioRoutes({ trackDocuments, tracks, masterTrack }),
@@ -105,9 +109,21 @@ export function createMasterRoutes(
       { moduleId: runtime.sessionRecorderId, ioName: "in" },
     ]),
     ...(runtime.masterId
-      ? createExpandedRoutes("instrument", masterOutputPlugs, [
-          { moduleId: runtime.masterId, ioName: "in" },
-        ])
+      ? [
+          ...createExpandedRoutes("instrument", masterOutputPlugs, [
+            { moduleId: runtime.masterId, ioName: "in" },
+          ]),
+          // The click goes straight to the Master, past the session
+          // recorder, so a recording never has it.
+          {
+            id: createRuntimeRouteId("instrument", metronomeOutput, {
+              moduleId: runtime.masterId,
+              ioName: "in",
+            }),
+            source: metronomeOutput,
+            destination: { moduleId: runtime.masterId, ioName: "in" },
+          },
+        ]
       : []),
   ];
 }
@@ -155,6 +171,7 @@ export function createInstrumentRuntimeRoutes(options: {
     | "controllerOutputId"
     | "masterId"
     | "sessionRecorderId"
+    | "metronomeId"
     | "midiMapperId"
   >;
   trackNoteRuntimes: readonly InstrumentTrackNoteRuntime[];
