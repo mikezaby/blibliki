@@ -88,7 +88,9 @@ const DRUM_NOTE_MOVES: Record<string, string> = {
   "G#2": "G#4",
 };
 
-function moveDrumNotes(track: InstrumentTrackDocument): InstrumentTrackDocument {
+function moveDrumNotes(
+  track: InstrumentTrackDocument,
+): InstrumentTrackDocument {
   if (track.sourceProfileId !== "drumMachine") {
     return track;
   }
