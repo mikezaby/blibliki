@@ -11,10 +11,10 @@ export const grooveboxRecipe: InstrumentRecipe = {
       sourceProfileId: "drumMachine",
       fxChain: ["compressor", "none", "none", "none"],
       lanes: {
-        C1: "x...x...x...x...",
-        D1: "....x.......x...",
-        "F#1": "x.x.x.x.x.x.x.x.",
-        "A#1": "......x.......x.",
+        C3: "x...x...x...x...",
+        D3: "....x.......x...",
+        "F#3": "x.x.x.x.x.x.x.x.",
+        "A#3": "......x.......x.",
       },
     },
     {

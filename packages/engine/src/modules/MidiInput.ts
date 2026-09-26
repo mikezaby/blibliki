@@ -132,8 +132,9 @@ export default class MidiInput
 
   private attachConfiguredInputs() {
     if (this.props.allIns) {
+      const excludedIds = this.resolveExcludedDeviceIds();
       this.findAllInputDevices().forEach((midiDevice) => {
-        if (this.isExcludedDevice(midiDevice)) return;
+        if (excludedIds.has(midiDevice.id)) return;
         this.addEventListener(midiDevice);
       });
       return;
@@ -181,13 +182,20 @@ export default class MidiInput
     return Array.from(this.engine.midiDeviceManager.inputDevices.values());
   }
 
-  private isExcludedDevice(
-    midiDevice: MidiInputDevice | ComputerKeyboardInput,
-  ) {
-    return (
-      this.props.excludedIds.includes(midiDevice.id) ||
-      this.props.excludedNames.includes(midiDevice.name)
-    );
+  // An excluded name resolves the way a selected one does: exact, then the
+  // best fuzzy match. A controller configured as "LCXL3 DAW In" attaches to
+  // the port the OS calls "LCXL3 1 DAW Out", and that is the port to skip.
+  private resolveExcludedDeviceIds() {
+    const ids = new Set(this.props.excludedIds);
+
+    this.props.excludedNames.forEach((name) => {
+      const device =
+        this.engine.findMidiInputDeviceByName(name) ??
+        this.engine.findMidiInputDeviceByFuzzyName(name, 0.6)?.device;
+      if (device) ids.add(device.id);
+    });
+
+    return ids;
   }
 
   private registerOutputs() {

@@ -680,22 +680,22 @@ describe("LaunchControlXL3Surface step entry on a drum machine track", () => {
     const tapped = release(surface, held.runtimePatch, STEP_4, 100);
 
     expect(getSteps(tapped.runtimePatch)[3]?.notes).toEqual([
-      { note: "C1", velocity: 100 },
+      { note: "C3", velocity: 100 },
     ]);
   });
 
   it("the pitch encoder steps through the drum parts", () => {
     const surface = new LaunchControlXL3Surface();
     const runtimePatch = createDrumStepEditPatch({
-      0: { active: true, notes: [{ note: "C1", velocity: 100 }] },
+      0: { active: true, notes: [{ note: "C3", velocity: 100 }] },
     });
     const held = press(surface, runtimePatch, STEP_1, 0);
 
     const snare = turn(surface, held.runtimePatch, PITCH_1, 1, 10);
-    expect(getSteps(snare.runtimePatch)[0]?.notes[0]?.note).toBe("D1");
+    expect(getSteps(snare.runtimePatch)[0]?.notes[0]?.note).toBe("D3");
 
     const closedHat = turn(surface, snare.runtimePatch, PITCH_1, 2, 20);
-    expect(getSteps(closedHat.runtimePatch)[0]?.notes[0]?.note).toBe("F#1");
+    expect(getSteps(closedHat.runtimePatch)[0]?.notes[0]?.note).toBe("F#3");
   });
 
   it("with nothing held the pitch encoder picks the default drum part", () => {
@@ -704,7 +704,7 @@ describe("LaunchControlXL3Surface step entry on a drum machine track", () => {
     const pitched = turn(surface, createDrumStepEditPatch(), PITCH_1, 1);
 
     expect(pitched.runtimePatch.runtime.navigation.stepDefaults).toEqual({
-      "track-1": { note: "D1" },
+      "track-1": { note: "D3" },
     });
   });
 
@@ -865,6 +865,7 @@ describe("LaunchControlXL3Surface played notes", () => {
   });
 });
 
+const ARM = 65;
 const RECORD = 118;
 const TRACK_NEXT = 102;
 const TRACK_PREV = 103;
@@ -873,10 +874,7 @@ function arm(
   surface: LaunchControlXL3Surface,
   runtimePatch: CompiledInstrumentEnginePatch,
 ) {
-  const shifted = press(surface, runtimePatch, SHIFT, 0);
-  const armed = press(surface, shifted.runtimePatch, RECORD, 0);
-
-  return release(surface, armed.runtimePatch, SHIFT, 0);
+  return press(surface, runtimePatch, ARM, 0);
 }
 
 // A note played and released, as a keyboard does it.
@@ -892,7 +890,7 @@ function tap(
 }
 
 describe("LaunchControlXL3Surface step record", () => {
-  it("Shift + Record arms step record at the first step and again leaves it", () => {
+  it("Arm arms step record at the first step and again leaves it", () => {
     const surface = new LaunchControlXL3Surface();
     const armed = arm(surface, createStepEditPatch());
 
@@ -1047,21 +1045,19 @@ describe("LaunchControlXL3Surface step record", () => {
   });
 });
 
-const PLAY = 116;
-
 describe("LaunchControlXL3Surface real-time record", () => {
   function armLive(
     surface: LaunchControlXL3Surface,
     runtimePatch: CompiledInstrumentEnginePatch,
   ) {
     const shifted = press(surface, runtimePatch, SHIFT, 0);
-    const toggled = press(surface, shifted.runtimePatch, PLAY, 0);
+    const toggled = press(surface, shifted.runtimePatch, RECORD, 0);
     const released = release(surface, toggled.runtimePatch, SHIFT, 0);
 
     return { command: toggled.command, runtimePatch: released.runtimePatch };
   }
 
-  it("Shift + Play arms in performance mode and again disarms", () => {
+  it("Shift + Record arms in performance mode and again disarms", () => {
     const surface = new LaunchControlXL3Surface();
     const performance = createInstrumentEnginePatch(createStepEditDocument());
     const armed = armLive(surface, performance);

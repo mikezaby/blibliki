@@ -30,7 +30,7 @@ describe("createInstrumentRuntimeState", () => {
     );
 
     expect(runtime.document).toEqual({
-      version: "3",
+      version: "4",
       name: "Default Instrument",
       templateId: "default-performance-instrument",
       hardwareProfileId: "launchcontrolxl3-pi-lcd",

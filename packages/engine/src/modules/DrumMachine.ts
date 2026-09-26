@@ -50,14 +50,15 @@ const OUTPUT_NAMES: Record<DrumVoice, string> = {
 export const drumMachineMidiSchema = {
   kind: "mapped",
   notes: [
-    { key: "kick", note: "C1", label: "Kick" },
-    { key: "snare", note: "D1", label: "Snare" },
-    { key: "clap", note: "D#1", label: "Clap" },
-    { key: "closedHat", note: "F#1", label: "Closed Hat" },
-    { key: "tom", note: "A1", label: "Tom" },
-    { key: "openHat", note: "A#1", label: "Open Hat" },
-    { key: "cymbal", note: "C#2", label: "Cymbal" },
-    { key: "cowbell", note: "G#2", label: "Cowbell" },
+    // General MIDI's drum layout, two octaves up so it sits mid-keyboard.
+    { key: "kick", note: "C3", label: "Kick" },
+    { key: "snare", note: "D3", label: "Snare" },
+    { key: "clap", note: "D#3", label: "Clap" },
+    { key: "closedHat", note: "F#3", label: "Closed Hat" },
+    { key: "tom", note: "A3", label: "Tom" },
+    { key: "openHat", note: "A#3", label: "Open Hat" },
+    { key: "cymbal", note: "C#4", label: "Cymbal" },
+    { key: "cowbell", note: "G#4", label: "Cowbell" },
   ],
 } as const satisfies MidiInputSchema;
 

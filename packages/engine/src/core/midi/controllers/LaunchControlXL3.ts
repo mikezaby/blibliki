@@ -98,6 +98,7 @@ const CHANNEL_BUTTON_PLAYHEAD_COLOR = 16;
 const CHANNEL_BUTTON_SELECTED_COLOR = 9;
 const RELATIVE_MODE_ENABLED = 127;
 const RELATIVE_MODE_DISABLED = 0;
+const BUTTON_CHANNEL_STATUS = 0xb0;
 const DAW_CONTROL_CHANNEL_STATUS = 0xb6;
 const ENCODER_CHANNEL_STATUS = 0xbf;
 const RELATIVE_ENCODER_OFFSET = 64;
@@ -116,6 +117,11 @@ const VALUE_COLOR_RAMP = [
   Color.Gray0,
 ] as const;
 
+// Encoder and fader numbers, and the relative aliases the encoders use.
+function isEncoderOrFaderCc(cc: number): boolean {
+  return (cc >= 5 && cc <= 36) || (cc >= 77 && cc <= 100);
+}
+
 function normalizeRelativeEncoderControl(cc: number): number {
   if (cc >= 77 && cc <= 84) return cc - RELATIVE_ENCODER_OFFSET;
   if (cc >= 85 && cc <= 92) return cc - RELATIVE_ENCODER_OFFSET;
@@ -125,24 +131,30 @@ function normalizeRelativeEncoderControl(cc: number): number {
 }
 
 export class LaunchControlXL3 extends BaseController {
+  // In DAW mode the surface sends encoders and faders on channel 16. The
+  // device also confirms feature changes and reports its mode on channel 7,
+  // and sends touch on and off on channel 15, reusing the encoder and fader
+  // CC numbers; the mapper matches on the number alone and would read those
+  // as turns. So an encoder or fader number is only trusted on channel 16.
+  // Buttons, Shift among them, pass on whatever channel the device uses.
   protected inputEventDataMutator = (
     data: number[] | Uint8Array,
-  ): number[] | Uint8Array => {
+  ): number[] | Uint8Array | null => {
     const [status, cc, value] = data;
     if (status === undefined || cc === undefined || value === undefined) {
       return data;
     }
 
-    if (status !== ENCODER_CHANNEL_STATUS) {
+    if ((status & 0xf0) !== BUTTON_CHANNEL_STATUS) {
       return data;
     }
 
-    const normalizedCc = normalizeRelativeEncoderControl(cc);
-    if (normalizedCc === cc) {
-      return data;
+    if (status === ENCODER_CHANNEL_STATUS) {
+      const normalizedCc = normalizeRelativeEncoderControl(cc);
+      return normalizedCc === cc ? data : [status, normalizedCc, value];
     }
 
-    return [status, normalizedCc, value];
+    return isEncoderOrFaderCc(cc) ? null : data;
   };
 
   constructor(engineId: string, ports: MatchedControllerPorts) {

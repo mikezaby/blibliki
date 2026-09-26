@@ -4,8 +4,8 @@ Date: 2026-09-26. Status: accepted.
 
 ## Context
 
-Real-time record (#68) has settings: metronome, pre-count, quantize, one
-pass or loop, overdub or replace. They needed a home. The instrument
+Real-time record (#68) has settings: metronome, whether it clicks only
+while recording, pre-count, quantize, one pass or loop, overdub or replace. They needed a home. The instrument
 document is saved to Firestore and shared; the console is the page the
 performer has open. The hardware the design copies (Digitakt II, Analog
 Rytm, Circuit Tracks) keeps all of these global to the device, in a settings

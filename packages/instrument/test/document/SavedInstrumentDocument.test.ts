@@ -22,7 +22,7 @@ describe("createSavedInstrumentDocument", () => {
     const saved = createSavedInstrumentDocument(document, runtimePatch, patch);
 
     expect(saved.globalBlock.masterVolume).toBe(-18);
-    expect(saved.version).toBe("3");
+    expect(saved.version).toBe("4");
   });
 
   it("migrates version 1 master volume when the runtime module is unavailable", () => {
@@ -38,7 +38,7 @@ describe("createSavedInstrumentDocument", () => {
     const saved = createSavedInstrumentDocument(document, runtimePatch, patch);
 
     expect(saved.globalBlock.masterVolume).toBeCloseTo(-6.02, 2);
-    expect(saved.version).toBe("3");
+    expect(saved.version).toBe("4");
   });
 
   it("writes normalized audio sources for enabled and disabled tracks", () => {

@@ -106,7 +106,7 @@ const HINT_TEXT: Record<InstrumentHintAction, string> = {
   holdAnother: "Edit that one too",
   releaseHeld: "Finish the edit",
   octave: "Move the note by octaves",
-  enterStepRecord: "Enter step record",
+  enterStepRecord: "Step record: keys write steps",
   leaveStepRecord: "Leave step record",
   recordNote: "Write the step and move on",
   recordRest: "Leave a rest and move on",

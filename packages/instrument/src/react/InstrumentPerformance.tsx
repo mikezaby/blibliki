@@ -54,6 +54,7 @@ import {
 } from "./bandCell";
 import { createFaceplateStyle, useFitToScreen } from "./faceplateFit";
 import { useFullscreen } from "./fullscreen";
+import { advancePeakHold, type PeakHold } from "./peakHold";
 import {
   loadMidiRecordingSettings,
   saveMidiRecordingSettings,
@@ -111,7 +112,7 @@ const TRACK_PREV_CC = 103;
 const TRACK_NEXT_CC = 102;
 const PAGE_PREV_CC = 107;
 const PAGE_NEXT_CC = 106;
-const PLAY_CC = 116;
+const RECORD_CC = 118;
 const SHIFT_CC = 63;
 // Those buttons are momentary: the surface acts on the press, not the release.
 // Shift is the exception, so the screen sends its release too.
@@ -234,6 +235,14 @@ const METER_W = 240;
 const METER_BAR_H = 9;
 const METER_BAR_GAP = 6;
 const METER_H = METER_BAR_H * 2 + METER_BAR_GAP;
+// A readout is at most 8 monospace glyphs (0.6em each) plus 0.12em of
+// tracking per glyph, 5.76em. A fixed 6em box, right aligned, keeps its edge
+// still as the value changes. Inline, so no host's CSS build can drop it.
+const METER_VALUE_STYLE = {
+  display: "inline-block",
+  width: "6em",
+  textAlign: "right",
+} as const;
 
 function levelToDb(level: number) {
   return level > 0 ? 20 * Math.log10(level) : -Infinity;
@@ -246,9 +255,20 @@ function dbToFrac(db: number) {
   );
 }
 
+// Below the bar's floor there is nothing to show, so the readout says so.
+function formatDb(db: number) {
+  return db > METER_MIN_DB ? `${db.toFixed(1)} dB` : "-∞ dB";
+}
+
+// Rewrites the text only when it changes, so the DOM rests between peaks.
+function setText(element: HTMLElement | null, text: string) {
+  if (element && element.textContent !== text) element.textContent = text;
+}
+
 function drawMeter(
   canvas: HTMLCanvasElement | null,
   smoothed: [number, number],
+  held: [number, number],
 ) {
   const ctx = canvas?.getContext("2d");
   if (!ctx) return;
@@ -272,6 +292,16 @@ function drawMeter(
     ctx.fillRect(0, y, METER_W, METER_BAR_H);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, y, dbToFrac(levelToDb(level)) * METER_W, METER_BAR_H);
+
+    const peakX = dbToFrac(levelToDb(held[ch]!)) * METER_W;
+    if (peakX > 0) {
+      ctx.fillStyle = "#fafafa";
+      ctx.fillRect(Math.min(peakX, METER_W - 2), y, 2, METER_BAR_H);
+    }
+
+    // The 0 dB mark, on the bar only.
+    ctx.fillStyle = "#d4d4d8";
+    ctx.fillRect(Math.round(red * METER_W), y, 1, METER_BAR_H);
   });
 }
 
@@ -290,6 +320,7 @@ function PerformanceMeter({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const readoutRef = useRef<HTMLSpanElement>(null);
+  const maxRef = useRef<HTMLSpanElement>(null);
 
   // Re-runs (and so resets peak hold) when the metered source or resetKey
   // changes, e.g. the performer selects a different track.
@@ -312,7 +343,12 @@ function PerformanceMeter({
 
     let running = true;
     const smoothed: [number, number] = [0, 0];
-    const hold: [number, number] = [0, 0]; // max since this source was selected
+    // The held peak per channel, and the max since this source was selected.
+    let held: [PeakHold, PeakHold] = [
+      { level: 0, since: 0 },
+      { level: 0, since: 0 },
+    ];
+    let max = 0;
 
     const render = () => {
       if (!running || !meterId) return;
@@ -320,20 +356,22 @@ function PerformanceMeter({
       const module = engine.findModule(meterId);
       if (module.moduleType === ModuleType.VuMeter) {
         const [peakL, peakR] = module.getPeaks();
+        const now = performance.now();
         // Instant attack, smoothed release (matches the grid VuMeter ballistics).
         smoothed[0] = Math.max(peakL, 0.8 * smoothed[0]);
         smoothed[1] = Math.max(peakR, 0.8 * smoothed[1]);
-        hold[0] = Math.max(hold[0], peakL);
-        hold[1] = Math.max(hold[1], peakR);
+        held = [
+          advancePeakHold(held[0], smoothed[0], now),
+          advancePeakHold(held[1], smoothed[1], now),
+        ];
+        max = Math.max(max, peakL, peakR);
 
-        drawMeter(canvasRef.current, smoothed);
-
-        if (readoutRef.current) {
-          const db = levelToDb(Math.max(hold[0], hold[1]));
-          readoutRef.current.textContent = Number.isFinite(db)
-            ? `${db.toFixed(1)} dB`
-            : "-∞ dB";
-        }
+        drawMeter(canvasRef.current, smoothed, [held[0].level, held[1].level]);
+        setText(
+          readoutRef.current,
+          formatDb(levelToDb(Math.max(held[0].level, held[1].level))),
+        );
+        setText(maxRef.current, formatDb(levelToDb(max)));
       }
 
       requestAnimationFrame(render);
@@ -357,11 +395,22 @@ function PerformanceMeter({
         <span className="font-mono text-xs uppercase tracking-[0.24em] text-zinc-500">
           {label}
         </span>
-        <span
-          ref={readoutRef}
-          className="font-mono text-xs uppercase tracking-[0.12em] text-zinc-300"
-        >
-          -∞ dB
+        <span className="font-mono text-xs uppercase tracking-[0.12em]">
+          <span
+            ref={maxRef}
+            className="text-zinc-500"
+            style={METER_VALUE_STYLE}
+            title="Peak since the track was selected"
+          >
+            -∞ dB
+          </span>
+          <span
+            ref={readoutRef}
+            className="text-zinc-300"
+            style={{ ...METER_VALUE_STYLE, marginLeft: "1.25rem" }}
+          >
+            -∞ dB
+          </span>
         </span>
       </div>
       <canvas
@@ -718,6 +767,15 @@ export default function InstrumentPerformance({
     };
   }, []);
   const documentRef = useRef(instrumentDocument);
+  // The host passes these inline, so any of its renders (the signed-in user
+  // resolving, for one) hands over a new function. Rebuilding the engine for
+  // that also cycles the hardware out of and back into DAW mode.
+  const onPersistRef = useRef(onPersist);
+  const nameRef = useRef(name);
+  useEffect(() => {
+    onPersistRef.current = onPersist;
+    nameRef.current = name;
+  }, [onPersist, name]);
   const stageRef = useRef<HTMLDivElement>(null);
   const faceplateRef = useRef<HTMLDivElement>(null);
   const fit = useFitToScreen(stageRef, faceplateRef);
@@ -765,7 +823,10 @@ export default function InstrumentPerformance({
               );
               documentRef.current = savedDocument;
 
-              const result = await onPersist?.(action, savedDocument);
+              const result = await onPersistRef.current?.(
+                action,
+                savedDocument,
+              );
               if (!result?.document) {
                 return result?.notice;
               }
@@ -791,7 +852,7 @@ export default function InstrumentPerformance({
           const recorder = engine.findModule(engine.sessionRecorderId);
           if (recorder.moduleType === ModuleType.AudioRecorder) {
             recorder.onRecordingComplete = (blob) => {
-              downloadWav(blob, name);
+              downloadWav(blob, nameRef.current);
             };
           }
         }
@@ -829,7 +890,7 @@ export default function InstrumentPerformance({
       engineInstance?.dispose();
       void engineInstance?.context.close();
     };
-  }, [sessionSource, name, onPersist]);
+  }, [sessionSource]);
 
   const displayState = state.displayState;
   // Source outputs to meter, derived from the live runtime patch so the track
@@ -857,6 +918,9 @@ export default function InstrumentPerformance({
   const isTransportRunning =
     displayState?.header.transportState === TransportState.playing;
   const isSequencerEdit = displayState?.header.mode === "seqEdit";
+  // Step record is a chord on the hardware with no button of its own, so the
+  // mode button and the cheatsheet title say when it is on.
+  const isStepRecord = displayState?.header.stepRecordCursor !== undefined;
   const isSequencerTrack = activeTrack?.noteSource === "stepSequencer";
   const liveRecord = displayState?.header.liveRecord;
   // The on-screen keys play a track that makes sound, through the note
@@ -942,10 +1006,10 @@ export default function InstrumentPerformance({
     );
   };
 
-  // Real-time record is Shift + Play on the hardware.
+  // Real-time record is Shift + Record on the hardware.
   const toggleLiveRecord = () => {
     sendControlChange(SHIFT_CC, BUTTON_PRESS_VALUE);
-    sendControlChange(PLAY_CC, BUTTON_PRESS_VALUE);
+    sendControlChange(RECORD_CC, BUTTON_PRESS_VALUE);
     sendControlChange(SHIFT_CC, BUTTON_RELEASE_VALUE);
   };
 
@@ -1072,7 +1136,7 @@ export default function InstrumentPerformance({
                       : "border-zinc-600 text-zinc-200 hover:border-zinc-400",
                   )}
                 >
-                  Step Edit
+                  {isStepRecord ? "Step Record" : "Step Edit"}
                 </Button>
                 <Button
                   variant="outlined"
@@ -1188,7 +1252,13 @@ export default function InstrumentPerformance({
                 <div className="relative z-10">
                   {showCheatsheet ? (
                     <CheatSheet
-                      title={isSequencerEdit ? "Step Edit" : "Performance"}
+                      title={
+                        isStepRecord
+                          ? "Step Record"
+                          : isSequencerEdit
+                            ? "Step Edit"
+                            : "Performance"
+                      }
                       hints={cheatsheetHints}
                     />
                   ) : null}

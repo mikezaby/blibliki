@@ -108,18 +108,18 @@ That duplication is acceptable in `v1`. The engine does not currently offer a cl
 
 ## MIDI Note Map
 
-The first version should use a fixed, GM-leaning note map. This keeps patches predictable and avoids spending `v1` complexity on note-routing props.
+The first version should use a fixed note map. This keeps patches predictable and avoids spending `v1` complexity on note-routing props. It follows General MIDI's drum layout two octaves up, so the kit sits mid-keyboard (moved from C1 on 2026-09-26; instrument documents migrate their drum patterns at v4).
 
-| Voice | MIDI | Note |
-| --- | ---: | --- |
-| Kick | 36 | C1 |
-| Snare | 38 | D1 |
-| Clap | 39 | D#1 |
-| Closed Hi-Hat | 42 | F#1 |
-| Tom | 45 | A1 |
-| Open Hi-Hat | 46 | A#1 |
-| Cymbal | 49 | C#2 |
-| Cowbell | 56 | G#2 |
+| Voice         | MIDI | Note |
+| ------------- | ---: | ---- |
+| Kick          |   60 | C3   |
+| Snare         |   62 | D3   |
+| Clap          |   63 | D#3  |
+| Closed Hi-Hat |   66 | F#3  |
+| Tom           |   69 | A3   |
+| Open Hi-Hat   |   70 | A#3  |
+| Cymbal        |   73 | C#4  |
+| Cowbell       |   80 | G#4  |
 
 Behavior rules:
 

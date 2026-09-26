@@ -485,6 +485,7 @@ describe("InstrumentPerformance", () => {
     await waitFor(() => {
       expect(setRecordingSettingsMock).toHaveBeenCalledWith({
         metronome: true,
+        metronomeOnlyWhileRecording: false,
         precount: false,
         quantize: "1/16",
         mode: "oneShot",
@@ -556,7 +557,7 @@ describe("InstrumentPerformance", () => {
       });
     expect(sentEvents().slice(-3)).toEqual([
       [63, 127],
-      [116, 127],
+      [118, 127],
       [63, 0],
     ]);
 
@@ -1036,6 +1037,37 @@ describe("InstrumentPerformance", () => {
     });
 
     expect(onPersist).toHaveBeenCalledWith("saveDraft", storedDocument);
+  });
+
+  it("keeps the engine when a render hands over a new onPersist function", async () => {
+    const { rerender } = render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+        onPersist={vi.fn()}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(createInstrumentControllerSessionMock).toHaveBeenCalledTimes(1);
+    });
+
+    // The host route passes an inline callback, so every render of it (a
+    // signed-in user resolving, for one) is a new function.
+    rerender(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+        onPersist={vi.fn()}
+      />,
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(engine.dispose).not.toHaveBeenCalled();
+    expect(loadEngineMock).toHaveBeenCalledTimes(1);
   });
 
   it("restarts the session on the document onPersist hands back", async () => {
