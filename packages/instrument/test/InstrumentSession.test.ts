@@ -755,15 +755,15 @@ describe("InstrumentSession", () => {
     });
     expect(metronomeStates).toEqual([false]);
 
-    // Shift + Play arms and starts the transport; the click comes with it.
+    // Shift + Record arms and starts the transport; the click comes with it.
     session.sendControlEvent(MidiEvent.fromCC(63, 127, 0));
-    session.sendControlEvent(MidiEvent.fromCC(116, 127, 0));
+    session.sendControlEvent(MidiEvent.fromCC(118, 127, 0));
     session.sendControlEvent(MidiEvent.fromCC(63, 0, 0));
     expect(metronomeStates).toEqual([false, true]);
 
-    // Shift + Play again disarms; the click goes with it.
+    // Shift + Record again disarms; the click goes with it.
     session.sendControlEvent(MidiEvent.fromCC(63, 127, 0));
-    session.sendControlEvent(MidiEvent.fromCC(116, 127, 0));
+    session.sendControlEvent(MidiEvent.fromCC(118, 127, 0));
     session.sendControlEvent(MidiEvent.fromCC(63, 0, 0));
     expect(metronomeStates).toEqual([false, true, false]);
   });
@@ -858,9 +858,9 @@ describe("InstrumentSession", () => {
       changes: { props: { enabled: true } },
     });
 
-    // Shift + Play arms: the transport starts after the count-in.
+    // Shift + Record arms: the transport starts after the count-in.
     session.sendControlEvent(MidiEvent.fromCC(63, 127, 0));
-    session.sendControlEvent(MidiEvent.fromCC(116, 127, 0));
+    session.sendControlEvent(MidiEvent.fromCC(118, 127, 0));
     session.sendControlEvent(MidiEvent.fromCC(63, 0, 0));
 
     expect(starts).toEqual([2]);

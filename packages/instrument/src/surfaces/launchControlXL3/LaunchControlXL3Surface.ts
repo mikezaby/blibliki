@@ -95,8 +95,9 @@ export type LaunchControlXL3Result = {
   command: LaunchControlXL3Command;
 };
 
-const PLAY_CC = 116;
 const RECORD_CC = 118;
+// The button the device labels Solo / Arm.
+const ARM_CC = 65;
 const PAGE_UP_CC = 106;
 const PAGE_DOWN_CC = 107;
 const TRACK_PREV_CC = 103;
@@ -644,11 +645,11 @@ export class LaunchControlXL3Surface {
       return createNoopResult(runtimePatch);
     }
 
-    // Record alone is the engine's WAV recording, so step record arms on
-    // the shifted press. Step and real-time record never run together.
+    // Arm, in Step Edit, is step record. Step and real-time record never
+    // run together.
     if (
-      currentNavigation.shiftPressed &&
-      event.cc === RECORD_CC &&
+      !currentNavigation.shiftPressed &&
+      event.cc === ARM_CC &&
       currentNavigation.mode === "seqEdit" &&
       sequencerTrack
     ) {
@@ -665,11 +666,12 @@ export class LaunchControlXL3Surface {
       };
     }
 
-    // Play alone is the engine's transport, so real-time record arms on
-    // the shifted press, in either mode.
+    // Record alone is the engine's WAV recording, so real-time record arms
+    // on the shifted press, in either mode. Shift + Play was the first
+    // choice, but the XL3 does not deliver Play while Shift is held.
     if (
       currentNavigation.shiftPressed &&
-      event.cc === PLAY_CC &&
+      event.cc === RECORD_CC &&
       sequencerTrack
     ) {
       const enabled = currentNavigation.liveRecord === undefined;
@@ -839,7 +841,6 @@ export class LaunchControlXL3Surface {
             action: "previousPage",
           },
         };
-      case PLAY_CC:
       case RECORD_CC:
       default:
         return createNoopResult(runtimePatch);

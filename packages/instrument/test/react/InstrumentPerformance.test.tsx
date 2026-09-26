@@ -557,7 +557,7 @@ describe("InstrumentPerformance", () => {
       });
     expect(sentEvents().slice(-3)).toEqual([
       [63, 127],
-      [116, 127],
+      [118, 127],
       [63, 0],
     ]);
 

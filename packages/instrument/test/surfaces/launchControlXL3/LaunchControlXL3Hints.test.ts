@@ -163,7 +163,7 @@ describe("createLaunchControlXL3Hints", () => {
       "Help: showCheatsheet",
     ]);
     expect(hints[4]).toMatchObject({
-      gesture: "[Shift] + [Record]",
+      gesture: "[Arm]",
       text: "Leave step record",
     });
   });

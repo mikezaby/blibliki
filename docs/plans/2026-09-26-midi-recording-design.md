@@ -37,10 +37,10 @@ The session, not the engine, decides what a note means.
 Notes are ignored in performance mode. Every session emit re-sends all 16
 step LEDs, and nothing in performance mode needs the note.
 
-### 3. Step record: Shift + Record
+### 3. Step record: Arm
 
-Record alone is the WAV recording, so step record arms on Shift + Record,
-in Step Edit. A note, or a chord whose keys are released together, writes
+Step record arms on the Arm button, in Step Edit. (It started on Shift +
+Record, which moved to real-time record on 2026-09-26; see section 4.) A note, or a chord whose keys are released together, writes
 the cursor step and advances; Track right leaves a rest and advances; Track
 left goes back; a step button moves the cursor. The cursor wraps around the
 bars of the loop and a bar change is written as the sequencer's active page.
@@ -50,9 +50,12 @@ For this to work the engine's XL3 controller had to learn Shift: it now
 leaves the transport and the session recording alone on a shifted Play or
 Record press.
 
-### 4. Real-time record: Shift + Play
+### 4. Real-time record: Shift + Record
 
-Shift + Play arms real-time record on a sequencer track, in either mode.
+Record alone is the WAV recording, so Shift + Record arms real-time record
+on a sequencer track, in either mode. It was Shift + Play until
+2026-09-26: on the device, Play does nothing while Shift is held, so the
+chord moved and step record made room for it.
 While the transport runs, a note on the track's channel is written where the
 sequencer says it was heard: `StepSequencer.positionAt(contextTime)` maps a
 moment to the nearest step with its signed distance in ticks, and the
@@ -119,10 +122,10 @@ keys use it. No arrow key conflict was found: the device maps letters only.
 | Hold [Step], play [Keys]            | Step Edit       | The step gets the note, then a chord |
 | Hold [Keys], tap [Step]             | Step Edit       | The step gets the chord              |
 | Play [Keys], tap [Step]             | Step Edit       | New steps get the last note played   |
-| [Shift] + [Record]                  | Step Edit       | Step record on and off               |
+| [Arm]                               | Step Edit       | Step record on and off               |
 | Play [Keys] / [Track ▶] / [Track ◀] | Step record     | Write and move on / rest / back      |
 | Tap [Step]                          | Step record     | Move the cursor                      |
-| [Shift] + [Play]                    | Sequencer track | Real-time record on and off          |
+| [Shift] + [Record]                  | Sequencer track | Real-time record on and off          |
 | Hold [Shift] + [Page ▼]             | Recording       | Erase as the playhead passes         |
 
 The console's Record and Erase buttons play the same events, as the Step
@@ -130,9 +133,10 @@ Edit button does. The cheatsheet lists every gesture in context.
 
 ## Open questions
 
-1. Does the hardware send a release for Page Down and Play in DAW mode? The
-   erase hold ends on Page Down's release or Shift's, so a missing Page Down
-   release still ends it with Shift. Check on the device.
+1. Does the hardware send a release for Page Down in DAW mode? The erase
+   hold ends on Page Down's release or Shift's, so a missing Page Down
+   release still ends it with Shift. Check on the device. (Play under Shift
+   was checked on 2026-09-26: the device does not deliver it.)
 2. The console's keys send velocity 127; a pointer has none. Mouse position
    on the key could set it later.
 3. A recording armed mid-loop in one-pass mode waits for the next start of

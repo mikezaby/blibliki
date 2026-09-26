@@ -112,7 +112,7 @@ const TRACK_PREV_CC = 103;
 const TRACK_NEXT_CC = 102;
 const PAGE_PREV_CC = 107;
 const PAGE_NEXT_CC = 106;
-const PLAY_CC = 116;
+const RECORD_CC = 118;
 const SHIFT_CC = 63;
 // Those buttons are momentary: the surface acts on the press, not the release.
 // Shift is the exception, so the screen sends its release too.
@@ -1006,10 +1006,10 @@ export default function InstrumentPerformance({
     );
   };
 
-  // Real-time record is Shift + Play on the hardware.
+  // Real-time record is Shift + Record on the hardware.
   const toggleLiveRecord = () => {
     sendControlChange(SHIFT_CC, BUTTON_PRESS_VALUE);
-    sendControlChange(PLAY_CC, BUTTON_PRESS_VALUE);
+    sendControlChange(RECORD_CC, BUTTON_PRESS_VALUE);
     sendControlChange(SHIFT_CC, BUTTON_RELEASE_VALUE);
   };
 
