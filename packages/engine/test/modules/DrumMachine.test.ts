@@ -51,14 +51,14 @@ const VOICE_OUTPUTS = [
 ];
 
 const FIXED_NOTE_MAP = [
-  { note: "C1", output: "kick out" }, // MIDI 36
-  { note: "D1", output: "snare out" }, // MIDI 38
-  { note: "D#1", output: "clap out" }, // MIDI 39
-  { note: "F#1", output: "closed hat out" }, // MIDI 42
-  { note: "A1", output: "tom out" }, // MIDI 45
-  { note: "A#1", output: "open hat out" }, // MIDI 46
-  { note: "C#2", output: "cymbal out" }, // MIDI 49
-  { note: "G#2", output: "cowbell out" }, // MIDI 56
+  { note: "C3", output: "kick out" }, // MIDI 60
+  { note: "D3", output: "snare out" }, // MIDI 62
+  { note: "D#3", output: "clap out" }, // MIDI 63
+  { note: "F#3", output: "closed hat out" }, // MIDI 66
+  { note: "A3", output: "tom out" }, // MIDI 69
+  { note: "A#3", output: "open hat out" }, // MIDI 70
+  { note: "C#4", output: "cymbal out" }, // MIDI 73
+  { note: "G#4", output: "cowbell out" }, // MIDI 80
 ];
 
 const VOICE_SLOT_NAMES = [
@@ -244,7 +244,7 @@ describe("DrumMachine", () => {
     const lowVelocityAt = ctx.context.currentTime + 0.01;
     drumMachine.onMidiEvent(
       MidiEvent.fromNote(
-        { name: "C", octave: 1, velocity: 0.2 },
+        { name: "C", octave: 3, velocity: 0.2 },
         true,
         lowVelocityAt,
       ),
@@ -253,7 +253,7 @@ describe("DrumMachine", () => {
     const highVelocityAt = ctx.context.audioContext.currentTime + 0.2;
     drumMachine.onMidiEvent(
       MidiEvent.fromNote(
-        { name: "C", octave: 1, velocity: 1 },
+        { name: "C", octave: 3, velocity: 1 },
         true,
         highVelocityAt,
       ),
@@ -278,11 +278,11 @@ describe("DrumMachine", () => {
     drumMachine.props = { kickLevel: 0.15 };
 
     const firstTriggerAt = ctx.context.currentTime + 0.01;
-    drumMachine.onMidiEvent(MidiEvent.fromNote("C1", true, firstTriggerAt));
+    drumMachine.onMidiEvent(MidiEvent.fromNote("C3", true, firstTriggerAt));
 
     drumMachine.props = { kickLevel: 1 };
     const secondTriggerAt = ctx.context.audioContext.currentTime + 0.2;
-    drumMachine.onMidiEvent(MidiEvent.fromNote("C1", true, secondTriggerAt));
+    drumMachine.onMidiEvent(MidiEvent.fromNote("C3", true, secondTriggerAt));
 
     const [lowLevelEnvelope, highLevelEnvelope] =
       expectTwoCalls(scheduledEnvelopes);
@@ -301,11 +301,11 @@ describe("DrumMachine", () => {
     drumMachine.props = { openHatDecay: 0.08 };
 
     const firstTriggerAt = ctx.context.currentTime + 0.01;
-    drumMachine.onMidiEvent(MidiEvent.fromNote("A#1", true, firstTriggerAt));
+    drumMachine.onMidiEvent(MidiEvent.fromNote("A#3", true, firstTriggerAt));
 
     drumMachine.props = { openHatDecay: 1.2 };
     const secondTriggerAt = ctx.context.audioContext.currentTime + 0.2;
-    drumMachine.onMidiEvent(MidiEvent.fromNote("A#1", true, secondTriggerAt));
+    drumMachine.onMidiEvent(MidiEvent.fromNote("A#3", true, secondTriggerAt));
 
     const [shortDecayEnvelope, longDecayEnvelope] =
       expectTwoCalls(scheduledEnvelopes);
@@ -344,11 +344,11 @@ describe("DrumMachine", () => {
     drumMachine.props = { kickTone: 0 };
 
     const firstTriggerAt = ctx.context.currentTime + 0.01;
-    drumMachine.onMidiEvent(MidiEvent.fromNote("C1", true, firstTriggerAt));
+    drumMachine.onMidiEvent(MidiEvent.fromNote("C3", true, firstTriggerAt));
 
     drumMachine.props = { kickTone: 1 };
     const secondTriggerAt = ctx.context.audioContext.currentTime + 0.25;
-    drumMachine.onMidiEvent(MidiEvent.fromNote("C1", true, secondTriggerAt));
+    drumMachine.onMidiEvent(MidiEvent.fromNote("C3", true, secondTriggerAt));
 
     expect(scheduledStartFrequencies).toEqual([180, 240]);
   });
@@ -448,10 +448,10 @@ describe("DrumMachine", () => {
     const initialOscillator = kickSlot.oscillator;
 
     drumMachine.onMidiEvent(
-      MidiEvent.fromNote("C1", true, ctx.context.currentTime + 0.01),
+      MidiEvent.fromNote("C3", true, ctx.context.currentTime + 0.01),
     );
     drumMachine.onMidiEvent(
-      MidiEvent.fromNote("C1", true, ctx.context.currentTime + 0.25),
+      MidiEvent.fromNote("C3", true, ctx.context.currentTime + 0.25),
     );
 
     expect(drumMachine.voiceSlots.kick[0]?.outputGain).toBe(initialOutputGain);
@@ -472,7 +472,7 @@ describe("DrumMachine", () => {
     drumMachine.props = { openHatDecay: 1.5 };
 
     const openHatAt = ctx.context.currentTime + 0.01;
-    drumMachine.onMidiEvent(MidiEvent.fromNote("A#1", true, openHatAt));
+    drumMachine.onMidiEvent(MidiEvent.fromNote("A#3", true, openHatAt));
     const activeOpenHatSlot = drumMachine.voiceSlots.openHat.find(
       (slot) => slot.activeUntil > openHatAt,
     );
@@ -482,7 +482,7 @@ describe("DrumMachine", () => {
     const activeUntilBeforeChoke = activeOpenHatSlot.activeUntil;
 
     const closedHatAt = openHatAt + 0.05;
-    drumMachine.onMidiEvent(MidiEvent.fromNote("F#1", true, closedHatAt));
+    drumMachine.onMidiEvent(MidiEvent.fromNote("F#3", true, closedHatAt));
 
     expect(activeOpenHatSlot.activeUntil).toBeLessThan(activeUntilBeforeChoke);
     expect(activeOpenHatSlot.activeUntil).toBeCloseTo(closedHatAt + 0.15, 5);

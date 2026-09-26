@@ -66,6 +66,49 @@ describe("migrateInstrumentDocument", () => {
     });
   });
 
+  it("moves drum machine patterns with the note map (v3 -> v4)", () => {
+    const document = createDefaultInstrumentDocument();
+    document.version = "3";
+    const withNotes = (
+      track: (typeof document.tracks)[number],
+      notes: string[],
+    ) => ({
+      ...track,
+      sequencer: {
+        ...track.sequencer,
+        pages: track.sequencer.pages.map((page, pageIndex) => ({
+          ...page,
+          steps: page.steps.map((step, stepIndex) =>
+            pageIndex === 0 && stepIndex === 0
+              ? {
+                  ...step,
+                  active: true,
+                  notes: notes.map((note) => ({ note, velocity: 100 })),
+                }
+              : step,
+          ),
+        })),
+      },
+    });
+    const firstNotes = (track: (typeof document.tracks)[number]) =>
+      track.sequencer.pages[0]!.steps[0]!.notes.map((note) => note.note);
+    document.tracks[0] = {
+      ...withNotes(document.tracks[0]!, ["C1", "F#1", "C4"]),
+      sourceProfileId: "drumMachine",
+    };
+    document.tracks[1] = {
+      ...withNotes(document.tracks[1]!, ["C1"]),
+      sourceProfileId: "osc",
+    };
+
+    const migrated = migrateInstrumentDocument(document);
+
+    expect(migrated.version).toBe(CURRENT_INSTRUMENT_VERSION);
+    expect(firstNotes(migrated.tracks[0]!)).toEqual(["C3", "F#3", "C4"]);
+    expect(firstNotes(migrated.tracks[1]!)).toEqual(["C1"]);
+    expect(migrateInstrumentDocument(migrated)).toBe(migrated);
+  });
+
   it("fills default global macro controller data when missing", () => {
     const document = createDefaultInstrumentDocument();
     delete (

@@ -28,7 +28,7 @@ describe("MIDI input schema", () => {
     expect(schema?.kind).toBe("mapped");
     expect(schema?.kind === "mapped" && schema.notes[0]).toEqual({
       key: "kick",
-      note: "C1",
+      note: "C3",
       label: "Kick",
     });
   });

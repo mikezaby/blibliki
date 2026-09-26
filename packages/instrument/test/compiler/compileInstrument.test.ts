@@ -8,7 +8,7 @@ describe("compileInstrument", () => {
   it("compiles the default instrument document into per-track compiled units", () => {
     const compiled = compileInstrument(createDefaultInstrumentDocument());
 
-    expect(compiled.version).toBe("3");
+    expect(compiled.version).toBe("4");
     expect(compiled.name).toBe("Default Instrument");
     expect(compiled.templateId).toBe("default-performance-instrument");
     expect(compiled.hardwareProfileId).toBe("launchcontrolxl3-pi-lcd");
@@ -127,7 +127,7 @@ describe("compileInstrument", () => {
 
     const compiled = compileInstrument(document);
 
-    expect(compiled.version).toBe("3");
+    expect(compiled.version).toBe("4");
     expect(compiled.globalBlock.masterVolume).toBeCloseTo(-6.02, 2);
   });
 
@@ -269,7 +269,7 @@ describe("compileInstrument", () => {
     const noteSchema = compiledTrack?.noteSchema;
     expect(noteSchema?.kind === "mapped" && noteSchema.notes[0]).toEqual({
       key: "kick",
-      note: "C1",
+      note: "C3",
       label: "Kick",
     });
     const topSlotKeys = sourceAmpPage?.regions[0]?.slots.map((slot) =>

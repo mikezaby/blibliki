@@ -680,22 +680,22 @@ describe("LaunchControlXL3Surface step entry on a drum machine track", () => {
     const tapped = release(surface, held.runtimePatch, STEP_4, 100);
 
     expect(getSteps(tapped.runtimePatch)[3]?.notes).toEqual([
-      { note: "C1", velocity: 100 },
+      { note: "C3", velocity: 100 },
     ]);
   });
 
   it("the pitch encoder steps through the drum parts", () => {
     const surface = new LaunchControlXL3Surface();
     const runtimePatch = createDrumStepEditPatch({
-      0: { active: true, notes: [{ note: "C1", velocity: 100 }] },
+      0: { active: true, notes: [{ note: "C3", velocity: 100 }] },
     });
     const held = press(surface, runtimePatch, STEP_1, 0);
 
     const snare = turn(surface, held.runtimePatch, PITCH_1, 1, 10);
-    expect(getSteps(snare.runtimePatch)[0]?.notes[0]?.note).toBe("D1");
+    expect(getSteps(snare.runtimePatch)[0]?.notes[0]?.note).toBe("D3");
 
     const closedHat = turn(surface, snare.runtimePatch, PITCH_1, 2, 20);
-    expect(getSteps(closedHat.runtimePatch)[0]?.notes[0]?.note).toBe("F#1");
+    expect(getSteps(closedHat.runtimePatch)[0]?.notes[0]?.note).toBe("F#3");
   });
 
   it("with nothing held the pitch encoder picks the default drum part", () => {
@@ -704,7 +704,7 @@ describe("LaunchControlXL3Surface step entry on a drum machine track", () => {
     const pitched = turn(surface, createDrumStepEditPatch(), PITCH_1, 1);
 
     expect(pitched.runtimePatch.runtime.navigation.stepDefaults).toEqual({
-      "track-1": { note: "D1" },
+      "track-1": { note: "D3" },
     });
   });
 

@@ -5,7 +5,7 @@ describe("createDefaultInstrumentDocument", () => {
   it("creates the fixed parent instrument document shape for the default template", () => {
     const document = createDefaultInstrumentDocument();
 
-    expect(document.version).toBe("3");
+    expect(document.version).toBe("4");
     expect(document.name).toBe("Default Instrument");
     expect(document.templateId).toBe("default-performance-instrument");
     expect(document.hardwareProfileId).toBe("launchcontrolxl3-pi-lcd");

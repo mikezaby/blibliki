@@ -7,9 +7,10 @@ import {
 import type {
   InstrumentTrackControllerSlotValues,
   InstrumentDocument,
+  InstrumentTrackDocument,
 } from "./types";
 
-export const CURRENT_INSTRUMENT_VERSION = "3";
+export const CURRENT_INSTRUMENT_VERSION = "4";
 const volumeSchema = moduleSchemas[ModuleType.Volume].volume;
 
 // The former global effect fields, present on v1/v2 documents but dropped from
@@ -74,11 +75,48 @@ function createMigratedMasterTrack(legacy: LegacyGlobalBlock) {
   });
 }
 
+// v3 -> v4: the drum machine's fixed note map moved up two octaves, so drum
+// patterns written on the old notes follow it.
+const DRUM_NOTE_MOVES: Record<string, string> = {
+  C1: "C3",
+  D1: "D3",
+  "D#1": "D#3",
+  "F#1": "F#3",
+  A1: "A3",
+  "A#1": "A#3",
+  "C#2": "C#4",
+  "G#2": "G#4",
+};
+
+function moveDrumNotes(track: InstrumentTrackDocument): InstrumentTrackDocument {
+  if (track.sourceProfileId !== "drumMachine") {
+    return track;
+  }
+
+  return {
+    ...track,
+    sequencer: {
+      ...track.sequencer,
+      pages: track.sequencer.pages.map((page) => ({
+        ...page,
+        steps: page.steps.map((step) => ({
+          ...step,
+          notes: step.notes.map((note) => ({
+            ...note,
+            note: DRUM_NOTE_MOVES[note.note] ?? note.note,
+          })),
+        })),
+      })),
+    },
+  };
+}
+
 // Brings a stored document up to CURRENT_INSTRUMENT_VERSION so callers (e.g. the
 // editor) always work in current-format units. Without this, a v1 document's
 // masterVolume (legacy linear gain) is re-converted to dB on every compile,
 // corrupting any dB value written back against the old version. v2 -> v3 also
-// moves the global effect chain onto a master track.
+// moves the global effect chain onto a master track, and v3 -> v4 moves drum
+// patterns with the drum machine's note map.
 export function migrateInstrumentDocument(
   document: LegacyInstrumentDocument,
 ): InstrumentDocument {
@@ -93,9 +131,12 @@ export function migrateInstrumentDocument(
   }
 
   const legacy = document.globalBlock as unknown as LegacyGlobalBlock;
-  const tracks = document.tracks.some(isMasterTrackDocument)
+  const tracksWithMaster = document.tracks.some(isMasterTrackDocument)
     ? document.tracks
     : [...document.tracks, createMigratedMasterTrack(legacy)];
+  const tracks = ["1", "2", "3"].includes(document.version)
+    ? tracksWithMaster.map(moveDrumNotes)
+    : tracksWithMaster;
 
   return {
     ...document,
