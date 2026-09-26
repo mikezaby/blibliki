@@ -171,17 +171,6 @@ session emits on every played note in Step Edit and on every sequencer
 step. Keep the last sent values per controller output and send only the
 differences.
 
-## The note input still listens to the controller port
-
-`excludeControllerFromAllNoteInputs` in
-`packages/instrument/src/core/midiPortSelection.ts` excludes the controller
-by its configured name, `LCXL3 DAW In`, but the port resolves by fuzzy match
-to `LCXL3 1 DAW Out`, so the all-ins note input attaches to it anyway. Every
-Launch Control event then also runs through each track's channel filter, and
-`InstrumentSession` handles it twice: once from its own device listener and
-once from the note tap. Exclude the device the controller input actually
-resolved to, not the name it was asked for.
-
 ## A disposed engine keeps parsing MIDI
 
 `MidiDeviceManager.dispose` in

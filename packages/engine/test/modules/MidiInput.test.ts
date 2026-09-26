@@ -100,6 +100,34 @@ describe("MidiInput", () => {
     expect(padController.addEventListener).toHaveBeenCalledTimes(1);
   });
 
+  it("excludes the device an excluded name resolves to, as selection would", (ctx) => {
+    // macOS names the XL3's ports with a "1", so the controller's configured
+    // name only reaches its port through the fuzzy match.
+    const dawPort = createFakeInputDevice("lcxl3-daw", "LCXL3 1 DAW Out");
+    const midiPort = createFakeInputDevice("lcxl3-midi", "LCXL3 1 MIDI Out");
+
+    ctx.engine.midiDeviceManager.inputDevices.clear();
+    ctx.engine.midiDeviceManager.inputDevices.set(dawPort.id, dawPort as never);
+    ctx.engine.midiDeviceManager.inputDevices.set(
+      midiPort.id,
+      midiPort as never,
+    );
+
+    ctx.engine.addModule({
+      name: "All ins",
+      moduleType: ModuleType.MidiInput,
+      props: {
+        allIns: true,
+        selectedName: "All ins",
+        excludedIds: [],
+        excludedNames: ["LCXL3 DAW In"],
+      },
+    });
+
+    expect(dawPort.addEventListener).not.toHaveBeenCalled();
+    expect(midiPort.addEventListener).toHaveBeenCalledTimes(1);
+  });
+
   it("forwards midi events received from any attached device in all-ins mode", (ctx) => {
     const firstKeyboard = createFakeInputDevice("keyboard-1", "KeyStep 37");
     const secondKeyboard = createFakeInputDevice(
