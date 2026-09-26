@@ -134,6 +134,7 @@
 
 .instrument-performance-key--pad {
   height: 100%;
+  justify-content: center;
   border-radius: 0.5rem;
   background: color-mix(in oklab, var(--ui-color-surface-0), black 50%);
   color: var(--ui-color-text-primary);
