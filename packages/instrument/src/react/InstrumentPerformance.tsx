@@ -54,6 +54,7 @@ import {
 } from "./bandCell";
 import { createFaceplateStyle, useFitToScreen } from "./faceplateFit";
 import { useFullscreen } from "./fullscreen";
+import { advancePeakHold, type PeakHold } from "./peakHold";
 import {
   loadMidiRecordingSettings,
   saveMidiRecordingSettings,
@@ -246,9 +247,19 @@ function dbToFrac(db: number) {
   );
 }
 
+function formatDb(db: number) {
+  return Number.isFinite(db) ? `${db.toFixed(1)} dB` : "-∞ dB";
+}
+
+// Rewrites the text only when it changes, so the DOM rests between peaks.
+function setText(element: HTMLElement | null, text: string) {
+  if (element && element.textContent !== text) element.textContent = text;
+}
+
 function drawMeter(
   canvas: HTMLCanvasElement | null,
   smoothed: [number, number],
+  held: [number, number],
 ) {
   const ctx = canvas?.getContext("2d");
   if (!ctx) return;
@@ -272,7 +283,17 @@ function drawMeter(
     ctx.fillRect(0, y, METER_W, METER_BAR_H);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, y, dbToFrac(levelToDb(level)) * METER_W, METER_BAR_H);
+
+    const peakX = dbToFrac(levelToDb(held[ch]!)) * METER_W;
+    if (peakX > 0) {
+      ctx.fillStyle = "#fafafa";
+      ctx.fillRect(Math.min(peakX, METER_W - 2), y, 2, METER_BAR_H);
+    }
   });
+
+  // The 0 dB mark, across both bars and the gap between them.
+  ctx.fillStyle = "#d4d4d8";
+  ctx.fillRect(Math.round(red * METER_W), 0, 1, METER_H);
 }
 
 function PerformanceMeter({
@@ -290,6 +311,7 @@ function PerformanceMeter({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const readoutRef = useRef<HTMLSpanElement>(null);
+  const maxRef = useRef<HTMLSpanElement>(null);
 
   // Re-runs (and so resets peak hold) when the metered source or resetKey
   // changes, e.g. the performer selects a different track.
@@ -312,7 +334,12 @@ function PerformanceMeter({
 
     let running = true;
     const smoothed: [number, number] = [0, 0];
-    const hold: [number, number] = [0, 0]; // max since this source was selected
+    // The held peak per channel, and the max since this source was selected.
+    let held: [PeakHold, PeakHold] = [
+      { level: 0, since: 0 },
+      { level: 0, since: 0 },
+    ];
+    let max = 0;
 
     const render = () => {
       if (!running || !meterId) return;
@@ -320,20 +347,22 @@ function PerformanceMeter({
       const module = engine.findModule(meterId);
       if (module.moduleType === ModuleType.VuMeter) {
         const [peakL, peakR] = module.getPeaks();
+        const now = performance.now();
         // Instant attack, smoothed release (matches the grid VuMeter ballistics).
         smoothed[0] = Math.max(peakL, 0.8 * smoothed[0]);
         smoothed[1] = Math.max(peakR, 0.8 * smoothed[1]);
-        hold[0] = Math.max(hold[0], peakL);
-        hold[1] = Math.max(hold[1], peakR);
+        held = [
+          advancePeakHold(held[0], smoothed[0], now),
+          advancePeakHold(held[1], smoothed[1], now),
+        ];
+        max = Math.max(max, peakL, peakR);
 
-        drawMeter(canvasRef.current, smoothed);
-
-        if (readoutRef.current) {
-          const db = levelToDb(Math.max(hold[0], hold[1]));
-          readoutRef.current.textContent = Number.isFinite(db)
-            ? `${db.toFixed(1)} dB`
-            : "-∞ dB";
-        }
+        drawMeter(canvasRef.current, smoothed, [held[0].level, held[1].level]);
+        setText(
+          readoutRef.current,
+          formatDb(levelToDb(Math.max(held[0].level, held[1].level))),
+        );
+        setText(maxRef.current, `max ${formatDb(levelToDb(max))}`);
       }
 
       requestAnimationFrame(render);
@@ -357,11 +386,13 @@ function PerformanceMeter({
         <span className="font-mono text-xs uppercase tracking-[0.24em] text-zinc-500">
           {label}
         </span>
-        <span
-          ref={readoutRef}
-          className="font-mono text-xs uppercase tracking-[0.12em] text-zinc-300"
-        >
-          -∞ dB
+        <span className="font-mono text-xs uppercase tracking-[0.12em]">
+          <span ref={maxRef} className="text-zinc-500">
+            max -∞ dB
+          </span>
+          <span ref={readoutRef} className="ml-3 text-zinc-300">
+            -∞ dB
+          </span>
         </span>
       </div>
       <canvas
