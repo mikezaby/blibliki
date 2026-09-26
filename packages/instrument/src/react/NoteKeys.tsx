@@ -1,5 +1,4 @@
 import type { MidiInputSchema } from "@blibliki/engine";
-import { Button, Text } from "@blibliki/ui";
 import { useEffect, useRef } from "react";
 
 // The computer keyboard's note row, the one the engine's keyboard device
@@ -168,26 +167,23 @@ export default function NoteKeys({
       <div
         role="group"
         aria-label="Keys"
-        className="grid grid-cols-4 gap-1 sm:grid-cols-8"
+        className="instrument-performance-keys grid grid-cols-4 gap-1 font-mono text-xs uppercase sm:grid-cols-8"
       >
         {keys.map((entry) => (
-          <Button
+          <button
             key={entry.note}
-            variant={sounding.has(entry.note) ? "contained" : "outlined"}
-            color={sounding.has(entry.note) ? "success" : "neutral"}
+            type="button"
             aria-label={entry.label}
             data-active={sounding.has(entry.note)}
             {...handlers(entry.note)}
-            className="h-auto select-none flex-col gap-1 px-1 py-2 font-mono text-xs uppercase"
+            className="instrument-performance-key instrument-performance-key--pad"
           >
             <span className="truncate">{entry.label}</span>
-            <Text asChild size="xs" tone="muted">
-              <span>
-                {entry.note}
-                {entry.key ? ` · ${entry.key}` : ""}
-              </span>
-            </Text>
-          </Button>
+            <small>
+              {entry.note}
+              {entry.key ? ` · ${entry.key}` : ""}
+            </small>
+          </button>
         ))}
       </div>
     );
@@ -200,25 +196,20 @@ export default function NoteKeys({
     <div
       role="group"
       aria-label="Keys"
-      className="relative flex h-24 select-none gap-px"
+      className="instrument-performance-keys instrument-performance-keys--piano font-mono text-xs"
     >
       {whites.map((entry) => (
-        <Button
+        <button
           key={entry.note}
-          variant={sounding.has(entry.note) ? "contained" : "outlined"}
-          color={sounding.has(entry.note) ? "success" : "neutral"}
+          type="button"
           aria-label={entry.label}
           data-active={sounding.has(entry.note)}
           {...handlers(entry.note)}
-          className="h-full min-w-0 flex-1 flex-col justify-end gap-0.5 px-0 font-mono text-xs"
+          className="instrument-performance-key instrument-performance-key--white"
         >
           <span>{entry.label}</span>
-          {entry.key ? (
-            <Text asChild size="xs" tone="muted">
-              <kbd>{entry.key}</kbd>
-            </Text>
-          ) : null}
-        </Button>
+          {entry.key ? <kbd>{entry.key}</kbd> : null}
+        </button>
       ))}
       {keys.map((entry, index) => {
         if (!entry.sharp) {
@@ -230,27 +221,21 @@ export default function NoteKeys({
         );
 
         return (
-          <Button
+          <button
             key={entry.note}
-            variant="contained"
-            color={sounding.has(entry.note) ? "success" : "neutral"}
+            type="button"
             aria-label={entry.label}
             data-active={sounding.has(entry.note)}
             {...handlers(entry.note)}
             style={{
               left: `${String((whiteIndex + 1 - BLACK_KEY_WIDTH / 2) * whiteWidth)}%`,
               width: `${String(BLACK_KEY_WIDTH * whiteWidth)}%`,
-              height: "60%",
             }}
-            className="absolute top-0 z-10 flex-col justify-end gap-0.5 px-0 font-mono text-xs"
+            className="instrument-performance-key instrument-performance-key--black"
           >
             <span>{entry.label}</span>
-            {entry.key ? (
-              <Text asChild size="xs" tone="muted">
-                <kbd>{entry.key}</kbd>
-              </Text>
-            ) : null}
-          </Button>
+            {entry.key ? <kbd>{entry.key}</kbd> : null}
+          </button>
         );
       })}
     </div>

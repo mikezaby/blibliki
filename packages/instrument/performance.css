@@ -85,3 +85,68 @@
 .instrument-performance-focus {
   text-shadow: 0 0 18px rgb(190 242 100 / 0.18);
 }
+
+/* The keys under the display. A fixed height, so the display does not jump
+ * when the active track has no keys. A key is not one of the UI's buttons:
+ * it has no padding of its own, no fixed height, and a geometry the row
+ * lays out, so it is a plain button styled here. */
+.instrument-performance-keys {
+  position: relative;
+  height: 6rem;
+  user-select: none;
+}
+
+.instrument-performance-keys--piano {
+  display: flex;
+  gap: 1px;
+}
+
+.instrument-performance-key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.125rem;
+  min-width: 0;
+  padding: 0 0 0.375rem;
+  overflow: hidden;
+  border: 1px solid var(--ui-color-border-subtle);
+  border-radius: 0 0 0.375rem 0.375rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.instrument-performance-key--white {
+  flex: 1 1 0;
+  height: 100%;
+  background: color-mix(in oklab, var(--ui-color-text-primary), black 10%);
+  color: var(--ui-color-surface-0);
+}
+
+.instrument-performance-key--black {
+  position: absolute;
+  top: 0;
+  z-index: 1;
+  height: 60%;
+  background: color-mix(in oklab, var(--ui-color-surface-0), black 70%);
+  color: var(--ui-color-text-primary);
+}
+
+.instrument-performance-key--pad {
+  height: 100%;
+  border-radius: 0.5rem;
+  background: color-mix(in oklab, var(--ui-color-surface-0), black 50%);
+  color: var(--ui-color-text-primary);
+}
+
+.instrument-performance-key:active,
+.instrument-performance-key[data-active="true"] {
+  background: var(--ui-color-success-500);
+  color: var(--ui-color-surface-0);
+}
+
+.instrument-performance-key kbd,
+.instrument-performance-key small {
+  font-size: 0.625rem;
+  opacity: 0.6;
+}

@@ -1283,7 +1283,14 @@ export default function InstrumentPerformance({
                           onNote={playNote}
                           sounding={soundingNotes}
                         />
-                      ) : null}
+                      ) : (
+                        // The same space, empty, so the display holds still
+                        // on a track that has no keys.
+                        <div
+                          className="instrument-performance-keys"
+                          aria-hidden="true"
+                        />
+                      )}
                     </div>
                   ) : null}
                 </div>

@@ -739,6 +739,44 @@ describe("InstrumentPerformance", () => {
     expect(sent()).toEqual([["C1", "noteon", 2]]);
   });
 
+  it("keeps the keys' space on a track that has none, so the display holds still", async () => {
+    const busRuntimePatch = {
+      ...runtimePatch,
+      runtime: { ...runtimePatch.runtime, noteInputId: "note-input" },
+      compiledInstrument: {
+        tracks: [
+          {
+            key: "master",
+            midiChannel: 1,
+            noteSource: "externalMidi",
+            noteSchema: { kind: "free" },
+            audioSource: { type: "master" },
+          },
+        ],
+      },
+    };
+    createInstrumentControllerSessionMock.mockImplementation(() => ({
+      getDisplayState: () => displayState,
+      getRuntimePatch: () => busRuntimePatch,
+      sendControlEvent: sendControlEventMock,
+      setRecordingSettings: setRecordingSettingsMock,
+      dispose: vi.fn(),
+    }));
+
+    const { container } = render(
+      <InstrumentPerformance
+        name="Instrument One"
+        document={instrumentDocument}
+      />,
+    );
+
+    await screen.findByRole("button", { name: "Start" });
+    expect(screen.queryByRole("group", { name: "Keys" })).toBeNull();
+    expect(
+      container.querySelector(".instrument-performance-keys[aria-hidden]"),
+    ).toBeTruthy();
+  });
+
   it("keeps the console's own controls apart from the general buttons", async () => {
     render(
       <InstrumentPerformance

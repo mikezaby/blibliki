@@ -21,8 +21,10 @@ describe("NoteKeys", () => {
     const white = within(keys).getByRole("button", { name: "C3" });
     const black = within(keys).getByRole("button", { name: "C#3" });
 
+    expect(white.className).toContain("instrument-performance-key--white");
     expect(white.style.left).toBe("");
     // Nine white keys: C#3 straddles the line after the first one.
+    expect(black.className).toContain("instrument-performance-key--black");
     expect(black.style.left).toBe(`${String((1 - 0.3) * (100 / 9))}%`);
     expect(black.style.width).toBe(`${String(0.6 * (100 / 9))}%`);
     expect(within(keys).getAllByRole("button")).toHaveLength(16);
